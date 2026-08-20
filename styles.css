@@ -1,0 +1,590 @@
+/* =========================================================
+   Manik Madaan — Portfolio
+   Visual language adapted from the Wispr Flow design system
+   ("cream broadsheet, dark velvet chambers"): warm editorial
+   canvas, oversized serif display type, flat ink borders,
+   alternating cream/dark sections instead of shadows.
+   ========================================================= */
+
+/* ---------- Fonts ----------
+   Eb Garamond (display, serif) + Figtree (body, sans) via
+   Google Fonts. These requests come from YOUR browser once this
+   file is opened or deployed, so they load normally — this has
+   nothing to do with the cloud sandbox's blocked npm registry.
+   Robust local fallbacks are still declared below in case a
+   connection is ever unavailable. */
+@import url('https://fonts.googleapis.com/css2?family=Eb+Garamond:ital,wght@0,400;1,400&family=Figtree:wght@400;500;600;700&display=swap');
+
+/* ---------- Design tokens ----------
+   Every color, spacing, radius, and type size the site uses is
+   named once here as a CSS custom property (a "token"), then
+   referenced everywhere else by name. Change a value in this one
+   block and it updates the whole site — that's the entire point
+   of a token system, with or without a framework. */
+:root {
+  color-scheme: light;
+
+  /* Color — from the Wispr Flow palette */
+  --ink:        #1a1a1a;   /* Vast Ink — primary text, borders, dark chambers */
+  --cream:      #ffffeb;   /* Lumen Cream — page canvas */
+  --stone:      #e4e4d0;   /* Lumen Stone — hairline borders on cream */
+  --fog:        #8a8a80;   /* muted captions / de-emphasized labels */
+  --charcoal:   #4a4a42;   /* secondary body text on cream (darkened from #222 for AA contrast) */
+  --lavender:   #f0d7ff;   /* primary CTA fill, accent surfaces */
+  --lavender-ink: #3a1a52; /* text-on-lavender, dark enough for contrast */
+  --forest:     #034f46;   /* secondary brand surface — pill badges, dark cards */
+  --ember:      #ffa946;   /* live/active accent, sparingly */
+  --white:      #ffffff;
+
+  /* Chart-only marks — validated separately, see case-study-cro.html note */
+  --chart-series-1: #2a78d6;
+  --chart-series-2: #eb6834;
+
+  /* Type */
+  --font-display: 'Eb Garamond', 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-body: 'Figtree', 'Inter', 'Plus Jakarta Sans', Manrope, system-ui, sans-serif;
+
+  /* Spacing — 8px base unit */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
+  --space-12: 96px;
+
+  /* Radius */
+  --radius-sm: 12px;   /* inputs, buttons */
+  --radius-md: 32px;   /* cards */
+  --radius-lg: 56px;   /* chambers — full sections */
+  --radius-pill: 9999px;
+
+  --max-width: 1160px;
+  --content-width: 720px;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;              /* never bold the display face — scale carries authority */
+  letter-spacing: -0.01em;
+}
+
+.wrap {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+}
+
+.wrap--wide { max-width: var(--max-width); }
+
+/* ---------- Nav ---------- */
+
+.site-nav {
+  background: var(--cream);
+  border-bottom: 2px solid var(--ink);
+}
+
+.site-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.site-nav__name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-style: italic;
+}
+
+.site-nav__links {
+  display: flex;
+  gap: var(--space-3);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--charcoal);
+}
+
+.site-nav__links a:hover { color: var(--ink); }
+
+/* ---------- Chambers ----------
+   A "chamber" is a full-bleed section with its own background
+   and oversized corner radius, in place of a card shadow — the
+   signature move of this system. Dark chambers carry the hero
+   moments; cream is the resting canvas in between. */
+
+.chamber {
+  padding: var(--space-10) 0;
+}
+
+.chamber--dark {
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.chamber--dark .eyebrow { color: var(--ember); }
+.chamber--dark p { color: #d8d8c8; }
+
+/* ---------- Hero ---------- */
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--forest);
+  margin: 0 0 var(--space-2);
+}
+
+.hero h1 {
+  font-size: clamp(34px, 5.5vw, 58px);
+  font-style: italic;
+  line-height: 1.12;
+  margin: 0 0 var(--space-3);
+  max-width: 16ch;
+}
+
+.hero p {
+  font-size: 19px;
+  max-width: 56ch;
+  margin: 0 0 var(--space-4);
+  color: #d8d8c8;
+}
+
+.hero__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn--primary {
+  background: var(--lavender);
+  color: var(--lavender-ink);
+  border-color: var(--ink);
+}
+
+.btn--primary:hover { background: var(--white); }
+
+.btn--secondary {
+  background: transparent;
+  border-color: currentColor;
+  color: inherit;
+}
+
+.chamber--dark .btn--secondary { border-color: var(--cream); color: var(--cream); }
+.chamber--dark .btn--secondary:hover { background: rgba(255,255,255,0.08); }
+
+body:not(.chamber--dark) .btn--secondary:hover,
+.btn--secondary:hover { background: rgba(26,26,26,0.06); }
+
+/* ---------- Section headings ---------- */
+
+.section { padding: var(--space-8) 0; }
+
+.section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.section__head h2 {
+  font-size: 30px;
+  margin: 0;
+}
+
+.section__note {
+  font-size: 13px;
+  color: var(--fog);
+  font-family: var(--font-body);
+}
+
+/* ---------- Case study card ---------- */
+
+.card {
+  display: block;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--white);
+  transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card:hover { background: var(--lavender); transform: translateY(-3px); }
+.card:hover .card__cta { color: var(--forest); }
+
+.card__tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cream);
+  background: var(--forest);
+  border-radius: var(--radius-pill);
+  padding: 5px 12px;
+}
+
+.card h3 {
+  font-size: 26px;
+  margin: 0 0 var(--space-2);
+  line-height: 1.25;
+}
+
+.card p {
+  color: var(--charcoal);
+  margin: 0 0 var(--space-2);
+  font-size: 15px;
+}
+
+.card__cta {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.card--ghost {
+  border-style: dashed;
+  background: transparent;
+}
+
+.card--ghost:hover { background: transparent; }
+.card--ghost p { margin: 0; color: var(--charcoal); }
+
+/* ---------- About ---------- */
+
+.about p {
+  color: var(--charcoal);
+  font-size: 17px;
+  max-width: 62ch;
+}
+
+footer {
+  border-top: 2px solid var(--ink);
+  padding: var(--space-4) 0 var(--space-6);
+}
+
+footer .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--fog);
+}
+
+footer a:hover { color: var(--ink); }
+
+/* ---------- Case study page ---------- */
+
+.breadcrumb {
+  padding: var(--space-3) 0 0;
+  font-size: 13px;
+  color: #b8b8a8;
+}
+
+.breadcrumb a { color: var(--cream); }
+.breadcrumb a:hover { color: var(--ember); }
+
+.cs-header .eyebrow { margin-bottom: var(--space-2); }
+
+.cs-header h1 {
+  font-size: clamp(30px, 4.8vw, 48px);
+  font-style: italic;
+  line-height: 1.2;
+  max-width: 22ch;
+  margin: 0 0 var(--space-2);
+}
+
+.cs-header .dek {
+  font-size: 18px;
+  max-width: 62ch;
+  margin: 0;
+  color: #d8d8c8;
+}
+
+.meta-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4) 0 0;
+  margin: var(--space-4) 0 0;
+  border-top: 1px solid rgba(255,255,255,0.18);
+}
+
+.meta-strip dt {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ember);
+  margin-bottom: 6px;
+  font-family: var(--font-body);
+}
+
+.meta-strip dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--cream);
+}
+
+.cs-body { padding: var(--space-8) 0; }
+
+.cs-body h2 {
+  font-size: 26px;
+  font-style: italic;
+  margin: var(--space-8) 0 var(--space-2);
+}
+
+.cs-body h2:first-child { margin-top: 0; }
+
+.cs-body p {
+  font-size: 17px;
+  color: var(--charcoal);
+  margin: 0 0 var(--space-2);
+  max-width: 68ch;
+}
+
+.cs-body p strong { color: var(--ink); }
+
+.pull-quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  border-left: 3px solid var(--forest);
+  padding: 2px 0 2px var(--space-3);
+  margin: var(--space-4) 0;
+  font-size: 22px;
+  color: var(--ink);
+  max-width: 56ch;
+}
+
+.reflection-box {
+  background: var(--forest);
+  color: var(--cream);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-4);
+  margin-top: 8px;
+}
+
+.reflection-box p { color: #d7e8e4; }
+.reflection-box p strong { color: var(--white); }
+
+.disclosure {
+  font-size: 13px;
+  color: var(--charcoal);
+  border: 1px dashed var(--ink);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0 0;
+  background: var(--white);
+}
+
+.cs-footer-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 2px solid var(--ink);
+  padding: var(--space-4) 0;
+  margin-top: var(--space-2);
+}
+
+.cs-footer-nav .btn { flex-shrink: 0; }
+
+/* ---------- Data viz block ----------
+   Chrome (surface, border, radius, type) follows the site's
+   Wispr Flow tokens. The two data-mark colors deliberately do
+   NOT use the brand palette — lavender/forest/ember all failed
+   the dataviz skill's validator as chart marks (too pale or too
+   low-chroma to read reliably, and to hold up for colorblind
+   readers). See the disclosure note on the page for why. */
+
+.viz-root {
+  color-scheme: light;
+  --v-surface:   var(--white);
+  --v-text:      var(--ink);
+  --v-text-2:    var(--charcoal);
+  --v-muted:     var(--fog);
+  --v-grid:      var(--stone);
+  --v-baseline:  #c9c9b8;
+  --v-series-1:  var(--chart-series-1);
+  --v-series-2:  var(--chart-series-2);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-md);
+  background: var(--v-surface);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  margin: var(--space-4) 0;
+}
+
+.viz-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--v-text);
+  margin: 0 0 2px;
+}
+
+.viz-subtitle {
+  font-size: 13px;
+  color: var(--v-muted);
+  margin: 0 0 var(--space-2);
+}
+
+.viz-legend {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--v-text-2);
+}
+
+.viz-legend__item { display: flex; align-items: center; gap: 8px; }
+
+.viz-legend__swatch {
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.viz-chart-svg { width: 100%; height: auto; overflow: visible; }
+
+.viz-gridline { stroke: var(--v-grid); stroke-width: 1; }
+.viz-baseline { stroke: var(--v-baseline); stroke-width: 1; }
+.viz-axis-label { fill: var(--v-muted); font-size: 11px; font-family: var(--font-body); }
+.viz-end-label { fill: var(--v-text-2); font-size: 12px; font-weight: 700; font-family: var(--font-body); }
+
+.viz-crosshair {
+  stroke: var(--v-muted);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.viz-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 8px;
+  padding: 8px 12px;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 10px));
+  white-space: nowrap;
+  z-index: 5;
+  transition: opacity 0.1s ease;
+}
+
+.viz-tooltip strong { font-weight: 700; }
+.viz-wrap { position: relative; }
+.viz-table-toggle { margin-top: var(--space-2); }
+
+.viz-table-toggle summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--v-text-2);
+  font-weight: 600;
+}
+
+.viz-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-2);
+  font-size: 13px;
+}
+
+.viz-table caption { text-align: left; color: var(--v-muted); font-size: 12px; margin-bottom: 6px; }
+
+.viz-table th,
+.viz-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--v-grid);
+  font-variant-numeric: tabular-nums;
+}
+
+.viz-table th { color: var(--v-muted); font-weight: 600; }
+
+@media (max-width: 640px) {
+  .meta-strip { grid-template-columns: repeat(2, 1fr); }
+  .chamber { padding: var(--space-6) 0; }
+  .chamber--dark { border-radius: 0 0 var(--space-6) var(--space-6); }
+}
+
+/* ---------- Motion ----------
+   Two mechanisms, both deliberately restrained:
+   1. .reveal — fades/lifts an element up once, the first time it
+      scrolls into view. Driven by IntersectionObserver in script.js;
+      this CSS only defines the two states (hidden → visible).
+   2. .reveal--d1 … --d4 — a small stagger delay, for a group of
+      elements (like the hero) that should reveal in sequence
+      instead of all at once.
+   Respect the reduced-motion setting unconditionally — that's not
+   optional polish, it's an accessibility requirement. */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal--visible { opacity: 1; transform: translateY(0); }
+
+.reveal--d1 { transition-delay: 0.05s; }
+.reveal--d2 { transition-delay: 0.15s; }
+.reveal--d3 { transition-delay: 0.25s; }
+.reveal--d4 { transition-delay: 0.35s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
