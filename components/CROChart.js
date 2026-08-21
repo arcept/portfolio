@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const labels = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
 const xs = [50, 124.3, 198.6, 272.9, 347.1, 421.4, 495.7, 570];
@@ -31,23 +31,53 @@ export default function CROChart() {
   const [active, setActive] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ left: 0, top: 0 });
 
+  function positionTooltip(clientX, clientY) {
+    const wrapRect = wrapRef.current.getBoundingClientRect();
+    setTooltipPos({
+      left: clientX - wrapRect.left,
+      top: clientY - wrapRect.top,
+    });
+  }
+
   function handlePointerMove(e) {
+    // Touch has no real "hover" — taps are handled by handlePointerUp instead.
+    if (e.pointerType === 'touch') return;
     const rect = chartRef.current.getBoundingClientRect();
     const scaleX = 680 / rect.width;
     const px = (e.clientX - rect.left) * scaleX;
     const i = nearestIndex(px);
     setActive(i);
-
-    const wrapRect = wrapRef.current.getBoundingClientRect();
-    setTooltipPos({
-      left: e.clientX - wrapRect.left,
-      top: e.clientY - wrapRect.top,
-    });
+    positionTooltip(e.clientX, e.clientY);
   }
 
-  function handlePointerLeave() {
+  function handlePointerLeave(e) {
+    if (e.pointerType === 'touch') return;
     setActive(null);
   }
+
+  function handlePointerUp(e) {
+    if (e.pointerType !== 'touch') return;
+    const rect = chartRef.current.getBoundingClientRect();
+    const scaleX = 680 / rect.width;
+    const px = (e.clientX - rect.left) * scaleX;
+    const i = nearestIndex(px);
+    setActive((prev) => (prev === i ? null : i));
+    positionTooltip(e.clientX, e.clientY);
+  }
+
+  useEffect(() => {
+    if (active === null) return undefined;
+
+    function handleOutsideTap(e) {
+      if (e.pointerType !== 'touch') return;
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setActive(null);
+      }
+    }
+
+    document.addEventListener('pointerdown', handleOutsideTap);
+    return () => document.removeEventListener('pointerdown', handleOutsideTap);
+  }, [active]);
 
   return (
     <div className="viz-wrap">
@@ -133,6 +163,7 @@ export default function CROChart() {
             style={{ cursor: 'crosshair' }}
             onPointerMove={handlePointerMove}
             onPointerLeave={handlePointerLeave}
+            onPointerUp={handlePointerUp}
           />
         </svg>
 

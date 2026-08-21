@@ -53,6 +53,16 @@ a {
   padding: 96px 0;
 }
 
+.hero {
+  padding-top: 96px;
+  padding-bottom: 96px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+}
+
 /* ---------- Nav ---------- */
 
 .site-nav {
@@ -172,6 +182,68 @@ button:focus-visible {
   font-weight: 510;
 }
 
+/* ---------- Selected work grid (featured + supporting pair) ---------- */
+
+.work-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.work-support-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 900px) {
+  .work-support-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.card__title {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.card--featured .card__title {
+  font-size: 24px;
+}
+
+.card__cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--obsidian);
+  border-radius: 12px;
+  color: var(--ash);
+  font-size: 13px;
+  margin-bottom: 16px;
+  min-height: 160px;
+}
+
+.card--featured .card__cover {
+  min-height: 240px;
+}
+
+.card__stat {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.card__stat-value {
+  font-size: 32px;
+  font-weight: 590;
+  color: var(--accent);
+}
+
+.card__stat-label {
+  color: var(--fog);
+  font-size: 13px;
+}
+
 /* ---------- Image placeholder slots ---------- */
 
 .image-slot {
@@ -230,6 +302,99 @@ button:focus-visible {
 
 .breadcrumb a:hover {
   color: var(--paper);
+}
+
+/* ---------- CRO header two-column split ---------- */
+
+.cs-header-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .cs-header-grid {
+    grid-template-columns: 55% 45%;
+  }
+}
+
+/*
+  Deliberate exception to the sitewide "hairline borders, no shadows" rule —
+  this frame holds real full-color content (a Canva-made cover graphic), not
+  chrome, so it gets a soft ambient glow instead of a flat graphite border.
+  Reserved for this one hero image only; not a new default card style.
+*/
+.cs-hero-frame {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cs-hero-frame::before {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08), transparent 70%);
+  filter: blur(40px);
+  z-index: -1;
+}
+
+.cs-hero-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---------- TL;DR expandable summary ---------- */
+
+.tldr {
+  margin-bottom: 16px;
+}
+
+.tldr-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 510;
+  cursor: pointer;
+}
+
+.tldr-trigger:hover {
+  opacity: 0.85;
+}
+
+.tldr-box {
+  margin-top: 16px;
+}
+
+.tldr-box p {
+  color: var(--mist);
+  margin-bottom: 8px;
+}
+
+.tldr-box p:last-child {
+  margin-bottom: 0;
+}
+
+.tldr-section + .tldr-section {
+  margin-top: 16px;
+}
+
+.tldr-label {
+  color: var(--fog);
+  font-size: 13px;
+  font-weight: 590;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
 }
 
 .pull-quote {
@@ -409,4 +574,44 @@ footer .wrap {
 
 footer a:hover {
   color: var(--paper);
+}
+
+/* ---------- Mobile breakpoints ----------
+   Sitewide convention: 640px (phone), 900px (tablet / two-column collapse
+   point — also used by the CRO header split and the work-support-grid). */
+
+@media (max-width: 640px) {
+  .text-display {
+    font-size: 44px;
+  }
+
+  .text-heading {
+    font-size: 32px;
+  }
+
+  .section {
+    padding: 56px 0;
+  }
+
+  .hero {
+    padding-top: 56px;
+    padding-bottom: 56px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
+
+  .site-nav__inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .site-nav__links {
+    gap: 12px;
+  }
 }

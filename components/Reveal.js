@@ -4,14 +4,14 @@ import { motion, useReducedMotion } from 'motion/react';
 
 const variants = {
   hidden: { opacity: 0, y: 8 },
-  visible: {
+  visible: (delay) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay },
+  }),
 };
 
-export default function Reveal({ children, className }) {
+export default function Reveal({ children, className, delay = 0 }) {
   const shouldReduceMotion = useReducedMotion();
 
   if (shouldReduceMotion) {
@@ -25,6 +25,7 @@ export default function Reveal({ children, className }) {
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
       variants={variants}
+      custom={delay}
     >
       {children}
     </motion.div>

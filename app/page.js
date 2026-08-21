@@ -2,13 +2,14 @@ import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import Card from '@/components/Card';
+import StatCounter from '@/components/StatCounter';
 
 export default function Home() {
   return (
     <>
       <Nav />
 
-      <header className="wrap wrap--wide" style={{ paddingTop: '96px', paddingBottom: '96px' }}>
+      <header className="hero wrap wrap--wide">
         <Reveal>
           <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Product Design Leader</p>
           <h1 className="text-display font-semibold" style={{ marginBottom: '24px', maxWidth: '840px' }}>
@@ -20,7 +21,7 @@ export default function Home() {
             at a fast-growing edtech company. I care about the systems that let good design
             happen consistently, and about the specific pixels and decisions inside them.
           </p>
-          <div style={{ display: 'flex', gap: '16px' }}>
+          <div className="hero-actions">
             <a href="#work" className="btn btn--primary">See selected work</a>
             <a href="mailto:manikdesigns@yahoo.com" className="btn btn--secondary">Get in touch</a>
           </div>
@@ -35,57 +36,69 @@ export default function Home() {
           </div>
         </Reveal>
 
-        <div style={{ display: 'grid', gap: '24px' }}>
-          <Card href="/case-study-cro">
-            <div className="card__tags">
-              <span className="tag">Product Strategy</span>
-              <span className="tag">Behavioral Data</span>
-              <span className="tag">Cross-functional Leadership</span>
-            </div>
-            <h3 className="text-body font-semibold" style={{ fontSize: '20px', marginBottom: '12px' }}>
-              Designing for Confidence: A Data-Informed Redesign of Novatr&apos;s Flagship Course Page
-            </h3>
-            <p className="text-body text-fog">
-              How behavioral data — not more traffic — became the difference between hesitation
-              and conversion on Novatr&apos;s highest-revenue product page, and how that changed the
-              way four teams made decisions together.
-            </p>
-            <span className="card__cta">Read the case study →</span>
-          </Card>
+        <div className="work-grid">
+          <Reveal>
+            <Card href="/case-study-cro" className="card--featured">
+              <div className="card__cover">Cover art pending</div>
+              <StatCounter value={20} suffix="%" label="Conversion improvement" />
+              <div className="card__tags">
+                <span className="tag">Product Strategy</span>
+                <span className="tag">Behavioral Data</span>
+                <span className="tag">Cross-functional Leadership</span>
+              </div>
+              <h3 className="card__title font-semibold">
+                Designing for Confidence: A Data-Informed Redesign of Novatr&apos;s Flagship Course Page
+              </h3>
+              <p className="text-body text-fog">
+                How behavioral data — not more traffic — became the difference between hesitation
+                and conversion on Novatr&apos;s highest-revenue product page, and how that changed the
+                way four teams made decisions together.
+              </p>
+              <span className="card__cta">Read the case study →</span>
+            </Card>
+          </Reveal>
 
-          <Card href="/case-study-novatr-lms">
-            <div className="card__tags">
-              <span className="tag tag--progress">Case study in progress</span>
-              <span className="tag">Product Strategy</span>
-              <span className="tag">Design Systems</span>
-              <span className="tag">0-to-1</span>
-            </div>
-            <h3 className="text-body font-semibold" style={{ fontSize: '20px', marginBottom: '12px' }}>
-              Building the Novatr LMS
-            </h3>
-            <p className="text-body text-fog">
-              A 0-to-1 platform build, design systems, and cross-functional leadership behind
-              Novatr&apos;s Learning Management System.
-            </p>
-            <span className="card__cta">Read the case study →</span>
-          </Card>
+          <div className="work-support-grid">
+            <Reveal delay={0.08}>
+              <Card href="/case-study-novatr-lms">
+                <div className="card__cover">Cover art pending</div>
+                <div className="card__tags">
+                  <span className="tag tag--progress">Case study in progress</span>
+                  <span className="tag">Product Strategy</span>
+                  <span className="tag">Design Systems</span>
+                  <span className="tag">0-to-1</span>
+                </div>
+                <h3 className="card__title font-semibold">
+                  Building the Novatr LMS
+                </h3>
+                <p className="text-body text-fog">
+                  A 0-to-1 platform build, design systems, and cross-functional leadership behind
+                  Novatr&apos;s Learning Management System.
+                </p>
+                <span className="card__cta">Read the case study →</span>
+              </Card>
+            </Reveal>
 
-          <Card href="/case-study-hapramp">
-            <div className="card__tags">
-              <span className="tag tag--progress">Case study in progress</span>
-              <span className="tag">Team Building</span>
-              <span className="tag">Hiring</span>
-              <span className="tag">Design Leadership</span>
-            </div>
-            <h3 className="text-body font-semibold" style={{ fontSize: '20px', marginBottom: '12px' }}>
-              Building a Design Team from Zero
-            </h3>
-            <p className="text-body text-fog">
-              The Hapramp Studio team-building story — hiring, structure, and design leadership
-              from the very first hire.
-            </p>
-            <span className="card__cta">Read the case study →</span>
-          </Card>
+            <Reveal delay={0.16}>
+              <Card href="/case-study-hapramp">
+                <div className="card__cover">Cover art pending</div>
+                <div className="card__tags">
+                  <span className="tag tag--progress">Case study in progress</span>
+                  <span className="tag">Team Building</span>
+                  <span className="tag">Hiring</span>
+                  <span className="tag">Design Leadership</span>
+                </div>
+                <h3 className="card__title font-semibold">
+                  Building a Design Team from Zero
+                </h3>
+                <p className="text-body text-fog">
+                  The Hapramp Studio team-building story — hiring, structure, and design leadership
+                  from the very first hire.
+                </p>
+                <span className="card__cta">Read the case study →</span>
+              </Card>
+            </Reveal>
+          </div>
         </div>
       </section>
 

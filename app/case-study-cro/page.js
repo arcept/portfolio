@@ -1,8 +1,10 @@
+import Image from 'next/image';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import MetaStrip from '@/components/MetaStrip';
 import CROChart from '@/components/CROChart';
+import TLDR from '@/components/TLDR';
 
 export const metadata = {
   title: 'Designing for Confidence — Manik Madaan',
@@ -19,25 +21,42 @@ export default function CaseStudyCRO() {
           <a href="/">← Back to all work</a>
         </div>
 
-        <Reveal>
-          <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Case Study — Novatr</p>
-          <h1 className="text-heading font-semibold" style={{ marginBottom: '16px' }}>
-            Designing for Confidence: A Data-Informed Redesign of Novatr&apos;s Flagship Course Page
-          </h1>
-          <p className="text-body text-mist" style={{ fontSize: '18px', maxWidth: '720px' }}>
-            How behavioral data became an empathy tool for four teams who couldn&apos;t agree on
-            why a strong page wasn&apos;t converting — and how that agreement outlasted the page itself.
-          </p>
+        <div className="cs-header-grid">
+          <Reveal>
+            <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Case Study — Novatr</p>
+            <h1 className="text-heading font-semibold" style={{ marginBottom: '16px' }}>
+              Designing for Confidence: A Data-Informed Redesign of Novatr&apos;s Flagship Course Page
+            </h1>
 
-          <MetaStrip
-            items={[
-              { label: 'Role', value: 'Product Design Manager, initiative lead' },
-              { label: 'Company', value: 'Novatr (formerly Oneistox)' },
-              { label: 'Timeframe', value: '2022–2024' },
-              { label: 'Collaborators', value: 'Design, Marketing, Sales, Engineering' },
-            ]}
-          />
-        </Reveal>
+            <TLDR />
+
+            <p className="text-body text-mist" style={{ fontSize: '18px', maxWidth: '720px' }}>
+              How behavioral data became an empathy tool for four teams who couldn&apos;t agree on
+              why a strong page wasn&apos;t converting — and how that agreement outlasted the page itself.
+            </p>
+
+            <MetaStrip
+              items={[
+                { label: 'Role', value: 'Product Design Manager, initiative lead' },
+                { label: 'Company', value: 'Novatr (formerly Oneistox)' },
+                { label: 'Timeframe', value: '2022–2024' },
+                { label: 'Collaborators', value: 'Design, Marketing, Sales, Engineering' },
+              ]}
+            />
+          </Reveal>
+
+          <Reveal delay={0.08}>
+            <div className="cs-hero-frame">
+              <Image
+                src="/case-studies/cro-cover.png"
+                alt="Cover graphic showing landing page CRO metrics: 52.7% and 7.33% increases, 7.31% decrease, and a conversion trend chart."
+                width={1400}
+                height={788}
+                priority
+              />
+            </div>
+          </Reveal>
+        </div>
       </header>
 
       <main className="cs-body wrap" style={{ paddingBottom: '48px' }}>
