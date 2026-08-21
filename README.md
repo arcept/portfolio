@@ -1,58 +1,55 @@
-# Manik Madaan — Portfolio (v1)
+# Manik Madaan — Portfolio (v3)
 
-This is a plain HTML/CSS/JS site — no build step, no framework, no `npm install`
-required. Open `index.html` directly in a browser and it works. That was a
-deliberate choice for this first build, not just a workaround (see note below),
-and it's a perfectly good permanent stack for a portfolio: it loads fast, has
-zero dependency risk, and is easy to keep editing by hand or with AI help.
+Next.js (App Router, JavaScript) + Tailwind CSS + `motion` (motion/react),
+statically exported and deployed to GitHub Pages behind the custom domain
+`www.arcept.in`.
 
 ## What's here
 
-- `index.html` — homepage
-- `case-study-cro.html` — first case study: the Novatr CRO/data-informed
-  redesign, adapted from your Medium article, with an interactive chart
-- `styles.css` — the whole design system (colors, type, layout, chart styling)
+- `app/page.js` — homepage: hero, selected work (3 cards), about
+- `app/case-study-cro/page.js` — the Novatr CRO/data-informed redesign case
+  study, with an interactive traffic-vs-conversion chart
+- `app/case-study-novatr-lms/page.js`, `app/case-study-hapramp/page.js` —
+  placeholder case study pages, marked "in progress"
+- `components/` — shared Nav, Footer, Reveal (scroll-in animation),
+  Card (hover), MetaStrip, CROChart
+- `tailwind.config.js` — the Linear-inspired dark design system (colors,
+  type scale, spacing, radius) as theme tokens
 
-## Preview it locally
-
-No server needed — just open the file:
+## Run locally
 
 ```
-open index.html
+npm install
+npm run dev
 ```
 
-(On Windows/Linux, double-click it in a file browser, or run a tiny local
-server if you want relative links to behave exactly like production:
-`npx serve .` or `python3 -m http.server`.)
+Open `http://localhost:3000`.
 
-## Deploy it (free, ~10 minutes)
+## Build
 
-1. Create a new GitHub repo (e.g. `manik-portfolio`) and push this folder to it.
-2. Go to [vercel.com](https://vercel.com), sign in with GitHub, and "Import"
-   that repo. Vercel will detect it as a static site — no build command, no
-   output directory needed. Deploy.
-3. You'll get a live `*.vercel.app` URL immediately.
-4. In the Vercel project's Settings → Domains, add the domain you registered
-   and follow the DNS instructions it gives you (usually one CNAME or A
-   record at your registrar). SSL is automatic.
+```
+npm run build
+```
 
-## A note on why this isn't Next.js/React
+Outputs a static site to `/out` (via `output: 'export'` in
+`next.config.js`), ready to serve from any static host — no Node server
+needed in production.
 
-The original plan called for Next.js + Tailwind. This cloud workspace's
-network access to package registries (npm, pip, etc.) is currently blocked
-by policy, so `npm install` can't run here. Rather than block on that, this
-version is zero-dependency plain HTML/CSS/JS — it deploys exactly the same
-way, and it's honestly a fine long-term choice for a portfolio site. If you
-want the Next.js/React version later (useful mainly if you want component
-reuse across many more pages, or you want that specific line on your AI-skills
-resume), that's a good Week 3 task to do from your own machine or a
-non-restricted environment, using this content as the source of truth.
+## Deploy
 
-## Next passes on this file
+Deploys automatically via `.github/workflows/deploy.yml` on every push to
+`main`: builds the static export and publishes `/out` to GitHub Pages.
+Custom domain is preserved via `public/CNAME` → `www.arcept.in`.
 
-- Add real screenshots/visuals to the case study (currently text + one
-  reconstructed chart, since original Mixpanel/GA assets aren't available)
-- Wire the "Get in touch" button to a real contact method once decided
-- Add the remaining 3 case studies (Novatr LMS, Hapramp team-building, Shyft)
-- Swap the placeholder `<title>`/meta description per page as more pages ship
+**One-time setup**: in the repo's Settings → Pages → Build and deployment →
+Source, this must be set to **GitHub Actions** (not "Deploy from a branch") —
+the old plain-HTML setup served files directly from the repo root, which
+doesn't work once there's a build step.
+
+## Next passes
+
+- Add real product/team screenshots to replace the image placeholder slots
+  (LMS stub, Hapramp stub, and eventually inline in the CRO case study)
+- Write the full "Building the Novatr LMS" and "Building a Design Team from
+  Zero" case studies
 - Add a resume download link once the resume draft is ready

@@ -1,0 +1,117 @@
+import Nav from '@/components/Nav';
+import Footer from '@/components/Footer';
+import Reveal from '@/components/Reveal';
+import Card from '@/components/Card';
+
+export default function Home() {
+  return (
+    <>
+      <Nav />
+
+      <header className="wrap wrap--wide" style={{ paddingTop: '96px', paddingBottom: '96px' }}>
+        <Reveal>
+          <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Product Design Leader</p>
+          <h1 className="text-display font-semibold" style={{ marginBottom: '24px', maxWidth: '840px' }}>
+            I build design functions, and I still do the craft work to prove it.
+          </h1>
+          <p className="text-body text-mist" style={{ maxWidth: '640px', marginBottom: '32px' }}>
+            Over a decade leading product design end to end — from founding my own studio,
+            to building a design team from zero, to running design as the head of function
+            at a fast-growing edtech company. I care about the systems that let good design
+            happen consistently, and about the specific pixels and decisions inside them.
+          </p>
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <a href="#work" className="btn btn--primary">See selected work</a>
+            <a href="mailto:manikdesigns@yahoo.com" className="btn btn--secondary">Get in touch</a>
+          </div>
+        </Reveal>
+      </header>
+
+      <section className="section wrap wrap--wide" id="work">
+        <Reveal>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '32px' }}>
+            <h2 className="text-heading font-semibold">Selected work</h2>
+            <span className="text-caption text-fog">Archive is being rebuilt — updating regularly</span>
+          </div>
+        </Reveal>
+
+        <div style={{ display: 'grid', gap: '24px' }}>
+          <Card href="/case-study-cro">
+            <div className="card__tags">
+              <span className="tag">Product Strategy</span>
+              <span className="tag">Behavioral Data</span>
+              <span className="tag">Cross-functional Leadership</span>
+            </div>
+            <h3 className="text-body font-semibold" style={{ fontSize: '20px', marginBottom: '12px' }}>
+              Designing for Confidence: A Data-Informed Redesign of Novatr&apos;s Flagship Course Page
+            </h3>
+            <p className="text-body text-fog">
+              How behavioral data — not more traffic — became the difference between hesitation
+              and conversion on Novatr&apos;s highest-revenue product page, and how that changed the
+              way four teams made decisions together.
+            </p>
+            <span className="card__cta">Read the case study →</span>
+          </Card>
+
+          <Card href="/case-study-novatr-lms">
+            <div className="card__tags">
+              <span className="tag tag--progress">Case study in progress</span>
+              <span className="tag">Product Strategy</span>
+              <span className="tag">Design Systems</span>
+              <span className="tag">0-to-1</span>
+            </div>
+            <h3 className="text-body font-semibold" style={{ fontSize: '20px', marginBottom: '12px' }}>
+              Building the Novatr LMS
+            </h3>
+            <p className="text-body text-fog">
+              A 0-to-1 platform build, design systems, and cross-functional leadership behind
+              Novatr&apos;s Learning Management System.
+            </p>
+            <span className="card__cta">Read the case study →</span>
+          </Card>
+
+          <Card href="/case-study-hapramp">
+            <div className="card__tags">
+              <span className="tag tag--progress">Case study in progress</span>
+              <span className="tag">Team Building</span>
+              <span className="tag">Hiring</span>
+              <span className="tag">Design Leadership</span>
+            </div>
+            <h3 className="text-body font-semibold" style={{ fontSize: '20px', marginBottom: '12px' }}>
+              Building a Design Team from Zero
+            </h3>
+            <p className="text-body text-fog">
+              The Hapramp Studio team-building story — hiring, structure, and design leadership
+              from the very first hire.
+            </p>
+            <span className="card__cta">Read the case study →</span>
+          </Card>
+        </div>
+      </section>
+
+      <section className="section wrap wrap--wide" id="about">
+        <Reveal>
+          <h2 className="text-heading font-semibold" style={{ marginBottom: '24px' }}>About</h2>
+          <p className="text-body text-mist" style={{ maxWidth: '720px', marginBottom: '16px' }}>
+            I&apos;m a Gurugram-based product designer and design leader. Most recently I was Product
+            Design Manager at Novatr (previously Oneistox), where I led design for a Learning
+            Management System that supported a 4x increase in company revenue, built a unified
+            design system across web and mobile, and ran the cross-functional processes that let
+            design, product, marketing, and engineering move in the same direction. Before that,
+            I built and led design teams at Hapramp Studio and Shyft, and started my career in
+            interaction design at Leo Burnett after a Master&apos;s in Interaction Design from Domus
+            Academy in Milan.
+          </p>
+          <p className="text-body text-mist" style={{ maxWidth: '720px' }}>
+            I&apos;m currently rebuilding this site and my case study archive after a career break —
+            partly to have a proper home for this work, and partly to get hands-on with AI-assisted
+            design and development again. This site itself is one of those projects: built and
+            deployed with AI-assisted tooling as I go.
+          </p>
+        </Reveal>
+      </section>
+
+      <Footer />
+    </>
+  );
+}
