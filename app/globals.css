@@ -50,7 +50,8 @@ a {
 }
 
 .section {
-  padding: 96px 0;
+  padding-top: 96px;
+  padding-bottom: 96px;
 }
 
 .hero {
@@ -590,7 +591,8 @@ footer a:hover {
   }
 
   .section {
-    padding: 56px 0;
+    padding-top: 56px;
+    padding-bottom: 56px;
   }
 
   .hero {

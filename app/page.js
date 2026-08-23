@@ -3,6 +3,7 @@ import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import Card from '@/components/Card';
 import StatCounter from '@/components/StatCounter';
+import CROCover from '@/components/CROCover';
 
 export default function Home() {
   return (
@@ -39,7 +40,7 @@ export default function Home() {
         <div className="work-grid">
           <Reveal>
             <Card href="/case-study-cro" className="card--featured">
-              <div className="card__cover">Cover art pending</div>
+              <CROCover />
               <StatCounter value={20} suffix="%" label="Conversion improvement" />
               <div className="card__tags">
                 <span className="tag">Product Strategy</span>
