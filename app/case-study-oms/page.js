@@ -1,17 +1,52 @@
+import localFont from 'next/font/local';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import MetaStrip from '@/components/MetaStrip';
 import PrototypeEmbed from '@/components/PrototypeEmbed';
 import CaseStudyNav from '@/components/CaseStudyNav';
+import TLDR from '@/components/TLDR';
+
+const neueAlteGrotesk = localFont({
+  src: '../fonts/NeueAlteGrotesk-SemiBold.ttf',
+  weight: '600',
+  style: 'normal',
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'Rebuilding OMS — Manik Madaan',
   description: "Novatr's entire sales org ran on a tool engineering had built with no product or design input. The product-and-design-led rebuild that replaced it.",
 };
 
+const tldrSections = [
+  {
+    label: 'Context',
+    body: "Novatr's entire sales org ran on a tool engineering built with no product or design input — slow, broken, and dependent on engineering for everything outside a handful of scenarios.",
+  },
+  {
+    label: 'Process',
+    body: "We validated the need through interviews at every level of the sales hierarchy and shadowed live sales calls, then moved OMS from an engineering-owned utility to a product-owned one.",
+  },
+  {
+    label: 'Solution',
+    body: "One shared dashboard and deal-list structure serves all five roles, scoped by who's logged in, plus a three-click drill-down from an org-wide dip to the one underperforming person.",
+  },
+  {
+    label: 'Impact',
+    body: 'Drop/dispose rate down 18%, turnaround for forms and offers down from 1–2 days to under an hour, and new-BDR training time down from 4 days to 3.',
+  },
+  {
+    label: 'Retrospective',
+    body: "The ATL permission tier was invisible in reporting, EMI plans couldn't be edited once approved, and a filtering bug let summary counts drift out of sync — real friction the rebuild still needs to fix.",
+  },
+  {
+    label: 'Reflection',
+    body: "The real fix was organizational as much as visual — moving OMS from engineering-owned to product-owned changed what questions we were even allowed to ask about it.",
+  },
+];
+
 const sections = [
-  { id: 'prototype', label: 'Try it' },
   { id: 'context', label: 'Context' },
   { id: 'process', label: 'Process' },
   { id: 'solution', label: 'Solution' },
@@ -25,35 +60,58 @@ export default function CaseStudyOMS() {
     <>
       <Nav />
 
-      <header className="cs-hero wrap wrap--wide" style={{ paddingTop: '64px', paddingBottom: '48px' }}>
-        <div className="breadcrumb" style={{ marginBottom: '32px' }}>
-          <a href="/">← Back to all work</a>
+      <header className="cs-hero" style={{ paddingTop: '96px', paddingBottom: '48px' }}>
+        <div className="wrap wrap--wide">
+          <div className="breadcrumb" style={{ marginBottom: '32px' }}>
+            <a href="/">← Back to all work</a>
+          </div>
+
+          <div className="cs-header-grid">
+            <Reveal>
+              <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Case Study — Novatr</p>
+              <h1
+                className={neueAlteGrotesk.className}
+                style={{
+                  color: '#fff',
+                  fontSize: '48px',
+                  fontWeight: 600,
+                  lineHeight: '110%',
+                  letterSpacing: '-0.48px',
+                  marginBottom: '16px',
+                  maxWidth: '16ch',
+                }}
+              >
+                From spreadsheets to a single source of truth
+              </h1>
+              <p className="text-body text-mist" style={{ fontSize: '18px', maxWidth: '640px' }}>
+                Rebuilding OMS: a v3.0 retrospective
+              </p>
+
+              <TLDR sections={tldrSections} />
+
+              <p className="text-body text-mist" style={{ maxWidth: '720px' }}>
+                Novatr&apos;s entire sales org, from a BDR on their first call to the VP of Sales, ran
+                on a tool engineering had built with no product or design input. I led the rebuild
+                that gave every one of five roles the exact view of the funnel they actually needed,
+                in one place, replacing what used to take hours or days to piece together by hand.
+              </p>
+
+              <MetaStrip
+                items={[
+                  { label: 'Role', value: 'Product Design Manager, project lead' },
+                  { label: 'Collaborators', value: 'Product, Sales, Engineering' },
+                  { label: 'Company', value: 'Novatr' },
+                ]}
+              />
+            </Reveal>
+
+            <Reveal delay={0.08}>
+              <div className="image-slot" style={{ height: '100%', minHeight: '349px' }}>
+                Cover art pending
+              </div>
+            </Reveal>
+          </div>
         </div>
-
-        <Reveal>
-          <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Case Study — Novatr</p>
-          <h1 className="text-heading font-semibold" style={{ marginBottom: '16px', maxWidth: '16ch' }}>
-            From spreadsheets to a single source of truth
-          </h1>
-          <p className="text-body text-mist" style={{ fontSize: '18px', maxWidth: '640px' }}>
-            Rebuilding OMS: a v3.0 retrospective
-          </p>
-          <p className="text-body text-mist" style={{ maxWidth: '720px', marginTop: '24px' }}>
-            Novatr&apos;s entire sales org — from a BDR on their first call to the VP of Sales — ran
-            on a tool engineering had built with no product or design input. I led the rebuild that
-            gave every one of five roles the exact view of the funnel they actually needed, in one
-            place, replacing what used to take hours or days to piece together by hand.
-          </p>
-
-          <MetaStrip
-            items={[
-              { label: 'Role', value: 'Product Design Manager, project lead' },
-              { label: 'Company', value: 'Novatr' },
-              { label: 'Timeframe', value: '2023 – 2024, rebuilt 2026' },
-              { label: 'Collaborators', value: 'Product, Sales, Engineering' },
-            ]}
-          />
-        </Reveal>
       </header>
 
       <PrototypeEmbed
@@ -64,7 +122,7 @@ export default function CaseStudyOMS() {
         mobileImageAlt="OMS v3.0 dashboard showing the funnel cards, revenue split, and deals list"
       />
 
-      <div className="cs-article-grid wrap">
+      <div className="cs-article-grid wrap wrap--wide">
         <main className="cs-body">
           <Reveal>
             <section className="cs-section" id="context">
@@ -316,7 +374,7 @@ export default function CaseStudyOMS() {
         <CaseStudyNav sections={sections} />
       </div>
 
-      <div className="cs-footer-nav wrap">
+      <div className="cs-footer-nav wrap wrap--wide">
         <a href="/" className="btn btn--secondary">← All work</a>
         <a href="mailto:manikdesigns@yahoo.com" className="btn btn--primary">Get in touch</a>
       </div>

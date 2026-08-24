@@ -68,12 +68,21 @@ a {
 /* ---------- Nav ---------- */
 
 .site-nav {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+.site-nav.is-scrolled {
   background: rgba(8, 9, 10, 0.8);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--graphite);
+  border-bottom-color: var(--graphite);
 }
 
 .site-nav__inner {
@@ -423,7 +432,8 @@ button:focus-visible {
 .cs-footer-nav {
   display: flex;
   gap: 16px;
-  padding: 48px 0;
+  padding-top: 48px;
+  padding-bottom: 48px;
 }
 
 /* ---------- Chart ---------- */
@@ -565,41 +575,20 @@ button:focus-visible {
 .cs-hero {
   position: relative;
   overflow: hidden;
-}
-
-.cs-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  opacity: 0.5;
-  background-image:
-    linear-gradient(to right, var(--graphite) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--graphite) 1px, transparent 1px);
-  background-size: 56px 56px;
-  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 20%, black 0%, transparent 78%);
-  mask-image: radial-gradient(ellipse 65% 55% at 50% 20%, black 0%, transparent 78%);
-  pointer-events: none;
-}
-
-.cs-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  /* rgba equivalent of --accent (#e4f222), for the low-opacity glow */
-  background: radial-gradient(55% 45% at 50% 0%, rgba(228, 242, 34, 0.08) 0%, rgba(228, 242, 34, 0) 70%);
-  pointer-events: none;
-}
-
-.cs-hero > * {
-  position: relative;
+  background: linear-gradient(180deg, #110A4E 0%, #08090A 100%), #08090A;
 }
 
 .section-eyebrow {
+  margin-top: 64px;
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ash);
   margin-bottom: 12px;
+}
+
+.section-eyebrow + h2 {
+  margin-top: 0;
 }
 
 .cs-section {
@@ -824,12 +813,38 @@ button:focus-visible {
 
 .proto-section {
   padding: 64px 0;
-  border-top: 1px solid var(--graphite);
 }
 
 .proto-head {
-  max-width: 640px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 32px;
+}
+
+.proto-head > div {
+  max-width: 640px;
+}
+
+.proto-head .btn {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .proto-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Pill-shaped variant, scoped to the prototype embed's CTA only —
+   not a change to the sitewide .btn--primary rectangular default.
+   9999px matches the `pill` radius already used by tailwind.config.js's
+   borderRadius scale (applied here directly since this file hand-writes
+   CSS values rather than consuming Tailwind utility classes). */
+.btn--pill {
+  border-radius: 9999px;
 }
 
 .proto-frame {

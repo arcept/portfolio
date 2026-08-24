@@ -6,6 +6,29 @@ import MetaStrip from '@/components/MetaStrip';
 import CROChart from '@/components/CROChart';
 import TLDR from '@/components/TLDR';
 
+const tldrSections = [
+  {
+    label: 'Problem',
+    body: "Novatr's flagship course page had strong traffic but weak conversions, and four teams disagreed on why.",
+  },
+  {
+    label: 'Approach',
+    body: 'I reframed the goal from improve conversion to understand hesitation, using analytics as an empathy tool instead of a dashboard. The data showed visitors reading deep into the page, then pausing before the form. They were interested, not disengaged.',
+  },
+  {
+    label: 'What changed',
+    body: "We reduced pre-form commitment, moved proof closer to the decision point, and shifted the team's shared metric from conversion to form starts.",
+  },
+  {
+    label: 'Outcome',
+    body: 'Form starts and conversion both improved. The bigger shift was cultural: marketing, design, sales, and engineering started sharing one language for user behavior, and CRO became an ongoing rhythm instead of a one-off fix.',
+  },
+  {
+    label: 'Reflection',
+    body: "I'd build the measurement framework into every landing page from day one, not retrofit it onto the highest-stakes page after the fact. Treating analytics as an empathy tool, not a report, is the instinct I'd install first.",
+  },
+];
+
 export const metadata = {
   title: 'Designing for Confidence — Manik Madaan',
   description: "How behavioral data became an empathy tool for four teams at Novatr who couldn't agree on why a strong page wasn't converting.",
@@ -28,7 +51,7 @@ export default function CaseStudyCRO() {
               Designing for Confidence: A Data-Informed Redesign of Novatr&apos;s Flagship Course Page
             </h1>
 
-            <TLDR />
+            <TLDR sections={tldrSections} />
 
             <p className="text-body text-mist" style={{ fontSize: '18px', maxWidth: '720px' }}>
               How behavioral data became an empathy tool for four teams who couldn&apos;t agree on
@@ -59,7 +82,7 @@ export default function CaseStudyCRO() {
         </div>
       </header>
 
-      <main className="cs-body wrap" style={{ paddingBottom: '48px' }}>
+      <main className="cs-body wrap wrap--wide" style={{ paddingBottom: '48px' }}>
         <Reveal>
           <h2>The situation</h2>
           <p>
@@ -179,7 +202,7 @@ export default function CaseStudyCRO() {
         </Reveal>
       </main>
 
-      <div className="cs-footer-nav wrap">
+      <div className="cs-footer-nav wrap wrap--wide">
         <a href="/" className="btn btn--secondary">← All work</a>
         <a href="mailto:manikdesigns@yahoo.com" className="btn btn--primary">Get in touch</a>
       </div>

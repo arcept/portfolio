@@ -4,6 +4,7 @@ import Reveal from '@/components/Reveal';
 import Card from '@/components/Card';
 import StatCounter from '@/components/StatCounter';
 import CROCover from '@/components/CROCover';
+import WarpText from '@/components/WarpText/WarpText';
 
 export default function Home() {
   return (
@@ -13,9 +14,23 @@ export default function Home() {
       <header className="hero wrap wrap--wide">
         <Reveal>
           <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Product Design Leader</p>
-          <h1 className="text-display font-semibold" style={{ marginBottom: '24px', maxWidth: '840px' }}>
-            I build design functions, and I still do the craft work to prove it.
-          </h1>
+          <WarpText
+            text={'I build design functions,\nand I still do the craft\nwork to prove it.'}
+            align="left"
+            color="#f8f5ff"
+            warpStrength={0.08}
+            warpScale={1.7}
+            speed={0.55}
+            pointerInfluence={0.42}
+            pointerStrength={0.50}
+            refraction={0.025}
+            ripple
+            fontSize={88}
+            fontWeight={800}
+            lineHeight={1.05}
+            letterSpacing="-0.02em"
+            style={{ height: '380px', marginBottom: '24px' }}
+          />
           <p className="text-body text-mist" style={{ maxWidth: '640px', marginBottom: '32px' }}>
             Over a decade leading product design end to end — from founding my own studio,
             to building a design team from zero, to running design as the head of function

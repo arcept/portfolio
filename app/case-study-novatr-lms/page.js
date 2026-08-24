@@ -38,7 +38,7 @@ export default function CaseStudyNovatrLMS() {
         </Reveal>
       </header>
 
-      <main className="cs-body wrap" style={{ paddingBottom: '64px' }}>
+      <main className="cs-body wrap wrap--wide" style={{ paddingBottom: '64px' }}>
         <Reveal>
           <div className="reflection-box">
             <p style={{ marginBottom: 0 }}>
@@ -54,7 +54,7 @@ export default function CaseStudyNovatrLMS() {
         </Reveal>
       </main>
 
-      <div className="cs-footer-nav wrap">
+      <div className="cs-footer-nav wrap wrap--wide">
         <a href="/" className="btn btn--secondary">← All work</a>
         <a href="mailto:manikdesigns@yahoo.com" className="btn btn--primary">Get in touch</a>
       </div>
