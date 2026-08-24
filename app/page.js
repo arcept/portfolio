@@ -59,8 +59,29 @@ export default function Home() {
             </Card>
           </Reveal>
 
+          <Reveal delay={0.08}>
+            <Card href="/case-study-oms" className="card--featured">
+              <div className="card__cover">Cover art pending</div>
+              <StatCounter value={-18} suffix="%" label="Drop/dispose rate after the rebuild" />
+              <div className="card__tags">
+                <span className="tag">Product Strategy</span>
+                <span className="tag">0-to-1</span>
+                <span className="tag">Interactive Prototype</span>
+              </div>
+              <h3 className="card__title font-semibold">
+                Rebuilding OMS: A v3.0 Retrospective
+              </h3>
+              <p className="text-body text-fog">
+                Novatr&apos;s entire sales org ran on a tool engineering had built with no product or
+                design input. The product-and-design-led rebuild that replaced it — with a live,
+                click-through prototype you can try yourself.
+              </p>
+              <span className="card__cta">Read the case study →</span>
+            </Card>
+          </Reveal>
+
           <div className="work-support-grid">
-            <Reveal delay={0.08}>
+            <Reveal delay={0.16}>
               <Card href="/case-study-novatr-lms">
                 <div className="card__cover">Cover art pending</div>
                 <div className="card__tags">
@@ -80,7 +101,7 @@ export default function Home() {
               </Card>
             </Reveal>
 
-            <Reveal delay={0.16}>
+            <Reveal delay={0.24}>
               <Card href="/case-study-hapramp">
                 <div className="card__cover">Cover art pending</div>
                 <div className="card__tags">

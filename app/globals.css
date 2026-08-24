@@ -14,6 +14,7 @@
   --accent: #e4f222;
   --chart-1: #eb5757;
   --chart-2: #6366f1;
+  --site-nav-h: 56px;
 }
 
 * {
@@ -555,6 +556,387 @@ button:focus-visible {
   color: var(--fog);
   font-size: 13px;
   margin-top: 16px;
+}
+
+/* ---------- Case study: long-form pattern (hero, TOC, stats, prototype embed) ----------
+   Introduced for the OMS case study; generic class names so LMS/Hapramp can reuse this
+   pattern once they graduate from stubs. */
+
+.cs-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.cs-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(to right, var(--graphite) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--graphite) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 20%, black 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 20%, black 0%, transparent 78%);
+  pointer-events: none;
+}
+
+.cs-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* rgba equivalent of --accent (#e4f222), for the low-opacity glow */
+  background: radial-gradient(55% 45% at 50% 0%, rgba(228, 242, 34, 0.08) 0%, rgba(228, 242, 34, 0) 70%);
+  pointer-events: none;
+}
+
+.cs-hero > * {
+  position: relative;
+}
+
+.section-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 12px;
+}
+
+.cs-section {
+  scroll-margin-top: calc(var(--site-nav-h) + 16px);
+}
+
+@media (max-width: 899px) {
+  .cs-section {
+    /* clear the sticky horizontal TOC bar too, not just the site nav */
+    scroll-margin-top: calc(var(--site-nav-h) + 56px);
+  }
+}
+
+.cs-article-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas: 'toc' 'body';
+  padding-bottom: 64px;
+}
+
+.cs-body {
+  grid-area: body;
+}
+
+.cs-toc {
+  grid-area: toc;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  overflow-x: auto;
+  position: sticky;
+  top: var(--site-nav-h);
+  z-index: 5;
+  background: rgba(8, 9, 10, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--graphite);
+  padding: 12px 24px;
+  margin: 0 0 32px;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+}
+
+.cs-toc::-webkit-scrollbar {
+  display: none;
+}
+
+.cs-toc__link {
+  position: relative;
+  color: var(--fog);
+  font-size: 14px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.cs-toc__link:hover,
+.cs-toc__link:focus-visible {
+  color: var(--mist);
+}
+
+.cs-toc__link.is-active {
+  color: var(--paper);
+  font-weight: 510;
+  border-color: var(--accent);
+}
+
+@media (min-width: 900px) {
+  .cs-article-grid {
+    grid-template-columns: 1fr 200px;
+    grid-template-areas: 'body toc';
+    gap: 64px;
+    align-items: start;
+  }
+
+  .cs-toc {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    overflow: visible;
+    position: sticky;
+    top: calc(var(--site-nav-h) + 32px);
+    background: none;
+    backdrop-filter: none;
+    border-bottom: none;
+    padding: 4px 0 0;
+    margin: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .cs-toc__link {
+    padding-left: 16px;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .cs-toc__link::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .cs-toc__link.is-active {
+    border-color: transparent;
+  }
+
+  .cs-toc__link.is-active::before {
+    opacity: 1;
+  }
+}
+
+.role-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  background: var(--carbon);
+  border: 1px solid var(--graphite);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+@media (min-width: 900px) {
+  .role-card {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.role-card__key {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ash);
+  margin-bottom: 6px;
+}
+
+.role-card__value {
+  font-size: 14px;
+  color: var(--mist);
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+@media (min-width: 900px) {
+  .stat-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stat-card {
+  background: var(--carbon);
+  border: 1px solid var(--graphite);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.stat-card__value {
+  font-size: 28px;
+  font-weight: 590;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+
+.stat-card__label {
+  font-size: 13px;
+  color: var(--fog);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.self-reported {
+  border: 1px dashed var(--graphite);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.self-reported__label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ash);
+  margin-bottom: 16px;
+}
+
+.self-reported-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .self-reported-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.self-reported-grid__value {
+  font-size: 18px;
+  font-weight: 590;
+  color: var(--mist);
+}
+
+.self-reported-grid__label {
+  font-size: 12px;
+  color: var(--ash);
+  margin-top: 4px;
+}
+
+/* ---------- Prototype embed ---------- */
+
+.proto-section {
+  padding: 64px 0;
+  border-top: 1px solid var(--graphite);
+}
+
+.proto-head {
+  max-width: 640px;
+  margin-bottom: 32px;
+}
+
+.proto-frame {
+  border-radius: 12px;
+  border: 1px solid var(--graphite);
+  overflow: hidden;
+  background: var(--carbon);
+}
+
+.proto-frame-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--graphite);
+  background: var(--obsidian);
+}
+
+.proto-frame-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.proto-frame-dots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--graphite);
+}
+
+.proto-frame-url {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: var(--ash);
+  background: var(--void);
+  border: 1px solid var(--graphite);
+  border-radius: 6px;
+  padding: 4px 10px;
+  margin: 0 24px;
+}
+
+.proto-frame-body {
+  position: relative;
+  height: 640px;
+  background: #f9fafb;
+}
+
+.proto-frame-body iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.proto-frame-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ash);
+  font-size: 13px;
+  background: var(--carbon);
+}
+
+.proto-preview {
+  display: none;
+}
+
+.proto-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.proto-note {
+  max-width: 46ch;
+}
+
+@media (max-width: 640px) {
+  .proto-frame {
+    display: none;
+  }
+
+  .proto-preview {
+    display: block;
+    /* bleed past .wrap's right padding so the image crops at the viewport edge
+       instead of sitting centered/boxed, per the Linear reference */
+    margin-right: -24px;
+    overflow-x: hidden;
+  }
+
+  .proto-preview img {
+    display: block;
+    /* wider than the viewport on purpose — crops at the right edge instead of
+       shrinking to fit, per the Linear reference */
+    width: 145vw;
+    max-width: 640px;
+    height: auto;
+    border-radius: 12px 0 0 12px;
+    border: 1px solid var(--graphite);
+    border-right: none;
+  }
 }
 
 /* ---------- Footer ---------- */
