@@ -1,0 +1,165 @@
+/* ============================================================
+   OMS v3 — Design tokens (v2: "product" identity)
+   A light, clean SaaS system in the spirit of Untitled UI —
+   the design-system family Novatr's own v2.0 screens were built
+   on — crossed with Linear's structural discipline (left nav,
+   generous whitespace, real elevation instead of neon accents).
+   Neutral gray carries a faint cool/indigo bias rather than being
+   flat gray; brand indigo/violet is Untitled UI's own default
+   "Brand" swatch family, not a Novatr-specific color, since this
+   is a v3 rebuild exploring the product's own direction — not a
+   reskin of the portfolio (arcept.in) that will eventually host it.
+   ============================================================ */
+
+:root {
+  /* ---- neutrals (cool gray, Untitled-UI "Gray" scale) ---- */
+  --gray-25:  #fcfcfd;
+  --gray-50:  #f9fafb;
+  --gray-100: #f2f4f7;
+  --gray-200: #eaecf0;
+  --gray-300: #d0d5dd;
+  --gray-400: #98a2b3;
+  --gray-500: #667085;
+  --gray-600: #475467;
+  --gray-700: #344054;
+  --gray-800: #1d2939;
+  --gray-900: #101828;
+
+  /* ---- surfaces ---- */
+  --bg: var(--gray-50);        /* page background */
+  --surface: #ffffff;          /* card / panel surface */
+  --surface-2: var(--gray-50); /* subtle recessed surface (table heads, wells) */
+  --surface-hover: var(--gray-50);
+  --surface-active: var(--gray-100);
+  --line: var(--gray-200);     /* default border */
+  --line-strong: var(--gray-300);
+  --line-faint: #f0f1f4;
+
+  /* ---- text ---- */
+  --graphite: var(--gray-500); /* muted / tertiary text */
+  --fog: var(--gray-600);      /* secondary text */
+  --silver: var(--gray-700);   /* primary body text */
+  --paper: var(--gray-900);    /* high-emphasis text / headings */
+  --on-brand: #ffffff;
+
+  /* ---- brand accent: indigo/violet (Untitled UI "Brand" default) ---- */
+  --brand-25:  #fcfaff;
+  --brand-50:  #f9f5ff;
+  --brand-100: #f4ebff;
+  --brand-200: #e9d7fe;
+  --brand-300: #d6bbfb;
+  --brand-500: #9e77ed;
+  --brand-600: #7f56d9;
+  --brand-700: #6941c6;
+  --redline: var(--brand-600);         /* legacy alias, still used across components */
+  --redline-hover: var(--brand-700);
+  --redline-press: #5b3aa8;
+  --redline-wash: var(--brand-50);
+  --redline-wash-strong: var(--brand-100);
+  --redline-text: var(--brand-700);
+
+  /* ---- semantic status (kept distinct from brand) ---- */
+  --signal-blue: #175cd3;
+  --signal-blue-wash: #eff8ff;
+  --signal-blue-line: #b2ddff;
+  --signal-amber: #b54708;
+  --signal-amber-wash: #fffaeb;
+  --signal-amber-line: #fedf89;
+  --signal-green: #067647;
+  --signal-green-wash: #ecfdf3;
+  --signal-green-line: #abefc6;
+  --signal-red: #b42318;
+  --signal-red-wash: #fef3f2;
+  --signal-red-line: #fecdca;
+  --signal-gray: var(--gray-600);
+  --signal-gray-wash: var(--gray-100);
+  --signal-gray-line: var(--gray-200);
+
+  /* ---- chart data colors ---- */
+  --chart-1: #7f56d9;
+  --chart-2: #f79009;
+  --chart-3: #12b76a;
+  --chart-4: #98a2b3;
+
+  /* ---- type families ---- */
+  --font-sans: "Inter", -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* ---- type scale ---- */
+  --text-display: clamp(2.75rem, 5.5vw, 5rem);
+  --text-h1: clamp(1.75rem, 2.8vw, 2.25rem);
+  --text-h2: 1.375rem;
+  --text-h3: 1.0625rem;
+  --text-body: 0.9375rem;
+  --text-small: 0.8125rem;
+  --text-caption: 0.75rem;
+  --text-micro: 0.6875rem;
+
+  /* ---- spacing ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* ---- radius (Untitled UI runs generous) ---- */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --radius-none: 0px;
+
+  /* ---- elevation — real, soft shadows (the thing this system uses
+     instead of hairlines-only) ---- */
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.10), 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.10), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-xl: 0 20px 24px -4px rgba(16, 24, 40, 0.08), 0 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --focus-ring: 0 0 0 4px var(--brand-100);
+
+  /* ---- motion — a touch of overshoot for the "spring" feel, since
+     this build has no Motion/Framer Motion dependency available
+     (npm blocked in the build sandbox) and hand-rolls that language
+     in CSS easings + a damped-follow JS primitive instead ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 380ms;
+  --dur-slower: 600ms;
+
+  /* ---- back-compat aliases (older component CSS/JS still reads these
+     names — pointed at the new light surfaces so nothing needs a
+     line-by-line rewrite) ---- */
+  --ink: var(--bg);
+  --steel: var(--surface);
+  --steel-2: var(--surface-hover);
+  --steel-3: var(--surface-active);
+
+  /* ---- layout ---- */
+  --nav-h: 60px;
+  --sidebar-w: 244px;
+  --max-w: 1180px;
+  --glow-redline: radial-gradient(
+    60% 50% at 50% 0%,
+    rgba(127, 86, 217, 0.10) 0%,
+    rgba(127, 86, 217, 0) 70%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-slow: 1ms;
+    --dur-slower: 1ms;
+  }
+}

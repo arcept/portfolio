@@ -378,169 +378,6 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 .skip-link:focus { left: 0; }
 
 
-/* === css/landing.css === */
-/* ============================================================
-   OMS v3 — Scroll showcase landing
-   ============================================================ */
-
-#landing-view { position: relative; }
-
-.land-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: var(--space-4) var(--space-6);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line-faint);
-}
-.land-nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; color: var(--paper); }
-
-.hero {
-  min-height: 100svh; display: flex; flex-direction: column; justify-content: center;
-  position: relative; padding: var(--space-9) var(--space-6) var(--space-8);
-  overflow: hidden;
-}
-.hero-grid-bg {
-  position: absolute; inset: 0; opacity: 0.7;
-  background-image:
-    linear-gradient(to right, var(--gray-200) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--gray-200) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 0%, transparent 75%);
-}
-.hero-glow { position: absolute; inset: 0; background: var(--glow-redline); pointer-events: none; }
-
-.hero-inner { position: relative; max-width: var(--max-w); margin: 0 auto; width: 100%; }
-.hero-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: var(--text-micro);
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--redline-text);
-  background: var(--redline-wash); border: 1px solid rgba(127,86,217,0.22); border-radius: var(--radius-pill);
-  padding: 5px 12px 5px 10px; margin-bottom: var(--space-5);
-}
-.hero-eyebrow .pd { width: 6px; height: 6px; border-radius: 50%; background: var(--redline); animation: pulse-dot 2.2s ease-in-out infinite; }
-@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
-
-.hero-title {
-  font-size: var(--text-display); font-weight: 560; letter-spacing: -0.025em; line-height: 1.02;
-  color: var(--paper); max-width: 15ch;
-}
-.hero-title em { font-style: normal; color: var(--redline-text); }
-.hero-sub { margin-top: var(--space-5); font-size: 1.15rem; color: var(--fog); max-width: 46ch; line-height: 1.5; }
-.hero-ctas { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-6); flex-wrap: wrap; }
-.hero-meta { display: flex; gap: var(--space-6); margin-top: var(--space-8); flex-wrap: wrap; }
-.hero-meta-item .n { font-family: var(--font-mono); font-size: 1.5rem; color: var(--paper); font-weight: 600; }
-.hero-meta-item .l { font-size: var(--text-caption); color: var(--graphite); margin-top: 2px; }
-
-.scroll-cue {
-  position: absolute; bottom: var(--space-6); left: 50%; transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--graphite);
-  animation: bob 2.4s ease-in-out infinite;
-}
-.scroll-cue span { font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: 0.08em; text-transform: uppercase; }
-.scroll-cue svg { width: 14px; height: 14px; }
-@keyframes bob { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 6px); } }
-
-/* --- feature sections --- */
-.feature-section {
-  padding: var(--space-9) var(--space-6);
-  border-top: 1px solid var(--line-faint);
-}
-.feature-inner {
-  max-width: var(--max-w); margin: 0 auto;
-  display: grid; grid-template-columns: 0.85fr 1.15fr; gap: var(--space-8); align-items: center;
-}
-.feature-section.reverse .feature-inner { grid-template-columns: 1.15fr 0.85fr; }
-.feature-section.reverse .feature-copy { order: 2; }
-.feature-section.reverse .feature-visual { order: 1; }
-@media (max-width: 900px) {
-  .feature-inner, .feature-section.reverse .feature-inner { grid-template-columns: 1fr; }
-  .feature-section.reverse .feature-copy { order: 1; }
-  .feature-section.reverse .feature-visual { order: 2; }
-}
-
-.feature-tag {
-  display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--text-micro);
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--signal-green);
-  background: var(--signal-green-wash); border-radius: var(--radius-pill); padding: 4px 10px; margin-bottom: var(--space-4);
-}
-.feature-num { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--line-strong); display: block; margin-bottom: var(--space-3); }
-.feature-title { font-size: var(--text-h1); color: var(--paper); margin-bottom: var(--space-3); max-width: 14ch; }
-.feature-desc { color: var(--fog); font-size: 1rem; line-height: 1.6; max-width: 42ch; }
-
-.feature-visual {
-  background: var(--steel); border: 1px solid var(--line); border-radius: var(--radius-lg);
-  padding: var(--space-5); min-height: 280px; display: flex; flex-direction: column; justify-content: center;
-  position: relative; overflow: hidden; box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
-}
-.feature-visual:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
-.feature-visual::before {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(160deg, rgba(127,86,217,0.06), transparent 55%);
-}
-
-/* mini mockup: synced tab counts */
-.mini-tabs { display: flex; gap: 6px; position: relative; z-index: 1; }
-.mini-tab { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; background: var(--steel-2); font-size: var(--text-caption); color: var(--fog); border: 1px solid var(--line); }
-.mini-tab.is-active { background: var(--redline-wash); color: var(--paper); border-color: rgba(127,86,217,0.28); }
-.mini-tab .c { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--silver); }
-.mini-filter-row { display: flex; align-items: center; gap: 8px; margin-top: var(--space-4); font-size: var(--text-caption); color: var(--graphite); z-index: 1; position: relative; }
-.mini-chip { background: var(--steel-3); border: 1px solid var(--line-strong); border-radius: 999px; padding: 3px 9px; font-size: var(--text-micro); color: var(--silver); }
-
-/* mini mockup: hover disclosure */
-.mini-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-top: 8px; font-size: var(--text-caption); position: relative; z-index: 1; background: var(--surface); transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out); }
-.mini-row:hover { border-color: var(--line-strong); transform: translateX(2px); }
-.mini-row .rn { color: var(--silver); }
-.mini-assignee { font-family: var(--font-mono); font-size: var(--text-micro); color: var(--graphite); border-bottom: 1px dashed var(--line-strong); }
-
-/* mini mockup: amount-left validator */
-.mini-al { position: relative; z-index: 1; }
-.mini-al-row { display: flex; justify-content: space-between; font-size: var(--text-caption); margin-bottom: 8px; }
-.mini-al-track { height: 6px; background: var(--line-faint); border-radius: 4px; overflow: hidden; }
-.mini-al-fill { height: 100%; background: var(--signal-red); border-radius: 4px; width: 40%; }
-
-/* mini mockup: drill-down cascade */
-.mini-cascade { display: flex; gap: 8px; position: relative; z-index: 1; }
-.mini-cascade-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.mini-cascade-row { padding: 7px 9px; border-radius: 6px; background: var(--steel-2); font-size: var(--text-micro); color: var(--fog); border: 1px solid transparent; }
-.mini-cascade-row.is-selected { background: var(--redline-wash); color: var(--paper); border-color: rgba(127,86,217,0.28); }
-
-/* --- CTA / transition into app --- */
-.launch-section {
-  min-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; padding: var(--space-9) var(--space-6); position: relative; border-top: 1px solid var(--line-faint);
-}
-.launch-title { font-size: var(--text-h1); color: var(--paper); max-width: 20ch; margin-bottom: var(--space-4); }
-.launch-sub { color: var(--graphite); max-width: 44ch; margin-bottom: var(--space-6); }
-.launch-preview-frame {
-  margin-top: var(--space-8); width: min(1040px, 100%); border-radius: var(--radius-lg);
-  border: 1px solid var(--line-strong); overflow: hidden; background: var(--steel);
-  box-shadow: 0 32px 64px -12px rgba(16,24,40,0.18), var(--shadow-md);
-  cursor: pointer; position: relative;
-  transition: transform var(--dur-slow) var(--ease-out), box-shadow var(--dur-slow) var(--ease-out);
-}
-.launch-preview-frame:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 40px 80px -12px rgba(16,24,40,0.24), var(--shadow-lg);
-}
-.launch-preview-frame .lpf-bar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
-.launch-preview-frame .lpf-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
-.launch-preview-frame .lpf-overlay {
-  position: absolute; inset: 0; background: rgba(11,12,14,0.55); opacity: 0; display: flex; align-items: center; justify-content: center;
-  transition: opacity var(--dur-base) var(--ease-out); backdrop-filter: blur(2px);
-}
-.launch-preview-frame:hover .lpf-overlay { opacity: 1; }
-.lpf-open-pill {
-  display: flex; align-items: center; gap: 8px; background: var(--redline); color: var(--on-brand); font-weight: 600;
-  padding: 10px 20px; border-radius: var(--radius-pill); font-size: var(--text-small);
-  transform: translateY(8px); opacity: 0; transition: transform var(--dur-base) var(--ease-spring), opacity var(--dur-base) var(--ease-out);
-}
-.launch-preview-frame:hover .lpf-open-pill { transform: translateY(0); opacity: 1; }
-
-.land-footer { padding: var(--space-6); text-align: center; color: var(--graphite); font-size: var(--text-caption); border-top: 1px solid var(--line-faint); }
-.land-footer a { color: var(--fog); text-decoration: underline; text-underline-offset: 3px; }
-
-
 /* === css/app.css === */
 /* ============================================================
    OMS v3 — App shell + shared product-UI components
@@ -548,7 +385,6 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 
 #app-view { display: none; min-height: 100vh; }
 #app-view.is-active { display: block; }
-#landing-view.is-hidden { display: none; }
 
 /* ---------------- App shell: left sidebar + main ---------------- */
 .app-shell { display: flex; min-height: 100vh; background: var(--bg); align-items: stretch; }
@@ -580,7 +416,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   display: flex; align-items: center; gap: 10px;
   padding: var(--space-1) var(--space-2) var(--space-4);
   font-weight: 600; font-size: 14px; color: var(--paper); letter-spacing: -0.005em;
-  cursor: pointer; background: none; border: none; text-align: left; width: 100%;
+  width: 100%;
 }
 .brand-mark {
   width: 24px; height: 24px; border-radius: 7px;
@@ -1165,8 +1001,6 @@ html, body { height: 100%; }
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 
-<div id="landing-view"></div>
-
 <div id="app-view">
   <div class="mobile-topbar" id="mobile-topbar"></div>
   <div class="sidebar-scrim" id="sidebar-scrim"></div>
@@ -1175,7 +1009,6 @@ html, body { height: 100%; }
     <div class="app-main"><main id="app-content" role="main"></main></div>
   </div>
 </div>
-<script>window.OMS_EMBEDDED = true;</script>
 <script>
 /* === js/data.js === */
 /* ============================================================
@@ -1893,7 +1726,6 @@ html, body { height: 100%; }
 
   var listeners = [];
   var state = {
-    view: "landing",              // "landing" | "app"
     personId: OMS.data.CURRENT_PERSON_ID,
     route: "dashboard",           // "dashboard" | "deals" | "dealDetail"
     selectedDealId: null,
@@ -2101,9 +1933,9 @@ html, body { height: 100%; }
       var person = store.currentPerson();
 
       els.sidebar.innerHTML =
-        '<button class="sidebar-brand" data-nav="back-to-landing" aria-label="Back to overview">' +
+        '<div class="sidebar-brand">' +
           '<span class="brand-mark"></span><span>OMS <span class="brand-sub">v3.0</span></span>' +
-        "</button>" +
+        "</div>" +
         '<button class="sidebar-workspace" data-nav="role-toggle" aria-haspopup="true" aria-expanded="' + menuOpen + '">' +
           '<span class="avatar">' + person.initials + "</span>" +
           '<span class="ws-text"><span class="ws-name">' + U.escapeHtml(person.name) + '</span><br/><span class="ws-role mono">' + person.role + "</span></span>" +
@@ -2161,7 +1993,6 @@ html, body { height: 100%; }
     }
 
     function bind() {
-      U.on(els.sidebar, "click", '[data-nav="back-to-landing"]', function () { OMS.app.showLanding(); });
       U.on(els.sidebar, "click", '[data-nav="dashboard"]', function () { store.goto("dashboard"); setDrawer(false); });
       U.on(els.sidebar, "click", '[data-nav="deals"]', function () { store.goto("deals"); setDrawer(false); });
       U.on(els.sidebar, "click", '[data-nav="role-toggle"]', function (e) {
@@ -3452,137 +3283,6 @@ html, body { height: 100%; }
 })(window.OMS = window.OMS || {});
 
 
-/* === js/components/landing.js === */
-/* ============================================================
-   OMS v3 — Scroll showcase landing (Linear-marketing-page spirit)
-   ============================================================ */
-(function (OMS) {
-  "use strict";
-  var U = OMS.utils, I = OMS.icons, D = OMS.data;
-
-  var FEATURES = [
-    {
-      tag: "Fixed", num: "01",
-      title: "Numbers that agree with each other",
-      desc: "In v2.0, filtering the Deals list narrowed the table without recomputing the status tabs above it — two counts, disagreeing, on the same screen. In v3, every tab recomputes from the exact same filtered set the table reads from. Always.",
-      visual: miniTabsVisual()
-    },
-    {
-      tag: "Rebuilt", num: "02",
-      title: "One component, five views",
-      desc: "A BDR's own funnel, a Team Manager's per-report breakdown, and an Admin's floor-wide drill-down were three bespoke builds in v2.0. In v3 they're the same funnel-card and the same cascading table, scoped by whoever's looking — three clicks from an org-wide dip to the one person behind it.",
-      visual: miniCascadeVisual()
-    },
-    {
-      tag: "Preserved", num: "03",
-      title: "Guardrails that catch mistakes early",
-      desc: "Building a payment plan tracks a live Amount Left total until it hits zero, and the offer step previews the exact email — merge tags rendered — before it ever reaches a learner. Both patterns worked well in v2.0; v3 keeps them.",
-      visual: miniAmountLeftVisual()
-    },
-    {
-      tag: "Simplified", num: "04",
-      title: "Assignment, on demand",
-      desc: "Four permanent columns for LC / ATL / TL / TM shrank to one — hover a name and the full chain discloses itself. The table gets room to breathe, and the hierarchy still scales if a sixth tier ever gets added.",
-      visual: miniAssigneeVisual()
-    }
-  ];
-
-  function miniTabsVisual() {
-    return '<div class="mini-tabs">' +
-      '<div class="mini-tab is-active">Application <span class="c">21</span></div>' +
-      '<div class="mini-tab">Offer <span class="c">14</span></div>' +
-      '<div class="mini-tab">Action Required <span class="c">9</span></div>' +
-    "</div>" +
-    '<div class="mini-filter-row">' + I.filter + '<span class="mini-chip">Course: BIM · Civil</span><span class="mini-chip">Currency: INR</span><span>— table + tabs share one query</span></div>';
-  }
-  function miniCascadeVisual() {
-    return '<div class="mini-cascade">' +
-      '<div class="mini-cascade-col"><div class="mini-cascade-row is-selected">Priya Nair</div><div class="mini-cascade-row">Arjun Mehta</div><div class="mini-cascade-row">Kabir Sethi</div></div>' +
-      '<div class="mini-cascade-col"><div class="mini-cascade-row is-selected">Rohan Verma</div><div class="mini-cascade-row">Meera Iyer</div></div>' +
-      '<div class="mini-cascade-col"><div class="mini-cascade-row">Ananya Kapoor</div><div class="mini-cascade-row is-selected">Devika Rao</div></div>' +
-    "</div>";
-  }
-  function miniAmountLeftVisual() {
-    return '<div class="mini-al"><div class="mini-al-row"><span style="color:var(--graphite)">Amount Left</span><span style="font-family:var(--font-mono);color:var(--signal-red);font-weight:700">₹98,000</span></div>' +
-      '<div class="mini-al-track"><div class="mini-al-fill"></div></div></div>' +
-      '<div class="mini-row" style="margin-top:16px"><span class="rn">₹2,45,000 Net Payable</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--graphite)">2 of 3 installments set</span></div>';
-  }
-  function miniAssigneeVisual() {
-    return ["Ananya Kapoor", "Farhan Ali", "Yusuf Khan"].map(function (n) {
-      return '<div class="mini-row"><span class="rn">' + n + '</span><span class="mini-assignee">Rohan Verma · TL</span></div>';
-    }).join("");
-  }
-
-  function render(root) {
-    var stats = {
-      deals: D.DEALS.length,
-      roles: 5,
-      bdrs: D.BDRS.length,
-      courses: D.COURSES.length
-    };
-
-    root.innerHTML =
-      '<nav class="land-nav" data-reveal>' +
-        '<div class="brand"><span class="brand-mark"></span><span>OMS <span class="brand-sub" style="color:var(--graphite)">v3.0</span></span></div>' +
-        '<button class="btn btn-secondary btn-sm" data-launch>Open prototype</button>' +
-      "</nav>" +
-      '<section class="hero">' +
-        '<div class="hero-grid-bg"></div><div class="hero-glow"></div>' +
-        '<div class="hero-inner">' +
-          '<div class="hero-eyebrow" data-reveal><span class="pd"></span>Interactive prototype · Sales Management System</div>' +
-          '<h1 class="hero-title" data-reveal data-reveal-delay="80">One system for <em>every stage</em> of the sale.</h1>' +
-          '<p class="hero-sub" data-reveal data-reveal-delay="140">Novatr runs its entire sales floor — a BDR on their first call, a VP reading the whole quarter — through OMS. This is v3.0: componentized, bug-fixed, and legible at every one of five permission levels. Click through the real flow below.</p>' +
-          '<div class="hero-ctas" data-reveal data-reveal-delay="200">' +
-            '<button class="btn btn-primary" data-launch>' + I.bolt + "Open the prototype</button>" +
-            '<a class="btn btn-ghost" href="#showcase">' + I.chevronDown + "See what changed</a>" +
-          "</div>" +
-          '<div class="hero-meta" data-reveal data-reveal-delay="260">' +
-            metaItem(stats.roles, "Permission tiers") + metaItem(stats.deals, "Live mock deals") + metaItem(stats.bdrs, "Reps across 3 teams") + metaItem(stats.courses, "Courses sold") +
-          "</div>" +
-        "</div>" +
-        '<div class="scroll-cue"><span>Scroll</span>' + I.chevronDown + "</div>" +
-      "</section>" +
-      '<div id="showcase">' +
-        FEATURES.map(function (f, i) {
-          return '<section class="feature-section' + (i % 2 ? " reverse" : "") + '">' +
-            '<div class="feature-inner">' +
-              '<div class="feature-copy" data-reveal>' +
-                '<span class="feature-num mono">' + f.num + " / 04</span>" +
-                '<span class="feature-tag">' + I.check + f.tag + " in v3</span>" +
-                '<h2 class="feature-title">' + f.title + "</h2>" +
-                '<p class="feature-desc">' + f.desc + "</p>" +
-              "</div>" +
-              '<div class="feature-visual" data-reveal data-reveal-delay="120">' + f.visual + "</div>" +
-            "</div>" +
-          "</section>";
-        }).join("") +
-      "</div>" +
-      '<section class="launch-section">' +
-        '<span class="eyebrow" data-reveal>Ready when you are</span>' +
-        '<h2 class="launch-title" data-reveal data-reveal-delay="60">Walk the BDR flow yourself</h2>' +
-        '<p class="launch-sub" data-reveal data-reveal-delay="100">Dashboard → Deals → a real Deal → build and send an offer. Switch roles at any point to see the same screens re-scope.</p>' +
-        '<div class="launch-preview-frame" data-launch data-reveal data-reveal-delay="160">' +
-          '<div class="lpf-bar"><span class="lpf-dot"></span><span class="lpf-dot"></span><span class="lpf-dot"></span></div>' +
-          '<div style="padding:28px 24px 40px;display:flex;flex-direction:column;gap:14px">' +
-            '<div style="display:flex;gap:10px"><div class="pill pill-blue"><span class="pill-dot"></span>Application · Pending</div><div class="pill pill-green"><span class="pill-dot"></span>Payment · Ongoing</div><div class="pill pill-red">Action needed</div></div>' +
-            '<div style="height:1px;background:var(--line)"></div>' +
-            '<div style="font-family:var(--font-mono);color:var(--graphite);font-size:12px">Dashboard · Deals · Deal Detail · Offer Wizard</div>' +
-          "</div>" +
-          '<div class="lpf-overlay"><span class="lpf-open-pill">' + I.arrowRight + "Open prototype</span></div>" +
-        "</div>" +
-      "</section>" +
-      '<footer class="land-footer">Prototype built for a portfolio case study on the OMS v3.0 rebuild. Sample data throughout is synthetic.</footer>';
-
-    root.querySelectorAll("[data-launch]").forEach(function (b) { b.addEventListener("click", function () { OMS.app.openApp(); }); });
-    U.initScrollReveal(root);
-
-    function metaItem(n, l) { return '<div class="hero-meta-item"><div class="n mono">' + n + '</div><div class="l">' + l + "</div></div>"; }
-  }
-
-  OMS.landingComponent = { render: render };
-})(window.OMS = window.OMS || {});
-
-
 /* === js/app.js === */
 /* ============================================================
    OMS v3 — App bootstrap / router
@@ -3590,7 +3290,6 @@ html, body { height: 100%; }
 (function (OMS) {
   "use strict";
 
-  var landingEl = document.getElementById("landing-view");
   var appEl = document.getElementById("app-view");
   var sidebarEl = document.getElementById("app-sidebar");
   var topbarEl = document.getElementById("mobile-topbar");
@@ -3599,17 +3298,10 @@ html, body { height: 100%; }
   var navMounted = false;
 
   function openApp() {
-    landingEl.classList.add("is-hidden");
     appEl.classList.add("is-active");
     document.body.style.overflow = "";
     if (!navMounted) { OMS.navComponent.render({ sidebar: sidebarEl, topbar: topbarEl, scrim: scrimEl }); navMounted = true; }
     renderRoute();
-    window.scrollTo({ top: 0, behavior: "auto" });
-  }
-
-  function showLanding() {
-    appEl.classList.remove("is-active");
-    landingEl.classList.remove("is-hidden");
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
@@ -3631,18 +3323,12 @@ html, body { height: 100%; }
     }
   });
 
-  OMS.app = { openApp: openApp, showLanding: showLanding };
+  OMS.app = { openApp: openApp };
 
   // ---- boot ----
-  // when embedded inside the case-study's frame (window.OMS_EMBEDDED,
-  // set by the embed build before this bundle runs) skip the marketing
-  // showcase entirely and land straight in the product. A plain
-  // "#app" deep link does the same thing for the standalone build, so
-  // links from elsewhere (e.g. the case study's "open full prototype"
-  // button) can point straight at the interactive app instead of the
-  // marketing landing page.
-  OMS.landingComponent.render(landingEl);
-  if (window.OMS_EMBEDDED || window.location.hash === "#app") { openApp(); }
+  // The marketing landing page has been removed — this always boots
+  // straight into the product now, regardless of embed/hash context.
+  openApp();
 })(window.OMS = window.OMS || {});
 
 </script>

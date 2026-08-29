@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:oms": "node prototype/oms-v3/build.js",
     "start": "next start",
     "lint": "next lint"
   },
