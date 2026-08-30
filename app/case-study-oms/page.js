@@ -115,8 +115,32 @@ export default function CaseStudyOMS() {
       </header>
 
       <PrototypeEmbed
-        embedSrc="/case-studies/oms/embed.html"
-        fullSrc="/case-studies/oms/dist.html#app"
+        versions={[
+          {
+            id: 'rebuild',
+            label: 'Latest rebuild (WIP)',
+            eyebrow: 'v3.0 · in progress',
+            description:
+              "The current rebuild, moved onto a proper design system. So far it's the Sales Head dashboard — deals list, deal detail, and the offer wizard are still being ported. Toggle light/dark from the sidebar; it's a placeholder control while the theme is still being designed.",
+            url: 'app.novatr-oms.internal/dashboard · v3.0',
+            embedSrc: '/case-studies/oms/rebuild/index.html',
+            fullSrc: '/case-studies/oms/rebuild/index.html',
+            // Renders at its real desktop width, then scales down to fit the
+            // frame — so the embed shows the actual desktop layout instead
+            // of the app's own narrower responsive breakpoint.
+            frameWidth: 1536,
+          },
+          {
+            id: 'original',
+            label: 'Original prototype',
+            eyebrow: 'v3.0 · interactive',
+            description:
+              "The full original prototype: a real dashboard, deals list, deal detail, and offer wizard, with a live role switcher across all five permission tiers. It's embedded below at a fixed size; open it full-size for the real thing.",
+            url: 'app.novatr-oms.internal · v3.0',
+            embedSrc: '/case-studies/oms/embed.html',
+            fullSrc: '/case-studies/oms/dist.html#app',
+          },
+        ]}
         title="OMS v3.0 interactive prototype"
         mobileImage="/case-studies/oms/dashboard-preview.png"
         mobileImageAlt="OMS v3.0 dashboard showing the funnel cards, revenue split, and deals list"

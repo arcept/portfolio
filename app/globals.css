@@ -815,6 +815,13 @@ button:focus-visible {
   padding: 64px 0;
 }
 
+/* Wraps only the frame (+ its mobile preview/note) at a wider max-width
+   than the sitewide 1160px .wrap--wide — the frame benefits from the extra
+   room, but .proto-head above it stays aligned with the rest of the page. */
+.proto-frame-wrap {
+  max-width: 1280px;
+}
+
 .proto-head {
   display: flex;
   align-items: flex-end;
@@ -831,10 +838,52 @@ button:focus-visible {
   flex-shrink: 0;
 }
 
+.proto-head-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.proto-version-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--graphite);
+  border-radius: 9999px;
+  background: var(--obsidian);
+}
+
+.proto-version-btn {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  color: var(--fog);
+  white-space: nowrap;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.proto-version-btn:hover {
+  color: var(--mist);
+}
+
+.proto-version-btn.is-active {
+  background: var(--carbon);
+  color: var(--paper);
+  box-shadow: 0 0 0 1px var(--graphite) inset;
+}
+
 @media (max-width: 640px) {
   .proto-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .proto-head-actions {
+    align-items: flex-start;
+    width: 100%;
   }
 }
 
@@ -890,6 +939,7 @@ button:focus-visible {
 .proto-frame-body {
   position: relative;
   height: 640px;
+  overflow: hidden;
   background: #f9fafb;
 }
 
