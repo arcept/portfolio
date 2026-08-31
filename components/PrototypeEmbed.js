@@ -11,6 +11,7 @@ export default function PrototypeEmbed({ versions, title, mobileImage, mobileIma
   const [activeId, setActiveId] = useState(versions[0].id);
   const [status, setStatus] = useState('loading');
   const [scale, setScale] = useState(1);
+  const [frameIsDark, setFrameIsDark] = useState(true);
   const timeoutRef = useRef(null);
   const iframeRef = useRef(null);
   const bodyRef = useRef(null);
@@ -40,6 +41,25 @@ export default function PrototypeEmbed({ versions, title, mobileImage, mobileIma
     observer.observe(el);
     return () => observer.disconnect();
   }, [active.frameWidth]);
+
+  // .proto-frame-body's own background only ever shows through briefly (the
+  // loading state, or a sub-pixel gap around the scaled iframe) — but since
+  // the embedded app has its own independent light/dark toggle, a static
+  // color is wrong for one of the two states. The iframe is same-origin, so
+  // mirror its live theme class instead of guessing.
+  useEffect(() => {
+    if (status !== 'loaded') return;
+
+    const root = iframeRef.current?.contentDocument?.documentElement;
+    if (!root) return;
+
+    const sync = () => setFrameIsDark(root.classList.contains('dark-mode'));
+    sync();
+
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, [status, activeId]);
 
   function selectVersion(id) {
     if (id === activeId) return;
@@ -135,44 +155,46 @@ export default function PrototypeEmbed({ versions, title, mobileImage, mobileIma
       </div>
 
       <div className="wrap proto-frame-wrap">
-        <div className="proto-frame">
-          <div className="proto-frame-bar">
-            <div className="proto-frame-dots"><span /><span /><span /></div>
-            <div className="proto-frame-url">{active.url}</div>
+        <StarBorder as="div" className="proto-frame-star" color="cyan" speed="5s" thickness={3}>
+          <div className="proto-frame">
+            <div className="proto-frame-bar">
+              <div className="proto-frame-dots"><span /><span /><span /></div>
+              <div className="proto-frame-url">{active.url}</div>
+            </div>
+            <div className="proto-frame-body" ref={bodyRef} style={{ background: frameIsDark ? 'var(--carbon)' : '#f9fafb' }}>
+              {status !== 'loaded' && (
+                <div className="proto-frame-status">
+                  {status === 'loading'
+                    ? 'Loading prototype…'
+                    : 'Prototype failed to load — use "Open full prototype" below.'}
+                </div>
+              )}
+              {status !== 'error' && (
+                <iframe
+                  ref={iframeRef}
+                  src={active.embedSrc}
+                  title={title}
+                  onLoad={handleLoad}
+                  onError={handleError}
+                  style={
+                    active.frameWidth
+                      ? {
+                          opacity: status === 'loaded' ? 1 : 0,
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: active.frameWidth,
+                          height: FRAME_HEIGHT / (scale || 1),
+                          transform: `scale(${scale})`,
+                          transformOrigin: '0 0',
+                        }
+                      : { opacity: status === 'loaded' ? 1 : 0 }
+                  }
+                />
+              )}
+            </div>
           </div>
-          <div className="proto-frame-body" ref={bodyRef}>
-            {status !== 'loaded' && (
-              <div className="proto-frame-status">
-                {status === 'loading'
-                  ? 'Loading prototype…'
-                  : 'Prototype failed to load — use "Open full prototype" below.'}
-              </div>
-            )}
-            {status !== 'error' && (
-              <iframe
-                ref={iframeRef}
-                src={active.embedSrc}
-                title={title}
-                onLoad={handleLoad}
-                onError={handleError}
-                style={
-                  active.frameWidth
-                    ? {
-                        opacity: status === 'loaded' ? 1 : 0,
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: active.frameWidth,
-                        height: FRAME_HEIGHT / (scale || 1),
-                        transform: `scale(${scale})`,
-                        transformOrigin: '0 0',
-                      }
-                    : { opacity: status === 'loaded' ? 1 : 0 }
-                }
-              />
-            )}
-          </div>
-        </div>
+        </StarBorder>
 
         <div className="proto-preview">
           <img src={mobileImage} alt={mobileImageAlt} width={1280} height={750} />
