@@ -1,22 +1,20 @@
+import { useState } from "react";
+import { AppShell } from "@/components/application/app-shell";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { FunnelSection } from "@/components/dashboard/funnel-section";
 import { StatCardsRow } from "@/components/dashboard/stat-cards";
 import { TeamDrilldown } from "@/components/dashboard/team-drilldown";
+import type { PeriodSelection } from "@/data/dashboard-data";
 
 export const DashboardSalesHead = () => {
-    return (
-        <div className="flex min-h-dvh bg-primary">
-            <DashboardSidebar />
+    const [selection, setSelection] = useState<PeriodSelection>({ kind: "preset", id: "this-month" });
 
-            <main className="min-w-0 flex-1 px-4 py-8 lg:px-8">
-                <div className="mx-auto flex max-w-360 flex-col gap-8">
-                    <DashboardHeader />
-                    <StatCardsRow />
-                    <FunnelSection />
-                    <TeamDrilldown />
-                </div>
-            </main>
-        </div>
+    return (
+        <AppShell>
+            <DashboardHeader selection={selection} onSelectionChange={setSelection} />
+            <StatCardsRow selection={selection} />
+            <FunnelSection selection={selection} />
+            <TeamDrilldown selection={selection} />
+        </AppShell>
     );
 };

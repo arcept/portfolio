@@ -10,33 +10,67 @@ import { InputDateBase } from "@/components/base/input/input-date";
 import { cx } from "@/utils/cx";
 import { RangeCalendar, RangePresetButton } from "./range-calendar";
 
-const now = today(getLocalTimeZone());
-
-const highlightedDates = [today(getLocalTimeZone())];
-
 interface DateRangePickerProps extends AriaDateRangePickerProps<DateValue> {
     size?: ButtonProps["size"];
     /** The function to call when the apply button is clicked. */
     onApply?: () => void;
     /** The function to call when the cancel button is clicked. */
     onCancel?: () => void;
+    /**
+     * The "today" used to compute presets (Today/This Week/This Month/etc.) and the
+     * highlighted-today marker. Defaults to the real device date — pass this when the
+     * picker needs to reason about a fixed prototype date instead.
+     */
+    referenceToday?: DateValue;
+    /** Shown on the trigger button before any range has been picked. @default "Select dates" */
+    placeholder?: string;
+    /** Whether to show the quick-preset sidebar (Today/This Week/This Month/etc.) in the popover. @default true */
+    showPresets?: boolean;
+    /** Styles the trigger as the active/selected control — e.g. when this picker represents the
+     * current selection among a set of alternatives (like period pills) rather than a plain
+     * always-available action button. */
+    active?: boolean;
 }
 
-export const DateRangePicker = ({ value: valueProp, defaultValue, onChange, onApply, onCancel, size = "sm", ...props }: DateRangePickerProps) => {
+/** Clamps a date into [min, max] — used so presets (e.g. "This Year") never fall outside
+ * an explicit minValue/maxValue and land the picker in an unselectable/invalid state. */
+function clampDate<T extends DateValue>(date: T, min?: DateValue | null, max?: DateValue | null): T {
+    if (min && date.compare(min) < 0) return min as T;
+    if (max && date.compare(max) > 0) return max as T;
+    return date;
+}
+
+export const DateRangePicker = ({
+    value: valueProp,
+    defaultValue,
+    onChange,
+    onApply,
+    onCancel,
+    size = "sm",
+    referenceToday,
+    placeholder = "Select dates",
+    showPresets = true,
+    active = false,
+    minValue,
+    maxValue,
+    ...props
+}: DateRangePickerProps) => {
     const { locale } = useLocale();
     const formatter = useDateFormatter({
         month: "short",
         day: "numeric",
         year: "numeric",
     });
+    const now = referenceToday ?? today(getLocalTimeZone());
+    const highlightedDates = [now];
     const [value, setValue] = useControlledState(valueProp, defaultValue || null, onChange);
     const [focusedValue, setFocusedValue] = useState<DateValue | null>(null);
 
     const formattedStartDate = value?.start ? formatter.format(value.start.toDate(getLocalTimeZone())) : "Select date";
     const formattedEndDate = value?.end ? formatter.format(value.end.toDate(getLocalTimeZone())) : "Select date";
 
-    const presets = useMemo(
-        () => ({
+    const presets = useMemo(() => {
+        const raw = {
             today: { label: "Today", value: { start: now, end: now } },
             yesterday: { label: "Yesterday", value: { start: now.subtract({ days: 1 }), end: now.subtract({ days: 1 }) } },
             thisWeek: { label: "This week", value: { start: startOfWeek(now, locale), end: endOfWeek(now, locale) } },
@@ -70,15 +104,42 @@ export const DateRangePicker = ({ value: valueProp, defaultValue, onChange, onAp
                     end: now,
                 },
             },
-        }),
-        [locale],
-    );
+        };
+
+        // Clamp every preset into [minValue, maxValue] so none of them (e.g. "This Year",
+        // "All time") can land the picker on a range that's partly or wholly unselectable.
+        return Object.fromEntries(
+            Object.entries(raw).map(([key, preset]) => [
+                key,
+                {
+                    ...preset,
+                    value: {
+                        start: clampDate(preset.value.start, minValue, maxValue),
+                        end: clampDate(preset.value.end, minValue, maxValue),
+                    },
+                },
+            ]),
+        ) as typeof raw;
+    }, [locale, now, minValue, maxValue]);
 
     return (
-        <AriaDateRangePicker aria-label="Date range picker" shouldCloseOnSelect={false} {...props} value={value} onChange={setValue}>
+        <AriaDateRangePicker
+            aria-label="Date range picker"
+            shouldCloseOnSelect={false}
+            {...props}
+            minValue={minValue}
+            maxValue={maxValue}
+            value={value}
+            onChange={setValue}
+        >
             <AriaGroup>
-                <Button size={size} color="secondary" iconLeading={CalendarIcon}>
-                    {!value ? <span className="text-placeholder">Select dates</span> : `${formattedStartDate} – ${formattedEndDate}`}
+                <Button
+                    size={size}
+                    color="secondary"
+                    iconLeading={CalendarIcon}
+                    className={active ? "bg-secondary text-secondary hover:bg-secondary_hover" : undefined}
+                >
+                    {!value ? <span className="text-placeholder">{placeholder}</span> : `${formattedStartDate} – ${formattedEndDate}`}
                 </Button>
             </AriaGroup>
             <AriaPopover
@@ -97,20 +158,22 @@ export const DateRangePicker = ({ value: valueProp, defaultValue, onChange, onAp
                 <AriaDialog aria-label="Date range picker" className="flex rounded-2xl bg-primary shadow-xl ring ring-secondary_alt focus:outline-hidden">
                     {({ close }) => (
                         <>
-                            <div className="hidden w-38 flex-col gap-0.5 border-r border-solid border-secondary p-3 lg:flex">
-                                {Object.values(presets).map((preset) => (
-                                    <RangePresetButton
-                                        key={preset.label}
-                                        value={preset.value}
-                                        onClick={() => {
-                                            setValue(preset.value);
-                                            setFocusedValue(preset.value.start);
-                                        }}
-                                    >
-                                        {preset.label}
-                                    </RangePresetButton>
-                                ))}
-                            </div>
+                            {showPresets && (
+                                <div className="hidden w-38 flex-col gap-0.5 border-r border-solid border-secondary p-3 lg:flex">
+                                    {Object.values(presets).map((preset) => (
+                                        <RangePresetButton
+                                            key={preset.label}
+                                            value={preset.value}
+                                            onClick={() => {
+                                                setValue(preset.value);
+                                                setFocusedValue(preset.value.start);
+                                            }}
+                                        >
+                                            {preset.label}
+                                        </RangePresetButton>
+                                    ))}
+                                </div>
+                            )}
                             <div className="flex flex-col">
                                 <RangeCalendar
                                     focusedValue={focusedValue}

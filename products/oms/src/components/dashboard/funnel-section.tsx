@@ -3,10 +3,11 @@ import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/but
 import { Badge } from "@/components/base/badges/badges";
 import { Dot } from "@/components/foundations/dot-icon";
 import { cx } from "@/utils/cx";
-import type { FunnelStage } from "@/data/dashboard-data";
-import { funnelCohorts } from "@/data/dashboard-data";
+import { usePersona } from "@/providers/role-provider";
+import type { FunnelStage, PeriodSelection } from "@/data/dashboard-data";
+import { getFunnelCohorts, getSelectedPeriodChartData, scalePeriodDataForPersona } from "@/data/dashboard-data";
 
-const FunnelStageCard = ({ stage }: { stage: FunnelStage }) => (
+export const FunnelStageCard = ({ stage }: { stage: FunnelStage }) => (
     <div className="flex flex-1 flex-col gap-5 rounded-xl border border-secondary bg-primary p-4">
         <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-secondary">{stage.label}</span>
@@ -46,25 +47,32 @@ const OverviewPerformanceToggle = ({ id }: { id: string }) => {
     );
 };
 
-export const FunnelSection = () => {
+export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => {
+    const { persona } = usePersona();
+    const data = scalePeriodDataForPersona(getSelectedPeriodChartData(selection), persona);
+    const cohorts = getFunnelCohorts(data, persona);
+    const isAggregateHeading = persona.role === "admin";
+
     return (
         <section className="flex flex-col gap-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-display-xs font-bold text-primary">ADMIN Funnel — Sales Head</h2>
-                    <p className="text-sm text-tertiary">Aggregate metrics across all cohorts</p>
+            {isAggregateHeading && (
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-display-xs font-bold text-primary">ADMIN Funnel — Sales Head</h2>
+                        <p className="text-sm text-tertiary">Aggregate metrics across all cohorts</p>
+                    </div>
+                    <OverviewPerformanceToggle id="admin-funnel" />
                 </div>
-                <OverviewPerformanceToggle id="admin-funnel" />
-            </div>
+            )}
 
-            {funnelCohorts.map((cohort, index) => (
+            {cohorts.map((cohort, index) => (
                 <div key={cohort.id} className={cx("flex flex-col gap-4", index > 0 && "border-t border-secondary pt-6")}>
                     {/*
                      * The aggregate row's Figma name/toggle header ("ADMIN Funnel — Sales Head") is
                      * identical to the section header above — Manik flagged this as a likely WIP
                      * duplicate in the file, so it's skipped here for the aggregate row only.
                      */}
-                    {index > 0 && (
+                    {(!isAggregateHeading || index > 0) && (
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <h3 className="text-md font-semibold text-primary">{cohort.name}</h3>
                             <OverviewPerformanceToggle id={cohort.id} />

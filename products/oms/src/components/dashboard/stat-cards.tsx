@@ -1,11 +1,14 @@
 import type { ReactNode } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { ArrowNarrowRight, ArrowUpRight, Copy01, Download01, Edit01, TrendUp02 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { cx } from "@/utils/cx";
-import { dealStages, dealStagesMax } from "@/data/dashboard-data";
+import { usePersona } from "@/providers/role-provider";
+import type { PeriodSelection } from "@/data/dashboard-data";
+import { cascadeToDealStages, formatIndianNumber, getPeriodSelectionKey, getSelectedPeriodChartData, scalePeriodDataForPersona } from "@/data/dashboard-data";
 import { BookedChart } from "./booked-chart";
 
 const CardActionsMenu = () => (
@@ -41,61 +44,96 @@ const HeadingAndNumber = ({ heading, value }: { heading: string; value: string }
     </div>
 );
 
-export const StatCardsRow = () => {
+const fadeTransition = { duration: 0.25, ease: "easeOut" as const };
+
+/** Wraps a card's contents in the same crossfade used everywhere else a card follows the
+ * period selection, so switching periods always reads as "refreshed", not a hard cut. */
+const FadeOnSelection = ({ selectionKey, className, children }: { selectionKey: string; className?: string; children: ReactNode }) => (
+    <AnimatePresence mode="wait">
+        <motion.div
+            key={selectionKey}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={fadeTransition}
+            className={className}
+        >
+            {children}
+        </motion.div>
+    </AnimatePresence>
+);
+
+export const StatCardsRow = ({ selection }: { selection: PeriodSelection }) => {
+    const { persona } = usePersona();
+    const booked = scalePeriodDataForPersona(getSelectedPeriodChartData(selection), persona);
+    const selectionKey = getPeriodSelectionKey(selection);
+    const dealStages = cascadeToDealStages(booked.cascade);
+    const dealStagesMax = Math.max(...dealStages.map((stage) => stage.value));
+
     return (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[1.4fr_1fr_1fr]">
-            {/* Booked - This Month */}
+            {/* Booked - selected period */}
             <Card className="row-span-2 min-h-104">
                 <div className="absolute top-4 right-4">
                     <CardActionsMenu />
                 </div>
 
-                <p className="max-w-[calc(100%-2rem)] text-xs font-medium text-tertiary">Booked - This Month (August)</p>
+                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
+                    <p className="max-w-[calc(100%-2rem)] text-xs font-medium text-tertiary">{booked.headingLabel}</p>
 
-                <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-medium text-primary">INR</span>
-                    <span className="text-display-sm font-semibold tracking-tight text-primary">18,88,000</span>
-                </div>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-medium text-primary">INR</span>
+                        <span className="text-display-sm font-semibold tracking-tight text-primary">{formatIndianNumber(booked.bookedTotal)}</span>
+                    </div>
 
-                <div className="flex w-max items-center gap-1 rounded-md bg-primary_alt px-1.5 py-0.5 shadow-xs">
-                    <ArrowUpRight className="size-3 text-fg-success-secondary" />
-                    <span className="text-sm font-medium text-secondary">Out of which ₹4.22 L is realised (22.35%)</span>
-                </div>
+                    <div className="flex w-max items-center gap-1 rounded-md bg-primary_alt px-1.5 py-0.5 shadow-xs">
+                        <ArrowUpRight className="size-3 text-fg-success-secondary" />
+                        <span className="text-sm font-medium text-secondary">{booked.changeText}</span>
+                    </div>
+                </FadeOnSelection>
 
                 <div className="min-h-0 flex-1">
-                    <BookedChart />
+                    <BookedChart data={booked} selectionKey={selectionKey} />
                 </div>
             </Card>
 
-            {/* Realised of Previous Month + Total Realised - This Month */}
+            {/* Realised of previously booked + Total Realised — now follows the period pill too:
+                "previously booked" is the backlog-ledger draw, "Total Realised" is that plus the
+                period's own bookings realised (booked.totalRealised), so the two always sum. */}
             <Card>
                 <div className="absolute top-4 right-4">
                     <CardActionsMenu />
                 </div>
-                <HeadingAndNumber heading="Realised of Previous Month" value="8,42,000" />
-                <HeadingAndNumber heading="Total Realised - This Month" value="12,64,000" />
+                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
+                    <HeadingAndNumber heading="Realised of Previously Booked" value={formatIndianNumber(booked.realisedOfPreviouslyBooked)} />
+                    <HeadingAndNumber heading={`Total Realised - ${booked.periodLabel}`} value={formatIndianNumber(booked.totalRealised)} />
+                </FadeOnSelection>
             </Card>
 
-            {/* Average Ticket Size + Unit Sales / Target */}
+            {/* Average Ticket Size + Unit Sales / Target — also follows the period pill. */}
             <Card>
                 <div className="absolute top-4 right-4">
                     <CardActionsMenu />
                 </div>
-                <HeadingAndNumber heading="Average Ticket Size" value="1,78,000" />
-                <div className="flex flex-col gap-0.5">
-                    <p className="text-xs font-medium text-tertiary">Unit Sales / Target</p>
-                    <span className="text-xl font-semibold text-primary">31 / 148</span>
-                </div>
+                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
+                    <HeadingAndNumber heading="Average Ticket Size" value={formatIndianNumber(booked.ats)} />
+                    <div className="flex flex-col gap-0.5">
+                        <p className="text-xs font-medium text-tertiary">Unit Sales / Target</p>
+                        <span className="text-xl font-semibold text-primary">
+                            {booked.unitsAchieved} / {booked.unitTarget}
+                        </span>
+                    </div>
+                </FadeOnSelection>
             </Card>
 
-            {/* Deal Stages */}
+            {/* Deal Stages — follows the period pill via the same cascade the Booked card reads. */}
             <Card>
                 <div className="flex items-center justify-between">
                     <p className="text-xs font-medium text-tertiary">Deal Stages</p>
                     <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-3">
                     {dealStages.map((stage) => (
                         <div key={stage.label} className="flex items-center gap-3">
                             <span className="w-27.5 shrink-0 text-xs text-secondary">{stage.label}</span>
@@ -103,7 +141,7 @@ export const StatCardsRow = () => {
                             <span className="w-4 shrink-0 text-right font-mono text-[13px] text-secondary">{stage.value}</span>
                         </div>
                     ))}
-                </div>
+                </FadeOnSelection>
             </Card>
 
             {/* Lost deals */}

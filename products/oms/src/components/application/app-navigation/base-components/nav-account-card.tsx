@@ -1,4 +1,4 @@
-import type { FC, HTMLAttributes } from "react";
+import type { FC, HTMLAttributes, ReactNode } from "react";
 import { useCallback, useEffect, useRef } from "react";
 import type { Placement } from "@react-types/overlays";
 import { BookOpen01, ChevronSelectorVertical, LogOut01, Plus, Settings01, User01 } from "@untitledui/icons";
@@ -46,8 +46,10 @@ const placeholderAccounts: NavAccountType[] = [
 export const NavAccountMenu = ({
     className,
     selectedAccountId = "olivia",
+    accounts = placeholderAccounts,
+    switchAccountSlot,
     ...dialogProps
-}: AriaDialogProps & { className?: string; accounts?: NavAccountType[]; selectedAccountId?: string }) => {
+}: AriaDialogProps & { className?: string; accounts?: NavAccountType[]; selectedAccountId?: string; switchAccountSlot?: ReactNode }) => {
     const focusManager = useFocusManager();
     const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -91,29 +93,35 @@ export const NavAccountMenu = ({
                     <NavAccountCardMenuItem label="Documentation" icon={BookOpen01} />
                 </div>
                 <div className="flex flex-col gap-0.5 border-t border-secondary py-1.5">
-                    <div className="px-3 pt-1.5 pb-1 text-xs font-semibold text-tertiary">Switch account</div>
+                    {switchAccountSlot ?? (
+                        <>
+                            <div className="px-3 pt-1.5 pb-1 text-xs font-semibold text-tertiary">Switch account</div>
 
-                    <div className="flex flex-col gap-0.5 px-1.5">
-                        {placeholderAccounts.map((account) => (
-                            <button
-                                key={account.id}
-                                className={cx(
-                                    "relative w-full cursor-pointer rounded-md px-2 py-1.5 text-left outline-focus-ring transition duration-100 ease-linear hover:bg-primary_hover focus:z-10 focus-visible:outline-2 focus-visible:outline-offset-2",
-                                    account.id === selectedAccountId && "bg-primary_hover",
-                                )}
-                            >
-                                <AvatarLabelGroup status="online" size="md" src={account.avatar} title={account.name} subtitle={account.email} />
+                            <div className="flex flex-col gap-0.5 px-1.5">
+                                {accounts.map((account) => (
+                                    <button
+                                        key={account.id}
+                                        className={cx(
+                                            "relative w-full cursor-pointer rounded-md px-2 py-1.5 text-left outline-focus-ring transition duration-100 ease-linear hover:bg-primary_hover focus:z-10 focus-visible:outline-2 focus-visible:outline-offset-2",
+                                            account.id === selectedAccountId && "bg-primary_hover",
+                                        )}
+                                    >
+                                        <AvatarLabelGroup status="online" size="md" src={account.avatar} title={account.name} subtitle={account.email} />
 
-                                <RadioButtonBase isSelected={account.id === selectedAccountId} className="absolute top-2 right-2" />
-                            </button>
-                        ))}
+                                        <RadioButtonBase isSelected={account.id === selectedAccountId} className="absolute top-2 right-2" />
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+                {!switchAccountSlot && (
+                    <div className="flex flex-col gap-2 px-2 pt-0.5 pb-2">
+                        <Button iconLeading={Plus} color="secondary" size="sm">
+                            Add account
+                        </Button>
                     </div>
-                </div>
-                <div className="flex flex-col gap-2 px-2 pt-0.5 pb-2">
-                    <Button iconLeading={Plus} color="secondary" size="sm">
-                        Add account
-                    </Button>
-                </div>
+                )}
             </div>
 
             <div className="pt-1 pb-1.5">
@@ -159,11 +167,16 @@ export const NavAccountCard = ({
     selectedAccountId = "caitlyn",
     items = placeholderAccounts,
     avatarRounded,
+    switchAccountSlot,
 }: {
     popoverPlacement?: Placement;
     selectedAccountId?: string;
     items?: NavAccountType[];
     avatarRounded?: boolean;
+    /** Replaces the default "Switch account" list + "Add account" button with custom content
+     * (e.g. a role/persona switcher) — for pages where the account concept isn't a flat list
+     * of separate people. */
+    switchAccountSlot?: ReactNode;
 }) => {
     const triggerRef = useRef<HTMLDivElement>(null);
     const isDesktop = useBreakpoint("lg");
@@ -205,7 +218,7 @@ export const NavAccountCard = ({
                         )
                     }
                 >
-                    <NavAccountMenu selectedAccountId={selectedAccountId} accounts={items} />
+                    <NavAccountMenu selectedAccountId={selectedAccountId} accounts={items} switchAccountSlot={switchAccountSlot} />
                 </AriaPopover>
             </AriaDialogTrigger>
         </div>

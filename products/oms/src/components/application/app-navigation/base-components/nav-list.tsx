@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cx } from "@/utils/cx";
 import type { NavItemDividerType, NavItemType } from "../config";
 import { NavItemBase } from "./nav-item";
@@ -16,6 +16,13 @@ export const NavList = ({ activeUrl, items, className }: NavListProps) => {
     const [open, setOpen] = useState(false);
     const activeItem = items.find((item) => item.href === activeUrl || item.items?.some((subItem) => subItem.href === activeUrl));
     const [currentItem, setCurrentItem] = useState(activeItem);
+
+    // `currentItem` only re-derives from `activeItem` on mount otherwise — a route change after
+    // that (e.g. navigating from "/" to "/deals") would leave the sidebar showing the original
+    // page as active forever.
+    useEffect(() => {
+        setCurrentItem(activeItem);
+    }, [activeUrl]);
 
     return (
         <ul className={cx("flex flex-col px-4 pt-5", className)}>

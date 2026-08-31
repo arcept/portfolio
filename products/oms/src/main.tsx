@@ -1,9 +1,14 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
+import { ToastHost } from "@/components/application/toast/toast";
 import { DashboardSalesHead } from "@/pages/dashboard-sales-head";
+import { DealDetail } from "@/pages/deal-detail";
+import { DealsList } from "@/pages/deals-list";
 import { HomeScreen } from "@/pages/home-screen";
 import { NotFound } from "@/pages/not-found";
+import { DealsProvider } from "@/providers/deals-provider";
+import { RoleProvider } from "@/providers/role-provider";
 import { RouteProvider } from "@/providers/router-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import "@/styles/globals.css";
@@ -17,15 +22,22 @@ const basename = import.meta.env.BASE_URL === "/" ? "/" : `${import.meta.env.BAS
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <ThemeProvider>
-            <BrowserRouter basename={basename}>
-                <RouteProvider>
-                    <Routes>
-                        <Route path="/" element={<DashboardSalesHead />} />
-                        <Route path="/starter" element={<HomeScreen />} />
-                        <Route path="*" element={<NotFound />} />
-                    </Routes>
-                </RouteProvider>
-            </BrowserRouter>
+            <RoleProvider>
+                <DealsProvider>
+                    <BrowserRouter basename={basename}>
+                        <RouteProvider>
+                            <Routes>
+                                <Route path="/" element={<DashboardSalesHead />} />
+                                <Route path="/deals" element={<DealsList />} />
+                                <Route path="/deals/:dealId" element={<DealDetail />} />
+                                <Route path="/starter" element={<HomeScreen />} />
+                                <Route path="*" element={<NotFound />} />
+                            </Routes>
+                        </RouteProvider>
+                    </BrowserRouter>
+                    <ToastHost />
+                </DealsProvider>
+            </RoleProvider>
         </ThemeProvider>
     </StrictMode>,
 );

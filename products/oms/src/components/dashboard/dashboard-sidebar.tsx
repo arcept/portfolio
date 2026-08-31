@@ -1,31 +1,59 @@
 import { BarChartSquare02, CreditCard01, Cube01, List, Settings01 } from "@untitledui/icons";
+import { useLocation } from "react-router";
 import { NavAccountCard } from "@/components/application/app-navigation/base-components/nav-account-card";
 import { NavList } from "@/components/application/app-navigation/base-components/nav-list";
 import type { NavItemType } from "@/components/application/app-navigation/config";
 import { MobileNavigationHeader } from "@/components/application/app-navigation/base-components/mobile-header";
 import { NavItemBase } from "@/components/application/app-navigation/base-components/nav-item";
 import { BadgeWithDot } from "@/components/base/badges/badges";
+import { openDealCount } from "@/data/deals-data";
+import { useDeals } from "@/providers/deals-provider";
+import { usePersona } from "@/providers/role-provider";
+import { ROLE_LABELS } from "@/types/role";
+import { getPersonaLabel } from "@/data/dashboard-data";
+import { PreviewAsSwitcher } from "./preview-as-switcher";
 import { ThemeToggle } from "./theme-toggle";
 
-const navItems: NavItemType[] = [
-    { label: "Home", href: "/", icon: Cube01 },
-    { label: "Deals", href: "/deals", icon: BarChartSquare02, badge: <BadgeWithDot color="success">235</BadgeWithDot> },
-    { label: "Payments", href: "/payments", icon: CreditCard01 },
-    { label: "Content", href: "/content", icon: List },
-];
-
-const account = {
-    id: "manik",
-    name: "Manik Madaan",
-    email: "Sales Head | Admin",
-    avatar: "",
-    initials: "MM",
-    status: "online" as const,
-};
+/** Matches the padding rhythm of the dropdown's other sections ("Switch account" originally) —
+ * label inset at `px-3`, content inset at `px-3` too since the selects need more room than the
+ * account-row buttons did. */
+const PreviewAsSwitcherSlot = () => (
+    <div className="px-3 pt-1.5 pb-1.5">
+        <PreviewAsSwitcher />
+    </div>
+);
 
 const SIDEBAR_WIDTH = 280;
 
 export const DashboardSidebar = () => {
+    const { persona } = usePersona();
+    const { pathname } = useLocation();
+    const { deals } = useDeals();
+
+    const navItems: NavItemType[] = [
+        { label: "Home", href: "/", icon: Cube01 },
+        { label: "Deals", href: "/deals", icon: BarChartSquare02, badge: <BadgeWithDot color="success">{openDealCount(persona, deals)}</BadgeWithDot> },
+        { label: "Payments", href: "/payments", icon: CreditCard01 },
+        { label: "Content", href: "/content", icon: List },
+    ];
+
+    const account = {
+        id: "manik",
+        name: persona.role === "admin" ? "Manik Madaan" : getPersonaLabel(persona),
+        email: persona.role === "admin" ? "Sales Head | Admin" : ROLE_LABELS[persona.role],
+        avatar: "",
+        initials:
+            persona.role === "admin"
+                ? "MM"
+                : getPersonaLabel(persona)
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase(),
+        status: "online" as const,
+    };
+
     const content = (
         <aside
             style={{ "--width": `${SIDEBAR_WIDTH}px` } as React.CSSProperties}
@@ -41,7 +69,7 @@ export const DashboardSidebar = () => {
                 </div>
             </div>
 
-            <NavList items={navItems} activeUrl="/" />
+            <NavList items={navItems} activeUrl={pathname.startsWith("/deals") ? "/deals" : pathname} />
 
             <div className="mt-auto flex flex-col gap-3 px-4 py-4 lg:py-5">
                 <ul className="flex flex-col">
@@ -57,7 +85,7 @@ export const DashboardSidebar = () => {
                     <ThemeToggle />
                 </div>
 
-                <NavAccountCard items={[account]} selectedAccountId="manik" />
+                <NavAccountCard items={[account]} selectedAccountId="manik" switchAccountSlot={<PreviewAsSwitcherSlot />} />
             </div>
         </aside>
     );
