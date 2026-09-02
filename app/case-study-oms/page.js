@@ -6,6 +6,7 @@ import MetaStrip from '@/components/MetaStrip';
 import PrototypeEmbed from '@/components/PrototypeEmbed';
 import CaseStudyNav from '@/components/CaseStudyNav';
 import TLDR from '@/components/TLDR';
+import VelarisBackground from '@/components/VelarisBackground';
 
 const neueAlteGrotesk = localFont({
   src: '../fonts/NeueAlteGrotesk-SemiBold.ttf',
@@ -61,7 +62,18 @@ export default function CaseStudyOMS() {
       <Nav />
 
       <header className="cs-hero" style={{ paddingTop: '96px', paddingBottom: '48px' }}>
-        <div className="wrap wrap--wide">
+        <VelarisBackground colors={['#8b5cf6', '#6366f1', '#110A4E', '#08090A']} bg="#08090A" />
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            background: 'linear-gradient(180deg, rgba(17, 10, 78, 0) 60%, #08090A 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div className="wrap wrap--wide" style={{ position: 'relative', zIndex: 2 }}>
           <div className="breadcrumb" style={{ marginBottom: '32px' }}>
             <a href="/">← Back to all work</a>
           </div>

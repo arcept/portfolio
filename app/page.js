@@ -117,7 +117,7 @@ export default function Home() {
             </Reveal>
 
             <Reveal delay={0.24}>
-              <Card href="/case-study-hapramp">
+              <Card href="/case-study-novatr-team">
                 <div className="card__cover">Cover art pending</div>
                 <div className="card__tags">
                   <span className="tag tag--progress">Case study in progress</span>
@@ -129,7 +129,7 @@ export default function Home() {
                   Building a Design Team from Zero
                 </h3>
                 <p className="text-body text-fog">
-                  The Hapramp Studio team-building story — hiring, structure, and design leadership
+                  The Novatr team-building story — hiring, structure, and design leadership
                   from the very first hire.
                 </p>
                 <span className="card__cta">Read the case study →</span>
