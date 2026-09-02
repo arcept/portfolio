@@ -1,7 +1,9 @@
 > [!NOTE]
-> **What this is, in this repo specifically:** the future home of the OMS product UI, scaffolded but not yet built out. There are no real OMS screens here yet — this is infrastructure only, waiting on an actual Figma design (built with the Untitled UI Figma library) to translate into components.
+> **What this is, in this repo specifically:** the home of the OMS "rebuild" (v3.0) dashboard UI — the Sales Head dashboard's funnel cards, drilldown, and related pieces, built with the Untitled UI React library.
 >
-> **Not wired into the live site.** The OMS case study's embedded prototype (`/case-study-oms`) still comes entirely from `prototype/oms-v3/` via `public/case-studies/oms/` — nothing here affects it. This app only gets pointed at from the live site once enough of it is actually built to match (or intentionally exceed) what that prototype does, which is a separate, later decision.
+> **Wired into the live site, two ways.** The full app is embedded at `/case-study-oms` as the "Latest rebuild (WIP)" prototype tab (`public/case-studies/oms/rebuild/`). The case study body also embeds individual isolated pieces of it directly — not screenshots — via `?embed=<view>` query params handled in `src/main.tsx` (see `src/pages/embed-view.tsx` for the view registry). After editing this app, run `npm run build:oms-rebuild` from the **portfolio repo root** (not from here) — it builds this app and syncs `dist/` over `public/case-studies/oms/rebuild/` in one step (`scripts/sync-oms-rebuild.js`). The **original**, separate v3.0 prototype (`/case-study-oms`'s other tab) still comes from `prototype/oms-v3/` via `public/case-studies/oms/` and is unrelated to this app.
+>
+> **`vite.config.ts` sets `base: "/case-studies/oms/rebuild/"`** to match exactly where the built output is served from — without it the built `index.html` references `/assets/...` instead of `/case-studies/oms/rebuild/assets/...`, which 404s once deployed (found and fixed while wiring up the `?embed=` views; don't remove it without re-checking that deployed path still resolves).
 >
 > **Fully standalone.** Own `package.json`, own `node_modules`, no npm workspaces, no connection to the root `package.json` or the Next.js app. Two independent dev servers: Next.js on its usual port, this Vite app on its own (default 5173).
 >

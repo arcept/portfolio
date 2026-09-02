@@ -23,8 +23,8 @@ export const usePersona = (): RoleContextType => {
  * change until someone switches via the "Preview as" control. */
 const DEFAULT_PERSONA: Persona = { role: "admin" };
 
-export const RoleProvider = ({ children }: { children: ReactNode }) => {
-    const [persona, setPersona] = useState<Persona>(DEFAULT_PERSONA);
+export const RoleProvider = ({ children, initialPersona }: { children: ReactNode; initialPersona?: Persona }) => {
+    const [persona, setPersona] = useState<Persona>(initialPersona ?? DEFAULT_PERSONA);
 
     return <RoleContext.Provider value={{ persona, setPersona }}>{children}</RoleContext.Provider>;
 };

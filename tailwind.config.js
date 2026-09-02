@@ -21,6 +21,8 @@ module.exports = {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        'plex-sans': ['var(--font-ibm-plex-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-ibm-plex-mono)', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         display: ['72px', { lineHeight: '1.05', letterSpacing: '-0.02em' }],

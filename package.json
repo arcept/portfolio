@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:oms": "node prototype/oms-v3/build.js",
+    "build:oms-rebuild": "npm --prefix products/oms run build && node scripts/sync-oms-rebuild.js",
     "start": "next start",
     "lint": "next lint"
   },

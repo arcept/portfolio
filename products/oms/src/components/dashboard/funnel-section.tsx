@@ -36,7 +36,7 @@ export const FunnelStageCard = ({ stage }: { stage: FunnelStage }) => (
     </div>
 );
 
-const OverviewPerformanceToggle = ({ id }: { id: string }) => {
+export const OverviewPerformanceToggle = ({ id }: { id: string }) => {
     const [view, setView] = useState("overview");
 
     return (
@@ -86,6 +86,34 @@ export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => 
                     </div>
                 </div>
             ))}
+        </section>
+    );
+};
+
+/** Just the first ("aggregate") row of the admin funnel — the header plus
+ * one 4-card grid — without the per-Team-Manager cohorts FunnelSection also
+ * renders below it for the admin persona. Used by the embed view so the
+ * case study can show exactly the Admin Funnel row in isolation, rather
+ * than the whole admin sweep across every team. */
+export const AdminFunnelAggregateRow = ({ selection }: { selection: PeriodSelection }) => {
+    const data = scalePeriodDataForPersona(getSelectedPeriodChartData(selection), { role: "admin" });
+    const [aggregate] = getFunnelCohorts(data, { role: "admin" });
+
+    return (
+        <section className="flex flex-col gap-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-display-xs font-bold text-primary">ADMIN Funnel — Sales Head</h2>
+                    <p className="text-sm text-tertiary">Aggregate metrics across all cohorts</p>
+                </div>
+                <OverviewPerformanceToggle id="admin-funnel" />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {aggregate.stages.map((stage) => (
+                    <FunnelStageCard key={stage.label} stage={stage} />
+                ))}
+            </div>
         </section>
     );
 };

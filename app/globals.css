@@ -76,7 +76,7 @@ a {
 }
 
 .wrap--wide {
-  max-width: 1280px;
+  max-width: 1400px;
 }
 
 .section {
@@ -116,7 +116,7 @@ a {
 }
 
 .site-nav__inner {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 16px 24px;
   display: flex;
@@ -259,6 +259,7 @@ a {
   background: var(--void);
   color: var(--paper);
   border: none;
+  border-radius: 16px;
 }
 
 .btn--rainbow-outline::after {
@@ -476,6 +477,592 @@ button:focus-visible {
 .cs-body p {
   color: var(--mist);
   margin-bottom: 16px;
+}
+
+/* ---------- Case study article section (redesigned OMS body) ----------
+   Deliberate exception to the sitewide neutral-gray/Inter-only system —
+   this pattern has its own numbered mono eyebrow and a slightly cooler,
+   more desaturated gray than --fog/--mist. Three new tokens instead of
+   overloading the sitewide neutrals, which other components still use. */
+:root {
+  --article-green: #4ade80;
+  --article-neutral: #a3a3a3;
+  --article-placeholder: #737373;
+}
+
+.cs-article-section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 16px 0 32px;
+  border-bottom: 1px solid var(--graphite);
+  /* Same offset as the old .cs-section — without it, scrollIntoView() lands
+     the section's true top flush against the viewport top, right behind
+     the fixed site nav, so the marginalia/top padding end up hidden under
+     it and the heading reads as the effective landing point instead. */
+  scroll-margin-top: calc(var(--site-nav-h) + 16px);
+}
+
+@media (min-width: 900px) {
+  .cs-article-section {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.cs-article-marginalia {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex-shrink: 0;
+  padding-top: 32px;
+}
+
+@media (min-width: 900px) {
+  .cs-article-marginalia {
+    width: 220px;
+    position: sticky;
+    top: calc(var(--site-nav-h) + 32px);
+    padding-bottom: 80px;
+  }
+}
+
+/* Every rule below is scoped under .cs-article-section so it outranks the
+   legacy bare-tag .cs-body h2 / .cs-body p rules above (class+type beats a
+   lone class on specificity) — without this prefix those rules silently
+   clobber this component's color/margin/font-size on every <h2>/<p>. */
+
+.cs-article-section .cs-article-marginalia__category {
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--article-green);
+}
+
+.cs-article-section .cs-article-marginalia__label {
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.cs-article-section .cs-article-marginalia__question {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--graphite);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--mist);
+}
+
+.cs-article-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 32px 0;
+}
+
+/* .cs-article-body's flex column defaults every child to align-items:
+   stretch — fine for text blocks and slots, but it also stretches CTA
+   buttons to the column's full width even though .btn itself is
+   inline-flex (content-sized). Buttons should size to their own content
+   and sit left-aligned, not stretch. */
+.cs-article-body > .btn {
+  align-self: flex-start;
+}
+
+.cs-article-heading-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cs-article-number {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 14px;
+}
+
+.cs-article-number__index {
+  color: var(--article-green);
+}
+
+.cs-article-number__label {
+  color: var(--ash);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cs-article-section .cs-article-heading {
+  margin: 0;
+  color: var(--paper);
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 44px;
+  letter-spacing: -0.72px;
+}
+
+.cs-article-section .cs-article-body p {
+  margin: 0 0 16px;
+  color: var(--article-neutral);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.cs-article-section .cs-article-body p:last-child {
+  margin-bottom: 0;
+}
+
+.cs-article-section .cs-article-statement {
+  margin: 0;
+  color: var(--paper);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+}
+
+.cs-article-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cs-article-slot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.cs-article-section .cs-article-caption {
+  margin: 0;
+  color: var(--article-neutral);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* Doubled class (not a typo) to out-specificity any other 2-class rule in
+   this component family, e.g. .cs-article-figure-caption__desc, so bold
+   inline text is always white regardless of which paragraph it's inside. */
+.cs-article-section.cs-article-section strong {
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.cs-article-section.cs-article-section .cs-article-subheading {
+  margin: 0;
+  padding: 0;
+  color: var(--paper);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 28px;
+}
+
+/* Two-tier figure caption: a bolder lead-in sentence, then a longer
+   regular-weight description — distinct from the plain .cs-article-caption
+   used where there's only one line of caption copy. No gap: the lead sits
+   flush against the description below it. */
+.cs-article-figure-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cs-article-section .cs-article-figure-caption .cs-article-figure-caption__lead {
+  margin: 0;
+  padding: 0;
+  color: var(--paper);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.cs-article-section .cs-article-figure-caption__desc {
+  margin: 0;
+  color: var(--article-neutral);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.cs-article-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 600px) {
+  .cs-article-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cs-article-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  background: rgba(23, 23, 23, 0.6);
+  border: 1px solid var(--graphite);
+  border-radius: 4px;
+}
+
+.cs-article-section .cs-article-cards .cs-article-card__label {
+  margin: 0;
+  padding: 0;
+  font-family: "IBM Plex Mono", var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.48px;
+  text-transform: uppercase;
+  color: var(--article-placeholder);
+}
+
+.cs-article-card__stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 12px;
+  border-left: 2px solid var(--article-green);
+}
+
+.cs-article-section .cs-article-card__stat p {
+  margin: 0;
+  color: var(--paper);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.cs-article-section .cs-article-cards .cs-article-card__desc {
+  margin: 0;
+  font-family: var(--font-inter), Inter, sans-serif;
+  color: var(--article-neutral);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+/* ---------- Decision stepper (C3) ----------
+   A numbered, connected list. The rail (line + icon) tracks scroll
+   position via IntersectionObserver, animating dashed -> solid / outline
+   -> check as each item is scrolled to (DecisionStepper.js). Each card is
+   its own <button> with default / hover / selected states straight from
+   Figma (node 270:4312) — selecting one card is exclusive; only one shows
+   its expanded detail at a time. */
+.cs-decision-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.cs-decision {
+  position: relative;
+  display: flex;
+  gap: 16px;
+}
+
+.cs-decision__rail {
+  position: relative;
+  flex-shrink: 0;
+  width: 20px;
+  display: flex;
+  justify-content: center;
+  /* Matches .cs-decision__body's top padding so the icon lines up with the
+     "01" number text, not the top edge of the row. */
+  padding-top: 24px;
+}
+
+.cs-decision__icon {
+  width: 20px;
+  height: 20px;
+  z-index: 1;
+}
+
+/* Reaches from this item's icon all the way to the next item's icon (this
+   row's bottom edge + .cs-decision-list's 8px gap + the next row's 24px
+   top padding), so the rail reads as one continuous line rather than
+   breaking between items. The green fill is a separate child anchored to
+   the top, its height driven directly by scroll position (DecisionStepper
+   .js) — it grows top-to-bottom as the segment is scrolled past, rather
+   than the whole line swapping color at once. */
+.cs-decision__line {
+  position: absolute;
+  top: 44px;
+  bottom: -32px;
+  width: 2px;
+  background: var(--graphite);
+}
+
+.cs-decision__line-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: var(--article-green);
+  opacity: 0.6;
+}
+
+/* Padding is fixed across default/hover/selected on purpose — animating it
+   (as an earlier version did) reflows the paragraph text mid-transition.
+   The hover/selected look (rounded corners, border, background glow) comes
+   entirely from .cs-decision__surface, a layer DecisionStepper.js animates
+   with Motion — opacity and border-radius interpolate smoothly; a raw CSS
+   transition between two different gradient strings does not. */
+.cs-decision__body {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 24px;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (min-width: 600px) {
+  .cs-decision__body {
+    padding: 24px 48px;
+  }
+}
+
+.cs-decision__surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid rgba(38, 38, 38, 0.6);
+  background: linear-gradient(180deg, rgba(87, 107, 0, 0.04) 5%, rgba(143, 249, 119, 0.1) 100%);
+}
+
+.cs-decision__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-article-section .cs-decision-list .cs-decision__number {
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--article-green);
+}
+
+.cs-article-section .cs-decision-list .cs-decision__heading {
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 24px;
+  color: var(--paper);
+}
+
+.cs-article-section .cs-decision-list .cs-decision__desc {
+  margin: 0;
+  color: var(--article-neutral);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.cs-decision__detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .cs-decision__detail {
+    /* fr, not %, so the 16px gap is accounted for rather than overflowing */
+    grid-template-columns: 7fr 3fr;
+  }
+}
+
+.cs-article-section .cs-decision-list .cs-decision__detail-label {
+  margin: 0 0 8px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--article-neutral);
+}
+
+.cs-article-section .cs-decision-list .cs-decision__detail-desc {
+  margin: 0;
+  color: var(--ash);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* "What I got wrong" — a reusable red-flagged retrospective callout,
+   reused across sections. */
+.cs-article-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px;
+  border-left: 3px solid #b91c1c;
+  background: linear-gradient(180deg, rgba(244, 144, 98, 0) 0%, rgba(253, 55, 31, 0.1) 100%);
+}
+
+/* Doubled .cs-article-section (not a typo — see the .cs-article-section
+   strong rule above) plus the .cs-article-warning ancestor qualifier so
+   this out-specifies .cs-article-warning p below — that rule also matches
+   this <p> (the label is a <p> too) and, since it carries a trailing type
+   selector, would otherwise out-specificity-tie this one and win on source
+   order, silently overriding the color/margin back to gray body-paragraph
+   defaults. */
+.cs-article-section.cs-article-section .cs-article-warning .cs-article-warning__label {
+  margin: 0;
+  color: var(--Component-colors-Utility-Red-utility-red-500, #ef4444);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.56px;
+  text-transform: uppercase;
+}
+
+.cs-article-section.cs-article-section .cs-article-warning p {
+  margin: 0 0 14px;
+  color: var(--article-neutral);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.cs-article-section.cs-article-section .cs-article-warning p:last-child {
+  margin-bottom: 0;
+}
+
+/* Scoped to the single lead paragraph flagged in Section 4's "What I got
+   wrong" callout — not a blanket change, since the second warning box
+   ("The bug that shipped") keeps its normal 14px rhythm between paragraphs. */
+.cs-article-section.cs-article-section .cs-article-warning .cs-article-warning__lead {
+  margin-bottom: 0;
+}
+
+/* Article-body CTAs reuse the sitewide lime .btn--primary, with a fuller
+   pill radius matching this section's rounder buttons in Figma. The
+   rainbow-outline secondary now gets its 16px directly from .btn--rainbow-
+   outline's own global rule instead of a scoped override here. */
+.cs-article-section .btn--primary {
+  border-radius: 38px;
+}
+
+/* Status color-legend badges */
+.cs-status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cs-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px 8px 14px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.cs-status-badge__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cs-article-section .cs-status-badge p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.cs-status-badge--blue { background: #172554; border-color: #1e40af; }
+.cs-status-badge--blue .cs-status-badge__dot { background: #3b82f6; }
+.cs-article-section .cs-status-badge--blue p { color: #93c5fd; }
+
+.cs-status-badge--amber { background: #422006; border-color: #854d0e; }
+.cs-status-badge--amber .cs-status-badge__dot { background: #eab308; }
+.cs-article-section .cs-status-badge--amber p { color: #fde047; }
+
+.cs-status-badge--green { background: #052e16; border-color: #166534; }
+.cs-status-badge--green .cs-status-badge__dot { background: #22c55e; }
+.cs-article-section .cs-status-badge--green p { color: #86efac; }
+
+.cs-status-badge--red { background: #450a0a; border-color: #991b1b; }
+.cs-status-badge--red .cs-status-badge__dot { background: #ef4444; }
+.cs-article-section .cs-status-badge--red p { color: #fca5a5; }
+
+.cs-status-badge--grey { background: #171717; border-color: #404040; }
+.cs-status-badge--grey .cs-status-badge__dot { background: #a3a3a3; }
+.cs-article-section .cs-status-badge--grey p { color: #d4d4d4; }
+
+/* One-off crop for the deals-list screenshot, whose source image is much
+   taller than its intended display box (a Figma "scale to fill" crop). */
+.cs-article-image--crop {
+  aspect-ratio: 704 / 296;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.cs-article-image--crop img {
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+}
+
+/* Live component embed (OMSComponentEmbed) — a scaled-to-fit iframe onto a
+   single isolated piece of the real OMS prototype, not a screenshot. */
+.cs-oms-embed {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--void);
+}
+
+.cs-oms-embed iframe {
+  border: 0;
+  display: block;
+  pointer-events: auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .breadcrumb a {
@@ -768,7 +1355,8 @@ button:focus-visible {
 }
 
 @media (max-width: 899px) {
-  .cs-section {
+  .cs-section,
+  .cs-article-section {
     /* clear the sticky horizontal TOC bar too, not just the site nav */
     scroll-margin-top: calc(var(--site-nav-h) + 56px);
   }
@@ -783,6 +1371,14 @@ button:focus-visible {
 
 .cs-body {
   grid-area: body;
+  /* Grid items default to min-width: auto — refusing to shrink below their
+     content's min-content size. That's normally invisible, but the OMS
+     component embeds render an iframe at a fixed intrinsic width (e.g.
+     1160px) and scale it down visually; the *layout* width is unaffected
+     by that transform, so without this the 'body' track (and everything
+     inside it) grows to fit the iframe instead of the iframe's wrapper
+     shrinking to fit the column. */
+  min-width: 0;
 }
 
 .cs-toc {
@@ -812,11 +1408,33 @@ button:focus-visible {
 
 .cs-toc__link {
   position: relative;
-  color: var(--fog);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ash);
   font-size: 14px;
   padding-bottom: 4px;
   border-bottom: 2px solid transparent;
   transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.cs-toc__link--disabled {
+  cursor: default;
+}
+
+/* The vertical rail (track + sliding indicator) and the Project Files list
+   are a desktop-only reading of the nav — the mobile layout is a horizontal
+   scroller with no room for either. */
+.cs-toc__track,
+.cs-toc__indicator,
+.cs-toc__files {
+  display: none;
+}
+
+.cs-toc__index {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  color: var(--ash);
+  transition: color 0.15s ease;
 }
 
 .cs-toc__link:hover,
@@ -830,9 +1448,13 @@ button:focus-visible {
   border-color: var(--accent);
 }
 
+.cs-toc__link.is-active .cs-toc__index {
+  color: var(--article-green);
+}
+
 @media (min-width: 900px) {
   .cs-article-grid {
-    grid-template-columns: 1fr 200px;
+    grid-template-columns: 1fr 240px;
     grid-template-areas: 'body toc';
     gap: 64px;
     align-items: start;
@@ -841,7 +1463,7 @@ button:focus-visible {
   .cs-toc {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 40px;
     overflow: visible;
     position: sticky;
     top: calc(var(--site-nav-h) + 32px);
@@ -850,62 +1472,107 @@ button:focus-visible {
     border-bottom: none;
     padding: 4px 0 0;
     margin: 0;
+    white-space: normal;
     -webkit-mask-image: none;
     mask-image: none;
   }
 
-  .cs-toc__link {
-    padding-left: 16px;
-    padding-bottom: 0;
-    border-bottom: none;
+  .cs-toc__list {
+    position: relative;
   }
 
-  .cs-toc__link::before {
-    content: '›';
+  .cs-toc__track {
+    display: block;
     position: absolute;
     left: 0;
     top: 0;
-    color: var(--accent);
-    opacity: 0;
-    transition: opacity 0.15s ease;
+    bottom: 0;
+    width: 1px;
+    background: var(--graphite);
+  }
+
+  .cs-toc__indicator {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2px;
+    background: var(--article-green);
+    transition: transform 0.25s ease, height 0.25s ease;
+  }
+
+  .cs-toc__link,
+  .cs-toc__link--disabled {
+    height: 40px;
+    padding-left: 20px;
+    padding-bottom: 0;
+    border-bottom: none;
   }
 
   .cs-toc__link.is-active {
     border-color: transparent;
   }
 
-  .cs-toc__link.is-active::before {
-    opacity: 1;
+  .cs-toc__files {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
-}
 
-.role-card {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-  background: var(--carbon);
-  border: 1px solid var(--graphite);
-  border-radius: 12px;
-  padding: 24px;
-}
-
-@media (min-width: 900px) {
-  .role-card {
-    grid-template-columns: repeat(3, 1fr);
+  .cs-toc__file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-}
 
-.role-card__key {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ash);
-  margin-bottom: 6px;
-}
+  .cs-toc__files-heading {
+    margin: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--chart-2);
+  }
 
-.role-card__value {
-  font-size: 14px;
-  color: var(--mist);
+  .cs-toc__file {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 44px;
+    padding: 4px 0 4px 12px;
+    border-left: 1px solid var(--graphite);
+    color: var(--article-neutral);
+    font-size: 12px;
+    line-height: 18px;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .cs-toc__file:hover,
+  .cs-toc__file:focus-visible {
+    color: var(--mist);
+    border-left-color: var(--ash);
+  }
+
+  .cs-toc__file-label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cs-toc__file-type {
+    flex-shrink: 0;
+    font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    font-size: 10px;
+    color: var(--article-neutral);
+  }
+
+  .cs-toc__file-icon {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .stat-row {
@@ -988,10 +1655,10 @@ button:focus-visible {
 }
 
 /* Wraps only the frame (+ its mobile preview/note) at a wider max-width
-   than the sitewide 1280px .wrap--wide — the frame benefits from the extra
+   than the sitewide 1400px .wrap--wide — the frame benefits from the extra
    room, but .proto-head above it stays aligned with the rest of the page. */
 .proto-frame-wrap {
-  max-width: 1400px;
+  max-width: 1520px;
 }
 
 .proto-head {
