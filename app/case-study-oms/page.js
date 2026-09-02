@@ -5,7 +5,7 @@ import Reveal from '@/components/Reveal';
 import MetaStrip from '@/components/MetaStrip';
 import PrototypeEmbed from '@/components/PrototypeEmbed';
 import CaseStudyNav from '@/components/CaseStudyNav';
-import TLDR from '@/components/TLDR';
+import { TLDRProvider, TLDRTrigger, TLDRPanel } from '@/components/TLDR';
 import VelarisBackground from '@/components/VelarisBackground';
 
 const neueAlteGrotesk = localFont({
@@ -80,41 +80,54 @@ export default function CaseStudyOMS() {
 
           <div className="cs-header-grid">
             <Reveal>
-              <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Case Study — Novatr</p>
-              <h1
-                className={neueAlteGrotesk.className}
-                style={{
-                  color: '#fff',
-                  fontSize: '48px',
-                  fontWeight: 600,
-                  lineHeight: '110%',
-                  letterSpacing: '-0.48px',
-                  marginBottom: '16px',
-                  maxWidth: '16ch',
-                }}
-              >
-                From spreadsheets to a single source of truth
-              </h1>
-              <p className="text-body text-mist" style={{ fontSize: '18px', maxWidth: '640px' }}>
-                Rebuilding OMS: a v3.0 retrospective
-              </p>
+              <TLDRProvider>
+                <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>Case Study — Novatr</p>
+                <h1
+                  className={neueAlteGrotesk.className}
+                  style={{
+                    color: '#fff',
+                    fontSize: '48px',
+                    fontWeight: 600,
+                    lineHeight: '110%',
+                    letterSpacing: '-0.48px',
+                    marginBottom: '16px',
+                    maxWidth: '16ch',
+                  }}
+                >
+                  From spreadsheets to a single source of truth
+                </h1>
+                <p className="text-body text-mist" style={{ fontSize: '18px', maxWidth: '640px' }}>
+                  Rebuilding OMS: a v3.0 retrospective
+                </p>
 
-              <TLDR sections={tldrSections} />
+                <p className="text-body text-mist" style={{ maxWidth: '720px' }}>
+                  Novatr&apos;s entire sales org, from a BDR on their first call to the VP of Sales, ran
+                  on a tool engineering had built with no product or design input. I led the rebuild
+                  that gave every one of five roles the exact view of the funnel they actually needed,
+                  in one place, replacing what used to take hours or days to piece together by hand.
+                </p>
 
-              <p className="text-body text-mist" style={{ maxWidth: '720px' }}>
-                Novatr&apos;s entire sales org, from a BDR on their first call to the VP of Sales, ran
-                on a tool engineering had built with no product or design input. I led the rebuild
-                that gave every one of five roles the exact view of the funnel they actually needed,
-                in one place, replacing what used to take hours or days to piece together by hand.
-              </p>
+                <MetaStrip
+                  items={[
+                    { label: 'Role', value: 'Product Design Manager, project lead' },
+                    { label: 'Collaborators', value: 'Product, Sales, Engineering' },
+                    { label: 'Company', value: 'Novatr' },
+                  ]}
+                />
 
-              <MetaStrip
-                items={[
-                  { label: 'Role', value: 'Product Design Manager, project lead' },
-                  { label: 'Collaborators', value: 'Product, Sales, Engineering' },
-                  { label: 'Company', value: 'Novatr' },
-                ]}
-              />
+                <div className="hero-actions" style={{ marginTop: '24px' }}>
+                  {/* Primary "Open full prototype ↗" (btn btn--rainbow) hidden for now —
+                      the solid white surface read as too loud next to the other two. */}
+                  <TLDRTrigger className="btn btn--rainbow-outline">
+                    Read the 2 min version
+                  </TLDRTrigger>
+                  <a href="#" className="btn btn--tertiary btn--rainbow-text">
+                    Sample tertiary link
+                  </a>
+                </div>
+
+                <TLDRPanel sections={tldrSections} />
+              </TLDRProvider>
             </Reveal>
 
             <Reveal delay={0.08}>

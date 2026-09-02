@@ -76,7 +76,7 @@ a {
 }
 
 .wrap--wide {
-  max-width: 1160px;
+  max-width: 1280px;
 }
 
 .section {
@@ -92,6 +92,7 @@ a {
 .hero-actions {
   display: flex;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 /* ---------- Nav ---------- */
@@ -115,7 +116,7 @@ a {
 }
 
 .site-nav__inner {
-  max-width: 1160px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 16px 24px;
   display: flex;
@@ -174,6 +175,148 @@ a {
 
 .btn--secondary:hover {
   border-color: var(--ash);
+}
+
+/* Lowest-emphasis CTA: text only, no fill, no border. */
+.btn--tertiary {
+  background: none;
+  border: none;
+  padding: 12px 8px;
+  color: var(--paper);
+}
+
+/* ---------- Rainbow CTA pair (homepage hero) ----------
+   Technique adapted from Magic UI's rainbow-button (MIT). Rewritten from
+   scratch for Tailwind v3 + this project's plain-CSS button system: no CVA,
+   no Radix Slot, no cn(). https://magicui.design/docs/components/rainbow-button
+
+   Animates on hover only (not looping) — .btn--rainbow:hover::before and
+   .btn--rainbow-outline:hover::after carry the animation property; the base
+   rule only sets a static background-position.
+
+   NOTE: .btn--rainbow / .btn--rainbow-outline must NOT be given z-index,
+   opacity, transform or filter — a position: relative element with
+   z-index: auto does not create a stacking context, so the z-index: -1
+   pseudo-element paints behind the button's own background. The moment
+   this parent creates a stacking context (opacity < 1, a transform, a
+   filter, will-change, backdrop-filter, or an explicit z-index), the
+   pseudo-element jumps in front of the background instead. */
+
+:root {
+  --rb-1: hsl(0 100% 63%);
+  --rb-2: hsl(270 100% 63%);
+  --rb-3: hsl(210 100% 63%);
+  --rb-4: hsl(195 100% 63%);
+  --rb-5: hsl(90 100% 63%);
+  --rb-speed: 6s;
+}
+
+@keyframes rainbow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.btn--rainbow,
+.btn--rainbow-outline {
+  position: relative; /* NO z-index */
+}
+
+/* --- Primary: solid paper surface, rainbow glow bleeding out beneath --- */
+.btn--rainbow {
+  background: var(--paper);
+  color: var(--void);
+  border: none;
+}
+
+.btn--rainbow::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  bottom: -18%;
+  width: 92%;
+  height: 60%;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    var(--rb-1), var(--rb-2), var(--rb-3), var(--rb-4), var(--rb-5), var(--rb-1)
+  );
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  filter: blur(14px);
+  opacity: 0.7;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.btn--rainbow:hover::before {
+  animation: rainbow var(--rb-speed) linear infinite;
+  opacity: 0.95;
+  filter: blur(18px);
+}
+
+/* --- Secondary: transparent surface, 1px animated rainbow ring, no glow --- */
+.btn--rainbow-outline {
+  background: var(--void);
+  color: var(--paper);
+  border: none;
+}
+
+.btn--rainbow-outline::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--rb-1), var(--rb-2), var(--rb-3), var(--rb-4), var(--rb-5), var(--rb-1)
+  );
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.btn--rainbow-outline:hover::after {
+  animation: rainbow var(--rb-speed) linear infinite;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn--rainbow:hover::before,
+  .btn--rainbow-outline:hover::after {
+    animation: none;
+  }
+}
+
+/* --- Tertiary: no surface, no ring — the rainbow lives in the text, on hover only --- */
+.btn--rainbow-text:hover {
+  background-image: linear-gradient(
+    90deg,
+    var(--rb-1), var(--rb-2), var(--rb-3), var(--rb-4), var(--rb-5), var(--rb-1)
+  );
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: var(--paper); /* fallback if background-clip: text isn't supported */
+  -webkit-text-fill-color: transparent;
+  animation: rainbow var(--rb-speed) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn--rainbow-text:hover {
+    animation: none;
+  }
+}
+
+/* Case study hero CTAs (e.g. OMS) get a fuller pill radius than the
+   homepage's default 6px — scoped to .cs-hero so the homepage pair is
+   untouched. .btn--rainbow-outline::after inherits this via border-radius:
+   inherit, so the ring tracks it automatically. */
+.cs-hero .btn--rainbow,
+.cs-hero .btn--rainbow-outline {
+  border-radius: 20px;
 }
 
 a:focus-visible,
@@ -845,10 +988,10 @@ button:focus-visible {
 }
 
 /* Wraps only the frame (+ its mobile preview/note) at a wider max-width
-   than the sitewide 1160px .wrap--wide — the frame benefits from the extra
+   than the sitewide 1280px .wrap--wide — the frame benefits from the extra
    room, but .proto-head above it stays aligned with the rest of the page. */
 .proto-frame-wrap {
-  max-width: 1280px;
+  max-width: 1400px;
 }
 
 .proto-head {
@@ -999,7 +1142,7 @@ button:focus-visible {
 
 .proto-frame-body {
   position: relative;
-  height: 640px;
+  height: 800px;
   overflow: hidden;
   background: var(--carbon);
 }

@@ -5,7 +5,7 @@ import StarBorder from './StarBorder/StarBorder';
 
 // Fixed height of .proto-frame-body in globals.css — kept in sync manually
 // since the scale math below needs it as a number, not a CSS value.
-const FRAME_HEIGHT = 640;
+const FRAME_HEIGHT = 800;
 
 export default function PrototypeEmbed({ versions, title, mobileImage, mobileImageAlt }) {
   const [activeId, setActiveId] = useState(versions[0].id);

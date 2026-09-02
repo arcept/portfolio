@@ -38,8 +38,8 @@ export default function Home() {
             happen consistently, and about the specific pixels and decisions inside them.
           </p>
           <div className="hero-actions">
-            <a href="#work" className="btn btn--primary">See selected work</a>
-            <a href="mailto:manikdesigns@yahoo.com" className="btn btn--secondary">Get in touch</a>
+            <a href="#work" className="btn btn--rainbow">See selected work</a>
+            <a href="mailto:manikdesigns@yahoo.com" className="btn btn--rainbow-outline">Get in touch</a>
           </div>
         </Reveal>
       </header>
