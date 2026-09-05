@@ -84,6 +84,8 @@
   /* ---- type families ---- */
   --font-sans: "Inter", -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  /* Available, not applied anywhere by default — swap in via var(--font-figtree). */
+  --font-figtree: "Figtree", -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 
   /* ---- type scale ---- */
   --text-display: clamp(2.75rem, 5.5vw, 5rem);

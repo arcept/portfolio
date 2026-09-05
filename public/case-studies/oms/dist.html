@@ -8,6 +8,7 @@
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url(fonts/IBMPlexMono-500.woff2) format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/IBMPlexMono-600.woff2) format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/IBMPlexMono-700.woff2) format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 300 900; font-display: swap; src: url(fonts/Figtree-normal-variable.woff2) format('woff2'); }
 </style>
 <style>
 /* === css/tokens.css === */
@@ -97,6 +98,8 @@
   /* ---- type families ---- */
   --font-sans: "Inter", -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  /* Available, not applied anywhere by default — swap in via var(--font-figtree). */
+  --font-figtree: "Figtree", -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 
   /* ---- type scale ---- */
   --text-display: clamp(2.75rem, 5.5vw, 5rem);

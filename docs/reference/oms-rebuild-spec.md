@@ -1,5 +1,8 @@
 > **Snapshot notice:** this is a point-in-time export (2026-08-30) of `claude/OMS-Rebuild-Spec.md`, a living document maintained in the Cowork session's attached Claude Project — that's the canonical, actively-updated version. This repo copy won't auto-update; if it changes meaningfully there, it should be re-exported. Treat this as reference/research material for engineering context, not a specification — see the data caveat immediately below, which is original to the source doc and still applies in full. Its companion raw fact-base, `oms-working-doc.md`, sits alongside this file in the same folder.
 
+> **⚠ Correction, 2026-09-05 — Booked revenue.** This doc defines Booked revenue as the value of payment plans/offers created in a period, regardless of collection. **That is wrong.** Booking is triggered by the learner's *first payment* (a part payment counts) and books the deal's full Net Payable at once; Realised is the cash collected to date. It also states the fee structure locks once a payment plan is created — that lock now engages at *offer sharing*, with a second, permanent tier at first payment. See `docs/reference/oms-offer-flow-scenario-analysis.md` §7.
+
+
 # Order Management System (OMS) — Rebuild & Improvement Spec
 
 **Status:** Draft v1, synthesized 2026-08-24 from the full screenshot/frame review recorded in `claude/OMS-working-doc.md`. That doc remains the raw fact-base — every claim here traces back to a section there, cited in brackets like **[WD §4d]**. This doc is the polished, structured spec meant to actually support redesigning parts of OMS.
