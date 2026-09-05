@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowRight, Check, ChevronLeft, Plus, Trash01 } from "@untitledui/icons";
-import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { DialogTrigger, Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
+import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
 import { PROTOTYPE_TODAY } from "@/data/dashboard-data";
@@ -105,196 +106,201 @@ export const OfferWizard = ({ dealId, onOpenChange }: { dealId: string | null; o
     const close = () => onOpenChange(false);
 
     return (
-        <SlideoutMenu.Trigger isOpen={!!dealId} onOpenChange={onOpenChange}>
-            <SlideoutMenu dialogClassName="max-w-2xl">
-                {() => (
-                    <>
-                        <SlideoutMenu.Header onClose={close}>
-                            <div className="flex flex-col gap-1">
-                                <span className="text-md font-semibold text-primary">{isRevise ? "Revise" : "Send"} offer letter</span>
-                                <span className="text-xs text-tertiary">
-                                    {deal.name} · {deal.course.short}
-                                </span>
-                            </div>
-                            {step < 3 && (
-                                <div className="mt-3 flex items-center gap-2 text-xs">
-                                    <StepDot active={step === 1} done={step > 1} label="Payment Plan" />
-                                    <span className="h-px w-6 bg-border-secondary" />
-                                    <StepDot active={step === 2} done={step > 2} label="Template" />
-                                </div>
-                            )}
-                        </SlideoutMenu.Header>
+        <DialogTrigger isOpen={!!dealId} onOpenChange={onOpenChange}>
+            <ModalOverlay>
+                <Modal className="max-w-2xl">
+                    <Dialog>
+                        {() => (
+                            <div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-2xl bg-primary shadow-xl">
+                                <header className="relative shrink-0 border-b border-secondary px-6 pt-6 pb-4">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-md font-semibold text-primary">{isRevise ? "Revise" : "Send"} offer letter</span>
+                                        <span className="text-xs text-tertiary">
+                                            {deal.name} · {deal.course.short}
+                                        </span>
+                                    </div>
+                                    {step < 3 && (
+                                        <div className="mt-3 flex items-center gap-2 text-xs">
+                                            <StepDot active={step === 1} done={step > 1} label="Payment Plan" />
+                                            <span className="h-px w-6 bg-border-secondary" />
+                                            <StepDot active={step === 2} done={step > 2} label="Template" />
+                                        </div>
+                                    )}
+                                    <CloseButton size="sm" className="absolute top-3 right-3" onClick={close} />
+                                </header>
 
-                        <SlideoutMenu.Content>
-                            {step === 1 && (
-                                <div className="flex flex-col gap-5">
-                                    <div className="flex flex-col gap-2">
-                                        <span className="text-sm font-medium text-secondary">Payment type</span>
-                                        <div className="flex w-max items-center gap-0.5 rounded-lg border border-secondary bg-primary p-0.5">
-                                            {(["upfront", "part"] as const).map((type) => (
-                                                <button
-                                                    key={type}
-                                                    type="button"
-                                                    onClick={() => setPlanTypeAndReseed(type)}
-                                                    className={`rounded-md px-3 py-1.5 text-sm font-semibold transition duration-100 ease-linear ${
-                                                        planType === type ? "bg-secondary text-secondary shadow-xs" : "text-quaternary hover:text-secondary"
-                                                    }`}
-                                                >
-                                                    {type === "upfront" ? "Upfront" : "Part Payment"}
-                                                </button>
+                                <div className="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-auto px-6 py-6">
+                                {step === 1 && (
+                                    <div className="flex flex-col gap-5">
+                                        <div className="flex flex-col gap-2">
+                                            <span className="text-sm font-medium text-secondary">Payment type</span>
+                                            <div className="flex w-max items-center gap-0.5 rounded-lg border border-secondary bg-primary p-0.5">
+                                                {(["upfront", "part"] as const).map((type) => (
+                                                    <button
+                                                        key={type}
+                                                        type="button"
+                                                        onClick={() => setPlanTypeAndReseed(type)}
+                                                        className={`rounded-md px-3 py-1.5 text-sm font-semibold transition duration-100 ease-linear ${
+                                                            planType === type ? "bg-secondary text-secondary shadow-xs" : "text-quaternary hover:text-secondary"
+                                                        }`}
+                                                    >
+                                                        {type === "upfront" ? "Upfront" : "Part Payment"}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+    
+                                        <Input
+                                            label={`Discount (${deal.currency})`}
+                                            type="number"
+                                            size="sm"
+                                            value={String(discount)}
+                                            onChange={(v) => {
+                                                const next = Number(v) || 0;
+                                                setDiscount(next);
+                                                if (planType === "upfront") setInstallments((prev) => [{ ...prev[0], amount: Math.max(0, deal.courseFee - next) }]);
+                                            }}
+                                        />
+    
+                                        <div className="flex flex-col gap-1.5 border-t border-secondary pt-4">
+                                            <div className="flex items-center justify-between text-sm text-tertiary">
+                                                <span>Course Fee</span>
+                                                <span>{formatMoney(deal.courseFee, deal.currency)}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm font-semibold text-primary">
+                                                <span>Net Payable Fee</span>
+                                                <span>{formatMoney(netPayable, deal.currency)}</span>
+                                            </div>
+                                        </div>
+    
+                                        <div className="flex flex-col gap-3">
+                                            <span className="text-sm font-medium text-secondary">Installments</span>
+                                            {installments.map((row, i) => (
+                                                <InstallmentBuilderRow
+                                                    key={i}
+                                                    row={row}
+                                                    index={i}
+                                                    currency={deal.currency}
+                                                    modes={modes}
+                                                    planType={planType}
+                                                    canRemove={planType === "part" && installments.length > 1}
+                                                    onChange={(patch) => updateInstallment(i, patch)}
+                                                    onRemove={() => setInstallments((prev) => prev.filter((_, idx) => idx !== i))}
+                                                />
                                             ))}
+                                            {planType === "part" && (
+                                                <Button
+                                                    color="secondary"
+                                                    size="sm"
+                                                    iconLeading={Plus}
+                                                    onClick={() =>
+                                                        setInstallments((prev) => [
+                                                            ...prev,
+                                                            { amount: Math.max(0, amountLeft), mode: deal.currency === "INR" ? "Razorpay" : "Stripe", deadline: isoInDays(21), isEmi: false, emiMonths: null },
+                                                        ])
+                                                    }
+                                                >
+                                                    Add Installment
+                                                </Button>
+                                            )}
                                         </div>
-                                    </div>
-
-                                    <Input
-                                        label={`Discount (${deal.currency})`}
-                                        type="number"
-                                        size="sm"
-                                        value={String(discount)}
-                                        onChange={(v) => {
-                                            const next = Number(v) || 0;
-                                            setDiscount(next);
-                                            if (planType === "upfront") setInstallments((prev) => [{ ...prev[0], amount: Math.max(0, deal.courseFee - next) }]);
-                                        }}
-                                    />
-
-                                    <div className="flex flex-col gap-1.5 border-t border-secondary pt-4">
-                                        <div className="flex items-center justify-between text-sm text-tertiary">
-                                            <span>Course Fee</span>
-                                            <span>{formatMoney(deal.courseFee, deal.currency)}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-sm font-semibold text-primary">
-                                            <span>Net Payable Fee</span>
-                                            <span>{formatMoney(netPayable, deal.currency)}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-3">
-                                        <span className="text-sm font-medium text-secondary">Installments</span>
-                                        {installments.map((row, i) => (
-                                            <InstallmentBuilderRow
-                                                key={i}
-                                                row={row}
-                                                index={i}
-                                                currency={deal.currency}
-                                                modes={modes}
-                                                planType={planType}
-                                                canRemove={planType === "part" && installments.length > 1}
-                                                onChange={(patch) => updateInstallment(i, patch)}
-                                                onRemove={() => setInstallments((prev) => prev.filter((_, idx) => idx !== i))}
-                                            />
-                                        ))}
+    
                                         {planType === "part" && (
-                                            <Button
-                                                color="secondary"
-                                                size="sm"
-                                                iconLeading={Plus}
-                                                onClick={() =>
-                                                    setInstallments((prev) => [
-                                                        ...prev,
-                                                        { amount: Math.max(0, amountLeft), mode: deal.currency === "INR" ? "Razorpay" : "Stripe", deadline: isoInDays(21), isEmi: false, emiMonths: null },
-                                                    ])
-                                                }
-                                            >
-                                                Add Installment
-                                            </Button>
+                                            <div className="flex flex-col gap-2 rounded-lg border border-secondary p-3">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm font-medium text-secondary">Amount Left</span>
+                                                    <span className={`text-sm font-semibold ${settled ? "text-success-primary" : "text-warning-primary"}`}>{formatMoney(amountLeft, deal.currency)}</span>
+                                                </div>
+                                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-quaternary">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-150 ${settled ? "bg-fg-success-primary" : "bg-fg-brand-primary"}`}
+                                                        style={{ width: `${Math.min(100, Math.round((totalAssigned / (netPayable || 1)) * 100))}%` }}
+                                                    />
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
-
-                                    {planType === "part" && (
-                                        <div className="flex flex-col gap-2 rounded-lg border border-secondary p-3">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm font-medium text-secondary">Amount Left</span>
-                                                <span className={`text-sm font-semibold ${settled ? "text-success-primary" : "text-warning-primary"}`}>{formatMoney(amountLeft, deal.currency)}</span>
-                                            </div>
-                                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-quaternary">
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-150 ${settled ? "bg-fg-success-primary" : "bg-fg-brand-primary"}`}
-                                                    style={{ width: `${Math.min(100, Math.round((totalAssigned / (netPayable || 1)) * 100))}%` }}
-                                                />
-                                            </div>
+                                )}
+    
+                                {step === 2 && (
+                                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                        <div className="flex flex-col gap-4">
+                                            {OFFER_TEMPLATES.map((t) => (
+                                                <button
+                                                    key={t.id}
+                                                    type="button"
+                                                    onClick={() => setTemplateId(t.id)}
+                                                    className={`flex items-start gap-3 rounded-lg border p-3 text-left transition duration-100 ease-linear ${
+                                                        templateId === t.id ? "border-brand bg-secondary" : "border-secondary hover:bg-secondary_hover"
+                                                    }`}
+                                                >
+                                                    <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${templateId === t.id ? "border-brand bg-brand-solid" : "border-secondary"}`}>
+                                                        {templateId === t.id && <Check className="size-2.5 text-white" />}
+                                                    </span>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="text-sm font-semibold text-primary">{t.name}</span>
+                                                        <span className="text-xs text-tertiary">{t.blurb}</span>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                            <Input label="Choose deadline" type="date" size="sm" value={offerDeadline} onChange={setOfferDeadline} />
                                         </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {step === 2 && (
-                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                                    <div className="flex flex-col gap-4">
-                                        {OFFER_TEMPLATES.map((t) => (
-                                            <button
-                                                key={t.id}
-                                                type="button"
-                                                onClick={() => setTemplateId(t.id)}
-                                                className={`flex items-start gap-3 rounded-lg border p-3 text-left transition duration-100 ease-linear ${
-                                                    templateId === t.id ? "border-brand bg-secondary" : "border-secondary hover:bg-secondary_hover"
-                                                }`}
-                                            >
-                                                <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${templateId === t.id ? "border-brand bg-brand-solid" : "border-secondary"}`}>
-                                                    {templateId === t.id && <Check className="size-2.5 text-white" />}
-                                                </span>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-sm font-semibold text-primary">{t.name}</span>
-                                                    <span className="text-xs text-tertiary">{t.blurb}</span>
-                                                </div>
-                                            </button>
-                                        ))}
-                                        <Input label="Choose deadline" type="date" size="sm" value={offerDeadline} onChange={setOfferDeadline} />
+                                        <EmailPreview deal={deal} discount={discount} templateId={templateId} offerDeadline={offerDeadline} />
                                     </div>
-                                    <EmailPreview deal={deal} discount={discount} templateId={templateId} offerDeadline={offerDeadline} />
-                                </div>
-                            )}
-
-                            {step === 3 && (
-                                <div className="flex flex-col items-center gap-4 py-12 text-center">
-                                    <span className="flex size-12 items-center justify-center rounded-full bg-success-primary">
-                                        <Check className="size-6 text-fg-success-primary" />
-                                    </span>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-lg font-semibold text-primary">Offer sent to {deal.name.split(" ")[0]}!</span>
-                                        <span className="max-w-sm text-sm text-tertiary">They'll receive it by email, with a link back to their offer. You can track acceptance from their Deal.</span>
-                                    </div>
-                                    <Button
-                                        color="primary"
-                                        iconTrailing={ArrowRight}
-                                        onClick={() => {
-                                            close();
-                                            navigate(`/deals/${deal.id}`);
-                                        }}
-                                    >
-                                        View deal
-                                    </Button>
-                                </div>
-                            )}
-                        </SlideoutMenu.Content>
-
-                        {step < 3 && (
-                            <SlideoutMenu.Footer className="flex items-center justify-between">
-                                <span className="text-xs text-tertiary">*Lead will receive this offer on their email</span>
-                                <div className="flex items-center gap-2">
-                                    {step === 2 && (
-                                        <Button color="secondary" size="sm" iconLeading={ChevronLeft} onClick={() => setStep(1)}>
-                                            Back
+                                )}
+    
+                                {step === 3 && (
+                                    <div className="flex flex-col items-center gap-4 py-12 text-center">
+                                        <span className="flex size-12 items-center justify-center rounded-full bg-success-primary">
+                                            <Check className="size-6 text-fg-success-primary" />
+                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-lg font-semibold text-primary">Offer sent to {deal.name.split(" ")[0]}!</span>
+                                            <span className="max-w-sm text-sm text-tertiary">They'll receive it by email, with a link back to their offer. You can track acceptance from their Deal.</span>
+                                        </div>
+                                        <Button
+                                            color="primary"
+                                            iconTrailing={ArrowRight}
+                                            onClick={() => {
+                                                close();
+                                                navigate(`/deals/${deal.id}`);
+                                            }}
+                                        >
+                                            View deal
                                         </Button>
-                                    )}
-                                    <Button
-                                        color="primary"
-                                        size="sm"
-                                        isDisabled={nextDisabled}
-                                        onClick={() => {
-                                            if (step === 1) setStep(2);
-                                            else submit();
-                                        }}
-                                    >
-                                        {step === 1 ? "Next Step" : "Send"}
-                                    </Button>
+                                    </div>
+                                )}
                                 </div>
-                            </SlideoutMenu.Footer>
+
+                                {step < 3 && (
+                                    <footer className="flex shrink-0 items-center justify-between border-t border-secondary px-6 py-4">
+                                        <span className="text-xs text-tertiary">*Lead will receive this offer on their email</span>
+                                        <div className="flex items-center gap-2">
+                                            {step === 2 && (
+                                                <Button color="secondary" size="sm" iconLeading={ChevronLeft} onClick={() => setStep(1)}>
+                                                    Back
+                                                </Button>
+                                            )}
+                                            <Button
+                                                color="primary"
+                                                size="sm"
+                                                isDisabled={nextDisabled}
+                                                onClick={() => {
+                                                    if (step === 1) setStep(2);
+                                                    else submit();
+                                                }}
+                                            >
+                                                {step === 1 ? "Next Step" : "Send"}
+                                            </Button>
+                                        </div>
+                                    </footer>
+                                )}
+                            </div>
                         )}
-                    </>
-                )}
-            </SlideoutMenu>
-        </SlideoutMenu.Trigger>
+                    </Dialog>
+                </Modal>
+            </ModalOverlay>
+        </DialogTrigger>
     );
 };
 

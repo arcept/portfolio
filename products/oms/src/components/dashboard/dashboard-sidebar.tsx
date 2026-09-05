@@ -56,8 +56,13 @@ export const DashboardSidebar = () => {
 
     const content = (
         <aside
-            style={{ "--width": `${SIDEBAR_WIDTH}px` } as React.CSSProperties}
-            className="flex h-full w-full max-w-full flex-col justify-between overflow-auto bg-primary pt-4 lg:w-(--width) lg:pt-5 md:border-r border-secondary"
+            style={
+                {
+                    "--width": `${SIDEBAR_WIDTH}px`,
+                    background: "linear-gradient(156deg, rgba(255, 255, 255, 0.04) 0%, rgba(153, 153, 153, 0.02) 36.69%), var(--color-bg-primary)",
+                } as React.CSSProperties
+            }
+            className="flex h-full w-full max-w-full flex-col justify-between overflow-auto pt-4 lg:w-(--width) lg:pt-5 md:border-r border-secondary"
         >
             <div className="flex flex-col gap-5 px-4 lg:px-5">
                 <div className="flex items-center gap-2">

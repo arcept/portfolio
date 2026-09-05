@@ -16,7 +16,7 @@ export const ModalOverlay = (props: ModalOverlayProps) => {
             {...props}
             className={(state) =>
                 cx(
-                    "fixed inset-0 flex min-h-dvh w-full items-center justify-end bg-overlay/70 pl-6 outline-hidden ease-linear md:pl-10",
+                    "fixed inset-0 flex min-h-dvh w-full items-center justify-end bg-overlay/70 pl-6 backdrop-blur-md outline-hidden ease-linear md:pl-10",
                     state.isEntering && "duration-300 animate-in fade-in",
                     state.isExiting && "duration-500 animate-out fade-out",
                     typeof props.className === "function" ? props.className(state) : props.className,
@@ -34,7 +34,7 @@ export const Modal = (props: ModalProps) => (
         {...props}
         className={(state) =>
             cx(
-                "inset-y-0 right-0 h-full w-full max-w-100 shadow-xl transition",
+                "inset-y-0 right-0 h-full w-full max-w-160 shadow-xl transition",
                 state.isEntering && "duration-300 animate-in slide-in-from-right",
                 state.isExiting && "duration-500 animate-out slide-out-to-right",
                 typeof props.className === "function" ? props.className(state) : props.className,
@@ -51,8 +51,12 @@ export const Dialog = (props: DialogProps) => (
         role="dialog"
         aria-label="Slideout menu"
         {...props}
+        style={{
+            background: "linear-gradient(180deg, rgba(38, 40, 29, 0.75) -5.43%, rgba(6, 8, 6, 0.80) 100%), rgba(0, 0, 0, 0.80)",
+            ...props.style,
+        }}
         className={cx(
-            "relative flex size-full flex-col items-start gap-6 overflow-y-auto bg-primary ring-1 ring-secondary_alt outline-hidden",
+            "relative flex size-full flex-col items-start gap-6 overflow-y-auto pt-8 pr-20 pb-30 pl-16 ring-1 ring-secondary_alt outline-hidden",
             props.className,
         )}
     />
@@ -82,7 +86,7 @@ const Menu = ({ children, dialogClassName, ...props }: SlideoutMenuProps) => {
 Menu.displayName = "SlideoutMenu";
 
 const Content = ({ role = "main", ...props }: ComponentPropsWithRef<"div">) => {
-    return <div role={role} {...props} className={cx("flex size-full flex-col gap-6 overflow-y-auto overscroll-auto px-4 md:px-6", props.className)} />;
+    return <div role={role} {...props} className={cx("flex w-full flex-col gap-6", props.className)} />;
 };
 Content.displayName = "SlideoutContent";
 
@@ -92,7 +96,7 @@ interface SlideoutHeaderProps extends ComponentPropsWithRef<"header"> {
 
 const Header = ({ className, children, onClose, ...props }: SlideoutHeaderProps) => {
     return (
-        <header {...props} className={cx("relative z-1 w-full px-4 pt-6 md:px-6", className)}>
+        <header {...props} className={cx("relative z-1 w-full", className)}>
             {children}
             <CloseButton size="sm" className="absolute top-3 right-3 shrink-0" onClick={onClose} />
         </header>
@@ -101,7 +105,7 @@ const Header = ({ className, children, onClose, ...props }: SlideoutHeaderProps)
 Header.displayName = "SlideoutHeader";
 
 const Footer = (props: ComponentPropsWithRef<"footer">) => {
-    return <footer {...props} className={cx("w-full p-4 shadow-[inset_0px_1px_0px_0px] shadow-border-secondary md:px-6", props.className)} />;
+    return <footer {...props} className={cx("w-full py-4 shadow-[inset_0px_1px_0px_0px] shadow-border-secondary", props.className)} />;
 };
 Footer.displayName = "SlideoutFooter";
 

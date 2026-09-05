@@ -130,6 +130,26 @@ const QUALIFICATIONS = ["B.Arch", "M.Arch", "B.E. Civil", "B.Tech Civil", "Diplo
 const CURRENT_ROLES = ["Junior Architect", "Design Engineer", "Site Engineer", "Architecture Intern", "Freelance Designer"];
 const EXPERIENCE_BANDS = ["0–1 years", "1–3 years", "3–5 years", "5+ years"];
 const INCOME_BANDS = ["₹3–5 LPA", "₹5–8 LPA", "₹8–12 LPA", "Not disclosed"];
+/** State/province shown in the Application Details slide-over's Basic Information group —
+ * only meaningful for the Indian cities `CITIES` includes; international cities fall back to
+ * their city name (there's no single "state" concept to derive for them). */
+const CITY_STATE: Record<string, string> = { Mumbai: "Maharashtra", Bengaluru: "Karnataka", Delhi: "Delhi", Pune: "Maharashtra", Hyderabad: "Telangana" };
+export function stateForCity(city: string): string {
+    return CITY_STATE[city] ?? city;
+}
+const PERCENTAGE_BANDS = ["60% – 69%", "70% – 79%", "80% – 89%", "90% – 100%"];
+const BIM_KNOWLEDGE_ANSWERS = [
+    "Don't know anything about BIM but I heard that it will have a good future.",
+    "Have used AutoCAD for a couple of years, but never touched a BIM workflow.",
+    "Some exposure through college projects, nothing hands-on in a real job yet.",
+    "Aware of the concept from client conversations, want to actually learn the tools.",
+];
+const WHY_LEARN_ANSWERS = [
+    "I want to grow my career and learn tech-first skills like BIM modelling.",
+    "My firm is moving to BIM workflows and I don't want to be left behind.",
+    "Looking to switch from a purely drafting role into something more technical.",
+    "Freelance clients keep asking for BIM deliverables and I keep saying no.",
+];
 
 // ---------------------------------------------------------------------------
 // Deal / installment / activity-log shapes
@@ -164,7 +184,18 @@ export type ApplicationDetails = {
     englishLevel: string;
     incomeBand: string;
     qualification: string;
+    percentageCgpa: string;
     linkedin: string;
+    bimKnowledge: string;
+    whyLearn: string;
+};
+
+/** How `discount` breaks down into the line items the Payment Plan section itemizes.
+ * Always sums back to the parent deal's `discount`. */
+export type DiscountBreakdown = {
+    upfront: number;
+    scholarship: number;
+    bdr: number;
 };
 
 export type Deal = {
@@ -177,6 +208,9 @@ export type Deal = {
     currency: "INR" | "USD";
     courseFee: number;
     discount: number;
+    /** Cosmetic — derived stably from `id` + `discount`, not part of the reconciliation model
+     * below. */
+    discountBreakdown: DiscountBreakdown;
     netPayable: number;
     installments: Installment[];
     status: DealStatus;
@@ -188,6 +222,8 @@ export type Deal = {
     cohort: string;
     city: string;
     country: string;
+    /** Cosmetic — derived stably from `id`, not part of the reconciliation model below. */
+    postalCode: string;
     intlFlag: boolean;
     sopSource: string;
     reachedStage: ReachedStage;
@@ -265,6 +301,18 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
 
     const id = `DL-${2100 + dealSeq}`;
     const name = genName();
+    const postalCode = country === "India" ? String(100_000 + (hashId(id) % 900_000)) : String(10_000 + (hashId(id) % 90_000));
+
+    // Split the single `discount` total into the three line items the Payment Plan section
+    // itemizes. `bdr` is always the remainder (never independently rounded), so the three
+    // always sum back to exactly `discount`.
+    const upfrontFraction = pickStable(`${id}du`, [0.5, 0.6, 0.7, 0.8, 1]);
+    const upfront = Math.round(discount * upfrontFraction);
+    const remainingAfterUpfront = discount - upfront;
+    const scholarshipFraction = pickStable(`${id}ds`, [0, 0, 0, 0.3, 0.5]);
+    const scholarship = Math.round(remainingAfterUpfront * scholarshipFraction);
+    const bdrDiscount = remainingAfterUpfront - scholarship;
+    const discountBreakdown: DiscountBreakdown = { upfront, scholarship, bdr: bdrDiscount };
 
     return {
         id,
@@ -276,6 +324,7 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
         currency,
         courseFee,
         discount,
+        discountBreakdown,
         netPayable,
         installments,
         status,
@@ -287,6 +336,7 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
         cohort: `${course.code}-${pick(["A", "B", "C"])}`,
         city,
         country,
+        postalCode,
         intlFlag: country !== "India",
         sopSource: pick(SOP_SOURCES),
         applicationDetails: {
@@ -296,7 +346,10 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
             englishLevel: pickStable(`${id}l`, ENGLISH_LEVELS),
             incomeBand: pickStable(`${id}i`, INCOME_BANDS),
             qualification: pickStable(`${id}q`, QUALIFICATIONS),
+            percentageCgpa: pickStable(`${id}p`, PERCENTAGE_BANDS),
             linkedin: `linkedin.com/in/${name.toLowerCase().replace(/\s+/g, "-")}`,
+            bimKnowledge: pickStable(`${id}bk`, BIM_KNOWLEDGE_ANSWERS),
+            whyLearn: pickStable(`${id}wl`, WHY_LEARN_ANSWERS),
         },
     };
 }

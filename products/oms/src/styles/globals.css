@@ -28,6 +28,14 @@
     transition-timing-function: inherit;
 }
 
+html {
+    /* Reserves the scrollbar's width permanently instead of only when content overflows —
+     * without this, any height change (e.g. expanding the deal detail activity log) that
+     * crosses the viewport-height threshold toggles the scrollbar and visibly narrows/widens
+     * every column on the page. */
+    scrollbar-gutter: stable;
+}
+
 html,
 body {
     font-family: var(--font-body);
@@ -57,6 +65,13 @@ body {
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border-secondary) transparent;
+}
+
+/* Native <button> defaults to the arrow cursor (only <a> gets pointer for free) — every
+ * clickable button across the app should read as clickable. */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+    cursor: pointer;
 }
 
 *::-webkit-scrollbar {
