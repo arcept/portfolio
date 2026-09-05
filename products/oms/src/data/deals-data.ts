@@ -122,9 +122,9 @@ const STAGE_RANK: Partial<Record<DealStatusId, ReachedStage>> = {
 export type Course = { id: string; code: string; name: string; short: string };
 
 export const COURSES: Course[] = [
-    { id: "bim-arch", code: "BIM_C005", name: "BIM for Architects", short: "BIM · Architects" },
-    { id: "bim-civil", code: "BIM_C009", name: "BIM for Civil Engineers", short: "BIM · Civil" },
-    { id: "mcd", code: "MCD_C004", name: "Master in Computational Design", short: "MCD" },
+    { id: "bim-arch", code: "BIM_C005", name: "BIM Professional Course for Architects", short: "BIM · Architects" },
+    { id: "bim-civil", code: "BIM_C009", name: "BIM Professional Course for Civil Engineers", short: "BIM · Civil" },
+    { id: "mcd", code: "MCD_C004", name: "Master in Computational Design for Professional Architects and Engineers", short: "MCD" },
 ];
 
 export type OfferTemplate = { id: string; name: string; blurb: string };

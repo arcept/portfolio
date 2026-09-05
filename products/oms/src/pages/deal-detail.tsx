@@ -15,7 +15,6 @@ import {
     Receipt,
     RefreshCcw01,
     Save01,
-    Send01,
     Shield01,
     SlashCircle01,
     XCircle,
@@ -38,6 +37,7 @@ import { GlobalStatusDialog } from "@/components/deals/global-status-dialog";
 import type { GlobalStatusRequest } from "@/components/deals/global-status-dialog";
 import { ApplicationLinkDialog } from "@/components/deals/application-link-dialog";
 import type { ApplicationLinkRequest } from "@/components/deals/application-link-dialog";
+import { ApplicationSectionCard } from "@/components/deals/application-section-card";
 import { ActionNeededBadge, DealStatusBadge } from "@/components/deals/status-badge";
 import HubspotIcon from "@/components/foundations/integration-icons/hubspot-icon";
 import WhatsappIcon from "@/components/foundations/integration-icons/whatsapp-icon";
@@ -98,6 +98,15 @@ function formatRelative(d: Date, now: Date): string {
     const diffDays = Math.round(diffHrs / 24);
     return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
 }
+
+/** Course-card duration facts (Figma's "24 Weeks" + "8 Months, online (8-10 hours/week)" pair)
+ * — the weeks/months figures are independent mock labels, not a weeks-per-month conversion, so
+ * each profile spells both out rather than deriving one from the other. */
+const COURSE_DURATION_PROFILES = [
+    { weeks: 24, months: 8, hoursPerWeek: "8-10" },
+    { weeks: 36, months: 10, hoursPerWeek: "10-12" },
+    { weeks: 48, months: 12, hoursPerWeek: "6-8" },
+];
 
 type MilestoneSubstage = { label: string; done: boolean; ts: Date | null };
 type MilestoneGroupStatus = "Completed" | "In Progress" | "Pending";
@@ -463,7 +472,7 @@ export const DealDetail = () => {
 
     if (!deal) {
         return (
-            <AppShell>
+            <AppShell background="gradient">
                 <EmptyState size="sm">
                     <EmptyState.Content>
                         <EmptyState.Description>Deal not found.</EmptyState.Description>
@@ -500,14 +509,14 @@ export const DealDetail = () => {
         toast("EMI change submitted for Sales Ops approval");
     };
 
-    const duration = pickStable(deal.id, ["6 months", "9 months", "12 months"]);
+    const durationProfile = pickStable(deal.id, COURSE_DURATION_PROFILES);
     const startDate = new Date(now.getTime() + 20 * 86_400_000);
     const lmsId = `LMS-${10000 + (hashId(deal.id) % 8999)}`;
     const firstSessionDate = new Date(now.getTime() + 12 * 86_400_000);
     const offerEmailHtml = resolveOfferEmail(deal, now);
 
     return (
-        <AppShell>
+        <AppShell background="gradient">
             <div className="flex flex-col gap-1">
                 <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals", href: "/deals" }, { label: deal.id }]} />
                 <button
@@ -610,65 +619,23 @@ export const DealDetail = () => {
 
                 {/* Main */}
                 <div className="flex flex-col gap-4">
-                    <Section number="01" title="Application" complete={appComplete} badgeLabel={appComplete ? undefined : deal.status.label}>
-                        {appComplete ? (
-                            <>
-                                <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-medium text-primary">{deal.course.name}</h3>
-                                    <div className="flex items-center gap-2 text-sm text-tertiary">
-                                        <span>
-                                            Duration: <span className="font-bold">{duration}</span>
-                                        </span>
-                                        <span className="h-3 w-px bg-[var(--color-border-tertiary)]" />
-                                        <span>
-                                            Starts: <span className="font-bold">{formatDate(startDate)}</span>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <Button color="link-gray" size="sm" onClick={() => setApplicationSlideoverOpen(true)}>
-                                        View application
-                                    </Button>
-                                    <Button color="link-color" size="sm" iconTrailing={ArrowUpRight} isDisabled>
-                                        Edit Application
-                                    </Button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <p className="text-sm text-tertiary">
-                                    {deal.application.sentOn
-                                        ? `Application form sent ${formatDate(deal.application.sentOn)}${deal.application.resendCount ? ` · resent ${deal.application.resendCount}×` : ""} — awaiting the learner.`
-                                        : "This deal hasn't been sent an application form yet."}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    {deal.status.id === "APP_NEW" ? (
-                                        <Button color="secondary" size="sm" iconLeading={Send01} onClick={() => setApplicationLinkRequest({ dealId: deal.id, mode: "send" })}>
-                                            Send Application Form
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            color="secondary"
-                                            size="sm"
-                                            iconLeading={RefreshCcw01}
-                                            isDisabled={!canResendApplication(deal).allowed}
-                                            onClick={() => setApplicationLinkRequest({ dealId: deal.id, mode: "resend" })}
-                                        >
-                                            Resend Application Form
-                                        </Button>
-                                    )}
-                                    <Button
-                                        color="secondary"
-                                        size="sm"
-                                        iconLeading={Copy04}
-                                        onClick={() => copyToClipboard(applicationFormUrl(deal), "Application link")}
-                                    >
-                                        Copy Link
-                                    </Button>
-                                </div>
-                            </>
-                        )}
-                    </Section>
+                    <ApplicationSectionCard
+                        courseName={deal.course.name}
+                        durationValue={`${durationProfile.weeks} Weeks, ${durationProfile.months} Months`}
+                        effortsValue={`Online (${durationProfile.hoursPerWeek} hours/week)`}
+                        startDateLabel={formatDate(startDate)}
+                        status={
+                            appComplete ? "completed" : deal.status.id === "APP_NEW" ? "new" : deal.status.id === "APP_EXPIRED" ? "expired" : "pending"
+                        }
+                        applicationUrl={applicationFormUrl(deal)}
+                        sentOnLabel={deal.application.sentOn ? formatDate(deal.application.sentOn) : null}
+                        resendCount={deal.application.resendCount}
+                        canResend={canResendApplication(deal).allowed}
+                        onSend={() => setApplicationLinkRequest({ dealId: deal.id, mode: "send" })}
+                        onResend={() => setApplicationLinkRequest({ dealId: deal.id, mode: "resend" })}
+                        onCopyLink={() => copyToClipboard(applicationFormUrl(deal), "Application link")}
+                        onViewApplication={() => setApplicationSlideoverOpen(true)}
+                    />
 
                     <Section number="02" title="Payment Plan" complete={planComplete} badgeLabel={PLAN_STATE_BADGE[deal.plan.state]}>
                         {deal.plan.state === "none" ? (
