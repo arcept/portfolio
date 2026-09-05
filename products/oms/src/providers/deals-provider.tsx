@@ -13,6 +13,11 @@ interface DealsContextType {
      * change. */
     logActivity: (id: string, text: string, reason?: string | null) => void;
 
+    /** Application-form lifecycle — separates "assigned" (`APP_NEW`) from "form actually sent"
+     * (`APP_PENDING`), which used to be the same status. */
+    sendApplication: (id: string) => void;
+    resendApplication: (id: string) => void;
+
     /** Payment Plan lifecycle (2026-09-05 offer-separation brief §4). */
     createPlan: (id: string) => void;
     savePlan: (id: string, patch: { discount: number; installments: Installment[] }) => void;
@@ -21,6 +26,9 @@ interface DealsContextType {
 
     /** Offer Letter lifecycle. */
     createLetter: (id: string, opts: { template: OfferTemplate; deadline: string }) => void;
+    /** Template/deadline change on a letter that hasn't been shared yet — no-ops unless
+     * `offer.state` is `created` or `stale`. */
+    editLetter: (id: string, opts: { template: OfferTemplate; deadline: string }) => void;
     refreshLetter: (id: string) => void;
     shareLetter: (id: string) => void;
     resendLetter: (id: string) => void;
@@ -60,6 +68,41 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
     const logActivity = useCallback((id: string, text: string, reason?: string | null) => {
         setDeals((prev) => prev.map((d) => (d.id === id ? { ...d, activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text, reason: reason ?? null }] } : d)));
     }, []);
+
+    const sendApplication = useCallback(
+        (id: string) => {
+            setDeals((prev) =>
+                prev.map((d) => {
+                    if (d.id !== id || d.status.id !== "APP_NEW") return d;
+                    return {
+                        ...d,
+                        application: { sentOn: PROTOTYPE_TODAY, resendCount: 0 },
+                        status: STATUS.APP_PENDING,
+                        lastUpdate: PROTOTYPE_TODAY,
+                        activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Application form sent", reason: withActor() }],
+                    };
+                }),
+            );
+        },
+        [withActor],
+    );
+
+    const resendApplication = useCallback(
+        (id: string) => {
+            setDeals((prev) =>
+                prev.map((d) => {
+                    if (d.id !== id || !d.application.sentOn) return d;
+                    return {
+                        ...d,
+                        application: { ...d.application, resendCount: d.application.resendCount + 1 },
+                        lastUpdate: PROTOTYPE_TODAY,
+                        activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Application form resent", reason: withActor() }],
+                    };
+                }),
+            );
+        },
+        [withActor],
+    );
 
     const createPlan = useCallback(
         (id: string) => {
@@ -165,10 +208,6 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                             { version: d.offer.version, template: d.offer.template.name, sharedOn: d.offer.sharedOn, endedOn: PROTOTYPE_TODAY, endedBy: d.offer.state, reason: null },
                         ];
                         version = d.offer.version + 1;
-                    } else if (d.offer.state === "created" || d.offer.state === "stale") {
-                        // An unshared draft letter, discarded for a fresh one — nothing was ever
-                        // delivered to the learner, so there's no history entry to push.
-                        version = d.offer.version + 1;
                     }
                     const offer: Deal["offer"] = {
                         state: "created", template: opts.template, deadline: opts.deadline, version,
@@ -180,6 +219,27 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                         offerHistory,
                         lastUpdate: PROTOTYPE_TODAY,
                         activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Offer letter created", reason: withActor(`${opts.template.name} template`) }],
+                    };
+                }),
+            );
+        },
+        [withActor],
+    );
+
+    /** Edits a letter that hasn't been shared yet (`created`/`stale`) — template/deadline change
+     * in place, same version, retaking the snapshot off the live plan (which also clears any
+     * staleness). Distinct from `createLetter`'s expired/withdrawn branch: nothing was ever
+     * delivered to the learner here, so there's no history entry to push and no version bump. */
+    const editLetter = useCallback(
+        (id: string, opts: { template: OfferTemplate; deadline: string }) => {
+            setDeals((prev) =>
+                prev.map((d) => {
+                    if (d.id !== id || (d.offer.state !== "created" && d.offer.state !== "stale")) return d;
+                    return {
+                        ...d,
+                        offer: { ...d.offer, state: "created", template: opts.template, deadline: opts.deadline, snapshot: planSnapshot(d) },
+                        lastUpdate: PROTOTYPE_TODAY,
+                        activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Offer letter edited", reason: withActor(`${opts.template.name} template`) }],
                     };
                 }),
             );
@@ -274,11 +334,14 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                 deals,
                 updateDeal,
                 logActivity,
+                sendApplication,
+                resendApplication,
                 createPlan,
                 savePlan,
                 submitPlanForApproval,
                 resolveApproval,
                 createLetter,
+                editLetter,
                 refreshLetter,
                 shareLetter,
                 resendLetter,

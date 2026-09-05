@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { FilterLines, Globe02, Link03, Mail01, RefreshCcw01, SearchLg, Send01, XClose } from "@untitledui/icons";
+import { FilterLines, Globe02, Link03, Mail01, Pencil01, RefreshCcw01, SearchLg, Send01, XClose } from "@untitledui/icons";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
 import { PaginationPageDefault } from "@/components/application/pagination/pagination";
@@ -15,11 +15,13 @@ import { DealsFilterChips, DealsFilterPanel, EMPTY_FILTERS } from "@/components/
 import { PaymentPlanEditor } from "@/components/deals/payment-plan-editor";
 import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
 import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
+import { ApplicationLinkDialog } from "@/components/deals/application-link-dialog";
+import type { ApplicationLinkRequest } from "@/components/deals/application-link-dialog";
 import type { DealFilters } from "@/components/deals/deals-filter-panel";
 import { DealStatusBadge, ActionNeededBadge } from "@/components/deals/status-badge";
 import { PROTOTYPE_TODAY } from "@/data/dashboard-data";
 import type { Deal } from "@/data/deals-data";
-import { canCreateLetter, canCreatePlan, canShareLetter, canWithdraw, dealsForPersona, STATUS } from "@/data/deals-data";
+import { applicationFormUrl, canCreateLetter, canCreatePlan, canResendApplication, canShareLetter, canWithdraw, dealsForPersona, STATUS } from "@/data/deals-data";
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import { ROLE_LABELS } from "@/types/role";
@@ -29,6 +31,7 @@ type Tab = { key: string; label: string; action?: boolean; test: (d: Deal) => bo
 const TABS: Tab[] = [
     { key: "all", label: "All", test: () => true },
     { key: "action", label: "Action Required", action: true, test: (d) => d.status.action },
+    { key: "new", label: "New", test: (d) => d.status.id === "APP_NEW" },
     { key: "application", label: "Application", test: (d) => d.status.stage === "Application" },
     { key: "plan", label: "Plan", test: (d) => d.status.stage === "Plan" },
     { key: "offer", label: "Offer", test: (d) => d.status.stage === "Offer" },
@@ -151,6 +154,7 @@ export const DealsList = () => {
         [updateDeal],
     );
     const handleCopyLink = useCallback((deal: Deal) => {
+        navigator.clipboard?.writeText(applicationFormUrl(deal)).catch(() => {});
         toast(`Application link copied for ${deal.name}`);
     }, []);
 
@@ -161,10 +165,13 @@ export const DealsList = () => {
     const [letterComposerDealId, setLetterComposerDealId] = useState<string | null>(null);
     const [shareDealId, setShareDealId] = useState<string | null>(null);
     const [withdrawDealId, setWithdrawDealId] = useState<string | null>(null);
+    const [applicationLinkRequest, setApplicationLinkRequest] = useState<ApplicationLinkRequest>(null);
     const handleCreatePlan = useCallback((deal: Deal) => setPlanEditorDealId(deal.id), []);
     const handleCreateLetter = useCallback((deal: Deal) => setLetterComposerDealId(deal.id), []);
     const handleShare = useCallback((deal: Deal) => setShareDealId(deal.id), []);
     const handleWithdraw = useCallback((deal: Deal) => setWithdrawDealId(deal.id), []);
+    const handleSendApplication = useCallback((deal: Deal) => setApplicationLinkRequest({ dealId: deal.id, mode: "send" }), []);
+    const handleResendApplication = useCallback((deal: Deal) => setApplicationLinkRequest({ dealId: deal.id, mode: "resend" }), []);
     const handleRefresh = useCallback(
         (deal: Deal) => {
             refreshLetter(deal.id);
@@ -189,8 +196,21 @@ export const DealsList = () => {
             onRefresh: handleRefresh,
             onResend: handleResend,
             onWithdraw: handleWithdraw,
+            onSendApplication: handleSendApplication,
+            onResendApplication: handleResendApplication,
         }),
-        [handleNotInterested, handleCopyLink, handleCreatePlan, handleCreateLetter, handleShare, handleRefresh, handleResend, handleWithdraw],
+        [
+            handleNotInterested,
+            handleCopyLink,
+            handleCreatePlan,
+            handleCreateLetter,
+            handleShare,
+            handleRefresh,
+            handleResend,
+            handleWithdraw,
+            handleSendApplication,
+            handleResendApplication,
+        ],
     );
 
     return (
@@ -282,9 +302,17 @@ export const DealsList = () => {
             )}
 
             <PaymentPlanEditor dealId={planEditorDealId} onOpenChange={(open) => !open && setPlanEditorDealId(null)} />
-            <OfferLetterComposer dealId={letterComposerDealId} onOpenChange={(open) => !open && setLetterComposerDealId(null)} />
+            <OfferLetterComposer
+                dealId={letterComposerDealId}
+                onOpenChange={(open) => !open && setLetterComposerDealId(null)}
+                onShareRequested={(id) => {
+                    setLetterComposerDealId(null);
+                    setShareDealId(id);
+                }}
+            />
             <ShareOfferDialog dealId={shareDealId} onOpenChange={(open) => !open && setShareDealId(null)} />
             <WithdrawOfferDialog dealId={withdrawDealId} onOpenChange={(open) => !open && setWithdrawDealId(null)} />
+            <ApplicationLinkDialog request={applicationLinkRequest} onOpenChange={(open) => !open && setApplicationLinkRequest(null)} />
         </AppShell>
     );
 };
@@ -298,23 +326,40 @@ type RowHandlers = {
     onRefresh: (d: Deal) => void;
     onResend: (d: Deal) => void;
     onWithdraw: (d: Deal) => void;
+    onSendApplication: (d: Deal) => void;
+    onResendApplication: (d: Deal) => void;
 };
 
 /** The §6 row-action table, one branch per deal state. Every button reads its enabled state off
  * the same guards Section 02/03 read on the deal-detail page (§2.3) — disabled-with-tooltip,
  * never hidden, so the reason is always visible. */
 function primaryRowActions(deal: Deal, handlers: RowHandlers) {
+    if (deal.status.id === "APP_NEW") {
+        return [<ButtonUtility key="send-app" size="sm" color="tertiary" tooltip="Send application form" icon={Send01} onClick={() => handlers.onSendApplication(deal)} />];
+    }
+    if (deal.status.id === "APP_PENDING" || deal.status.id === "APP_EXPIRED") {
+        const guard = canResendApplication(deal);
+        return [
+            <ButtonUtility key="resend-app" size="sm" color="tertiary" tooltip={guard.allowed ? "Resend application form" : guard.reason} icon={RefreshCcw01} isDisabled={!guard.allowed} onClick={() => handlers.onResendApplication(deal)} />,
+        ];
+    }
     if (deal.status.id === "APP_FILLED" || deal.status.id === "PLAN_NOT_STARTED") {
         const guard = canCreatePlan(deal);
         return [<ButtonUtility key="plan" size="sm" color="tertiary" tooltip={guard.allowed ? "Create payment plan" : guard.reason} icon={Mail01} isDisabled={!guard.allowed} onClick={() => handlers.onCreatePlan(deal)} />];
     }
     if (deal.status.id === "PLAN_DRAFT") {
         if (deal.offer.state === "stale") {
-            return [<ButtonUtility key="refresh" size="sm" color="tertiary" tooltip="Refresh offer letter" icon={RefreshCcw01} onClick={() => handlers.onRefresh(deal)} />];
+            return [
+                <ButtonUtility key="edit" size="sm" color="tertiary" tooltip="Edit offer letter" icon={Pencil01} onClick={() => handlers.onCreateLetter(deal)} />,
+                <ButtonUtility key="refresh" size="sm" color="tertiary" tooltip="Refresh offer letter" icon={RefreshCcw01} onClick={() => handlers.onRefresh(deal)} />,
+            ];
         }
         if (deal.offer.state === "created") {
             const guard = canShareLetter(deal);
-            return [<ButtonUtility key="share" size="sm" color="tertiary" tooltip={guard.allowed ? "Share offer letter" : guard.reason} icon={Send01} isDisabled={!guard.allowed} onClick={() => handlers.onShare(deal)} />];
+            return [
+                <ButtonUtility key="edit" size="sm" color="tertiary" tooltip="Edit offer letter" icon={Pencil01} onClick={() => handlers.onCreateLetter(deal)} />,
+                <ButtonUtility key="share" size="sm" color="tertiary" tooltip={guard.allowed ? "Share offer letter" : guard.reason} icon={Send01} isDisabled={!guard.allowed} onClick={() => handlers.onShare(deal)} />,
+            ];
         }
         const guard = canCreateLetter(deal);
         return [<ButtonUtility key="letter" size="sm" color="tertiary" tooltip={guard.allowed ? "Create offer letter" : guard.reason} icon={Mail01} isDisabled={!guard.allowed} onClick={() => handlers.onCreateLetter(deal)} />];

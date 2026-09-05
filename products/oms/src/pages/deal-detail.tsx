@@ -14,6 +14,8 @@ import {
     Pencil01,
     Receipt,
     RefreshCcw01,
+    Save01,
+    Send01,
     Shield01,
     SlashCircle01,
     XCircle,
@@ -28,16 +30,21 @@ import { toast } from "@/components/application/toast/toast";
 import { BadgeWithFlag } from "@/components/base/badges/badges";
 import type { FlagTypes } from "@/components/base/badges/badge-types";
 import { Dot } from "@/components/foundations/dot-icon";
-import { PaymentPlanEditor } from "@/components/deals/payment-plan-editor";
+import { PaymentPlanForm } from "@/components/deals/payment-plan-editor";
 import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
 import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
+import { OfferEmailModal, OfferEmailPreviewCard } from "@/components/deals/offer-email-preview";
+import { GlobalStatusDialog } from "@/components/deals/global-status-dialog";
+import type { GlobalStatusRequest } from "@/components/deals/global-status-dialog";
+import { ApplicationLinkDialog } from "@/components/deals/application-link-dialog";
+import type { ApplicationLinkRequest } from "@/components/deals/application-link-dialog";
 import { ActionNeededBadge, DealStatusBadge } from "@/components/deals/status-badge";
 import HubspotIcon from "@/components/foundations/integration-icons/hubspot-icon";
 import WhatsappIcon from "@/components/foundations/integration-icons/whatsapp-icon";
-import offerLetterPreview from "@/assets/offer-letter-preview.png";
 import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
 import type { ActivityLogEntry, Deal, Installment } from "@/data/deals-data";
-import { STATUS, canCreateLetter, canCreatePlan, canEditPlan, canShareLetter, canWithdraw, stateForCity } from "@/data/deals-data";
+import { STATUS, applicationFormUrl, canCreateLetter, canCreatePlan, canEditPlan, canResendApplication, canShareLetter, canWithdraw, stateForCity } from "@/data/deals-data";
+import { resolveOfferEmail } from "@/data/offer-emails";
 import { useDeals } from "@/providers/deals-provider";
 
 /** ISO-3166 codes for `BadgeWithFlag` — only the countries `CITIES` (deals-data.ts) uses. */
@@ -77,6 +84,13 @@ function formatDateTime(d: Date): string {
     const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     return `${date}, ${time} IST`;
 }
+/** Deadline, date + time — §"deadline visibility": the old display was date-only. Pinned to
+ * 11:59 PM, the same convention `ShareOfferDialog` and the offer emailers use, since the plan
+ * only carries a calendar date. */
+function formatDeadlineDateTime(iso: string): string {
+    const d = new Date(`${iso}T23:59:59`);
+    return `${formatDate(d)}, 11:59 PM`;
+}
 function formatRelative(d: Date, now: Date): string {
     const diffHrs = Math.round((now.getTime() - d.getTime()) / 3_600_000);
     if (diffHrs < 1) return "just now";
@@ -115,7 +129,7 @@ function getMilestoneGroups(deal: Deal): MilestoneGroup[] {
     const enrolled = deal.status.id === "PAY_COMPLETED";
 
     const applicationAndPlan: MilestoneSubstage[] = [
-        { label: "Application Sent", done: true, ts: deal.createdOn },
+        { label: "Application Sent", done: !!deal.application.sentOn, ts: deal.application.sentOn },
         { label: "Application Filled", done: !!appFilled, ts: appFilled?.ts ?? null },
         { label: "Payment Plan Created", done: !!planCreated, ts: planCreated?.ts ?? null },
     ];
@@ -434,14 +448,16 @@ const InstallmentRow = ({
 export const DealDetail = () => {
     const { dealId } = useParams<{ dealId: string }>();
     const navigate = useNavigate();
-    const { deals, updateDeal, logActivity, submitPlanForApproval, resolveApproval, refreshLetter, resendLetter } = useDeals();
+    const { deals, updateDeal, logActivity, createPlan, submitPlanForApproval, resolveApproval, refreshLetter, resendLetter } = useDeals();
     const deal = deals.find((d) => d.id === dealId);
 
     const [applicationSlideoverOpen, setApplicationSlideoverOpen] = useState(false);
-    const [planEditorDealId, setPlanEditorDealId] = useState<string | null>(null);
     const [letterComposerDealId, setLetterComposerDealId] = useState<string | null>(null);
     const [shareDealId, setShareDealId] = useState<string | null>(null);
     const [withdrawDealId, setWithdrawDealId] = useState<string | null>(null);
+    const [emailModalDealId, setEmailModalDealId] = useState<string | null>(null);
+    const [globalStatusRequest, setGlobalStatusRequest] = useState<GlobalStatusRequest>(null);
+    const [applicationLinkRequest, setApplicationLinkRequest] = useState<ApplicationLinkRequest>(null);
     const [activityLogOpen, setActivityLogOpen] = useState(true);
     const now = deals[0]?.lastUpdate ?? new Date();
 
@@ -473,17 +489,6 @@ export const DealDetail = () => {
     // payment ongoing" (2) is now 3.
     const enrollComplete = deal.reachedStage >= 3;
 
-    const handleGlobalStatus = (statusId: "NOT_INTERESTED" | "REJECTED" | "SAVED") => {
-        const reasons: Record<string, string> = {
-            NOT_INTERESTED: "No longer pursuing this cohort",
-            REJECTED: "Does not meet course prerequisites",
-            SAVED: "Parked for the next intake",
-        };
-        updateDeal(deal.id, { status: STATUS[statusId] });
-        logActivity(deal.id, `Deal marked ${STATUS[statusId].label}`, reasons[statusId]);
-        toast(`${deal.name} → ${STATUS[statusId].label}`);
-    };
-
     const handleReopen = () => {
         updateDeal(deal.id, { status: STATUS.APP_PENDING });
         logActivity(deal.id, "Deal Reopened", "Learner reached back out");
@@ -499,6 +504,7 @@ export const DealDetail = () => {
     const startDate = new Date(now.getTime() + 20 * 86_400_000);
     const lmsId = `LMS-${10000 + (hashId(deal.id) % 8999)}`;
     const firstSessionDate = new Date(now.getTime() + 12 * 86_400_000);
+    const offerEmailHtml = resolveOfferEmail(deal, now);
 
     return (
         <AppShell>
@@ -579,13 +585,13 @@ export const DealDetail = () => {
                             </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-2">
-                                <Button color="secondary" size="sm" iconLeading={SlashCircle01} onClick={() => handleGlobalStatus("NOT_INTERESTED")}>
+                                <Button color="secondary" size="sm" iconLeading={SlashCircle01} onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "not-interested" })}>
                                     Not Interested
                                 </Button>
-                                <Button color="secondary" size="sm" iconLeading={XCircle} onClick={() => handleGlobalStatus("REJECTED")}>
+                                <Button color="secondary" size="sm" iconLeading={XCircle} onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "rejected" })}>
                                     Mark Reject
                                 </Button>
-                                <Button className="col-span-2" color="secondary" size="sm" iconLeading={Bookmark} onClick={() => handleGlobalStatus("SAVED")}>
+                                <Button className="col-span-2" color="secondary" size="sm" iconLeading={Bookmark} onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "saved" })}>
                                     Save for Later
                                 </Button>
                             </div>
@@ -604,7 +610,7 @@ export const DealDetail = () => {
 
                 {/* Main */}
                 <div className="flex flex-col gap-4">
-                    <Section number="01" title="Application" complete={appComplete}>
+                    <Section number="01" title="Application" complete={appComplete} badgeLabel={appComplete ? undefined : deal.status.label}>
                         {appComplete ? (
                             <>
                                 <div className="flex flex-col gap-1">
@@ -629,12 +635,57 @@ export const DealDetail = () => {
                                 </div>
                             </>
                         ) : (
-                            <p className="text-sm text-tertiary">Application not filled yet.</p>
+                            <>
+                                <p className="text-sm text-tertiary">
+                                    {deal.application.sentOn
+                                        ? `Application form sent ${formatDate(deal.application.sentOn)}${deal.application.resendCount ? ` · resent ${deal.application.resendCount}×` : ""} — awaiting the learner.`
+                                        : "This deal hasn't been sent an application form yet."}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    {deal.status.id === "APP_NEW" ? (
+                                        <Button color="secondary" size="sm" iconLeading={Send01} onClick={() => setApplicationLinkRequest({ dealId: deal.id, mode: "send" })}>
+                                            Send Application Form
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            color="secondary"
+                                            size="sm"
+                                            iconLeading={RefreshCcw01}
+                                            isDisabled={!canResendApplication(deal).allowed}
+                                            onClick={() => setApplicationLinkRequest({ dealId: deal.id, mode: "resend" })}
+                                        >
+                                            Resend Application Form
+                                        </Button>
+                                    )}
+                                    <Button
+                                        color="secondary"
+                                        size="sm"
+                                        iconLeading={Copy04}
+                                        onClick={() => copyToClipboard(applicationFormUrl(deal), "Application link")}
+                                    >
+                                        Copy Link
+                                    </Button>
+                                </div>
+                            </>
                         )}
                     </Section>
 
                     <Section number="02" title="Payment Plan" complete={planComplete} badgeLabel={PLAN_STATE_BADGE[deal.plan.state]}>
-                        {planComplete ? (
+                        {deal.plan.state === "none" ? (
+                            <EmptyState size="sm" className="mx-auto max-w-none py-4">
+                                <EmptyState.Content>
+                                    <EmptyState.Description>{planGuardCreate.allowed ? "No payment plan yet." : planGuardCreate.reason}</EmptyState.Description>
+                                </EmptyState.Content>
+                                <Button color="secondary" size="sm" iconLeading={Save01} className="h-11" isDisabled={!planGuardCreate.allowed} onClick={() => createPlan(deal.id)}>
+                                    Create Payment Plan
+                                </Button>
+                            </EmptyState>
+                        ) : planGuardEdit.allowed ? (
+                            // Editable in place — the same form the slideout uses elsewhere (deals-list.tsx),
+                            // just rendered directly in the section instead of behind a modal. Keyed on the
+                            // deal id so its internal draft state resets cleanly on a route change.
+                            <PaymentPlanForm key={deal.id} deal={deal} />
+                        ) : (
                             <>
                                 <div className="flex flex-col">
                                     <FeeRow label="Course Fees (A)" amount={deal.courseFee} currency={deal.currency} emphasis />
@@ -668,23 +719,9 @@ export const DealDetail = () => {
                                 {deal.plan.state === "awaiting_approval" ? (
                                     <SimulateApprovalControl onDecide={(decision, reason) => resolveApproval(deal.id, decision, reason)} />
                                 ) : (
-                                    <div className="flex items-center gap-2">
-                                        <Button color="secondary" size="sm" isDisabled={!planGuardEdit.allowed} onClick={() => setPlanEditorDealId(deal.id)}>
-                                            Edit payment plan
-                                        </Button>
-                                        {!planGuardEdit.allowed && <span className="text-xs text-tertiary italic">*{planGuardEdit.reason}</span>}
-                                    </div>
+                                    <span className="text-xs text-tertiary italic">*{planGuardEdit.reason}</span>
                                 )}
                             </>
-                        ) : (
-                            <EmptyState size="sm" className="mx-auto max-w-none py-4">
-                                <EmptyState.Content>
-                                    <EmptyState.Description>{planGuardCreate.allowed ? "No payment plan yet." : planGuardCreate.reason}</EmptyState.Description>
-                                </EmptyState.Content>
-                                <Button color="primary" size="sm" isDisabled={!planGuardCreate.allowed} onClick={() => setPlanEditorDealId(deal.id)}>
-                                    Create payment plan
-                                </Button>
-                            </EmptyState>
                         )}
                     </Section>
 
@@ -692,10 +729,10 @@ export const DealDetail = () => {
                         {offerComplete ? (
                             <>
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                    <MetaField label="Template" value={deal.offer.template?.name ?? "—"} />
-                                    <MetaField label="Deadline" value={deal.offer.deadline ? formatDate(new Date(deal.offer.deadline)) : "—"} />
+                                    <MetaField label="Template Used" value={deal.offer.template?.name ?? "—"} />
+                                    <MetaField label="Deadline" value={deal.offer.deadline ? formatDeadlineDateTime(deal.offer.deadline) : "—"} />
                                     <MetaField label="Net Payable (as shared)" value={deal.offer.snapshot ? formatMoney(deal.offer.snapshot.netPayable, deal.currency) : "—"} />
-                                    <MetaField label="Version" value={`v${deal.offer.version}${deal.offer.resendCount ? ` · resent ${deal.offer.resendCount}×` : ""}`} />
+                                    <MetaField label="Version" value={`v${deal.offer.version}${deal.offer.resendCount ? `.resent${deal.offer.resendCount}x` : ""}`} />
                                 </div>
 
                                 {deal.offer.state === "stale" && deal.offer.snapshot && (
@@ -707,41 +744,47 @@ export const DealDetail = () => {
                                     </div>
                                 )}
 
-                                {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                    <div className="overflow-hidden rounded-2xl">
-                                        <img src={offerLetterPreview} alt="Offer letter preview" className="h-auto w-full object-cover" />
-                                    </div>
-                                )}
+                                {offerEmailHtml && <OfferEmailPreviewCard html={offerEmailHtml} />}
 
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {deal.offer.state === "created" && (
-                                        <Button color="primary" size="sm" isDisabled={!letterGuardShare.allowed} onClick={() => setShareDealId(deal.id)}>
-                                            Share offer letter
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Button color="secondary" size="sm" iconLeading={ArrowUpRight} isDisabled={!offerEmailHtml} onClick={() => setEmailModalDealId(deal.id)}>
+                                            View Offer Letter
                                         </Button>
-                                    )}
-                                    {deal.offer.state === "stale" && (
-                                        <Button color="primary" size="sm" iconLeading={RefreshCcw01} onClick={() => refreshLetter(deal.id)}>
-                                            Refresh letter
-                                        </Button>
-                                    )}
+                                        {(deal.offer.state === "created" || deal.offer.state === "stale") && (
+                                            <Button color="secondary" size="sm" iconLeading={Pencil01} onClick={() => setLetterComposerDealId(deal.id)}>
+                                                Edit offer letter
+                                            </Button>
+                                        )}
+                                        {deal.offer.state === "created" && (
+                                            <Button color="primary" size="sm" isDisabled={!letterGuardShare.allowed} onClick={() => setShareDealId(deal.id)}>
+                                                Share offer letter
+                                            </Button>
+                                        )}
+                                        {deal.offer.state === "stale" && (
+                                            <Button color="primary" size="sm" iconLeading={RefreshCcw01} onClick={() => refreshLetter(deal.id)}>
+                                                Refresh letter
+                                            </Button>
+                                        )}
+                                        {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
+                                            <Button color="secondary" size="sm" iconLeading={RefreshCcw01} onClick={() => resendLetter(deal.id)}>
+                                                Resend Letter
+                                            </Button>
+                                        )}
+                                        {(deal.offer.state === "expired" || deal.offer.state === "withdrawn") && (
+                                            <Button color="secondary" size="sm" isDisabled={!letterGuardCreate.allowed} onClick={() => setLetterComposerDealId(deal.id)}>
+                                                Create offer letter (v2)
+                                            </Button>
+                                        )}
+                                        {!letterGuardShare.allowed && deal.offer.state === "created" && <span className="text-xs text-tertiary italic">*{letterGuardShare.reason}</span>}
+                                    </div>
                                     {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                        <>
-                                            <Button color="secondary" size="sm" onClick={() => resendLetter(deal.id)}>
-                                                Resend
+                                        <div className="flex flex-col items-end gap-1">
+                                            <Button color="secondary-destructive" size="sm" iconLeading={SlashCircle01} isDisabled={!withdrawGuard.allowed} onClick={() => setWithdrawDealId(deal.id)}>
+                                                Withdraw Offer
                                             </Button>
-                                            <Button color="secondary-destructive" size="sm" isDisabled={!withdrawGuard.allowed} onClick={() => setWithdrawDealId(deal.id)}>
-                                                Withdraw
-                                            </Button>
-                                        </>
-                                    )}
-                                    {(deal.offer.state === "expired" || deal.offer.state === "withdrawn") && (
-                                        <Button color="secondary" size="sm" isDisabled={!letterGuardCreate.allowed} onClick={() => setLetterComposerDealId(deal.id)}>
-                                            Create offer letter (v2)
-                                        </Button>
-                                    )}
-                                    {!letterGuardShare.allowed && deal.offer.state === "created" && <span className="text-xs text-tertiary italic">*{letterGuardShare.reason}</span>}
-                                    {!withdrawGuard.allowed && (deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                        <span className="text-xs text-tertiary italic">*{withdrawGuard.reason}</span>
+                                            {!withdrawGuard.allowed && <span className="text-xs text-tertiary italic">*{withdrawGuard.reason}</span>}
+                                        </div>
                                     )}
                                 </div>
 
@@ -921,10 +964,19 @@ export const DealDetail = () => {
                 </SlideoutMenu>
             </SlideoutMenu.Trigger>
 
-            <PaymentPlanEditor dealId={planEditorDealId} onOpenChange={(open) => !open && setPlanEditorDealId(null)} />
-            <OfferLetterComposer dealId={letterComposerDealId} onOpenChange={(open) => !open && setLetterComposerDealId(null)} />
+            <OfferLetterComposer
+                dealId={letterComposerDealId}
+                onOpenChange={(open) => !open && setLetterComposerDealId(null)}
+                onShareRequested={(id) => {
+                    setLetterComposerDealId(null);
+                    setShareDealId(id);
+                }}
+            />
             <ShareOfferDialog dealId={shareDealId} onOpenChange={(open) => !open && setShareDealId(null)} />
             <WithdrawOfferDialog dealId={withdrawDealId} onOpenChange={(open) => !open && setWithdrawDealId(null)} />
+            <OfferEmailModal dealId={emailModalDealId} onOpenChange={(open) => !open && setEmailModalDealId(null)} />
+            <GlobalStatusDialog request={globalStatusRequest} onOpenChange={(open) => !open && setGlobalStatusRequest(null)} />
+            <ApplicationLinkDialog request={applicationLinkRequest} onOpenChange={(open) => !open && setApplicationLinkRequest(null)} />
         </AppShell>
     );
 };

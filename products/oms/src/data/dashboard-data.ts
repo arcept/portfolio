@@ -176,8 +176,11 @@ function buildCascade(unitsAchieved: number, seed: number): DealStageCascade {
     const offerNotInterestedOrRejected = branch(accepted, 0.12, 0.2);
     const filled = accepted + offerPending + offerExpired + offerNotInterestedOrRejected;
 
-    // Application step — backward from `filled`.
-    const appPending = branch(filled, 0.12, 0.2);
+    // Application step — backward from `filled`. Widened per Manik's ask for a bigger sample of
+    // brand-new (assigned, not yet sent) deals — purely additive to Applications Sent, since
+    // `filled` (and everything downstream of it — Plan/Offer/Payment) is computed independently
+    // above and never reads this fraction back.
+    const appPending = branch(filled, 0.22, 0.34);
     const appExpired = branch(filled, 0.06, 0.12);
     const appNotInterestedOrRejected = branch(filled, 0.08, 0.16);
     const applicationsSent = filled + appPending + appExpired + appNotInterestedOrRejected;

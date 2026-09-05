@@ -39,6 +39,7 @@ import { MONTHS, PROTOTYPE_TODAY, bdrs, seededRandom, splitByWeights, teamLeads,
 // ---------------------------------------------------------------------------
 
 export type DealStatusId =
+    | "APP_NEW"
     | "APP_PENDING"
     | "APP_EXPIRED"
     | "APP_FILLED"
@@ -68,6 +69,7 @@ export type DealStatus = {
 };
 
 export const STATUS: Record<DealStatusId, DealStatus> = {
+    APP_NEW: { id: "APP_NEW", stage: "Application", label: "New", color: "green", action: true, desc: "Assigned — application form not sent yet" },
     APP_PENDING: { id: "APP_PENDING", stage: "Application", label: "Pending", color: "blue", action: false, desc: "Application sent, awaiting the learner" },
     APP_EXPIRED: { id: "APP_EXPIRED", stage: "Application", label: "Expired", color: "amber", action: false, desc: "Application link timed out" },
     // Transitional: real time between the learner filling the application and the status
@@ -96,6 +98,7 @@ export const STATUS: Record<DealStatusId, DealStatus> = {
 export type ReachedStage = 0 | 1 | 2 | 3 | 4;
 
 const STAGE_RANK: Partial<Record<DealStatusId, ReachedStage>> = {
+    APP_NEW: 0,
     APP_PENDING: 0,
     APP_EXPIRED: 0,
     APP_FILLED: 0,
@@ -277,7 +280,31 @@ export type OfferHistoryEntry = {
 
 export type BookingFields = { bookedOn: Date | null; bookedValue: number };
 
+/** Tracks the application-form link separately from the deal's status — `APP_NEW` (assigned,
+ * not sent) and `APP_PENDING` (sent, awaiting the learner) used to be the same status with no
+ * record of when — or whether — the link actually went out. */
+export type ApplicationFields = { sentOn: Date | null; resendCount: number };
+
 export type GuardResult = { allowed: boolean; reason?: string };
+
+/** BDR owes sending the application form — the deal is brand new, nothing sent yet. */
+export function canSendApplication(d: Deal): GuardResult {
+    if (d.status.id !== "APP_NEW") return { allowed: false, reason: "Application form already sent" };
+    return { allowed: true };
+}
+
+/** Resend the same, already-sent application link — available while it's still pending or
+ * has expired unfilled; not once the learner has actually filled it. */
+export function canResendApplication(d: Deal): GuardResult {
+    if (!d.application.sentOn) return { allowed: false, reason: "Application form hasn't been sent yet" };
+    if (d.status.id !== "APP_PENDING" && d.status.id !== "APP_EXPIRED") return { allowed: false, reason: "Application has already moved past pending" };
+    return { allowed: true };
+}
+
+/** A stable, fabricated application-form link — this prototype has no real form host. */
+export function applicationFormUrl(d: Deal): string {
+    return `https://apply.novatr.com/a/${d.applicationId}`;
+}
 
 /** BDR owes a payment plan. */
 export function canCreatePlan(d: Deal): GuardResult {
@@ -356,6 +383,7 @@ export type Deal = {
     discountBreakdown: DiscountBreakdown;
     netPayable: number;
     installments: Installment[];
+    application: ApplicationFields;
     plan: PlanFields;
     offer: OfferFields;
     /** Past offer versions, pushed when a withdrawal or a new version supersedes them. */
@@ -420,7 +448,7 @@ const bdrWeights = bdrs.map((b) => b.weight);
  * generation. Sub-status relabeling (`assignSubStatuses`) happens on this shape precisely so
  * those lifecycle fields are always derived from the deal's *final* status, never a
  * pre-relabel placeholder. */
-type DraftDeal = Omit<Deal, "reachedStage" | "activityLog" | "installments" | "plan" | "offer" | "offerHistory" | "booking">;
+type DraftDeal = Omit<Deal, "reachedStage" | "activityLog" | "installments" | "application" | "plan" | "offer" | "offerHistory" | "booking">;
 
 let dealSeq = 0;
 let applicationSeq = 0;
@@ -728,11 +756,17 @@ function generateAllDeals(): Deal[] {
         const c: DealStageCascade = month.cascade;
         const monthDrafts: DraftDeal[] = [];
 
-        // applicationStage → all APP_PENDING (haven't filled the application at all).
+        // applicationStage → hasn't filled the application at all. Split between deals just
+        // assigned (form not sent yet) and deals whose form is already out with the learner —
+        // APP_PENDING used to be 100% of this bucket, silently assuming every assignment was
+        // followed by an immediate, unmodeled send.
         const perBdrAppPending = splitByWeights(c.currentStage.applicationStage, bdrWeights, true);
+        let appStageDrafts: DraftDeal[] = [];
         bdrs.forEach((bdr, i) => {
-            for (let n = 0; n < perBdrAppPending[i]; n++) monthDrafts.push(buildBaseDeal(bdr, month, "APP_PENDING"));
+            for (let n = 0; n < perBdrAppPending[i]; n++) appStageDrafts.push(buildBaseDeal(bdr, month, "APP_PENDING"));
         });
+        appStageDrafts = assignSubStatuses(appStageDrafts, ["APP_NEW", "APP_PENDING"], [70, 30]);
+        monthDrafts.push(...appStageDrafts);
 
         // offerStage (= offers.pending + payments.dpNotPaid, by cascade construction) → the
         // "filled the application" population. Under the plan/offer separation, most of these
@@ -797,17 +831,35 @@ function generateAllDeals(): Deal[] {
 
     return allDrafts.map((draft) => {
         const lifecycle = buildLifecycle(draft.id, draft.status.id, draft.currency, draft.discount, draft.netPayable, draft.createdOn);
+        const application = buildApplicationFields(draft.id, draft.status.id, draft.createdOn);
         const reachedStage = STAGE_RANK[draft.status.id] ?? (pick([0, 0, 1, 1, 2, 3]) as ReachedStage);
-        const withoutLog: Omit<Deal, "activityLog"> = { ...draft, ...lifecycle, reachedStage };
+        const withoutLog: Omit<Deal, "activityLog"> = { ...draft, ...lifecycle, application, reachedStage };
         return { ...withoutLog, activityLog: buildActivityLog(withoutLog) };
     });
+}
+
+/** `APP_NEW` deals haven't had the application form sent yet — everything past that point
+ * (including `APP_EXPIRED`, where the link *was* sent but lapsed unfilled) has a real send
+ * timestamp shortly after the deal was created. */
+function buildApplicationFields(id: string, statusId: DealStatusId, createdOn: Date): ApplicationFields {
+    if (statusId === "APP_NEW") return { sentOn: null, resendCount: 0 };
+    let sentOn = new Date(createdOn.getTime() + int(0, 2) * 86_400_000);
+    if (sentOn > PROTOTYPE_TODAY) sentOn = PROTOTYPE_TODAY;
+    const resendCount = pickStable(`${id}arc`, [0, 0, 0, 1]);
+    return { sentOn, resendCount };
 }
 
 function buildActivityLog(d: Omit<Deal, "activityLog">): ActivityLogEntry[] {
     const log: ActivityLogEntry[] = [{ ts: d.createdOn, text: "Deal created", reason: "PDE completed on call" }];
     const daysAgo = (n: number) => new Date(PROTOTYPE_TODAY.getTime() - n * 86_400_000);
 
-    if (d.status.id !== "APP_PENDING" && d.status.id !== "APP_EXPIRED") {
+    if (d.application.sentOn) {
+        log.push({ ts: d.application.sentOn, text: "Application form sent" });
+    }
+    if (d.application.resendCount > 0) {
+        log.push({ ts: daysAgo(int(1, 20)), text: "Application form resent" });
+    }
+    if (d.status.id !== "APP_NEW" && d.status.id !== "APP_PENDING" && d.status.id !== "APP_EXPIRED") {
         log.push({ ts: daysAgo(int(30, 90)), text: "Application filled by learner" });
     }
     if (d.plan.state !== "none") {

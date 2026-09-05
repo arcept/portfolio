@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash01 } from "@untitledui/icons";
+import { Check, Plus, Save01, Trash01 } from "@untitledui/icons";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -23,6 +23,34 @@ function formatMoney(amount: number, currency: "INR" | "USD"): string {
     return `${symbol}${Math.round(amount).toLocaleString(currency === "INR" ? "en-IN" : "en-US")}`;
 }
 
+// ---------------------------------------------------------------------------
+// Discount tiers — replaces a free-entry amount with a fixed menu (Early Bird,
+// two scholarship tiers, and a capped custom entry) so a BDR can't apply an
+// arbitrary, unaudited discount.
+// ---------------------------------------------------------------------------
+
+type DiscountTierId = "early-bird" | "merit" | "need-based" | "custom";
+
+const EARLY_BIRD_PCT = 10;
+const MERIT_PCT = 15;
+const NEED_BASED_PCT = 25;
+export const CUSTOM_DISCOUNT_MAX = 20_000;
+
+/** Early Bird is a live promotion, not a permanent discount tier — on only for the last week of
+ * the month (a flash-sale window), off the rest of the time. Read off `PROTOTYPE_TODAY`, this
+ * prototype's frozen clock, not the real system date. */
+function isEarlyBirdAvailable(now: Date): boolean {
+    const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return now.getDate() >= totalDays - 6;
+}
+
+/** Percent-of-course-fee tiers round to a clean unit (nearest ₹100 / $10) rather than landing on
+ * an odd number. */
+function tierAmount(courseFee: number, currency: "INR" | "USD", pct: number): number {
+    const roundTo = currency === "INR" ? 100 : 10;
+    return Math.round((courseFee * pct) / 100 / roundTo) * roundTo;
+}
+
 function draftFromDeal(deal: Deal): DraftInstallment[] {
     if (deal.installments.length) {
         return deal.installments.map((i) => ({ amount: i.amount, mode: i.mode, deadline: i.deadline, isEmi: i.isEmi, emiMonths: i.emiMonths }));
@@ -39,6 +67,28 @@ export const PaymentPlanForm = ({ deal, onSaved }: { deal: Deal; onSaved?: () =>
     const [planType, setPlanType] = useState<"upfront" | "part">(deal.installments.length > 1 ? "part" : "upfront");
     const [discount, setDiscount] = useState(deal.discount || 0);
     const [installments, setInstallments] = useState<DraftInstallment[]>(draftFromDeal(deal));
+
+    const earlyBirdAvailable = isEarlyBirdAvailable(PROTOTYPE_TODAY);
+    const earlyBirdAmount = tierAmount(deal.courseFee, deal.currency, EARLY_BIRD_PCT);
+    const meritAmount = tierAmount(deal.courseFee, deal.currency, MERIT_PCT);
+    const needBasedAmount = tierAmount(deal.courseFee, deal.currency, NEED_BASED_PCT);
+
+    const [discountTier, setDiscountTier] = useState<DiscountTierId>(() => {
+        if (deal.discount === earlyBirdAmount) return "early-bird";
+        if (deal.discount === meritAmount) return "merit";
+        if (deal.discount === needBasedAmount) return "need-based";
+        return "custom";
+    });
+
+    const applyDiscount = (next: number) => {
+        setDiscount(next);
+        if (planType === "upfront") setInstallments((prev) => [{ ...prev[0], amount: Math.max(0, deal.courseFee - next) }]);
+    };
+    const selectTier = (id: DiscountTierId, amount: number | null) => {
+        setDiscountTier(id);
+        if (amount !== null) applyDiscount(amount);
+        else applyDiscount(Math.min(discount, CUSTOM_DISCOUNT_MAX));
+    };
 
     const netPayable = Math.max(0, deal.courseFee - discount);
     const totalAssigned = installments.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
@@ -95,17 +145,47 @@ export const PaymentPlanForm = ({ deal, onSaved }: { deal: Deal; onSaved?: () =>
                 </div>
             </div>
 
-            <Input
-                label={`Discount (${deal.currency})`}
-                type="number"
-                size="sm"
-                value={String(discount)}
-                onChange={(v) => {
-                    const next = Number(v) || 0;
-                    setDiscount(next);
-                    if (planType === "upfront") setInstallments((prev) => [{ ...prev[0], amount: Math.max(0, deal.courseFee - next) }]);
-                }}
-            />
+            <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-secondary">Discount</span>
+                <div className="flex flex-col gap-2">
+                    <DiscountTierCard
+                        selected={discountTier === "early-bird"}
+                        disabled={!earlyBirdAvailable}
+                        title="Early Bird Offer"
+                        description={`${formatMoney(earlyBirdAmount, deal.currency)} off (${EARLY_BIRD_PCT}%) — only active in the last week of the month`}
+                        badge={earlyBirdAvailable ? { label: "Available", tone: "success" } : { label: "Unavailable", tone: "neutral" }}
+                        onClick={() => selectTier("early-bird", earlyBirdAmount)}
+                    />
+                    <DiscountTierCard
+                        selected={discountTier === "merit"}
+                        title="Merit Scholarship"
+                        description={`${formatMoney(meritAmount, deal.currency)} off (${MERIT_PCT}%)`}
+                        onClick={() => selectTier("merit", meritAmount)}
+                    />
+                    <DiscountTierCard
+                        selected={discountTier === "need-based"}
+                        title="Need-Based Scholarship"
+                        description={`${formatMoney(needBasedAmount, deal.currency)} off (${NEED_BASED_PCT}%)`}
+                        onClick={() => selectTier("need-based", needBasedAmount)}
+                    />
+                    <DiscountTierCard
+                        selected={discountTier === "custom"}
+                        title="Custom Amount"
+                        description={`Enter any amount up to ${formatMoney(CUSTOM_DISCOUNT_MAX, deal.currency)}`}
+                        onClick={() => selectTier("custom", null)}
+                    />
+                </div>
+                {discountTier === "custom" && (
+                    <Input
+                        label={`Custom discount (${deal.currency})`}
+                        type="number"
+                        size="sm"
+                        value={String(discount)}
+                        hint={`Maximum ${formatMoney(CUSTOM_DISCOUNT_MAX, deal.currency)}`}
+                        onChange={(v) => applyDiscount(Math.min(CUSTOM_DISCOUNT_MAX, Math.max(0, Number(v) || 0)))}
+                    />
+                )}
+            </div>
 
             <div className="flex flex-col gap-1.5 border-t border-secondary pt-4">
                 <div className="flex items-center justify-between text-sm text-tertiary">
@@ -165,8 +245,14 @@ export const PaymentPlanForm = ({ deal, onSaved }: { deal: Deal; onSaved?: () =>
                 </div>
             )}
 
-            <Button color="primary" size="sm" onClick={save} className="self-start">
-                Save payment plan
+            <Button
+                color="primary"
+                size="sm"
+                iconLeading={Save01}
+                onClick={save}
+                className="h-11 self-start !bg-green-500 !text-neutral-900 !ring-green-400 hover:!bg-green-600 *:data-icon:!text-neutral-900"
+            >
+                Save Payment Plan
             </Button>
         </div>
     );
@@ -215,6 +301,47 @@ export const PaymentPlanEditor = ({ dealId, onOpenChange }: { dealId: string | n
         </SlideoutMenu.Trigger>
     );
 };
+
+const BADGE_TONE_CLASSES: Record<"success" | "neutral", string> = {
+    success: "bg-success-primary text-success-primary",
+    neutral: "bg-secondary text-tertiary",
+};
+
+const DiscountTierCard = ({
+    selected,
+    disabled,
+    title,
+    description,
+    badge,
+    onClick,
+}: {
+    selected: boolean;
+    disabled?: boolean;
+    title: string;
+    description: string;
+    badge?: { label: string; tone: "success" | "neutral" };
+    onClick: () => void;
+}) => (
+    <button
+        type="button"
+        disabled={disabled}
+        onClick={onClick}
+        className={`flex items-start gap-3 rounded-lg border p-3 text-left transition duration-100 ease-linear disabled:cursor-not-allowed disabled:opacity-50 ${
+            selected ? "border-brand bg-secondary" : "border-secondary hover:bg-secondary_hover"
+        }`}
+    >
+        <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${selected ? "border-brand bg-brand-solid" : "border-secondary"}`}>
+            {selected && <Check className="size-2.5 text-white" />}
+        </span>
+        <div className="flex flex-1 flex-col gap-0.5">
+            <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-primary">{title}</span>
+                {badge && <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${BADGE_TONE_CLASSES[badge.tone]}`}>{badge.label}</span>}
+            </div>
+            <span className="text-xs text-tertiary">{description}</span>
+        </div>
+    </button>
+);
 
 const InstallmentBuilderRow = ({
     row,
