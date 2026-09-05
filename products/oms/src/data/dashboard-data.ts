@@ -13,12 +13,20 @@
  *   - Total Realised(P) = RealisedThisPeriod(P) + RealisedOfPreviouslyBooked(P), where the
  *     latter is drawn from a running backlog ledger (§7 of the brief), not free-floating.
  *   - Deal Stages is a genuine cascade: each stage's population is what's left over from
- *     the previous one, so the 6 current-stage buckets always sum to Applications Sent,
- *     and Payment Completed always equals Units Achieved — enforced by construction.
+ *     the previous one, so the 6 current-stage buckets always sum to Applications Sent.
  *   - The funnel cards (Applications Sent → Offers Shared → Converted → Payment Clearance)
  *     read off that same cascade, so they can't drift from the Deal Stages bars.
  *   - Per-TM splits use `splitByWeights` (exact for currency, largest-remainder for counts)
  *     so children always sum exactly to the org-wide parent total.
+ *
+ * Booked-revenue trigger (2026-09-05 offer-separation brief §9(a) — corrected from an earlier
+ * pinning of Booked to full payment): `unitsAchieved` is a deal that has made **at least one**
+ * payment — a part payment counts, i.e. every "accepted" deal except `payments.dpNotPaid`.
+ * `payments.cleared` (Payment Completed / fully paid) is now a strict *subset* of it, derived
+ * downward inside `buildCascade` rather than pinned equal — Booked and Unit Sales still share
+ * one trigger (first payment), they just no longer collapse Payment Completed into the same
+ * number. `payments.overdue` and `payments.notInterestedOrRejected` make up the rest of a
+ * period's booked-but-not-fully-cleared units.
  */
 
 import type { Persona } from "@/types/role";
@@ -151,11 +159,15 @@ function buildCascade(unitsAchieved: number, seed: number): DealStageCascade {
     const rand = seededRandom(seed);
     const branch = (of: number, min: number, max: number) => Math.max(1, Math.round(of * (min + rand() * (max - min))));
 
-    // Payment step — cleared is pinned to unitsAchieved; everything else branches off it backward.
-    const cleared = unitsAchieved;
-    const dpNotPaid = branch(cleared, 0.2, 0.32);
-    const overdue = branch(cleared, 0.12, 0.22);
-    const paymentNotInterestedOrRejected = branch(cleared, 0.12, 0.2);
+    // Payment step — `unitsAchieved` is booked units (>=1 payment): cleared + overdue +
+    // payment-stage not-interested/rejected, every "accepted" deal except dpNotPaid. `cleared`
+    // (fully paid / Payment Completed) is derived DOWNWARD from it, not pinned equal to it
+    // (§9(a) of the offer-separation brief) — a deal books the moment it starts paying, whether
+    // or not it's finished.
+    const overdue = branch(unitsAchieved, 0.12, 0.22);
+    const paymentNotInterestedOrRejected = branch(unitsAchieved, 0.06, 0.12);
+    const cleared = Math.max(1, unitsAchieved - overdue - paymentNotInterestedOrRejected);
+    const dpNotPaid = branch(unitsAchieved, 0.2, 0.32);
     const accepted = cleared + dpNotPaid + overdue + paymentNotInterestedOrRejected;
 
     // Offer step — backward from `accepted`.
@@ -274,6 +286,8 @@ export type MonthGroundTruth = {
     year: number;
     month: number; // 0-indexed
     unitTarget: number;
+    /** A deal that's made >=1 payment (booked), not necessarily fully cleared — see the
+     * booked-revenue-trigger note at the top of this file. */
     unitsAchieved: number;
     ats: number;
     booked: number; // = unitsAchieved * ats, always
@@ -733,7 +747,13 @@ if (import.meta.env.DEV) {
     for (const m of MONTHS) {
         assert(m.booked === m.unitsAchieved * m.ats, `Booked !== Units × ATS for month ${m.month + 1}`);
         assert(m.totalRealised === m.realisedThisPeriod + m.realisedOfPreviouslyBooked, `Total Realised mismatch for month ${m.month + 1}`);
-        assert(m.cascade.currentStage.paymentCompleted === m.unitsAchieved, `Payment Completed !== Units Achieved for month ${m.month + 1}`);
+        // Reworked for §9(a): Units Achieved is now "booked" (>=1 payment), of which Payment
+        // Completed (cleared) is a subset — the other two are still-paying or fell off after
+        // paying something. Cleared no longer equals Units Achieved by itself.
+        assert(
+            m.cascade.payments.cleared + m.cascade.payments.overdue + m.cascade.payments.notInterestedOrRejected === m.unitsAchieved,
+            `Booked (cleared+overdue+payment-stage not-interested) !== Units Achieved for month ${m.month + 1}`,
+        );
 
         const stageSum =
             m.cascade.currentStage.applicationStage +

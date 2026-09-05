@@ -28,14 +28,16 @@ import { toast } from "@/components/application/toast/toast";
 import { BadgeWithFlag } from "@/components/base/badges/badges";
 import type { FlagTypes } from "@/components/base/badges/badge-types";
 import { Dot } from "@/components/foundations/dot-icon";
-import { OfferWizard } from "@/components/deals/offer-wizard";
+import { PaymentPlanEditor } from "@/components/deals/payment-plan-editor";
+import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
+import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
 import { ActionNeededBadge, DealStatusBadge } from "@/components/deals/status-badge";
 import HubspotIcon from "@/components/foundations/integration-icons/hubspot-icon";
 import WhatsappIcon from "@/components/foundations/integration-icons/whatsapp-icon";
 import offerLetterPreview from "@/assets/offer-letter-preview.png";
 import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
 import type { ActivityLogEntry, Deal, Installment } from "@/data/deals-data";
-import { OFFER_TEMPLATES, STATUS, stateForCity } from "@/data/deals-data";
+import { STATUS, canCreateLetter, canCreatePlan, canEditPlan, canShareLetter, canWithdraw, stateForCity } from "@/data/deals-data";
 import { useDeals } from "@/providers/deals-provider";
 
 /** ISO-3166 codes for `BadgeWithFlag` — only the countries `CITIES` (deals-data.ts) uses. */
@@ -94,26 +96,32 @@ function statusForSubstages(substages: MilestoneSubstage[]): MilestoneGroupStatu
     return "In Progress";
 }
 
-/** Groups the deal's funnel into the three stage-level milestones the redesigned timeline
- * shows (Application / Offer / Payment & Enrolment), each broken into the substages that
- * `activityLog` already tracks — no separate milestone data model, just a different read of
- * the same log entries `buildActivityLog` (deals-data.ts) always produces. */
+/** Groups the deal's funnel into three stage-level milestones (Application & Plan / Offer /
+ * Payment & Enrolment), each broken into the substages that `activityLog` already tracks — no
+ * separate milestone data model, just a different read of the same log entries
+ * `buildActivityLog` (deals-data.ts) always produces. The Plan stage (2026-09-05
+ * offer-separation brief) extends the first group's label rather than adding a fourth group
+ * (§7) — Payment Plan created sits between Application Filled and Offer Letter Created. */
 function getMilestoneGroups(deal: Deal): MilestoneGroup[] {
     const findEntry = (text: string): ActivityLogEntry | null => deal.activityLog.find((e) => e.text === text) ?? null;
 
     const appFilled = findEntry("Application filled by learner");
-    const offerSent = findEntry("Offer letter sent");
+    const planCreated = findEntry("Payment plan created");
+    const offerCreated = findEntry("Offer letter created");
+    const offerShared = findEntry("Offer letter shared");
     const offerAccepted = findEntry("Offer accepted by learner");
     const downPayment = findEntry("Down payment received");
     const paymentCompleted = findEntry("Final installment received — payment completed");
     const enrolled = deal.status.id === "PAY_COMPLETED";
 
-    const application: MilestoneSubstage[] = [
+    const applicationAndPlan: MilestoneSubstage[] = [
         { label: "Application Sent", done: true, ts: deal.createdOn },
         { label: "Application Filled", done: !!appFilled, ts: appFilled?.ts ?? null },
+        { label: "Payment Plan Created", done: !!planCreated, ts: planCreated?.ts ?? null },
     ];
     const offer: MilestoneSubstage[] = [
-        { label: "Offer Sent", done: !!offerSent, ts: offerSent?.ts ?? null },
+        { label: "Offer Letter Created", done: !!offerCreated, ts: offerCreated?.ts ?? null },
+        { label: "Offer Letter Shared", done: !!offerShared, ts: offerShared?.ts ?? null },
         { label: "Offer Accepted", done: !!offerAccepted, ts: offerAccepted?.ts ?? null },
     ];
     const paymentAndEnrolment: MilestoneSubstage[] = [
@@ -123,7 +131,7 @@ function getMilestoneGroups(deal: Deal): MilestoneGroup[] {
     ];
 
     return [
-        { name: "Application", status: statusForSubstages(application), substages: application },
+        { name: "Application & Plan", status: statusForSubstages(applicationAndPlan), substages: applicationAndPlan },
         { name: "Offer", status: statusForSubstages(offer), substages: offer },
         { name: "Payment & Enrolment", status: statusForSubstages(paymentAndEnrolment), substages: paymentAndEnrolment },
     ];
@@ -338,11 +346,25 @@ const FeeRow = ({
     </div>
 );
 
-const InstallmentRow = ({ deal, installment, index, onEmiSubmit }: { deal: Deal; installment: Installment; index: number; onEmiSubmit: (index: number, months: number, amount: number) => void }) => {
+const InstallmentRow = ({
+    deal,
+    installment,
+    index,
+    showEmiEditor,
+    onEmiSubmit,
+}: {
+    deal: Deal;
+    installment: Installment;
+    index: number;
+    /** Scoped to `active` plans (§7) — on a draft plan the BDR just edits the row directly in
+     * the payment-plan editor, no Sales Ops submit flow. */
+    showEmiEditor: boolean;
+    onEmiSubmit: (index: number, months: number, amount: number) => void;
+}) => {
     const [editing, setEditing] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
     const [months, setMonths] = useState(String(installment.emiMonths ?? ""));
     const [amount, setAmount] = useState(String(installment.emiMonths ? Math.round(installment.amount / installment.emiMonths) : ""));
+    const submitted = deal.plan.state === "awaiting_approval";
 
     const colorClass = installment.status === "Paid" ? "bg-fg-success-secondary" : installment.status === "Overdue" ? "bg-fg-warning-primary" : "bg-fg-brand-primary";
 
@@ -369,7 +391,7 @@ const InstallmentRow = ({ deal, installment, index, onEmiSubmit }: { deal: Deal;
                         {installment.isEmi ? <span>{installment.emiMonths} months</span> : <span>Due {formatDate(new Date(installment.deadline))}</span>}
                     </div>
                 </div>
-                {installment.isEmi && !submitted && (
+                {installment.isEmi && showEmiEditor && !submitted && (
                     <button
                         type="button"
                         onClick={() => setEditing((v) => !v)}
@@ -381,7 +403,7 @@ const InstallmentRow = ({ deal, installment, index, onEmiSubmit }: { deal: Deal;
                 )}
             </div>
 
-            {editing && !submitted && (
+            {editing && showEmiEditor && !submitted && (
                 <div className="flex flex-col gap-3 border-t border-secondary pt-3">
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Tenure (months)" type="number" size="sm" value={months} onChange={setMonths} />
@@ -392,7 +414,6 @@ const InstallmentRow = ({ deal, installment, index, onEmiSubmit }: { deal: Deal;
                         size="sm"
                         onClick={() => {
                             onEmiSubmit(index, Number(months) || installment.emiMonths || 0, Number(amount) || 0);
-                            setSubmitted(true);
                             setEditing(false);
                         }}
                     >
@@ -413,11 +434,14 @@ const InstallmentRow = ({ deal, installment, index, onEmiSubmit }: { deal: Deal;
 export const DealDetail = () => {
     const { dealId } = useParams<{ dealId: string }>();
     const navigate = useNavigate();
-    const { deals, updateDeal, logActivity } = useDeals();
+    const { deals, updateDeal, logActivity, submitPlanForApproval, resolveApproval, refreshLetter, resendLetter } = useDeals();
     const deal = deals.find((d) => d.id === dealId);
 
     const [applicationSlideoverOpen, setApplicationSlideoverOpen] = useState(false);
-    const [offerWizardOpen, setOfferWizardOpen] = useState(false);
+    const [planEditorDealId, setPlanEditorDealId] = useState<string | null>(null);
+    const [letterComposerDealId, setLetterComposerDealId] = useState<string | null>(null);
+    const [shareDealId, setShareDealId] = useState<string | null>(null);
+    const [withdrawDealId, setWithdrawDealId] = useState<string | null>(null);
     const [activityLogOpen, setActivityLogOpen] = useState(true);
     const now = deals[0]?.lastUpdate ?? new Date();
 
@@ -438,9 +462,16 @@ export const DealDetail = () => {
     const tm = teamManagers.find((t) => t.id === deal.tmId);
 
     const appComplete = deal.reachedStage >= 1 || deal.status.id === "APP_FILLED";
-    const planComplete = deal.installments.length > 0;
-    const offerComplete = deal.reachedStage >= 1;
-    const enrollComplete = deal.reachedStage >= 2;
+    const planGuardCreate = canCreatePlan(deal);
+    const planGuardEdit = canEditPlan(deal);
+    const letterGuardCreate = canCreateLetter(deal);
+    const letterGuardShare = canShareLetter(deal);
+    const withdrawGuard = canWithdraw(deal);
+    const planComplete = deal.plan.state !== "none";
+    const offerComplete = deal.offer.state !== "none";
+    // Shifted from >=2 to >=3 — ReachedStage grew a rank for the Plan stage (§3.3): old "reached
+    // payment ongoing" (2) is now 3.
+    const enrollComplete = deal.reachedStage >= 3;
 
     const handleGlobalStatus = (statusId: "NOT_INTERESTED" | "REJECTED" | "SAVED") => {
         const reasons: Record<string, string> = {
@@ -459,16 +490,13 @@ export const DealDetail = () => {
         toast(`Deal reopened for ${deal.name}`);
     };
 
-    const handleOfferCta = () => setOfferWizardOpen(true);
-
     const handleEmiSubmit = (index: number, newMonths: number, newAmount: number) => {
-        logActivity(deal.id, `EMI revision requested on Installment ${index + 1}`, `New terms: ${newMonths} months at ${formatMoney(newAmount, deal.currency)}/mo — pending Sales Ops approval`);
+        submitPlanForApproval(deal.id, `Installment ${index + 1}: new terms ${newMonths} months at ${formatMoney(newAmount, deal.currency)}/mo`);
         toast("EMI change submitted for Sales Ops approval");
     };
 
     const duration = pickStable(deal.id, ["6 months", "9 months", "12 months"]);
     const startDate = new Date(now.getTime() + 20 * 86_400_000);
-    const offerTemplate = offerComplete ? pickStable(deal.id, OFFER_TEMPLATES) : null;
     const lmsId = `LMS-${10000 + (hashId(deal.id) % 8999)}`;
     const firstSessionDate = new Date(now.getTime() + 12 * 86_400_000);
 
@@ -605,7 +633,7 @@ export const DealDetail = () => {
                         )}
                     </Section>
 
-                    <Section number="02" title="Payment Plan" complete={planComplete}>
+                    <Section number="02" title="Payment Plan" complete={planComplete} badgeLabel={PLAN_STATE_BADGE[deal.plan.state]}>
                         {planComplete ? (
                             <>
                                 <div className="flex flex-col">
@@ -625,54 +653,117 @@ export const DealDetail = () => {
                                     <p className="px-2 text-xs font-semibold tracking-wide text-quaternary uppercase">Installments</p>
                                     <div className="flex flex-col gap-3">
                                         {deal.installments.map((installment, i) => (
-                                            <InstallmentRow key={i} deal={deal} installment={installment} index={i} onEmiSubmit={handleEmiSubmit} />
+                                            <InstallmentRow
+                                                key={i}
+                                                deal={deal}
+                                                installment={installment}
+                                                index={i}
+                                                showEmiEditor={deal.plan.state === "active"}
+                                                onEmiSubmit={handleEmiSubmit}
+                                            />
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
-                                    <Button color="secondary" size="sm" isDisabled>
-                                        Edit Course Fee Structure
-                                    </Button>
-                                    <span className="text-xs text-tertiary italic">*Can't update structure once payment plan is created.</span>
-                                </div>
+                                {deal.plan.state === "awaiting_approval" ? (
+                                    <SimulateApprovalControl onDecide={(decision, reason) => resolveApproval(deal.id, decision, reason)} />
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <Button color="secondary" size="sm" isDisabled={!planGuardEdit.allowed} onClick={() => setPlanEditorDealId(deal.id)}>
+                                            Edit payment plan
+                                        </Button>
+                                        {!planGuardEdit.allowed && <span className="text-xs text-tertiary italic">*{planGuardEdit.reason}</span>}
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <EmptyState size="sm" className="mx-auto max-w-none py-4">
                                 <EmptyState.Content>
-                                    <EmptyState.Description>No payment plan yet.</EmptyState.Description>
+                                    <EmptyState.Description>{planGuardCreate.allowed ? "No payment plan yet." : planGuardCreate.reason}</EmptyState.Description>
                                 </EmptyState.Content>
-                                <Button color="primary" size="sm" onClick={handleOfferCta}>
-                                    Send offer letter
+                                <Button color="primary" size="sm" isDisabled={!planGuardCreate.allowed} onClick={() => setPlanEditorDealId(deal.id)}>
+                                    Create payment plan
                                 </Button>
                             </EmptyState>
                         )}
                     </Section>
 
-                    <Section number="03" title="Offer Letter" complete={offerComplete}>
-                        {offerComplete && offerTemplate ? (
+                    <Section number="03" title="Offer Letter" complete={deal.offer.state === "shared" || deal.offer.state === "accepted"} badgeLabel={OFFER_STATE_BADGE[deal.offer.state]}>
+                        {offerComplete ? (
                             <>
-                                <div className="flex flex-col gap-1">
-                                    <span className="font-mono text-xs text-tertiary">Template Used</span>
-                                    <span className="text-base font-medium text-primary">{offerTemplate.name}</span>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                    <MetaField label="Template" value={deal.offer.template?.name ?? "—"} />
+                                    <MetaField label="Deadline" value={deal.offer.deadline ? formatDate(new Date(deal.offer.deadline)) : "—"} />
+                                    <MetaField label="Net Payable (as shared)" value={deal.offer.snapshot ? formatMoney(deal.offer.snapshot.netPayable, deal.currency) : "—"} />
+                                    <MetaField label="Version" value={`v${deal.offer.version}${deal.offer.resendCount ? ` · resent ${deal.offer.resendCount}×` : ""}`} />
                                 </div>
-                                <div className="overflow-hidden rounded-2xl">
-                                    <img src={offerLetterPreview} alt="Offer letter preview" className="h-auto w-full object-cover" />
+
+                                {deal.offer.state === "stale" && deal.offer.snapshot && (
+                                    <div className="flex flex-col gap-1 rounded-lg bg-warning-secondary p-3 text-xs text-warning-primary">
+                                        <span className="font-semibold">Plan changed since this letter was created</span>
+                                        <span>
+                                            Discount {formatMoney(deal.offer.snapshot.discount, deal.currency)} → {formatMoney(deal.discount, deal.currency)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
+                                    <div className="overflow-hidden rounded-2xl">
+                                        <img src={offerLetterPreview} alt="Offer letter preview" className="h-auto w-full object-cover" />
+                                    </div>
+                                )}
+
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {deal.offer.state === "created" && (
+                                        <Button color="primary" size="sm" isDisabled={!letterGuardShare.allowed} onClick={() => setShareDealId(deal.id)}>
+                                            Share offer letter
+                                        </Button>
+                                    )}
+                                    {deal.offer.state === "stale" && (
+                                        <Button color="primary" size="sm" iconLeading={RefreshCcw01} onClick={() => refreshLetter(deal.id)}>
+                                            Refresh letter
+                                        </Button>
+                                    )}
+                                    {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
+                                        <>
+                                            <Button color="secondary" size="sm" onClick={() => resendLetter(deal.id)}>
+                                                Resend
+                                            </Button>
+                                            <Button color="secondary-destructive" size="sm" isDisabled={!withdrawGuard.allowed} onClick={() => setWithdrawDealId(deal.id)}>
+                                                Withdraw
+                                            </Button>
+                                        </>
+                                    )}
+                                    {(deal.offer.state === "expired" || deal.offer.state === "withdrawn") && (
+                                        <Button color="secondary" size="sm" isDisabled={!letterGuardCreate.allowed} onClick={() => setLetterComposerDealId(deal.id)}>
+                                            Create offer letter (v2)
+                                        </Button>
+                                    )}
+                                    {!letterGuardShare.allowed && deal.offer.state === "created" && <span className="text-xs text-tertiary italic">*{letterGuardShare.reason}</span>}
+                                    {!withdrawGuard.allowed && (deal.offer.state === "shared" || deal.offer.state === "accepted") && (
+                                        <span className="text-xs text-tertiary italic">*{withdrawGuard.reason}</span>
+                                    )}
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <Button color="link-gray" size="sm" onClick={() => toast("Opening offer letter…")}>
-                                        View Offer Letter
-                                    </Button>
-                                    <Button color="link-color" size="sm" iconTrailing={ArrowUpRight} isDisabled>
-                                        Edit Offer Letter
-                                    </Button>
-                                </div>
+
+                                {deal.offerHistory.length > 0 && (
+                                    <div className="flex flex-col gap-1.5 border-t border-secondary pt-3">
+                                        <span className="text-xs font-semibold tracking-wide text-quaternary uppercase">Previous versions</span>
+                                        {deal.offerHistory.map((h, i) => (
+                                            <div key={i} className="flex items-center justify-between text-xs text-tertiary">
+                                                <span>
+                                                    v{h.version} · {h.template} · {h.endedBy}
+                                                </span>
+                                                <span>{formatDate(h.endedOn)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <>
-                                <p className="text-sm text-tertiary">No offer sent yet — build a payment plan first.</p>
-                                <Button color="secondary" size="sm" onClick={handleOfferCta}>
-                                    {deal.reachedStage >= 1 ? "Revise offer letter" : "Send offer letter"}
+                                <p className="text-sm text-tertiary">{letterGuardCreate.allowed ? "No offer letter yet." : letterGuardCreate.reason}</p>
+                                <Button color="secondary" size="sm" isDisabled={!letterGuardCreate.allowed} onClick={() => setLetterComposerDealId(deal.id)}>
+                                    Create offer letter
                                 </Button>
                             </>
                         )}
@@ -830,8 +921,68 @@ export const DealDetail = () => {
                 </SlideoutMenu>
             </SlideoutMenu.Trigger>
 
-            <OfferWizard dealId={offerWizardOpen ? deal.id : null} onOpenChange={(open) => setOfferWizardOpen(open)} />
+            <PaymentPlanEditor dealId={planEditorDealId} onOpenChange={(open) => !open && setPlanEditorDealId(null)} />
+            <OfferLetterComposer dealId={letterComposerDealId} onOpenChange={(open) => !open && setLetterComposerDealId(null)} />
+            <ShareOfferDialog dealId={shareDealId} onOpenChange={(open) => !open && setShareDealId(null)} />
+            <WithdrawOfferDialog dealId={withdrawDealId} onOpenChange={(open) => !open && setWithdrawDealId(null)} />
         </AppShell>
+    );
+};
+
+const PLAN_STATE_BADGE: Record<Deal["plan"]["state"], string> = {
+    none: "Not started",
+    draft_incomplete: "Draft",
+    draft_ready: "Draft",
+    awaiting_approval: "Awaiting approval",
+    committed: "Locked",
+    active: "Locked",
+};
+
+const OFFER_STATE_BADGE: Record<Deal["offer"]["state"], string> = {
+    none: "Not started",
+    created: "Created",
+    stale: "Stale",
+    shared: "Shared",
+    expired: "Expired",
+    accepted: "Accepted",
+    withdrawn: "Withdrawn",
+};
+
+/** "Simulate Sales Ops decision" — there's no Sales Ops persona in this prototype, so this
+ * stands in for one. Labeled visibly as a prototype affordance per §7. */
+const SimulateApprovalControl = ({ onDecide }: { onDecide: (decision: "approved" | "rejected", reason?: string | null) => void }) => {
+    const [rejecting, setRejecting] = useState(false);
+    const [reason, setReason] = useState("");
+
+    return (
+        <div className="flex flex-col gap-3 rounded-lg border border-dashed border-warning-primary bg-warning-secondary p-3">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-warning-primary">
+                <Shield01 className="size-3.5" />
+                Simulate Sales Ops decision (prototype affordance — no Sales Ops persona exists)
+            </div>
+            {rejecting ? (
+                <div className="flex flex-col gap-2">
+                    <Input label="Rejection reason" size="sm" isRequired value={reason} onChange={setReason} />
+                    <div className="flex items-center gap-2">
+                        <Button color="secondary" size="sm" onClick={() => setRejecting(false)}>
+                            Cancel
+                        </Button>
+                        <Button color="primary-destructive" size="sm" isDisabled={!reason.trim()} onClick={() => onDecide("rejected", reason.trim())}>
+                            Confirm rejection
+                        </Button>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2">
+                    <Button color="primary" size="sm" onClick={() => onDecide("approved")}>
+                        Approve
+                    </Button>
+                    <Button color="secondary-destructive" size="sm" onClick={() => setRejecting(true)}>
+                        Reject
+                    </Button>
+                </div>
+            )}
+        </div>
     );
 };
 
