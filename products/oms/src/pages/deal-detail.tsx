@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { useNavigate, useParams } from "react-router";
 import {
     ArrowUpRight,
     Bookmark,
@@ -19,31 +17,43 @@ import {
     SlashCircle01,
     XCircle,
 } from "@untitledui/icons";
+import { AnimatePresence, motion } from "motion/react";
+import { useNavigate, useParams } from "react-router";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
+import { toast } from "@/components/application/toast/toast";
+import type { FlagTypes } from "@/components/base/badges/badge-types";
+import { BadgeWithFlag } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
-import { toast } from "@/components/application/toast/toast";
-import { BadgeWithFlag } from "@/components/base/badges/badges";
-import type { FlagTypes } from "@/components/base/badges/badge-types";
-import { Dot } from "@/components/foundations/dot-icon";
-import { PaymentPlanForm } from "@/components/deals/payment-plan-editor";
-import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
-import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
-import { OfferEmailModal, OfferEmailPreviewCard } from "@/components/deals/offer-email-preview";
-import { GlobalStatusDialog } from "@/components/deals/global-status-dialog";
-import type { GlobalStatusRequest } from "@/components/deals/global-status-dialog";
 import { ApplicationLinkDialog } from "@/components/deals/application-link-dialog";
 import type { ApplicationLinkRequest } from "@/components/deals/application-link-dialog";
 import { ApplicationSectionCard } from "@/components/deals/application-section-card";
+import { GlobalStatusDialog } from "@/components/deals/global-status-dialog";
+import type { GlobalStatusRequest } from "@/components/deals/global-status-dialog";
+import { OfferEmailModal, OfferEmailPreviewCard } from "@/components/deals/offer-email-preview";
+import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
+import { PaymentPlanForm } from "@/components/deals/payment-plan-editor";
+import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
 import { ActionNeededBadge, DealStatusBadge } from "@/components/deals/status-badge";
+import { Dot } from "@/components/foundations/dot-icon";
 import HubspotIcon from "@/components/foundations/integration-icons/hubspot-icon";
 import WhatsappIcon from "@/components/foundations/integration-icons/whatsapp-icon";
 import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
 import type { ActivityLogEntry, Deal, Installment } from "@/data/deals-data";
-import { STATUS, applicationFormUrl, canCreateLetter, canCreatePlan, canEditPlan, canResendApplication, canShareLetter, canWithdraw, stateForCity } from "@/data/deals-data";
+import {
+    STATUS,
+    applicationFormUrl,
+    canCreateLetter,
+    canCreatePlan,
+    canEditPlan,
+    canResendApplication,
+    canShareLetter,
+    canWithdraw,
+    stateForCity,
+} from "@/data/deals-data";
 import { resolveOfferEmail } from "@/data/offer-emails";
 import { useDeals } from "@/providers/deals-provider";
 
@@ -222,7 +232,10 @@ const MilestoneTimeline = ({ deal }: { deal: Deal }) => {
             <div
                 aria-hidden
                 className="absolute top-0 bottom-0 left-0 w-0.5 -translate-x-1/2"
-                style={{ backgroundImage: "repeating-linear-gradient(to bottom, var(--color-fg-quaternary) 0px, var(--color-fg-quaternary) 4px, transparent 4px, transparent 12px)" }}
+                style={{
+                    backgroundImage:
+                        "repeating-linear-gradient(to bottom, var(--color-fg-quaternary) 0px, var(--color-fg-quaternary) 4px, transparent 4px, transparent 12px)",
+                }}
             />
             {groups.map((group) => (
                 <div key={group.name} className="flex flex-col gap-3">
@@ -238,7 +251,9 @@ const MilestoneTimeline = ({ deal }: { deal: Deal }) => {
                         {group.substages.map((substage) => (
                             <div key={substage.label} className="flex flex-col gap-0.5">
                                 <div className="flex items-center gap-2">
-                                    <span className="flex size-3 shrink-0 items-center justify-center">{substage.done ? <CheckGlyph /> : <PendingRingIcon />}</span>
+                                    <span className="flex size-3 shrink-0 items-center justify-center">
+                                        {substage.done ? <CheckGlyph /> : <PendingRingIcon />}
+                                    </span>
                                     <span className={`flex-1 text-xs ${substage.done ? "text-secondary" : "text-secondary_hover"}`}>{substage.label}</span>
                                     {!substage.done && <span className="font-mono text-[10px] text-tertiary">Pending</span>}
                                 </div>
@@ -308,6 +323,22 @@ const SectionStatusBadge = ({ complete, label }: { complete: boolean; label?: st
         <Dot size="sm" className={complete ? "text-fg-success-secondary" : "text-fg-quaternary"} />
         {label ?? (complete ? "Completed" : "Pending")}
     </span>
+);
+
+/** Collapsed placeholder row for a section that's locked behind the Application stage — Figma's
+ * "dd-main" frame (404:9220) renders 02/03/04 this way whenever 01 isn't complete yet, each one
+ * dimmer than the last (80% / 60% / 40%) to read as progressively further away, with the
+ * trailing badge carrying its own nested 30% opacity on top of that. */
+const LockedSectionRow = ({ number, title, opacity }: { number: string; title: string; opacity: number }) => (
+    <div className="flex items-center justify-between rounded-lg bg-tertiary/30 px-4 py-6" style={{ opacity }}>
+        <div className="flex items-center gap-2 text-sm font-semibold">
+            <span className="text-fg-quaternary">{number}</span>
+            <span className="text-tertiary">{title}</span>
+        </div>
+        <div className="opacity-30">
+            <SectionStatusBadge complete={false} />
+        </div>
+    </div>
 );
 
 /** A numbered, always-expanded section card — the redesign drops the old collapse/expand
@@ -389,7 +420,8 @@ const InstallmentRow = ({
     const [amount, setAmount] = useState(String(installment.emiMonths ? Math.round(installment.amount / installment.emiMonths) : ""));
     const submitted = deal.plan.state === "awaiting_approval";
 
-    const colorClass = installment.status === "Paid" ? "bg-fg-success-secondary" : installment.status === "Overdue" ? "bg-fg-warning-primary" : "bg-fg-brand-primary";
+    const colorClass =
+        installment.status === "Paid" ? "bg-fg-success-secondary" : installment.status === "Overdue" ? "bg-fg-warning-primary" : "bg-fg-brand-primary";
 
     return (
         <div className="group flex flex-col gap-2 rounded-lg border border-secondary p-3">
@@ -594,15 +626,30 @@ export const DealDetail = () => {
                             </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-2">
-                                <Button color="secondary" size="sm" iconLeading={SlashCircle01} onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "not-interested" })}>
+                                <button
+                                    type="button"
+                                    onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "not-interested" })}
+                                    className="flex items-center justify-center gap-1 rounded-lg bg-secondary p-3 text-xs font-semibold text-primary shadow-xs-skeuomorphic transition-colors duration-100 ease-linear hover:bg-secondary_hover active:bg-quaternary"
+                                >
+                                    <SlashCircle01 className="size-4" />
                                     Not Interested
-                                </Button>
-                                <Button color="secondary" size="sm" iconLeading={XCircle} onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "rejected" })}>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "rejected" })}
+                                    className="flex items-center justify-center gap-1 rounded-lg bg-secondary p-3 text-xs font-semibold text-primary shadow-xs-skeuomorphic transition-colors duration-100 ease-linear hover:bg-secondary_hover active:bg-quaternary"
+                                >
+                                    <XCircle className="size-4" />
                                     Mark Reject
-                                </Button>
-                                <Button className="col-span-2" color="secondary" size="sm" iconLeading={Bookmark} onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "saved" })}>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setGlobalStatusRequest({ dealId: deal.id, kind: "saved" })}
+                                    className="col-span-2 flex items-center justify-center gap-1 rounded-lg bg-secondary p-3 text-xs font-semibold text-primary shadow-xs-skeuomorphic transition-colors duration-100 ease-linear hover:bg-secondary_hover active:bg-quaternary"
+                                >
+                                    <Bookmark className="size-4" />
                                     Save for Later
-                                </Button>
+                                </button>
                             </div>
                         )}
                     </div>
@@ -624,9 +671,7 @@ export const DealDetail = () => {
                         durationValue={`${durationProfile.weeks} Weeks, ${durationProfile.months} Months`}
                         effortsValue={`Online (${durationProfile.hoursPerWeek} hours/week)`}
                         startDateLabel={formatDate(startDate)}
-                        status={
-                            appComplete ? "completed" : deal.status.id === "APP_NEW" ? "new" : deal.status.id === "APP_EXPIRED" ? "expired" : "pending"
-                        }
+                        status={appComplete ? "completed" : deal.status.id === "APP_NEW" ? "new" : deal.status.id === "APP_EXPIRED" ? "expired" : "pending"}
                         applicationUrl={applicationFormUrl(deal)}
                         sentOnLabel={deal.application.sentOn ? formatDate(deal.application.sentOn) : null}
                         resendCount={deal.application.resendCount}
@@ -637,161 +682,227 @@ export const DealDetail = () => {
                         onViewApplication={() => setApplicationSlideoverOpen(true)}
                     />
 
-                    <Section number="02" title="Payment Plan" complete={planComplete} badgeLabel={PLAN_STATE_BADGE[deal.plan.state]}>
-                        {deal.plan.state === "none" ? (
-                            <EmptyState size="sm" className="mx-auto max-w-none py-4">
-                                <EmptyState.Content>
-                                    <EmptyState.Description>{planGuardCreate.allowed ? "No payment plan yet." : planGuardCreate.reason}</EmptyState.Description>
-                                </EmptyState.Content>
-                                <Button color="secondary" size="sm" iconLeading={Save01} className="h-11" isDisabled={!planGuardCreate.allowed} onClick={() => createPlan(deal.id)}>
-                                    Create Payment Plan
-                                </Button>
-                            </EmptyState>
-                        ) : planGuardEdit.allowed ? (
-                            // Editable in place — the same form the slideout uses elsewhere (deals-list.tsx),
-                            // just rendered directly in the section instead of behind a modal. Keyed on the
-                            // deal id so its internal draft state resets cleanly on a route change.
-                            <PaymentPlanForm key={deal.id} deal={deal} />
-                        ) : (
-                            <>
-                                <div className="flex flex-col">
-                                    <FeeRow label="Course Fees (A)" amount={deal.courseFee} currency={deal.currency} emphasis />
-                                    <FeeRow label="Total Discount (B)" amount={deal.discount} currency={deal.currency} emphasis />
-                                    <div className="my-1 ml-4 flex flex-col border-l border-secondary pl-4">
-                                        <FeeRow label="Upfront Discount" amount={deal.discountBreakdown.upfront} currency={deal.currency} icon compact />
-                                        <FeeRow label="Scholarship" amount={deal.discountBreakdown.scholarship} currency={deal.currency} compact />
-                                        <FeeRow label="BDR Discount" amount={deal.discountBreakdown.bdr} currency={deal.currency} compact />
-                                    </div>
-                                    <div className="border-t border-secondary">
-                                        <FeeRow label="Net Payable Fee (A-B)" amount={deal.netPayable} currency={deal.currency} emphasis />
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-3">
-                                    <p className="px-2 text-xs font-semibold tracking-wide text-quaternary uppercase">Installments</p>
-                                    <div className="flex flex-col gap-3">
-                                        {deal.installments.map((installment, i) => (
-                                            <InstallmentRow
-                                                key={i}
-                                                deal={deal}
-                                                installment={installment}
-                                                index={i}
-                                                showEmiEditor={deal.plan.state === "active"}
-                                                onEmiSubmit={handleEmiSubmit}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {deal.plan.state === "awaiting_approval" ? (
-                                    <SimulateApprovalControl onDecide={(decision, reason) => resolveApproval(deal.id, decision, reason)} />
-                                ) : (
-                                    <span className="text-xs text-tertiary italic">*{planGuardEdit.reason}</span>
-                                )}
-                            </>
-                        )}
-                    </Section>
-
-                    <Section number="03" title="Offer Letter" complete={deal.offer.state === "shared" || deal.offer.state === "accepted"} badgeLabel={OFFER_STATE_BADGE[deal.offer.state]}>
-                        {offerComplete ? (
-                            <>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                    <MetaField label="Template Used" value={deal.offer.template?.name ?? "—"} />
-                                    <MetaField label="Deadline" value={deal.offer.deadline ? formatDeadlineDateTime(deal.offer.deadline) : "—"} />
-                                    <MetaField label="Net Payable (as shared)" value={deal.offer.snapshot ? formatMoney(deal.offer.snapshot.netPayable, deal.currency) : "—"} />
-                                    <MetaField label="Version" value={`v${deal.offer.version}${deal.offer.resendCount ? `.resent${deal.offer.resendCount}x` : ""}`} />
-                                </div>
-
-                                {deal.offer.state === "stale" && deal.offer.snapshot && (
-                                    <div className="flex flex-col gap-1 rounded-lg bg-warning-secondary p-3 text-xs text-warning-primary">
-                                        <span className="font-semibold">Plan changed since this letter was created</span>
-                                        <span>
-                                            Discount {formatMoney(deal.offer.snapshot.discount, deal.currency)} → {formatMoney(deal.discount, deal.currency)}
-                                        </span>
-                                    </div>
-                                )}
-
-                                {offerEmailHtml && <OfferEmailPreviewCard html={offerEmailHtml} />}
-
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <Button color="secondary" size="sm" iconLeading={ArrowUpRight} isDisabled={!offerEmailHtml} onClick={() => setEmailModalDealId(deal.id)}>
-                                            View Offer Letter
+                    {!appComplete ? (
+                        <>
+                            <LockedSectionRow number="02" title="Payment Plan" opacity={0.8} />
+                            <LockedSectionRow number="03" title="Offer Letter" opacity={0.6} />
+                            <LockedSectionRow number="04" title="Enrolment" opacity={0.4} />
+                        </>
+                    ) : (
+                        <>
+                            <Section number="02" title="Payment Plan" complete={planComplete} badgeLabel={PLAN_STATE_BADGE[deal.plan.state]}>
+                                {deal.plan.state === "none" ? (
+                                    <EmptyState size="sm" className="mx-auto max-w-none py-4">
+                                        <EmptyState.Content>
+                                            <EmptyState.Description>
+                                                {planGuardCreate.allowed ? "No payment plan yet." : planGuardCreate.reason}
+                                            </EmptyState.Description>
+                                        </EmptyState.Content>
+                                        <Button
+                                            color="secondary"
+                                            size="sm"
+                                            iconLeading={Save01}
+                                            className="h-11"
+                                            isDisabled={!planGuardCreate.allowed}
+                                            onClick={() => createPlan(deal.id)}
+                                        >
+                                            Create Payment Plan
                                         </Button>
-                                        {(deal.offer.state === "created" || deal.offer.state === "stale") && (
-                                            <Button color="secondary" size="sm" iconLeading={Pencil01} onClick={() => setLetterComposerDealId(deal.id)}>
-                                                Edit offer letter
-                                            </Button>
-                                        )}
-                                        {deal.offer.state === "created" && (
-                                            <Button color="primary" size="sm" isDisabled={!letterGuardShare.allowed} onClick={() => setShareDealId(deal.id)}>
-                                                Share offer letter
-                                            </Button>
-                                        )}
-                                        {deal.offer.state === "stale" && (
-                                            <Button color="primary" size="sm" iconLeading={RefreshCcw01} onClick={() => refreshLetter(deal.id)}>
-                                                Refresh letter
-                                            </Button>
-                                        )}
-                                        {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                            <Button color="secondary" size="sm" iconLeading={RefreshCcw01} onClick={() => resendLetter(deal.id)}>
-                                                Resend Letter
-                                            </Button>
-                                        )}
-                                        {(deal.offer.state === "expired" || deal.offer.state === "withdrawn") && (
-                                            <Button color="secondary" size="sm" isDisabled={!letterGuardCreate.allowed} onClick={() => setLetterComposerDealId(deal.id)}>
-                                                Create offer letter (v2)
-                                            </Button>
-                                        )}
-                                        {!letterGuardShare.allowed && deal.offer.state === "created" && <span className="text-xs text-tertiary italic">*{letterGuardShare.reason}</span>}
-                                    </div>
-                                    {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                        <div className="flex flex-col items-end gap-1">
-                                            <Button color="secondary-destructive" size="sm" iconLeading={SlashCircle01} isDisabled={!withdrawGuard.allowed} onClick={() => setWithdrawDealId(deal.id)}>
-                                                Withdraw Offer
-                                            </Button>
-                                            {!withdrawGuard.allowed && <span className="text-xs text-tertiary italic">*{withdrawGuard.reason}</span>}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {deal.offerHistory.length > 0 && (
-                                    <div className="flex flex-col gap-1.5 border-t border-secondary pt-3">
-                                        <span className="text-xs font-semibold tracking-wide text-quaternary uppercase">Previous versions</span>
-                                        {deal.offerHistory.map((h, i) => (
-                                            <div key={i} className="flex items-center justify-between text-xs text-tertiary">
-                                                <span>
-                                                    v{h.version} · {h.template} · {h.endedBy}
-                                                </span>
-                                                <span>{formatDate(h.endedOn)}</span>
+                                    </EmptyState>
+                                ) : planGuardEdit.allowed ? (
+                                    // Editable in place — the same form the slideout uses elsewhere (deals-list.tsx),
+                                    // just rendered directly in the section instead of behind a modal. Keyed on the
+                                    // deal id so its internal draft state resets cleanly on a route change.
+                                    <PaymentPlanForm key={deal.id} deal={deal} />
+                                ) : (
+                                    <>
+                                        <div className="flex flex-col">
+                                            <FeeRow label="Course Fees (A)" amount={deal.courseFee} currency={deal.currency} emphasis />
+                                            <FeeRow label="Total Discount (B)" amount={deal.discount} currency={deal.currency} emphasis />
+                                            <div className="my-1 ml-4 flex flex-col border-l border-secondary pl-4">
+                                                <FeeRow
+                                                    label="Upfront Discount"
+                                                    amount={deal.discountBreakdown.upfront}
+                                                    currency={deal.currency}
+                                                    icon
+                                                    compact
+                                                />
+                                                <FeeRow label="Scholarship" amount={deal.discountBreakdown.scholarship} currency={deal.currency} compact />
+                                                <FeeRow label="BDR Discount" amount={deal.discountBreakdown.bdr} currency={deal.currency} compact />
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <p className="text-sm text-tertiary">{letterGuardCreate.allowed ? "No offer letter yet." : letterGuardCreate.reason}</p>
-                                <Button color="secondary" size="sm" isDisabled={!letterGuardCreate.allowed} onClick={() => setLetterComposerDealId(deal.id)}>
-                                    Create offer letter
-                                </Button>
-                            </>
-                        )}
-                    </Section>
+                                            <div className="border-t border-secondary">
+                                                <FeeRow label="Net Payable Fee (A-B)" amount={deal.netPayable} currency={deal.currency} emphasis />
+                                            </div>
+                                        </div>
 
-                    <Section number="04" title="Enrolment" complete={enrollComplete}>
-                        {enrollComplete ? (
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                                <MetaField label="Applicant Name" value={deal.name} />
-                                <MetaField label="Admission Counsellor" value={bdr?.name ?? "—"} />
-                                <MetaField label="Application ID" value={deal.id} onCopy={() => copyToClipboard(deal.id, "Application ID")} />
-                                <MetaField label="LMS ID" value={lmsId} onCopy={() => copyToClipboard(lmsId, "LMS ID")} />
-                                <MetaField label="First Session at" value={formatDateTime(firstSessionDate)} />
-                            </div>
-                        ) : (
-                            <p className="text-sm text-tertiary">Enrolment unlocks after the first payment.</p>
-                        )}
-                    </Section>
+                                        <div className="flex flex-col gap-3">
+                                            <p className="px-2 text-xs font-semibold tracking-wide text-quaternary uppercase">Installments</p>
+                                            <div className="flex flex-col gap-3">
+                                                {deal.installments.map((installment, i) => (
+                                                    <InstallmentRow
+                                                        key={i}
+                                                        deal={deal}
+                                                        installment={installment}
+                                                        index={i}
+                                                        showEmiEditor={deal.plan.state === "active"}
+                                                        onEmiSubmit={handleEmiSubmit}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {deal.plan.state === "awaiting_approval" ? (
+                                            <SimulateApprovalControl onDecide={(decision, reason) => resolveApproval(deal.id, decision, reason)} />
+                                        ) : (
+                                            <span className="text-xs text-tertiary italic">*{planGuardEdit.reason}</span>
+                                        )}
+                                    </>
+                                )}
+                            </Section>
+
+                            <Section
+                                number="03"
+                                title="Offer Letter"
+                                complete={deal.offer.state === "shared" || deal.offer.state === "accepted"}
+                                badgeLabel={OFFER_STATE_BADGE[deal.offer.state]}
+                            >
+                                {offerComplete ? (
+                                    <>
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                            <MetaField label="Template Used" value={deal.offer.template?.name ?? "—"} />
+                                            <MetaField label="Deadline" value={deal.offer.deadline ? formatDeadlineDateTime(deal.offer.deadline) : "—"} />
+                                            <MetaField
+                                                label="Net Payable (as shared)"
+                                                value={deal.offer.snapshot ? formatMoney(deal.offer.snapshot.netPayable, deal.currency) : "—"}
+                                            />
+                                            <MetaField
+                                                label="Version"
+                                                value={`v${deal.offer.version}${deal.offer.resendCount ? `.resent${deal.offer.resendCount}x` : ""}`}
+                                            />
+                                        </div>
+
+                                        {deal.offer.state === "stale" && deal.offer.snapshot && (
+                                            <div className="flex flex-col gap-1 rounded-lg bg-warning-secondary p-3 text-xs text-warning-primary">
+                                                <span className="font-semibold">Plan changed since this letter was created</span>
+                                                <span>
+                                                    Discount {formatMoney(deal.offer.snapshot.discount, deal.currency)} →{" "}
+                                                    {formatMoney(deal.discount, deal.currency)}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {offerEmailHtml && <OfferEmailPreviewCard html={offerEmailHtml} />}
+
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Button
+                                                    color="secondary"
+                                                    size="sm"
+                                                    iconLeading={ArrowUpRight}
+                                                    isDisabled={!offerEmailHtml}
+                                                    onClick={() => setEmailModalDealId(deal.id)}
+                                                >
+                                                    View Offer Letter
+                                                </Button>
+                                                {(deal.offer.state === "created" || deal.offer.state === "stale") && (
+                                                    <Button color="secondary" size="sm" iconLeading={Pencil01} onClick={() => setLetterComposerDealId(deal.id)}>
+                                                        Edit offer letter
+                                                    </Button>
+                                                )}
+                                                {deal.offer.state === "created" && (
+                                                    <Button
+                                                        color="primary"
+                                                        size="sm"
+                                                        isDisabled={!letterGuardShare.allowed}
+                                                        onClick={() => setShareDealId(deal.id)}
+                                                    >
+                                                        Share offer letter
+                                                    </Button>
+                                                )}
+                                                {deal.offer.state === "stale" && (
+                                                    <Button color="primary" size="sm" iconLeading={RefreshCcw01} onClick={() => refreshLetter(deal.id)}>
+                                                        Refresh letter
+                                                    </Button>
+                                                )}
+                                                {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
+                                                    <Button color="secondary" size="sm" iconLeading={RefreshCcw01} onClick={() => resendLetter(deal.id)}>
+                                                        Resend Letter
+                                                    </Button>
+                                                )}
+                                                {(deal.offer.state === "expired" || deal.offer.state === "withdrawn") && (
+                                                    <Button
+                                                        color="secondary"
+                                                        size="sm"
+                                                        isDisabled={!letterGuardCreate.allowed}
+                                                        onClick={() => setLetterComposerDealId(deal.id)}
+                                                    >
+                                                        Create offer letter (v2)
+                                                    </Button>
+                                                )}
+                                                {!letterGuardShare.allowed && deal.offer.state === "created" && (
+                                                    <span className="text-xs text-tertiary italic">*{letterGuardShare.reason}</span>
+                                                )}
+                                            </div>
+                                            {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <Button
+                                                        color="secondary-destructive"
+                                                        size="sm"
+                                                        iconLeading={SlashCircle01}
+                                                        isDisabled={!withdrawGuard.allowed}
+                                                        onClick={() => setWithdrawDealId(deal.id)}
+                                                    >
+                                                        Withdraw Offer
+                                                    </Button>
+                                                    {!withdrawGuard.allowed && <span className="text-xs text-tertiary italic">*{withdrawGuard.reason}</span>}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {deal.offerHistory.length > 0 && (
+                                            <div className="flex flex-col gap-1.5 border-t border-secondary pt-3">
+                                                <span className="text-xs font-semibold tracking-wide text-quaternary uppercase">Previous versions</span>
+                                                {deal.offerHistory.map((h, i) => (
+                                                    <div key={i} className="flex items-center justify-between text-xs text-tertiary">
+                                                        <span>
+                                                            v{h.version} · {h.template} · {h.endedBy}
+                                                        </span>
+                                                        <span>{formatDate(h.endedOn)}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-sm text-tertiary">{letterGuardCreate.allowed ? "No offer letter yet." : letterGuardCreate.reason}</p>
+                                        <Button
+                                            color="secondary"
+                                            size="sm"
+                                            isDisabled={!letterGuardCreate.allowed}
+                                            onClick={() => setLetterComposerDealId(deal.id)}
+                                        >
+                                            Create offer letter
+                                        </Button>
+                                    </>
+                                )}
+                            </Section>
+
+                            <Section number="04" title="Enrolment" complete={enrollComplete}>
+                                {enrollComplete ? (
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                                        <MetaField label="Applicant Name" value={deal.name} />
+                                        <MetaField label="Admission Counsellor" value={bdr?.name ?? "—"} />
+                                        <MetaField label="Application ID" value={deal.id} onCopy={() => copyToClipboard(deal.id, "Application ID")} />
+                                        <MetaField label="LMS ID" value={lmsId} onCopy={() => copyToClipboard(lmsId, "LMS ID")} />
+                                        <MetaField label="First Session at" value={formatDateTime(firstSessionDate)} />
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-tertiary">Enrolment unlocks after the first payment.</p>
+                                )}
+                            </Section>
+                        </>
+                    )}
                 </div>
 
                 {/* Right rail */}
@@ -805,7 +916,7 @@ export const DealDetail = () => {
                         <button
                             type="button"
                             onClick={() => setActivityLogOpen((v) => !v)}
-                            className="flex w-full items-center justify-between gap-2 rounded px-1 py-0.5 -mx-1"
+                            className="-mx-1 flex w-full items-center justify-between gap-2 rounded px-1 py-0.5"
                         >
                             <span className="font-mono text-sm text-tertiary">ACTIVITY LOG</span>
                             <ChevronDown className={`size-4 text-fg-quaternary transition-transform duration-150 ${activityLogOpen ? "rotate-180" : ""}`} />
@@ -974,7 +1085,7 @@ const SimulateApprovalControl = ({ onDecide }: { onDecide: (decision: "approved"
     const [reason, setReason] = useState("");
 
     return (
-        <div className="flex flex-col gap-3 rounded-lg border border-dashed border-warning-primary bg-warning-secondary p-3">
+        <div className="border-warning-primary flex flex-col gap-3 rounded-lg border border-dashed bg-warning-secondary p-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-warning-primary">
                 <Shield01 className="size-3.5" />
                 Simulate Sales Ops decision (prototype affordance — no Sales Ops persona exists)
@@ -1005,17 +1116,7 @@ const SimulateApprovalControl = ({ onDecide }: { onDecide: (decision: "approved"
     );
 };
 
-const FormSection = ({
-    title,
-    children,
-    divider = true,
-    cols = 2,
-}: {
-    title: string;
-    children: React.ReactNode;
-    divider?: boolean;
-    cols?: 1 | 2;
-}) => (
+const FormSection = ({ title, children, divider = true, cols = 2 }: { title: string; children: React.ReactNode; divider?: boolean; cols?: 1 | 2 }) => (
     <div className={`flex flex-col gap-3 ${divider ? "border-b border-secondary pb-6" : ""}`}>
         <span className="text-md font-semibold text-primary">{title}</span>
         <div className={cols === 2 ? "grid grid-cols-2 gap-x-4 gap-y-4" : "flex flex-col gap-4"}>{children}</div>
