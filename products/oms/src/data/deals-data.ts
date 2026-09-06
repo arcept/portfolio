@@ -25,7 +25,6 @@
  * moment — every surface (row actions, detail sections, dialogs) reads these instead of
  * inferring permission from `reachedStage`, which is how the old model tangled.
  */
-
 import type { Persona } from "@/types/role";
 import type { DealStageCascade, MonthGroundTruth, OrgBdr } from "./dashboard-data";
 import { MONTHS, PROTOTYPE_TODAY, bdrs, seededRandom, splitByWeights, teamLeads, teamManagers } from "./dashboard-data";
@@ -75,16 +74,37 @@ export const STATUS: Record<DealStatusId, DealStatus> = {
     // Transitional: real time between the learner filling the application and the status
     // flipping to PLAN_NOT_STARTED. Kept for that brief window rather than removed outright.
     APP_FILLED: { id: "APP_FILLED", stage: "Application", label: "Filled", color: "green", action: true, desc: "Learner filled it — plan not started yet" },
-    PLAN_NOT_STARTED: { id: "PLAN_NOT_STARTED", stage: "Plan", label: "Not started", color: "green", action: true, desc: "Application filled — payment plan not started" },
+    PLAN_NOT_STARTED: {
+        id: "PLAN_NOT_STARTED",
+        stage: "Plan",
+        label: "Not started",
+        color: "green",
+        action: true,
+        desc: "Application filled — payment plan not started",
+    },
     PLAN_DRAFT: { id: "PLAN_DRAFT", stage: "Plan", label: "Draft", color: "green", action: true, desc: "Payment plan being built" },
-    PLAN_AWAITING_APPROVAL: { id: "PLAN_AWAITING_APPROVAL", stage: "Plan", label: "Awaiting approval", color: "blue", action: false, desc: "An EMI row is with Sales Ops" },
+    PLAN_AWAITING_APPROVAL: {
+        id: "PLAN_AWAITING_APPROVAL",
+        stage: "Plan",
+        label: "Awaiting approval",
+        color: "blue",
+        action: false,
+        desc: "An EMI row is with Sales Ops",
+    },
     OFFER_PENDING: { id: "OFFER_PENDING", stage: "Offer", label: "Pending", color: "blue", action: false, desc: "Offer sent, awaiting the learner" },
     OFFER_EXPIRED: { id: "OFFER_EXPIRED", stage: "Offer", label: "Expired", color: "amber", action: false, desc: "Offer's acceptance window timed out" },
     OFFER_ACCEPTED: { id: "OFFER_ACCEPTED", stage: "Offer", label: "Accepted", color: "green", action: true, desc: "Accepted — no payment made yet" },
     OFFER_WITHDRAWN: { id: "OFFER_WITHDRAWN", stage: "Offer", label: "Withdrawn", color: "amber", action: true, desc: "Offer withdrawn — plan reopened" },
     PAY_ONGOING: { id: "PAY_ONGOING", stage: "Payment", label: "Ongoing", color: "green", action: false, desc: "First payment made, installments continuing" },
     PAY_COMPLETED: { id: "PAY_COMPLETED", stage: "Payment", label: "Completed", color: "green", action: false, desc: "All installments paid" },
-    ENR_CANCELLED: { id: "ENR_CANCELLED", stage: "Enrolment", label: "Cancelled", color: "red", action: false, desc: "Enrolment was cancelled (backend action)" },
+    ENR_CANCELLED: {
+        id: "ENR_CANCELLED",
+        stage: "Enrolment",
+        label: "Cancelled",
+        color: "red",
+        action: false,
+        desc: "Enrolment was cancelled (backend action)",
+    },
     NOT_INTERESTED: { id: "NOT_INTERESTED", stage: "Global", label: "Not Interested", color: "gray", action: false, desc: "Learner is no longer interested" },
     REJECTED: { id: "REJECTED", stage: "Global", label: "Rejected", color: "gray", action: false, desc: "Disqualified by the BDR" },
     SAVED: { id: "SAVED", stage: "Global", label: "Saved", color: "gray", action: false, desc: "Parked for a future sales cycle" },
@@ -136,19 +156,91 @@ export const OFFER_TEMPLATES: OfferTemplate[] = [
 ];
 
 const FIRST_NAMES = [
-    "Aarav", "Vivaan", "Diya", "Ishita", "Kabir", "Meher", "Sara", "Aryan", "Naina", "Reyansh",
-    "Anaya", "Vihaan", "Myra", "Advika", "Rehan", "Trisha", "Dhruv", "Kiara", "Yash", "Alia",
-    "James", "Olivia", "Daniel", "Sophia", "Lucas", "Amelia", "Noah", "Grace", "Ethan", "Chloe",
-    "Marco", "Elena", "Hassan", "Layla", "Omar", "Fatima", "Chen", "Wei", "Mei", "Arjun",
+    "Aarav",
+    "Vivaan",
+    "Diya",
+    "Ishita",
+    "Kabir",
+    "Meher",
+    "Sara",
+    "Aryan",
+    "Naina",
+    "Reyansh",
+    "Anaya",
+    "Vihaan",
+    "Myra",
+    "Advika",
+    "Rehan",
+    "Trisha",
+    "Dhruv",
+    "Kiara",
+    "Yash",
+    "Alia",
+    "James",
+    "Olivia",
+    "Daniel",
+    "Sophia",
+    "Lucas",
+    "Amelia",
+    "Noah",
+    "Grace",
+    "Ethan",
+    "Chloe",
+    "Marco",
+    "Elena",
+    "Hassan",
+    "Layla",
+    "Omar",
+    "Fatima",
+    "Chen",
+    "Wei",
+    "Mei",
+    "Arjun",
 ];
 const LAST_NAMES = [
-    "Sharma", "Gupta", "Iyer", "Reddy", "Nair", "Kapoor", "Verma", "Chopra", "Bhatt", "Rao",
-    "Malhotra", "Menon", "Joshi", "Bose", "Sheikh", "Suri", "Desai", "Patil", "Ranganathan", "Ahmed",
-    "Fischer", "Novak", "Rossi", "Dubois", "Larsen", "Okoye", "Silva", "Tanaka", "Wong", "Kim",
+    "Sharma",
+    "Gupta",
+    "Iyer",
+    "Reddy",
+    "Nair",
+    "Kapoor",
+    "Verma",
+    "Chopra",
+    "Bhatt",
+    "Rao",
+    "Malhotra",
+    "Menon",
+    "Joshi",
+    "Bose",
+    "Sheikh",
+    "Suri",
+    "Desai",
+    "Patil",
+    "Ranganathan",
+    "Ahmed",
+    "Fischer",
+    "Novak",
+    "Rossi",
+    "Dubois",
+    "Larsen",
+    "Okoye",
+    "Silva",
+    "Tanaka",
+    "Wong",
+    "Kim",
 ];
 const CITIES: [string, string][] = [
-    ["Mumbai", "India"], ["Bengaluru", "India"], ["Delhi", "India"], ["Pune", "India"], ["Hyderabad", "India"],
-    ["Dubai", "UAE"], ["Singapore", "Singapore"], ["London", "UK"], ["Toronto", "Canada"], ["Sydney", "Australia"], ["Lagos", "Nigeria"],
+    ["Mumbai", "India"],
+    ["Bengaluru", "India"],
+    ["Delhi", "India"],
+    ["Pune", "India"],
+    ["Hyderabad", "India"],
+    ["Dubai", "UAE"],
+    ["Singapore", "Singapore"],
+    ["London", "UK"],
+    ["Toronto", "Canada"],
+    ["Sydney", "Australia"],
+    ["Lagos", "Nigeria"],
 ];
 const SOP_SOURCES = ["Instagram ad", "LinkedIn post", "Google search", "referral from a friend", "YouTube review", "Novatr blog"];
 const TOOLS = ["AutoCAD, Revit", "Rhinoceros 3D, Grasshopper", "Revit, Navisworks", "AutoCAD only", "Rhino, AutoCAD"];
@@ -188,6 +280,7 @@ const WITHDRAW_REASONS = [
 // Deal / installment / activity-log shapes
 // ---------------------------------------------------------------------------
 
+export type Currency = "INR" | "USD";
 export type InstallmentMode = "Razorpay" | "Manual" | "EMI_3P" | "Stripe" | "Stripe EMI";
 export type InstallmentStatus = "Paid" | "Unpaid" | "Overdue";
 
@@ -226,12 +319,15 @@ export type ApplicationDetails = {
     whyLearn: string;
 };
 
-/** How `discount` breaks down into the line items the Payment Plan section itemizes.
- * Always sums back to the parent deal's `discount`. */
+export type DiscountLineItem = { label: string; amount: number };
+
+/** How `discount` breaks down into the line items the Payment Plan section itemizes — `upfront`
+ * is the automatic Upfront-payment-type discount, `items` is every other tier actually applied
+ * (multiple can stack: Early Bird + Merit + a Custom BDR amount, any combination). Always sums
+ * back to the parent deal's `discount`. */
 export type DiscountBreakdown = {
     upfront: number;
-    scholarship: number;
-    bdr: number;
+    items: DiscountLineItem[];
 };
 
 // ---------------------------------------------------------------------------
@@ -304,6 +400,12 @@ export function canResendApplication(d: Deal): GuardResult {
 /** A stable, fabricated application-form link — this prototype has no real form host. */
 export function applicationFormUrl(d: Deal): string {
     return `https://apply.novatr.com/a/${d.applicationId}`;
+}
+
+/** A stable, fabricated payment-collection link — mirrors `applicationFormUrl`, no real payment
+ * host behind it either. */
+export function paymentPlanUrl(d: Deal): string {
+    return `https://payment.novatr.com/a/${d.applicationId}`;
 }
 
 /** BDR owes a payment plan. */
@@ -417,7 +519,7 @@ export type Deal = {
 // ---------------------------------------------------------------------------
 
 const rand = seededRandom(770101);
-const pick = <T,>(arr: T[]): T => arr[Math.floor(rand() * arr.length)];
+const pick = <T>(arr: T[]): T => arr[Math.floor(rand() * arr.length)];
 const int = (min: number, max: number) => Math.floor(rand() * (max - min + 1)) + min;
 
 function hashId(id: string): number {
@@ -491,7 +593,13 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
     const scholarshipFraction = pickStable(`${id}ds`, [0, 0, 0, 0.3, 0.5]);
     const scholarship = Math.round(remainingAfterUpfront * scholarshipFraction);
     const bdrDiscount = remainingAfterUpfront - scholarship;
-    const discountBreakdown: DiscountBreakdown = { upfront, scholarship, bdr: bdrDiscount };
+    const discountBreakdown: DiscountBreakdown = {
+        upfront,
+        items: [
+            ...(scholarship > 0 ? [{ label: "Merit Scholarship", amount: scholarship }] : []),
+            ...(bdrDiscount > 0 ? [{ label: "Custom BDR Discount", amount: bdrDiscount }] : []),
+        ],
+    };
 
     return {
         id,
@@ -623,7 +731,13 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
                 // Amount Left ≠ 0 — a genuinely half-built plan (§3.4 seed list). Drop the last
                 // row (or shrink the only row) so the installments no longer sum to Net Payable.
                 const installments = full.length > 1 ? full.slice(0, -1) : [{ ...full[0], amount: Math.round(full[0].amount * 0.6) }];
-                return { installments, plan: { ...emptyPlan(), state: "draft_incomplete", createdOn }, offer: emptyOffer(), offerHistory: [], booking: emptyBooking() };
+                return {
+                    installments,
+                    plan: { ...emptyPlan(), state: "draft_incomplete", createdOn },
+                    offer: emptyOffer(),
+                    offerHistory: [],
+                    booking: emptyBooking(),
+                };
             }
 
             const plan: PlanFields = { ...emptyPlan(), state: "draft_ready", createdOn };
@@ -632,8 +746,14 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             }
             if (variant === "ready_created") {
                 const offer: OfferFields = {
-                    state: "created", template: template(), deadline: offerDeadline(7), version: 1,
-                    createdOn, sharedOn: null, resendCount: 0, snapshot: takeSnapshot(discount, netPayable, full),
+                    state: "created",
+                    template: template(),
+                    deadline: offerDeadline(7),
+                    version: 1,
+                    createdOn,
+                    sharedOn: null,
+                    resendCount: 0,
+                    snapshot: takeSnapshot(discount, netPayable, full),
                 };
                 return { installments: full, plan, offer, offerHistory: [], booking: emptyBooking() };
             }
@@ -643,8 +763,14 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             const staleDiscount = Math.max(0, discount - Math.round(netPayable * 0.06));
             const staleNetPayable = netPayable + (discount - staleDiscount);
             const offer: OfferFields = {
-                state: "stale", template: template(), deadline: offerDeadline(7), version: 1,
-                createdOn, sharedOn: null, resendCount: 0, snapshot: takeSnapshot(staleDiscount, staleNetPayable, full),
+                state: "stale",
+                template: template(),
+                deadline: offerDeadline(7),
+                version: 1,
+                createdOn,
+                sharedOn: null,
+                resendCount: 0,
+                snapshot: takeSnapshot(staleDiscount, staleNetPayable, full),
             };
             return { installments: full, plan, offer, offerHistory: [], booking: emptyBooking() };
         }
@@ -654,10 +780,22 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             // it, then an EMI row got submitted for Sales Ops re-approval, freezing the plan —
             // letter creatable-in-the-past, not currently shareable (§7/§10).
             const full = complete();
-            const plan: PlanFields = { state: "awaiting_approval", createdOn, committedOn: null, activatedOn: null, approval: { state: "pending", reason: null, decidedOn: null } };
+            const plan: PlanFields = {
+                state: "awaiting_approval",
+                createdOn,
+                committedOn: null,
+                activatedOn: null,
+                approval: { state: "pending", reason: null, decidedOn: null },
+            };
             const offer: OfferFields = {
-                state: "created", template: template(), deadline: offerDeadline(7), version: 1,
-                createdOn, sharedOn: null, resendCount: 0, snapshot: takeSnapshot(discount, netPayable, full),
+                state: "created",
+                template: template(),
+                deadline: offerDeadline(7),
+                version: 1,
+                createdOn,
+                sharedOn: null,
+                resendCount: 0,
+                snapshot: takeSnapshot(discount, netPayable, full),
             };
             return { installments: full, plan, offer, offerHistory: [], booking: emptyBooking() };
         }
@@ -665,10 +803,22 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
         case "OFFER_PENDING": {
             const full = complete();
             const sharedOn = createdOn;
-            const plan: PlanFields = { state: "committed", createdOn, committedOn: sharedOn, activatedOn: null, approval: { state: "n/a", reason: null, decidedOn: null } };
+            const plan: PlanFields = {
+                state: "committed",
+                createdOn,
+                committedOn: sharedOn,
+                activatedOn: null,
+                approval: { state: "n/a", reason: null, decidedOn: null },
+            };
             const offer: OfferFields = {
-                state: "shared", template: template(), deadline: toISODate(new Date(PROTOTYPE_TODAY.getTime() + int(-3, 10) * 86_400_000)), version: 1,
-                createdOn, sharedOn, resendCount: pickStable(`${id}rc`, [0, 0, 0, 1]), snapshot: takeSnapshot(discount, netPayable, full),
+                state: "shared",
+                template: template(),
+                deadline: toISODate(new Date(PROTOTYPE_TODAY.getTime() + int(-3, 10) * 86_400_000)),
+                version: 1,
+                createdOn,
+                sharedOn,
+                resendCount: pickStable(`${id}rc`, [0, 0, 0, 1]),
+                snapshot: takeSnapshot(discount, netPayable, full),
             };
             return { installments: full, plan, offer, offerHistory: [], booking: emptyBooking() };
         }
@@ -678,9 +828,22 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             const sharedOn = createdOn;
             // Reopened per the row-action table (§6): an expired offer's plan returns to
             // draft_ready so "Create offer letter (v2)" (canCreateLetter) is available.
-            const plan: PlanFields = { state: "draft_ready", createdOn, committedOn: sharedOn, activatedOn: null, approval: { state: "n/a", reason: null, decidedOn: null } };
+            const plan: PlanFields = {
+                state: "draft_ready",
+                createdOn,
+                committedOn: sharedOn,
+                activatedOn: null,
+                approval: { state: "n/a", reason: null, decidedOn: null },
+            };
             const offer: OfferFields = {
-                state: "expired", template: template(), deadline: offerDeadline(7), version: 1, createdOn, sharedOn, resendCount: 0, snapshot: takeSnapshot(discount, netPayable, full),
+                state: "expired",
+                template: template(),
+                deadline: offerDeadline(7),
+                version: 1,
+                createdOn,
+                sharedOn,
+                resendCount: 0,
+                snapshot: takeSnapshot(discount, netPayable, full),
             };
             return { installments: full, plan, offer, offerHistory: [], booking: emptyBooking() };
         }
@@ -690,9 +853,26 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             const sharedOn = createdOn;
             const endedOn = new Date(createdOn.getTime() + int(2, 10) * 86_400_000);
             const t = template();
-            const plan: PlanFields = { state: "draft_ready", createdOn, committedOn: sharedOn, activatedOn: null, approval: { state: "n/a", reason: null, decidedOn: null } };
-            const offer: OfferFields = { state: "withdrawn", template: t, deadline: null, version: 1, createdOn, sharedOn, resendCount: 0, snapshot: takeSnapshot(discount, netPayable, full) };
-            const offerHistory: OfferHistoryEntry[] = [{ version: 1, template: t.name, sharedOn, endedOn, endedBy: "withdrawn", reason: pickStable(`${id}wr`, WITHDRAW_REASONS) }];
+            const plan: PlanFields = {
+                state: "draft_ready",
+                createdOn,
+                committedOn: sharedOn,
+                activatedOn: null,
+                approval: { state: "n/a", reason: null, decidedOn: null },
+            };
+            const offer: OfferFields = {
+                state: "withdrawn",
+                template: t,
+                deadline: null,
+                version: 1,
+                createdOn,
+                sharedOn,
+                resendCount: 0,
+                snapshot: takeSnapshot(discount, netPayable, full),
+            };
+            const offerHistory: OfferHistoryEntry[] = [
+                { version: 1, template: t.name, sharedOn, endedOn, endedBy: "withdrawn", reason: pickStable(`${id}wr`, WITHDRAW_REASONS) },
+            ];
             return { installments: full, plan, offer, offerHistory, booking: emptyBooking() };
         }
 
@@ -701,8 +881,23 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             // until the first payment lands (§10 acceptance check).
             const full = complete();
             const sharedOn = createdOn;
-            const plan: PlanFields = { state: "committed", createdOn, committedOn: sharedOn, activatedOn: null, approval: { state: "n/a", reason: null, decidedOn: null } };
-            const offer: OfferFields = { state: "accepted", template: template(), deadline: null, version: 1, createdOn, sharedOn, resendCount: 0, snapshot: takeSnapshot(discount, netPayable, full) };
+            const plan: PlanFields = {
+                state: "committed",
+                createdOn,
+                committedOn: sharedOn,
+                activatedOn: null,
+                approval: { state: "n/a", reason: null, decidedOn: null },
+            };
+            const offer: OfferFields = {
+                state: "accepted",
+                template: template(),
+                deadline: null,
+                version: 1,
+                createdOn,
+                sharedOn,
+                resendCount: 0,
+                snapshot: takeSnapshot(discount, netPayable, full),
+            };
             return { installments: full, plan, offer, offerHistory: [], booking: emptyBooking() };
         }
 
@@ -711,8 +906,23 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
         case "ENR_CANCELLED": {
             const full = complete();
             const sharedOn = createdOn;
-            const plan: PlanFields = { state: "active", createdOn, committedOn: sharedOn, activatedOn: earliestPaidOn(full), approval: { state: "n/a", reason: null, decidedOn: null } };
-            const offer: OfferFields = { state: "accepted", template: template(), deadline: null, version: 1, createdOn, sharedOn, resendCount: 0, snapshot: takeSnapshot(discount, netPayable, full) };
+            const plan: PlanFields = {
+                state: "active",
+                createdOn,
+                committedOn: sharedOn,
+                activatedOn: earliestPaidOn(full),
+                approval: { state: "n/a", reason: null, decidedOn: null },
+            };
+            const offer: OfferFields = {
+                state: "accepted",
+                template: template(),
+                deadline: null,
+                version: 1,
+                createdOn,
+                sharedOn,
+                resendCount: 0,
+                snapshot: takeSnapshot(discount, netPayable, full),
+            };
             return { installments: full, plan, offer, offerHistory: [], booking: bookingFor(full, netPayable) };
         }
 
@@ -869,7 +1079,11 @@ function buildActivityLog(d: Omit<Deal, "activityLog">): ActivityLogEntry[] {
         log.push({ ts: daysAgo(int(1, 15)), text: "Submitted for Sales Ops approval" });
     }
     if (d.offer.state !== "none") {
-        log.push({ ts: d.offer.createdOn ?? daysAgo(int(15, 45)), text: "Offer letter created", reason: d.offer.template ? `${d.offer.template.name} template` : undefined });
+        log.push({
+            ts: d.offer.createdOn ?? daysAgo(int(15, 45)),
+            text: "Offer letter created",
+            reason: d.offer.template ? `${d.offer.template.name} template` : undefined,
+        });
     }
     if (d.offer.sharedOn) {
         log.push({ ts: d.offer.sharedOn, text: "Offer letter shared", reason: d.offer.template ? `${d.offer.template.name} template` : undefined });
@@ -947,7 +1161,10 @@ if (import.meta.env.DEV) {
     assert(DEALS.length === lifetimeApplicationsSent, `deals.length (${DEALS.length}) !== lifetime applicationsSent (${lifetimeApplicationsSent})`);
 
     const knownBdrIds = new Set(bdrs.map((b) => b.id));
-    assert(DEALS.every((d) => knownBdrIds.has(d.bdrId)), "every deal's bdrId must exist in bdrs");
+    assert(
+        DEALS.every((d) => knownBdrIds.has(d.bdrId)),
+        "every deal's bdrId must exist in bdrs",
+    );
 
     assert(dealsForPersona({ role: "admin" }).length === DEALS.length, "admin persona must see every deal");
 
@@ -955,7 +1172,12 @@ if (import.meta.env.DEV) {
         const c = month.cascade;
         const monthDeals = DEALS.filter((d) => d.createdOn.getFullYear() === month.year && d.createdOn.getMonth() === month.month);
         const bucketSum =
-            c.currentStage.applicationStage + c.currentStage.offerStage + c.currentStage.paymentStage + c.currentStage.paymentCompleted + c.currentStage.expired + c.currentStage.notInterested;
+            c.currentStage.applicationStage +
+            c.currentStage.offerStage +
+            c.currentStage.paymentStage +
+            c.currentStage.paymentCompleted +
+            c.currentStage.expired +
+            c.currentStage.notInterested;
         assert(monthDeals.length === bucketSum, `month ${month.month + 1}: roster count (${monthDeals.length}) !== currentStage bucket sum (${bucketSum})`);
     }
 

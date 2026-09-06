@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { PROTOTYPE_TODAY, getPersonaLabel } from "@/data/dashboard-data";
 import { DEALS, STATUS, planSnapshot, refreshOfferStaleness } from "@/data/deals-data";
-import type { Deal, Installment, OfferTemplate, PlanState } from "@/data/deals-data";
+import type { Deal, DiscountBreakdown, Installment, OfferTemplate, PlanState } from "@/data/deals-data";
 import { usePersona } from "@/providers/role-provider";
 
 interface DealsContextType {
@@ -20,7 +20,7 @@ interface DealsContextType {
 
     /** Payment Plan lifecycle (2026-09-05 offer-separation brief §4). */
     createPlan: (id: string) => void;
-    savePlan: (id: string, patch: { discount: number; installments: Installment[] }) => void;
+    savePlan: (id: string, patch: { discount: number; discountBreakdown: DiscountBreakdown; installments: Installment[] }) => void;
     submitPlanForApproval: (id: string, note?: string | null) => void;
     resolveApproval: (id: string, decision: "approved" | "rejected", reason?: string | null) => void;
 
@@ -66,7 +66,9 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const logActivity = useCallback((id: string, text: string, reason?: string | null) => {
-        setDeals((prev) => prev.map((d) => (d.id === id ? { ...d, activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text, reason: reason ?? null }] } : d)));
+        setDeals((prev) =>
+            prev.map((d) => (d.id === id ? { ...d, activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text, reason: reason ?? null }] } : d)),
+        );
     }, []);
 
     const sendApplication = useCallback(
@@ -112,7 +114,13 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                     const nextStatus = d.status.id === "APP_FILLED" || d.status.id === "PLAN_NOT_STARTED" ? STATUS.PLAN_DRAFT : d.status;
                     return {
                         ...d,
-                        plan: { state: "draft_incomplete", createdOn: PROTOTYPE_TODAY, committedOn: null, activatedOn: null, approval: { state: "n/a", reason: null, decidedOn: null } },
+                        plan: {
+                            state: "draft_incomplete",
+                            createdOn: PROTOTYPE_TODAY,
+                            committedOn: null,
+                            activatedOn: null,
+                            approval: { state: "n/a", reason: null, decidedOn: null },
+                        },
                         status: nextStatus,
                         reachedStage: Math.max(d.reachedStage, 1) as Deal["reachedStage"],
                         lastUpdate: PROTOTYPE_TODAY,
@@ -125,7 +133,7 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
     );
 
     const savePlan = useCallback(
-        (id: string, patch: { discount: number; installments: Installment[] }) => {
+        (id: string, patch: { discount: number; discountBreakdown: DiscountBreakdown; installments: Installment[] }) => {
             setDeals((prev) =>
                 prev.map((d) => {
                     if (d.id !== id) return d;
@@ -135,6 +143,7 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                     const next: Deal = {
                         ...d,
                         discount: patch.discount,
+                        discountBreakdown: patch.discountBreakdown,
                         netPayable,
                         installments: patch.installments,
                         plan: { ...d.plan, state: planState },
@@ -205,20 +214,36 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                     if ((d.offer.state === "expired" || d.offer.state === "withdrawn") && d.offer.sharedOn && d.offer.template) {
                         offerHistory = [
                             ...offerHistory,
-                            { version: d.offer.version, template: d.offer.template.name, sharedOn: d.offer.sharedOn, endedOn: PROTOTYPE_TODAY, endedBy: d.offer.state, reason: null },
+                            {
+                                version: d.offer.version,
+                                template: d.offer.template.name,
+                                sharedOn: d.offer.sharedOn,
+                                endedOn: PROTOTYPE_TODAY,
+                                endedBy: d.offer.state,
+                                reason: null,
+                            },
                         ];
                         version = d.offer.version + 1;
                     }
                     const offer: Deal["offer"] = {
-                        state: "created", template: opts.template, deadline: opts.deadline, version,
-                        createdOn: PROTOTYPE_TODAY, sharedOn: null, resendCount: 0, snapshot: planSnapshot(d),
+                        state: "created",
+                        template: opts.template,
+                        deadline: opts.deadline,
+                        version,
+                        createdOn: PROTOTYPE_TODAY,
+                        sharedOn: null,
+                        resendCount: 0,
+                        snapshot: planSnapshot(d),
                     };
                     return {
                         ...d,
                         offer,
                         offerHistory,
                         lastUpdate: PROTOTYPE_TODAY,
-                        activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Offer letter created", reason: withActor(`${opts.template.name} template`) }],
+                        activityLog: [
+                            ...d.activityLog,
+                            { ts: PROTOTYPE_TODAY, text: "Offer letter created", reason: withActor(`${opts.template.name} template`) },
+                        ],
                     };
                 }),
             );
@@ -239,7 +264,10 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                         ...d,
                         offer: { ...d.offer, state: "created", template: opts.template, deadline: opts.deadline, snapshot: planSnapshot(d) },
                         lastUpdate: PROTOTYPE_TODAY,
-                        activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Offer letter edited", reason: withActor(`${opts.template.name} template`) }],
+                        activityLog: [
+                            ...d.activityLog,
+                            { ts: PROTOTYPE_TODAY, text: "Offer letter edited", reason: withActor(`${opts.template.name} template`) },
+                        ],
                     };
                 }),
             );
@@ -278,7 +306,11 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                         lastUpdate: PROTOTYPE_TODAY,
                         activityLog: [
                             ...d.activityLog,
-                            { ts: PROTOTYPE_TODAY, text: "Offer letter shared", reason: withActor(d.offer.template ? `${d.offer.template.name} template` : null) },
+                            {
+                                ts: PROTOTYPE_TODAY,
+                                text: "Offer letter shared",
+                                reason: withActor(d.offer.template ? `${d.offer.template.name} template` : null),
+                            },
                         ],
                     };
                 }),
@@ -311,7 +343,17 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                     if (d.id !== id) return d;
                     const offerHistory =
                         d.offer.sharedOn && d.offer.template
-                            ? [...d.offerHistory, { version: d.offer.version, template: d.offer.template.name, sharedOn: d.offer.sharedOn, endedOn: PROTOTYPE_TODAY, endedBy: "withdrawn" as const, reason }]
+                            ? [
+                                  ...d.offerHistory,
+                                  {
+                                      version: d.offer.version,
+                                      template: d.offer.template.name,
+                                      sharedOn: d.offer.sharedOn,
+                                      endedOn: PROTOTYPE_TODAY,
+                                      endedBy: "withdrawn" as const,
+                                      reason,
+                                  },
+                              ]
                             : d.offerHistory;
                     return {
                         ...d,

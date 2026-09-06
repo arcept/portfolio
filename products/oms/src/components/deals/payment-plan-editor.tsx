@@ -1,40 +1,35 @@
-import { useEffect, useState } from "react";
-import { Check, Plus, Save01, Trash01 } from "@untitledui/icons";
+import { useEffect, useMemo, useState } from "react";
+import { Check, CreditCardPlus } from "@untitledui/icons";
+import bankIcon from "@/assets/payment-icons/bank-icon.svg";
+import razorpayModeIcon from "@/assets/payment-icons/razorpay-mode-icon.svg";
+import stripeModeIcon from "@/assets/payment-icons/stripe-mode-icon.svg";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
-import { Select } from "@/components/base/select/select";
+import { EMI_MODE, FeeBreakdown, GATEWAY_MODE, InstallmentPreviewCard, formatMoney, tierAmount } from "@/components/deals/payment-plan-shared";
 import { PROTOTYPE_TODAY } from "@/data/dashboard-data";
-import type { Deal, Installment, InstallmentMode } from "@/data/deals-data";
+import type { Currency, Deal, DiscountBreakdown, Installment, InstallmentMode } from "@/data/deals-data";
 import { canEditPlan } from "@/data/deals-data";
 import { useDeals } from "@/providers/deals-provider";
 
-const MODES_INR: InstallmentMode[] = ["Razorpay", "Manual", "EMI_3P"];
-const MODES_USD: InstallmentMode[] = ["Stripe", "Stripe EMI"];
-const EMI_TENURES = [3, 6, 12] as const;
-
-type DraftInstallment = { amount: number; mode: InstallmentMode; deadline: string; isEmi: boolean; emiMonths: number | null };
-
-function isoInDays(n: number): string {
-    return new Date(PROTOTYPE_TODAY.getTime() + n * 86_400_000).toISOString().slice(0, 10);
-}
-function formatMoney(amount: number, currency: "INR" | "USD"): string {
-    const symbol = currency === "INR" ? "₹" : "$";
-    return `${symbol}${Math.round(amount).toLocaleString(currency === "INR" ? "en-IN" : "en-US")}`;
-}
-
 // ---------------------------------------------------------------------------
-// Discount tiers — replaces a free-entry amount with a fixed menu (Early Bird,
-// two scholarship tiers, and a capped custom entry) so a BDR can't apply an
-// arbitrary, unaudited discount.
+// Discount tiers — a fixed menu (Early Bird, Merit, Super Merit, custom) so a BDR
+// can't apply an arbitrary, unaudited discount. Upfront additionally auto-applies
+// its own one-time discount on top of whichever tier is selected (§ stacking).
 // ---------------------------------------------------------------------------
 
-type DiscountTierId = "early-bird" | "merit" | "need-based" | "custom";
+type PaymentType = "upfront" | "part" | "emi";
+type DiscountTierId = "early-bird" | "merit" | "super-merit" | "custom";
+type InstallmentPlanId = "dp3" | "dp6";
+type EmiTenure = 3 | 6 | 12;
 
+const UPFRONT_AUTO_PCT = 5;
 const EARLY_BIRD_PCT = 10;
 const MERIT_PCT = 15;
-const NEED_BASED_PCT = 25;
-export const CUSTOM_DISCOUNT_MAX = 20_000;
+const SUPER_MERIT_PCT = 25;
+const CUSTOM_DISCOUNT_MAX = 20_000;
+const EMI_TENURES: EmiTenure[] = [3, 6, 12];
+const EMI_INTEREST_PCT: Record<EmiTenure, number> = { 3: 3, 6: 6, 12: 10 };
 
 /** Early Bird is a live promotion, not a permanent discount tier — on only for the last week of
  * the month (a flash-sale window), off the rest of the time. Read off `PROTOTYPE_TODAY`, this
@@ -44,223 +39,155 @@ function isEarlyBirdAvailable(now: Date): boolean {
     return now.getDate() >= totalDays - 6;
 }
 
-/** Percent-of-course-fee tiers round to a clean unit (nearest ₹100 / $10) rather than landing on
- * an odd number. */
-function tierAmount(courseFee: number, currency: "INR" | "USD", pct: number): number {
+function isoInDays(n: number): string {
+    return new Date(PROTOTYPE_TODAY.getTime() + n * 86_400_000).toISOString().slice(0, 10);
+}
+
+function blankInstallment(label: string, amount: number, mode: InstallmentMode, deadline: string): Installment {
+    return { label, amount, mode, isEmi: false, emiMonths: null, emiInterest: null, deadline, status: "Unpaid", paidOn: null };
+}
+
+function buildUpfrontInstallments(netPayable: number, mode: InstallmentMode): Installment[] {
+    return [blankInstallment("Full payment", netPayable, mode, isoInDays(14))];
+}
+
+/** Downpayment is a fixed 15% of Net Payable; the remainder splits evenly across the chosen
+ * tenure, with the final installment absorbing any rounding remainder so the total always lands
+ * exactly on Net Payable — there's no "Amount Left" leftover to reconcile like the old freeform
+ * builder had. */
+function buildPartPaymentInstallments(netPayable: number, currency: Currency, months: number, mode: InstallmentMode): Installment[] {
     const roundTo = currency === "INR" ? 100 : 10;
-    return Math.round((courseFee * pct) / 100 / roundTo) * roundTo;
-}
-
-function draftFromDeal(deal: Deal): DraftInstallment[] {
-    if (deal.installments.length) {
-        return deal.installments.map((i) => ({ amount: i.amount, mode: i.mode, deadline: i.deadline, isEmi: i.isEmi, emiMonths: i.emiMonths }));
+    const downpayment = Math.round((netPayable * 0.15) / roundTo) * roundTo;
+    const per = Math.round((netPayable - downpayment) / months / roundTo) * roundTo;
+    const rows: Installment[] = [blankInstallment("Downpayment", downpayment, mode, isoInDays(14))];
+    let assigned = downpayment;
+    for (let i = 0; i < months; i++) {
+        const isLast = i === months - 1;
+        const amount = isLast ? netPayable - assigned : per;
+        assigned += amount;
+        rows.push(blankInstallment(`Installment ${i + 1}`, amount, mode, isoInDays(14 + (i + 1) * 30)));
     }
-    return [{ amount: Math.max(0, deal.courseFee - deal.discount), mode: deal.currency === "INR" ? "Razorpay" : "Stripe", deadline: isoInDays(14), isEmi: false, emiMonths: null }];
+    return rows;
 }
 
-/** Everything from the old wizard's step 1 — Upfront/Part Payment toggle, Discount, Course Fee,
- * live Net Payable, installment rows, the Amount Left validator — now a standalone form that
- * saves independently of letter creation (2026-09-05 offer-separation brief §5). Amount Left ≠
- * 0 no longer blocks saving; it only blocks `canCreateLetter`. */
+function buildEmiInstallment(netPayable: number, currency: Currency, tenure: EmiTenure): Installment {
+    return {
+        label: "Full Payment",
+        amount: netPayable,
+        mode: EMI_MODE[currency],
+        isEmi: true,
+        emiMonths: tenure,
+        emiInterest: Math.round(netPayable * (EMI_INTEREST_PCT[tenure] / 100)),
+        deadline: isoInDays(14),
+        status: "Unpaid",
+        paidOn: null,
+    };
+}
+
+/** Everything from the old wizard's step 1 — Upfront/Part Payment/EMI toggle, discount, live fee
+ * breakdown, payment mode, generated installment preview — now a standalone form that saves
+ * independently of letter creation (2026-09-05 offer-separation brief §5). */
 export const PaymentPlanForm = ({ deal, onSaved }: { deal: Deal; onSaved?: () => void }) => {
     const { savePlan } = useDeals();
-    const [planType, setPlanType] = useState<"upfront" | "part">(deal.installments.length > 1 ? "part" : "upfront");
-    const [discount, setDiscount] = useState(deal.discount || 0);
-    const [installments, setInstallments] = useState<DraftInstallment[]>(draftFromDeal(deal));
+    const currency = deal.currency;
+
+    const [paymentType, setPaymentType] = useState<PaymentType>(() =>
+        deal.installments.some((i) => i.isEmi) ? "emi" : deal.installments.length > 1 ? "part" : "upfront",
+    );
+    // Multiple tiers can be selected at once (Early Bird + Merit + a Custom amount, any
+    // combination) — Super Merit never enters this set since it's permanently locked.
+    const [selectedTiers, setSelectedTiers] = useState<Set<DiscountTierId>>(() => new Set());
+    const [customDiscount, setCustomDiscount] = useState(0);
+    const [installmentPlan, setInstallmentPlan] = useState<InstallmentPlanId>(() => (deal.installments.length - 1 > 3 ? "dp6" : "dp3"));
+    const [emiTenure, setEmiTenure] = useState<EmiTenure>(() => (deal.installments.find((i) => i.isEmi)?.emiMonths as EmiTenure) || 6);
+    const [paymentMode, setPaymentMode] = useState<InstallmentMode>(() => (deal.installments[0]?.mode === "Manual" ? "Manual" : GATEWAY_MODE[currency]));
+
+    const toggleTier = (id: DiscountTierId) => {
+        setSelectedTiers((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
 
     const earlyBirdAvailable = isEarlyBirdAvailable(PROTOTYPE_TODAY);
-    const earlyBirdAmount = tierAmount(deal.courseFee, deal.currency, EARLY_BIRD_PCT);
-    const meritAmount = tierAmount(deal.courseFee, deal.currency, MERIT_PCT);
-    const needBasedAmount = tierAmount(deal.courseFee, deal.currency, NEED_BASED_PCT);
+    const upfrontAutoDiscount = paymentType === "upfront" ? tierAmount(deal.courseFee, currency, UPFRONT_AUTO_PCT) : 0;
 
-    const [discountTier, setDiscountTier] = useState<DiscountTierId>(() => {
-        if (deal.discount === earlyBirdAmount) return "early-bird";
-        if (deal.discount === meritAmount) return "merit";
-        if (deal.discount === needBasedAmount) return "need-based";
-        return "custom";
-    });
+    const discountBreakdown: DiscountBreakdown = useMemo(() => {
+        const items: DiscountBreakdown["items"] = [];
+        if (selectedTiers.has("early-bird")) items.push({ label: "Early Bird Offer", amount: tierAmount(deal.courseFee, currency, EARLY_BIRD_PCT) });
+        if (selectedTiers.has("merit")) items.push({ label: "Merit Scholarship", amount: tierAmount(deal.courseFee, currency, MERIT_PCT) });
+        if (selectedTiers.has("custom")) items.push({ label: "Custom BDR Discount", amount: Math.min(customDiscount, CUSTOM_DISCOUNT_MAX) });
+        return { upfront: upfrontAutoDiscount, items };
+    }, [selectedTiers, customDiscount, deal.courseFee, currency, upfrontAutoDiscount]);
 
-    const applyDiscount = (next: number) => {
-        setDiscount(next);
-        if (planType === "upfront") setInstallments((prev) => [{ ...prev[0], amount: Math.max(0, deal.courseFee - next) }]);
-    };
-    const selectTier = (id: DiscountTierId, amount: number | null) => {
-        setDiscountTier(id);
-        if (amount !== null) applyDiscount(amount);
-        else applyDiscount(Math.min(discount, CUSTOM_DISCOUNT_MAX));
-    };
+    const totalDiscount = discountBreakdown.upfront + discountBreakdown.items.reduce((sum, i) => sum + i.amount, 0);
+    const netPayable = Math.max(0, deal.courseFee - totalDiscount);
 
-    const netPayable = Math.max(0, deal.courseFee - discount);
-    const totalAssigned = installments.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
-    const amountLeft = planType === "upfront" ? 0 : netPayable - totalAssigned;
-    const settled = amountLeft === 0;
-    const modes = deal.currency === "INR" ? MODES_INR : MODES_USD;
+    const installments = useMemo(() => {
+        if (paymentType === "upfront") return buildUpfrontInstallments(netPayable, paymentMode);
+        if (paymentType === "part") return buildPartPaymentInstallments(netPayable, currency, installmentPlan === "dp3" ? 3 : 6, paymentMode);
+        return [buildEmiInstallment(netPayable, currency, emiTenure)];
+    }, [paymentType, netPayable, paymentMode, installmentPlan, currency, emiTenure]);
 
-    const setPlanTypeAndReseed = (type: "upfront" | "part") => {
-        setPlanType(type);
-        if (type === "upfront") {
-            setInstallments([{ amount: netPayable, mode: installments[0]?.mode ?? (deal.currency === "INR" ? "Razorpay" : "Stripe"), deadline: isoInDays(14), isEmi: false, emiMonths: null }]);
-        } else if (installments.length === 1) {
-            setInstallments([{ ...installments[0], amount: netPayable }]);
-        }
-    };
-
-    const updateInstallment = (index: number, patch: Partial<DraftInstallment>) => {
-        setInstallments((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
-    };
-
+    const isFirstSave = deal.installments.length === 0;
     const save = () => {
-        const finalInstallments: Installment[] = installments.map((r, i) => ({
-            label: planType === "part" ? `Installment ${i + 1}` : "Full payment",
-            amount: Number(r.amount) || 0,
-            mode: r.mode,
-            isEmi: r.isEmi,
-            emiMonths: r.isEmi ? r.emiMonths : null,
-            emiInterest: r.isEmi ? Math.round((Number(r.amount) || 0) * 0.06) : null,
-            deadline: r.deadline,
-            status: "Unpaid",
-            paidOn: null,
-        }));
-        savePlan(deal.id, { discount, installments: finalInstallments });
+        savePlan(deal.id, { discount: totalDiscount, discountBreakdown, installments });
         onSaved?.();
     };
 
     return (
-        <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-secondary">Payment type</span>
-                <div className="flex w-max items-center gap-0.5 rounded-lg border border-secondary bg-primary p-0.5">
-                    {(["upfront", "part"] as const).map((type) => (
-                        <button
-                            key={type}
-                            type="button"
-                            onClick={() => setPlanTypeAndReseed(type)}
-                            className={`rounded-md px-3 py-1.5 text-sm font-semibold transition duration-100 ease-linear ${
-                                planType === type ? "bg-secondary text-secondary shadow-xs" : "text-quaternary hover:text-secondary"
-                            }`}
-                        >
-                            {type === "upfront" ? "Upfront" : "Part Payment"}
-                        </button>
-                    ))}
-                </div>
+        <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-2 px-2">
+                <span className="text-sm text-tertiary">Payment Type</span>
+                <PaymentTypeTabs value={paymentType} onChange={setPaymentType} />
             </div>
 
-            <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-secondary">Discount</span>
-                <div className="flex flex-col gap-2">
-                    <DiscountTierCard
-                        selected={discountTier === "early-bird"}
-                        disabled={!earlyBirdAvailable}
-                        title="Early Bird Offer"
-                        description={`${formatMoney(earlyBirdAmount, deal.currency)} off (${EARLY_BIRD_PCT}%) — only active in the last week of the month`}
-                        badge={earlyBirdAvailable ? { label: "Available", tone: "success" } : { label: "Unavailable", tone: "neutral" }}
-                        onClick={() => selectTier("early-bird", earlyBirdAmount)}
-                    />
-                    <DiscountTierCard
-                        selected={discountTier === "merit"}
-                        title="Merit Scholarship"
-                        description={`${formatMoney(meritAmount, deal.currency)} off (${MERIT_PCT}%)`}
-                        onClick={() => selectTier("merit", meritAmount)}
-                    />
-                    <DiscountTierCard
-                        selected={discountTier === "need-based"}
-                        title="Need-Based Scholarship"
-                        description={`${formatMoney(needBasedAmount, deal.currency)} off (${NEED_BASED_PCT}%)`}
-                        onClick={() => selectTier("need-based", needBasedAmount)}
-                    />
-                    <DiscountTierCard
-                        selected={discountTier === "custom"}
-                        title="Custom Amount"
-                        description={`Enter any amount up to ${formatMoney(CUSTOM_DISCOUNT_MAX, deal.currency)}`}
-                        onClick={() => selectTier("custom", null)}
-                    />
-                </div>
-                {discountTier === "custom" && (
-                    <Input
-                        label={`Custom discount (${deal.currency})`}
-                        type="number"
-                        size="sm"
-                        value={String(discount)}
-                        hint={`Maximum ${formatMoney(CUSTOM_DISCOUNT_MAX, deal.currency)}`}
-                        onChange={(v) => applyDiscount(Math.min(CUSTOM_DISCOUNT_MAX, Math.max(0, Number(v) || 0)))}
-                    />
-                )}
-            </div>
+            {paymentType === "upfront" && <UpfrontAutoDiscountBanner amount={upfrontAutoDiscount} currency={currency} pct={UPFRONT_AUTO_PCT} />}
 
-            <div className="flex flex-col gap-1.5 border-t border-secondary pt-4">
-                <div className="flex items-center justify-between text-sm text-tertiary">
-                    <span>Course Fee</span>
-                    <span>{formatMoney(deal.courseFee, deal.currency)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm font-semibold text-primary">
-                    <span>Net Payable Fee</span>
-                    <span>{formatMoney(netPayable, deal.currency)}</span>
-                </div>
-            </div>
+            <DiscountTierList
+                currency={currency}
+                courseFee={deal.courseFee}
+                selected={selectedTiers}
+                onToggle={toggleTier}
+                earlyBirdAvailable={earlyBirdAvailable}
+                customDiscount={customDiscount}
+                onCustomDiscountChange={setCustomDiscount}
+            />
 
-            <div className="flex flex-col gap-3">
-                <span className="text-sm font-medium text-secondary">Installments</span>
+            <FeeBreakdown currency={currency} courseFee={deal.courseFee} discountBreakdown={discountBreakdown} netPayable={netPayable} />
+
+            <PaymentModeSelector currency={currency} value={paymentMode} onChange={setPaymentMode} />
+
+            {paymentType === "part" && <InstallmentPlanPicker value={installmentPlan} onChange={setInstallmentPlan} />}
+            {paymentType === "emi" && <EmiTenurePicker currency={currency} netPayable={netPayable} value={emiTenure} onChange={setEmiTenure} />}
+
+            <div className="grid grid-cols-2 gap-2">
                 {installments.map((row, i) => (
-                    <InstallmentBuilderRow
-                        key={i}
-                        row={row}
-                        currency={deal.currency}
-                        modes={modes}
-                        planType={planType}
-                        canRemove={planType === "part" && installments.length > 1}
-                        onChange={(patch) => updateInstallment(i, patch)}
-                        onRemove={() => setInstallments((prev) => prev.filter((_, idx) => idx !== i))}
-                    />
+                    <InstallmentPreviewCard key={i} installment={row} currency={currency} isNext={i === 0} />
                 ))}
-                {planType === "part" && (
-                    <Button
-                        color="secondary"
-                        size="sm"
-                        iconLeading={Plus}
-                        onClick={() =>
-                            setInstallments((prev) => [
-                                ...prev,
-                                { amount: Math.max(0, amountLeft), mode: deal.currency === "INR" ? "Razorpay" : "Stripe", deadline: isoInDays(21), isEmi: false, emiMonths: null },
-                            ])
-                        }
-                    >
-                        Add Installment
-                    </Button>
-                )}
             </div>
 
-            {planType === "part" && (
-                <div className="flex flex-col gap-2 rounded-lg border border-secondary p-3">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-secondary">Amount Left</span>
-                        <span className={`text-sm font-semibold ${settled ? "text-success-primary" : "text-warning-primary"}`}>{formatMoney(amountLeft, deal.currency)}</span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-quaternary">
-                        <div
-                            className={`h-full rounded-full transition-all duration-150 ${settled ? "bg-fg-success-primary" : "bg-fg-brand-primary"}`}
-                            style={{ width: `${Math.min(100, Math.round((totalAssigned / (netPayable || 1)) * 100))}%` }}
-                        />
-                    </div>
-                    {!settled && <span className="text-xs text-tertiary">Amount Left must be ₹0 before an offer letter can be created — the plan saves fine either way.</span>}
-                </div>
-            )}
-
-            <Button
-                color="primary"
-                size="sm"
-                iconLeading={Save01}
-                onClick={save}
-                className="h-11 self-start !bg-green-500 !text-neutral-900 !ring-green-400 hover:!bg-green-600 *:data-icon:!text-neutral-900"
-            >
-                Save Payment Plan
-            </Button>
+            <div className="flex w-full flex-col gap-4 rounded-2xl bg-gradient-to-b from-tertiary/10 to-tertiary p-6 shadow-lg">
+                <p className="text-sm text-primary">Please save/create the payment plan only when you’ve reverified every detail.</p>
+                <Button
+                    color="primary"
+                    size="md"
+                    iconLeading={CreditCardPlus}
+                    onClick={save}
+                    className="w-max !bg-green-600 !ring-green-400 hover:!bg-green-700"
+                >
+                    {isFirstSave ? "Create Payment Plan" : "Save Payment Plan"}
+                </Button>
+            </div>
         </div>
     );
 };
 
 /** Slideout wrapper around `PaymentPlanForm` — used from the deals list (§6) where there's no
- * deal page to embed the form inline on; the deal-detail page (§7) opens the same slideout for
- * its "Create payment plan" / "Edit" affordances. */
+ * deal page to embed the form inline on; the deal-detail page (§7) embeds the same form directly
+ * in the section instead. */
 export const PaymentPlanEditor = ({ dealId, onOpenChange }: { dealId: string | null; onOpenChange: (open: boolean) => void }) => {
     const { deals, createPlan } = useDeals();
     const deal = dealId ? deals.find((d) => d.id === dealId) : undefined;
@@ -302,117 +229,284 @@ export const PaymentPlanEditor = ({ dealId, onOpenChange }: { dealId: string | n
     );
 };
 
-const BADGE_TONE_CLASSES: Record<"success" | "neutral", string> = {
-    success: "bg-success-primary text-success-primary",
-    neutral: "bg-secondary text-tertiary",
+// ---------------------------------------------------------------------------
+// Subcomponents
+// ---------------------------------------------------------------------------
+
+const PAYMENT_TYPE_LABEL: Record<PaymentType, string> = { upfront: "Upfront", part: "Part Payment", emi: "EMI 3rd Party" };
+
+const PaymentTypeTabs = ({ value, onChange }: { value: PaymentType; onChange: (v: PaymentType) => void }) => (
+    <div className="flex w-max items-center gap-1 rounded-[20px] border border-secondary bg-secondary_alt p-1">
+        {(["upfront", "part", "emi"] as const).map((type) => (
+            <button
+                key={type}
+                type="button"
+                onClick={() => onChange(type)}
+                className={`flex h-9 items-center justify-center rounded-2xl px-4 text-sm font-semibold whitespace-nowrap transition duration-150 ease-linear ${
+                    value === type ? "bg-white text-neutral-900 shadow-sm" : "text-placeholder opacity-60 hover:opacity-100"
+                }`}
+            >
+                {PAYMENT_TYPE_LABEL[type]}
+            </button>
+        ))}
+    </div>
+);
+
+const UpfrontAutoDiscountBanner = ({ amount, currency, pct }: { amount: number; currency: Currency; pct: number }) => (
+    <div className="flex items-start gap-3 px-2">
+        <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-fg-success-primary bg-success-solid">
+            <Check className="size-2.5 text-white" />
+        </span>
+        <div className="flex flex-col gap-1">
+            <span className="text-sm text-success-primary">Upfront One Time Discount (Auto Applied)</span>
+            <span className="text-md font-semibold text-primary">
+                {formatMoney(amount, currency)} off ({pct}%)
+            </span>
+        </div>
+    </div>
+);
+
+type TierMeta = {
+    id: DiscountTierId;
+    title: string;
+    sub?: string;
+    /** Only "Merit Scholarship"'s sub-label is italic in Figma — a literal authoring detail, not
+     * a rule tied to selection state. */
+    italicSub?: boolean;
+    pct?: number;
+    badge: { label: string; tone: "success" | "warning" };
+    locked?: boolean;
+};
+const BADGE_TONE_CLASSES: Record<"success" | "warning", string> = { success: "text-success-primary", warning: "text-warning-primary" };
+
+const DiscountTierList = ({
+    currency,
+    courseFee,
+    selected,
+    onToggle,
+    earlyBirdAvailable,
+    customDiscount,
+    onCustomDiscountChange,
+}: {
+    currency: Currency;
+    courseFee: number;
+    /** Multiple tiers can be active at once — this isn't a radio group. */
+    selected: Set<DiscountTierId>;
+    onToggle: (id: DiscountTierId) => void;
+    earlyBirdAvailable: boolean;
+    customDiscount: number;
+    onCustomDiscountChange: (v: number) => void;
+}) => {
+    const tiers: TierMeta[] = [
+        {
+            id: "early-bird",
+            title: "Early Bird Offer",
+            sub: "Only active in the last week of the month",
+            pct: EARLY_BIRD_PCT,
+            badge: earlyBirdAvailable ? { label: "Available", tone: "success" } : { label: "Unavailable", tone: "warning" },
+            locked: !earlyBirdAvailable,
+        },
+        {
+            id: "merit",
+            title: "Merit Scholarship",
+            sub: "Includes the merit/need-based scholarship line.",
+            italicSub: true,
+            pct: MERIT_PCT,
+            badge: { label: "Available", tone: "success" },
+        },
+        {
+            id: "super-merit",
+            title: "Super Merit Scholarship",
+            sub: "Need Sales Ops Approval.",
+            pct: SUPER_MERIT_PCT,
+            badge: { label: "Approval Required", tone: "warning" },
+            locked: true,
+        },
+        { id: "custom", title: "Custom BDR Discount", badge: { label: "Available", tone: "success" } },
+    ];
+
+    return (
+        <div className="flex flex-col gap-2 px-2">
+            <span className="text-sm text-tertiary">Discount</span>
+            <div className="flex flex-col">
+                {tiers.map((tier) => (
+                    <div key={tier.id}>
+                        <DiscountTierRow
+                            tier={tier}
+                            isSelected={selected.has(tier.id)}
+                            amount={tier.pct ? tierAmount(courseFee, currency, tier.pct) : customDiscount}
+                            currency={currency}
+                            onClick={() => !tier.locked && onToggle(tier.id)}
+                        />
+                        {tier.id === "custom" && selected.has("custom") && (
+                            <div className="pt-1 pr-2 pb-2 pl-9">
+                                <Input
+                                    label={`Custom discount (${currency})`}
+                                    type="number"
+                                    size="sm"
+                                    value={String(customDiscount)}
+                                    hint={`Maximum ${formatMoney(CUSTOM_DISCOUNT_MAX, currency)}`}
+                                    onChange={(v) => onCustomDiscountChange(Math.min(CUSTOM_DISCOUNT_MAX, Math.max(0, Number(v) || 0)))}
+                                />
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 };
 
-const DiscountTierCard = ({
-    selected,
-    disabled,
-    title,
-    description,
-    badge,
+const DiscountTierRow = ({
+    tier,
+    isSelected,
+    amount,
+    currency,
     onClick,
 }: {
-    selected: boolean;
-    disabled?: boolean;
-    title: string;
-    description: string;
-    badge?: { label: string; tone: "success" | "neutral" };
+    tier: TierMeta;
+    isSelected: boolean;
+    amount: number;
+    currency: Currency;
     onClick: () => void;
 }) => (
     <button
         type="button"
-        disabled={disabled}
+        disabled={tier.locked}
         onClick={onClick}
-        className={`flex items-start gap-3 rounded-lg border p-3 text-left transition duration-100 ease-linear disabled:cursor-not-allowed disabled:opacity-50 ${
-            selected ? "border-brand bg-secondary" : "border-secondary hover:bg-secondary_hover"
+        className={`flex items-start gap-3 rounded-lg p-3 text-left transition duration-100 ease-linear disabled:cursor-not-allowed ${
+            isSelected ? "bg-tertiary/50" : "opacity-60 hover:opacity-100"
         }`}
     >
-        <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${selected ? "border-brand bg-brand-solid" : "border-secondary"}`}>
-            {selected && <Check className="size-2.5 text-white" />}
+        <span className="flex w-4 shrink-0 items-center justify-center py-1">
+            {isSelected ? (
+                <span className="flex size-4 items-center justify-center rounded-full border border-fg-success-primary bg-success-solid">
+                    <Check className="size-2.5 text-white" />
+                </span>
+            ) : (
+                <span className="size-3 rounded-full border border-secondary" />
+            )}
         </span>
-        <div className="flex flex-1 flex-col gap-0.5">
-            <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-primary">{title}</span>
-                {badge && <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${BADGE_TONE_CLASSES[badge.tone]}`}>{badge.label}</span>}
+        <div className="flex flex-1 flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+                <span className={`text-sm ${isSelected ? "text-success-primary" : "text-secondary"}`}>{tier.title}</span>
+                {tier.sub && <span className={`text-[10px] text-tertiary ${tier.italicSub ? "italic" : ""}`}>{tier.sub}</span>}
             </div>
-            <span className="text-xs text-tertiary">{description}</span>
+            <span className="text-md font-semibold text-primary">
+                {tier.id === "custom" ? `${formatMoney(amount, currency)} off` : `${formatMoney(amount, currency)} off (${tier.pct}%)`}
+            </span>
         </div>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${BADGE_TONE_CLASSES[tier.badge.tone]}`}>{tier.badge.label}</span>
     </button>
 );
 
-const InstallmentBuilderRow = ({
-    row,
-    currency,
-    modes,
-    planType,
-    canRemove,
-    onChange,
-    onRemove,
-}: {
-    row: DraftInstallment;
-    currency: "INR" | "USD";
-    modes: InstallmentMode[];
-    planType: "upfront" | "part";
-    canRemove: boolean;
-    onChange: (patch: Partial<DraftInstallment>) => void;
-    onRemove: () => void;
-}) => {
-    const modeOptions = modes.map((m) => ({ id: m, label: m }));
+const RadioDot = ({ selected }: { selected: boolean }) => (
+    <span className={`flex size-4 shrink-0 items-center justify-center rounded-full ${selected ? "bg-success-solid" : "border-2 border-secondary"}`}>
+        {selected && <span className="size-1.5 rounded-full bg-white" />}
+    </span>
+);
 
+/** Always shows all three modes — Razorpay only makes sense for INR and Stripe only for USD, so
+ * whichever gateway doesn't match the deal's currency is disabled rather than hidden. */
+const PaymentModeSelector = ({ currency, value, onChange }: { currency: Currency; value: InstallmentMode; onChange: (m: InstallmentMode) => void }) => {
+    const razorpayDisabled = currency !== "INR";
+    const stripeDisabled = currency !== "USD";
     return (
-        <div className="flex flex-col gap-3 rounded-lg border border-secondary p-3">
-            <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-2">
-                <Input label="Amount" type="number" size="sm" value={String(row.amount)} onChange={(v) => onChange({ amount: Number(v) || 0 })} isDisabled={planType === "upfront"} />
-                <Select
-                    aria-label="Mode"
-                    label="Mode"
-                    size="sm"
-                    items={modeOptions}
-                    selectedKey={row.mode}
-                    onSelectionChange={(key) => {
-                        const mode = key as InstallmentMode;
-                        onChange({ mode, isEmi: mode.includes("EMI"), emiMonths: mode.includes("EMI") ? (row.emiMonths ?? 6) : null });
-                    }}
+        <div className="flex flex-col gap-2 px-2">
+            <span className="text-sm text-tertiary">Payment Mode</span>
+            <div className="flex flex-wrap items-center gap-6">
+                <button
+                    type="button"
+                    disabled={razorpayDisabled}
+                    onClick={() => onChange("Razorpay")}
+                    className="flex items-center gap-3 p-2 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                </Select>
-                <Input label={row.isEmi ? "Start date" : "Deadline"} type="date" size="sm" value={row.deadline} onChange={(v) => onChange({ deadline: v })} />
-                {canRemove ? (
-                    <button type="button" onClick={onRemove} className="rounded-md p-2 text-fg-quaternary hover:bg-secondary_hover hover:text-fg-error-primary" title="Remove">
-                        <Trash01 className="size-4" />
-                    </button>
-                ) : (
-                    <span />
-                )}
+                    <RadioDot selected={value === "Razorpay"} />
+                    <img src={razorpayModeIcon} alt="Razorpay" className="h-6 w-auto" />
+                </button>
+                <button
+                    type="button"
+                    disabled={stripeDisabled}
+                    onClick={() => onChange("Stripe")}
+                    className="flex items-center gap-3 p-2 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    <RadioDot selected={value === "Stripe"} />
+                    <img src={stripeModeIcon} alt="Stripe" className="h-6 w-auto" />
+                </button>
+                <button type="button" onClick={() => onChange("Manual")} className="flex items-center gap-3 p-2">
+                    <RadioDot selected={value === "Manual"} />
+                    <img src={bankIcon} alt="" className="size-8" />
+                    <span className="text-sm font-semibold text-tertiary">
+                        Manual Bank
+                        <br />
+                        Transfer
+                    </span>
+                </button>
             </div>
-
-            {row.isEmi && (
-                <div className="grid grid-cols-3 gap-2">
-                    {EMI_TENURES.map((months) => {
-                        const monthly = Math.round((Number(row.amount) || 0) / months);
-                        const interest = Math.round((Number(row.amount) || 0) * (months === 3 ? 0.03 : months === 6 ? 0.06 : 0.1));
-                        return (
-                            <button
-                                key={months}
-                                type="button"
-                                onClick={() => onChange({ emiMonths: months })}
-                                className={`flex flex-col gap-0.5 rounded-lg border p-2.5 text-left transition duration-100 ease-linear ${
-                                    row.emiMonths === months ? "border-brand bg-secondary" : "border-secondary hover:bg-secondary_hover"
-                                }`}
-                            >
-                                <span className="text-sm font-semibold text-primary">{formatMoney(monthly, currency)}/mo</span>
-                                <span className="text-xs text-tertiary">
-                                    for {months} months · {formatMoney(interest, currency)} interest
-                                </span>
-                            </button>
-                        );
-                    })}
-                    <p className="col-span-3 text-xs text-tertiary">Payment link will be sent to the learner directly by the gateway.</p>
-                </div>
-            )}
         </div>
     );
 };
+
+const INSTALLMENT_PLAN_LABEL: Record<InstallmentPlanId, { top: string; bottom: string }> = {
+    dp3: { top: "Downpayment+", bottom: "3 Monthly Instalments" },
+    dp6: { top: "Downpayment+", bottom: "6 Monthly Instalments" },
+};
+
+const InstallmentPlanPicker = ({ value, onChange }: { value: InstallmentPlanId; onChange: (v: InstallmentPlanId) => void }) => (
+    <div className="flex flex-col gap-2 px-2">
+        <span className="text-sm text-tertiary">Instalment Plan</span>
+        <div className="flex flex-wrap gap-6">
+            {(["dp3", "dp6"] as const).map((id) => (
+                <button key={id} type="button" onClick={() => onChange(id)} className="flex items-center gap-3 p-2">
+                    <RadioDot selected={value === id} />
+                    <span className="flex flex-col">
+                        <span className="text-sm font-semibold text-primary">{INSTALLMENT_PLAN_LABEL[id].top}</span>
+                        <span className="text-md font-semibold text-primary">{INSTALLMENT_PLAN_LABEL[id].bottom}</span>
+                    </span>
+                </button>
+            ))}
+        </div>
+    </div>
+);
+
+/** No Figma design exists for this tab yet — adapted from the old freeform builder's EMI tenure
+ * cards (3/6/12 months with computed monthly + interest), reskinned to match the rest of this
+ * section's new visual language rather than left as a placeholder. */
+const EmiTenurePicker = ({
+    currency,
+    netPayable,
+    value,
+    onChange,
+}: {
+    currency: Currency;
+    netPayable: number;
+    value: EmiTenure;
+    onChange: (v: EmiTenure) => void;
+}) => (
+    <div className="flex flex-col gap-2 px-2">
+        <span className="text-sm text-tertiary">EMI Tenure</span>
+        <div className="grid grid-cols-3 gap-2">
+            {EMI_TENURES.map((months) => {
+                const monthly = Math.round(netPayable / months);
+                const interest = Math.round(netPayable * (EMI_INTEREST_PCT[months] / 100));
+                const selected = value === months;
+                return (
+                    <button
+                        key={months}
+                        type="button"
+                        onClick={() => onChange(months)}
+                        className={`flex flex-col gap-1 rounded-lg border p-3 text-left transition duration-100 ease-linear ${
+                            selected ? "border-brand bg-secondary" : "border-secondary hover:bg-secondary_hover"
+                        }`}
+                    >
+                        <span className="text-md font-semibold text-primary">{formatMoney(monthly, currency)}/mo</span>
+                        <span className="text-xs text-tertiary">
+                            for {months} months · {formatMoney(interest, currency)} interest
+                        </span>
+                    </button>
+                );
+            })}
+        </div>
+        <p className="text-xs text-tertiary">Payment link will be sent to the learner directly by the 3rd-party financier.</p>
+    </div>
+);
