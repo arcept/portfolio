@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { HashRouter, Route, Routes } from "react-router";
 import { ToastHost } from "@/components/application/toast/toast";
 import { DashboardSalesHead } from "@/pages/dashboard-sales-head";
 import { DealDetail } from "@/pages/deal-detail";
@@ -15,12 +15,11 @@ import { RouteProvider } from "@/providers/router-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import "@/styles/globals.css";
 
-// When built for a subpath deployment (e.g. embedded as a static file at
-// /case-studies/oms/rebuild/index.html), the host serves this app at the
-// literal `index.html` path rather than resolving a directory index — so
-// the router's basename must include it too, or root-route matching fails.
-const basename = import.meta.env.BASE_URL === "/" ? "/" : `${import.meta.env.BASE_URL}index.html`;
-
+// Hash-based routing rather than `BrowserRouter` — this app is embedded as a plain static
+// file at /case-studies/oms/rebuild/index.html with no server-side rewrites available, so a
+// hard refresh on a deep route (e.g. /deals/DL-2216) requested the literal nested path and
+// 500'd wherever the host couldn't resolve a file with that name. Since the fragment after
+// `#` never reaches the server, every refresh just re-requests index.html itself.
 const EMBED_VIEW_KEYS: EmbedViewKey[] = ["admin-funnel", "team-manager-funnel", "team-drilldown", "stat-cards"];
 
 // A plain query param, not a route: the host page requests this exact same
@@ -38,7 +37,7 @@ createRoot(document.getElementById("root")!).render(
             <ThemeProvider>
                 <RoleProvider>
                     <DealsProvider>
-                        <BrowserRouter basename={basename}>
+                        <HashRouter>
                             <RouteProvider>
                                 <Routes>
                                     <Route path="/" element={<DashboardSalesHead />} />
@@ -48,7 +47,7 @@ createRoot(document.getElementById("root")!).render(
                                     <Route path="*" element={<NotFound />} />
                                 </Routes>
                             </RouteProvider>
-                        </BrowserRouter>
+                        </HashRouter>
                         <ToastHost />
                     </DealsProvider>
                 </RoleProvider>
