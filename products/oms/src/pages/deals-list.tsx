@@ -54,7 +54,7 @@ const COLUMNS: { id: string; label: string; allowsSorting?: boolean }[] = [
     { id: "actions", label: "" },
 ];
 
-const PAGE_SIZE = 13;
+const PAGE_SIZE = 10;
 
 function formatDateShort(d: Date): string {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
