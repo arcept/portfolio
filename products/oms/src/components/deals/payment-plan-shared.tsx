@@ -232,7 +232,7 @@ export const InstallmentPreviewCard = ({ installment, currency, isNext }: { inst
     const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
     return (
-        <div className="flex h-40 flex-col overflow-hidden rounded-2xl bg-primary-solid shadow-lg">
+        <div className={cx("flex h-40 flex-col overflow-hidden rounded-2xl shadow-lg", CARD_BACKGROUND[status])}>
             <div className="flex items-center justify-between px-4 pt-4 pb-3">
                 <span className="font-mono text-xs text-white/80">
                     {installment.label}
@@ -240,7 +240,7 @@ export const InstallmentPreviewCard = ({ installment, currency, isNext }: { inst
                 </span>
                 <ModeMark mode={installment.mode} />
             </div>
-            <div className={cx("flex flex-1 flex-col justify-between rounded-2xl px-4 pt-4 pb-6", CARD_BACKGROUND[status])}>
+            <div className="flex flex-1 flex-col justify-between rounded-2xl px-4 pt-4 pb-6">
                 <div className="flex items-center justify-between">
                     <AmountValue currency={currency} amount={installment.amount} size="xl" tone="white" />
                     <span className="flex items-center gap-1">
