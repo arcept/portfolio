@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FilterLines, Link03, Mail01, Pencil01, RefreshCcw01, SearchLg, Send01, Upload02, XClose } from "@untitledui/icons";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
-import { AppShell } from "@/components/application/app-shell";
+import { AppShell, GRADIENT_BACKGROUND } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { PaginationPageDefault } from "@/components/application/pagination/pagination";
@@ -54,21 +54,48 @@ const TABS: Tab[] = [
     { key: "saved", label: "Saved", test: (d) => d.status.id === "SAVED" },
 ];
 
-// Fixed pixel widths (Figma node 442:29859, "Table header") — keeps every column's width
-// constant across pages instead of reflowing with each page's content lengths. `actions` gets
-// its own explicit width too (rather than being left to soak up the remainder) — on a narrower
-// viewport a purely flexible remainder can get squeezed to near-zero and the row's action icons
-// spill into the next column; 190px comfortably fits the busiest row (up to 4 icons).
-const COLUMNS: { id: string; label: string; allowsSorting?: boolean; width?: number }[] = [
-    { id: "name", label: "Applicant", width: 200 },
-    { id: "mobile", label: "Mobile", width: 192 },
-    { id: "course", label: "Course", width: 118 },
-    { id: "status", label: "Status", width: 280 },
-    { id: "createdOn", label: "Created On", allowsSorting: true, width: 144 },
-    { id: "lastUpdate", label: "Last Update", allowsSorting: true, width: 144 },
-    { id: "assigned", label: "Assigned", width: 80 },
-    { id: "actions", label: "", width: 190 },
+// Reference column widths, in their Figma proportions (node 442:29859, "Table header").
+// `buildColumns` below scales every column from these ratios to whatever width the table's
+// container actually measures, rather than using these as literal locked pixel values — the
+// embed's real deployed width (1536px, see `frameWidth` in app/case-study-oms/page.js) is
+// narrower than the ~1740px canvas these numbers were sized for, so using them unscaled left a
+// horizontal scrollbar in production even though this same scaling comfortably avoids one.
+const FIGMA_COLUMNS: { id: string; label: string; allowsSorting?: boolean; figmaWidth: number }[] = [
+    { id: "name", label: "Applicant", figmaWidth: 200 },
+    { id: "mobile", label: "Mobile", figmaWidth: 192 },
+    { id: "course", label: "Course", figmaWidth: 118 },
+    { id: "status", label: "Status", figmaWidth: 280 },
+    { id: "createdOn", label: "Created On", allowsSorting: true, figmaWidth: 144 },
+    { id: "lastUpdate", label: "Last Update", allowsSorting: true, figmaWidth: 144 },
+    { id: "assigned", label: "Assigned", figmaWidth: 80 },
 ];
+const FIGMA_COLUMNS_TOTAL = FIGMA_COLUMNS.reduce((sum, c) => sum + c.figmaWidth, 0);
+const FIGMA_ACTIONS_WIDTH = 118; // Figma's own Actions column width — used only for its scale ratio.
+// Table's own selection-checkbox column width for size="md" (see table.tsx's `w-11` on that
+// column) — not exposed as a constant there, so tracked here to size everything else below.
+const CHECKBOX_COLUMN_WIDTH = 44;
+const ACTIONS_MIN_WIDTH = 190; // Comfortably fits the busiest row (up to 4 action icons).
+
+/** Scales every column from its Figma ratio to fill `containerWidth` exactly, so the table
+ * always fills its container with no leftover gap — while keeping Actions no smaller than
+ * `ACTIONS_MIN_WIDTH` (Chromium doesn't honor `min-width`/`calc()` on a `table-fixed` header
+ * cell, verified empirically, so that floor has to be enforced here rather than in CSS): if
+ * Actions' proportional share would fall under the floor, it locks to the floor instead and the
+ * other 7 columns scale down further to make room, so the total still matches `containerWidth`
+ * precisely. */
+function buildColumns(containerWidth: number) {
+    const available = Math.max(0, containerWidth - CHECKBOX_COLUMN_WIDTH);
+    const scale = available / (FIGMA_COLUMNS_TOTAL + FIGMA_ACTIONS_WIDTH);
+    const actionsWidth = Math.max(ACTIONS_MIN_WIDTH, Math.round(FIGMA_ACTIONS_WIDTH * scale));
+    const columnScale = Math.max(0, available - actionsWidth) / FIGMA_COLUMNS_TOTAL;
+    const scaled: { id: string; label: string; allowsSorting?: boolean; width: number }[] = FIGMA_COLUMNS.map((c) => ({
+        id: c.id,
+        label: c.label,
+        allowsSorting: c.allowsSorting,
+        width: Math.round(c.figmaWidth * columnScale),
+    }));
+    return [...scaled, { id: "actions", label: "", width: actionsWidth }];
+}
 
 const PAGE_SIZE = 20;
 
@@ -104,6 +131,21 @@ export const DealsList = () => {
     const [filters, setFilters] = useState<DealFilters>(EMPTY_FILTERS);
     const [page, setPage] = useState(1);
     const [sort, setSort] = useState<{ column: string; direction: "ascending" | "descending" }>({ column: "lastUpdate", direction: "descending" });
+
+    // Measures the table's own container so every column can be scaled from its Figma ratio to
+    // an already-resolved pixel width every render (see `buildColumns` above for why this can't
+    // be done in CSS alone).
+    const tableWrapperRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState(1536); // real deployed embed frameWidth, as a sane pre-measurement default
+    useLayoutEffect(() => {
+        const el = tableWrapperRef.current;
+        if (!el) return;
+        setContainerWidth(el.getBoundingClientRect().width);
+        const observer = new ResizeObserver(([entry]) => setContainerWidth(entry.contentRect.width));
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+    const columns = useMemo(() => buildColumns(containerWidth), [containerWidth]);
 
     // Debounced search (~140ms), matching the prototype.
     useEffect(() => {
@@ -297,7 +339,7 @@ export const DealsList = () => {
             {filtersOpen && <DealsFilterPanel persona={persona} filters={filters} onChange={setFilters} />}
             <DealsFilterChips filters={filters} onChange={setFilters} />
 
-            <TableCard.Root>
+            <TableCard.Root ref={tableWrapperRef}>
                 {/* Keyed on `page` so switching pages replays this fade/slide-in — mirrors the
                  * `fadeProps` transition used for the Payment Plan section's state changes. */}
                 <motion.div key={page} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, ease: "easeInOut" }}>
@@ -326,12 +368,12 @@ export const DealsList = () => {
                             onRowAction={(key) => navigate(`/deals/${key}`)}
                             size="md"
                         >
-                            <Table.Header columns={COLUMNS}>
-                                {(column) => <Table.Head id={column.id} allowsSorting={column.allowsSorting} label={column.label} width={column.width} />}
+                            <Table.Header columns={columns}>
+                                {(column) => <Table.Head id={column.id} allowsSorting={column.allowsSorting} label={column.label} fixedWidth={column.width} />}
                             </Table.Header>
                             <Table.Body items={pageDeals}>
                                 {(deal) => (
-                                    <Table.Row id={deal.id} columns={COLUMNS} className="cursor-pointer">
+                                    <Table.Row id={deal.id} columns={columns} className="cursor-pointer">
                                         {(column) => <Table.Cell>{renderCell(deal, column.id, rowHandlers)}</Table.Cell>}
                                     </Table.Row>
                                 )}
@@ -345,7 +387,10 @@ export const DealsList = () => {
                 // Sticky rather than size-to-fit-viewport: page size stays a normal, content-driven
                 // number and the pager instead follows you down so it's always reachable without
                 // scrolling all the way to the bottom of a long table.
-                <div className="sticky bottom-0 z-10 border-t border-secondary bg-primary/95 pb-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)] backdrop-blur-sm">
+                <div
+                    className="sticky bottom-0 z-10 border-t border-secondary pb-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)]"
+                    style={{ background: GRADIENT_BACKGROUND }}
+                >
                     <PaginationPageDefault page={page} total={totalPages} onPageChange={setPage} />
                 </div>
             )}

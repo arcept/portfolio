@@ -47,7 +47,12 @@ export const TableRowActionsDropdown = () => (
 
 const TableContext = createContext<{ size: "sm" | "md" }>({ size: "md" });
 
-const TableCardRoot = ({ children, className, size = "md", ...props }: HTMLAttributes<HTMLDivElement> & { size?: "sm" | "md" }) => {
+const TableCardRoot = ({
+    children,
+    className,
+    size = "md",
+    ...props
+}: HTMLAttributes<HTMLDivElement> & { size?: "sm" | "md"; ref?: Ref<HTMLDivElement> }) => {
     return (
         <TableContext.Provider value={{ size }}>
             <div {...props} className={cx("overflow-hidden rounded-xl", className)}>
@@ -168,19 +173,27 @@ TableHeader.displayName = "TableHeader";
 interface TableHeadProps extends AriaColumnProps, Omit<ThHTMLAttributes<HTMLTableCellElement>, "children" | "className" | "style" | "id"> {
     label?: string;
     tooltip?: string;
-    /** Fixed pixel width for this column. Requires the table itself to use `table-fixed` (the
-     * default) — only the header row's widths are read in that layout, so this is the one place
-     * a width needs to be set for it to hold constant across every page/sort/filter change. */
-    width?: number;
+    /** Fixed pixel width for this column, locked to exactly this value (never grows or shrinks) —
+     * distinct from `ColumnProps.width` (react-aria-components' own prop, for its interactive
+     * column-resizing feature, which this table doesn't use). Requires the table itself to use
+     * `table-fixed` (the default) — only the header row's widths are read in that layout, so
+     * this is the one place a width needs to be set for it to hold constant across every
+     * page/sort/filter change. Chromium does not honor `min-width`/`calc()` on a `table-fixed`
+     * header cell (verified empirically — both are silently ignored once the column is squeezed),
+     * so a column that needs to flex within a floor can't be expressed here; it has to be given
+     * an already-resolved pixel number computed by the caller (e.g. from a `ResizeObserver`). */
+    fixedWidth?: number;
 }
 
-const TableHead = ({ className, tooltip, label, children, width, ...props }: TableHeadProps) => {
+const TableHead = ({ className, tooltip, label, children, fixedWidth, ...props }: TableHeadProps) => {
     const { selectionBehavior } = useTableOptions();
+
+    const style = fixedWidth !== undefined ? { width: fixedWidth, minWidth: fixedWidth, maxWidth: fixedWidth } : undefined;
 
     return (
         <AriaColumn
             {...props}
-            style={width ? { width, minWidth: width, maxWidth: width } : undefined}
+            style={style}
             className={(state) =>
                 cx(
                     "relative p-0 px-6 py-2 outline-hidden focus-visible:z-1 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-bg-primary focus-visible:ring-inset",
