@@ -356,7 +356,7 @@ export type DiscountBreakdown = {
 // ---------------------------------------------------------------------------
 
 export type PlanState = "none" | "draft_incomplete" | "draft_ready" | "awaiting_approval" | "committed" | "active";
-export type OfferState = "none" | "created" | "stale" | "shared" | "expired" | "accepted" | "withdrawn";
+export type OfferState = "none" | "created" | "shared" | "expired" | "accepted" | "withdrawn";
 
 /** A frozen read of the plan's money shape — taken when a letter is created (so staleness can
  * be detected before it's ever shared) and again whenever it's refreshed. Once the letter is
@@ -458,7 +458,6 @@ export function canCreateLetter(d: Deal): GuardResult {
 /** The fee lock moves here — sharing commits the plan and freezes the letter's snapshot. */
 export function canShareLetter(d: Deal): GuardResult {
     if (d.plan.state === "awaiting_approval") return { allowed: false, reason: "Plan is with Sales Ops for approval" };
-    if (d.offer.state === "stale") return { allowed: false, reason: "Plan changed since this letter was created — refresh it first" };
     if (d.offer.state !== "created") return { allowed: false, reason: "Create an offer letter first" };
     return { allowed: true };
 }
@@ -488,17 +487,6 @@ export function planSnapshot(d: Deal): PlanSnapshot {
     };
 }
 
-function snapshotsMatch(a: PlanSnapshot, b: PlanSnapshot): boolean {
-    return JSON.stringify(a) === JSON.stringify(b);
-}
-
-/** Call from every plan mutation. Deep-compares the installment array (not a reference) against
- * the letter's snapshot; flips a `created` letter to `stale` the moment they diverge. */
-export function refreshOfferStaleness(d: Deal): Deal {
-    if (d.offer.state !== "created" || !d.offer.snapshot) return d;
-    if (snapshotsMatch(d.offer.snapshot, planSnapshot(d))) return d;
-    return { ...d, offer: { ...d.offer, state: "stale" } };
-}
 
 export type Deal = {
     id: string;

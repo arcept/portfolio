@@ -121,7 +121,7 @@ const scopeLabel = (roleLabel: string) => (roleLabel === "Admin" ? "the whole fl
 
 export const DealsList = () => {
     const { persona } = usePersona();
-    const { deals, updateDeal, refreshLetter, resendLetter } = useDeals();
+    const { deals, updateDeal, resendLetter } = useDeals();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -277,13 +277,6 @@ export const DealsList = () => {
     const handleWithdraw = useCallback((deal: Deal) => setWithdrawDealId(deal.id), []);
     const handleSendApplication = useCallback((deal: Deal) => setApplicationLinkRequest({ dealId: deal.id, mode: "send" }), []);
     const handleResendApplication = useCallback((deal: Deal) => setApplicationLinkRequest({ dealId: deal.id, mode: "resend" }), []);
-    const handleRefresh = useCallback(
-        (deal: Deal) => {
-            refreshLetter(deal.id);
-            toast(`Offer letter refreshed for ${deal.name}`);
-        },
-        [refreshLetter],
-    );
     const handleResend = useCallback(
         (deal: Deal) => {
             resendLetter(deal.id);
@@ -298,7 +291,6 @@ export const DealsList = () => {
             onCreatePlan: handleCreatePlan,
             onCreateLetter: handleCreateLetter,
             onShare: handleShare,
-            onRefresh: handleRefresh,
             onResend: handleResend,
             onWithdraw: handleWithdraw,
             onSendApplication: handleSendApplication,
@@ -310,7 +302,6 @@ export const DealsList = () => {
             handleCreatePlan,
             handleCreateLetter,
             handleShare,
-            handleRefresh,
             handleResend,
             handleWithdraw,
             handleSendApplication,
@@ -471,7 +462,6 @@ type RowHandlers = {
     onCreatePlan: (d: Deal) => void;
     onCreateLetter: (d: Deal) => void;
     onShare: (d: Deal) => void;
-    onRefresh: (d: Deal) => void;
     onResend: (d: Deal) => void;
     onWithdraw: (d: Deal) => void;
     onSendApplication: (d: Deal) => void;
@@ -523,26 +513,6 @@ function primaryRowActions(deal: Deal, handlers: RowHandlers) {
         ];
     }
     if (deal.status.id === "PLAN_DRAFT") {
-        if (deal.offer.state === "stale") {
-            return [
-                <ButtonUtility
-                    key="edit"
-                    size="sm"
-                    color="tertiary"
-                    tooltip="Edit offer letter"
-                    icon={Pencil01}
-                    onClick={() => handlers.onCreateLetter(deal)}
-                />,
-                <ButtonUtility
-                    key="refresh"
-                    size="sm"
-                    color="tertiary"
-                    tooltip="Refresh offer letter"
-                    icon={RefreshCcw01}
-                    onClick={() => handlers.onRefresh(deal)}
-                />,
-            ];
-        }
         if (deal.offer.state === "created") {
             const guard = canShareLetter(deal);
             return [

@@ -24,7 +24,7 @@ const SectionLabel = ({ number, label }: { number: string; label: string }) => (
  * now its own step, doing double duty as the **edit** surface for a letter that hasn't been
  * shared yet. Creating an offer is never a standalone, savable-for-later action — there's no
  * "created but not shared" resting state — so **Share Offer** is the only way out: it persists
- * the letter (creating, or editing in place on an already `created`/`stale` letter — same
+ * the letter (creating, or editing in place on an already `created` letter — same
  * version, nothing was ever delivered to the learner) and hands off to `ShareOfferDialog` for the
  * actual send confirmation (Figma node 398:5068, minus the removed Save path). Share Offer sits
  * at the bottom of the left column (not a full-width footer) and renders green, matching that
@@ -44,7 +44,7 @@ export const OfferLetterComposer = ({
 }) => {
     const { deals, createLetter, editLetter } = useDeals();
     const deal = dealId ? deals.find((d) => d.id === dealId) : undefined;
-    const isEdit = deal ? deal.offer.state === "created" || deal.offer.state === "stale" : false;
+    const isEdit = deal ? deal.offer.state === "created" : false;
 
     const [templateId, setTemplateId] = useState(OFFER_TEMPLATES[2].id);
     const [deadline, setDeadline] = useState(isoInDays(3));

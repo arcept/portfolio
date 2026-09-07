@@ -7,7 +7,7 @@ import {
     Copy04,
     DotsVertical,
     LinkExternal01,
-    Pencil01,
+    MagicWand01,
     RefreshCcw01,
     SlashCircle01,
     XCircle,
@@ -26,7 +26,7 @@ import type { ApplicationLinkRequest } from "@/components/deals/application-link
 import { ApplicationSectionCard } from "@/components/deals/application-section-card";
 import { GlobalStatusDialog } from "@/components/deals/global-status-dialog";
 import type { GlobalStatusRequest } from "@/components/deals/global-status-dialog";
-import { OfferEmailModal, OfferEmailPreviewCard } from "@/components/deals/offer-email-preview";
+import { OfferEmailModal } from "@/components/deals/offer-email-preview";
 import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
 import { PaymentPlanSectionCard } from "@/components/deals/payment-plan-section-card";
 import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
@@ -36,19 +36,10 @@ import HubspotIcon from "@/components/foundations/integration-icons/hubspot-icon
 import WhatsappIcon from "@/components/foundations/integration-icons/whatsapp-icon";
 import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
 import type { ActivityLogEntry, Deal } from "@/data/deals-data";
-import {
-    COUNTRY_FLAG,
-    STATUS,
-    applicationFormUrl,
-    canCreateLetter,
-    canResendApplication,
-    canResendLetter,
-    canShareLetter,
-    canWithdraw,
-    stateForCity,
-} from "@/data/deals-data";
+import { COUNTRY_FLAG, STATUS, applicationFormUrl, canCreateLetter, canResendApplication, canResendLetter, canWithdraw, stateForCity } from "@/data/deals-data";
 import { resolveOfferEmail } from "@/data/offer-emails";
 import { useDeals } from "@/providers/deals-provider";
+import { cx } from "@/utils/cx";
 
 function copyToClipboard(value: string, label: string) {
     navigator.clipboard?.writeText(value).catch(() => {});
@@ -82,6 +73,11 @@ function formatDateTime(d: Date): string {
 function formatDeadlineDateTime(iso: string): string {
     const d = new Date(`${iso}T23:59:59`);
     return `${formatDate(d)}, 11:59 PM`;
+}
+/** "Feb 12, 2024, 6:10 PM" — the Offer Letter section's real-timestamp fields (Accepted On,
+ * Payment made on, Withdrawn on), matching Figma's node 466-42458 date style. */
+function formatEventDateTime(d: Date): string {
+    return `${formatDate(d)}, ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 }
 function formatRelative(d: Date, now: Date): string {
     const diffHrs = Math.round((now.getTime() - d.getTime()) / 3_600_000);
@@ -351,6 +347,94 @@ const Section = ({
     </div>
 );
 
+// ---------------------------------------------------------------------------
+// "03 Offer Letter" — a bespoke, pixel-matched rebuild of Figma node 466-42458,
+// not the generic `Section`/`MetaField` above. Five states now (2026-09-08
+// Offer Letter redesign): Pending (offer.state "none"/"created" — a fleeting
+// "created" only exists between clicking Share and confirming, so it reads as
+// Pending too), Offer Shared, Accepted, Expired, and Withdrawn — "stale" is
+// gone entirely (creating a letter always ends in sharing it now, so the
+// unshared-edit window staleness needed no longer exists).
+// ---------------------------------------------------------------------------
+
+type OfferSectionState = "pending" | "shared" | "accepted" | "expired" | "withdrawn";
+
+const OFFER_BADGE: Record<OfferSectionState, { label: string; dotClass: string }> = {
+    pending: { label: "Pending", dotClass: "text-utility-amber-500" },
+    shared: { label: "Completed", dotClass: "text-utility-green-500" },
+    accepted: { label: "Accepted", dotClass: "text-utility-green-500" },
+    expired: { label: "Expired", dotClass: "text-utility-amber-500" },
+    withdrawn: { label: "Withdrawn", dotClass: "text-utility-red-500" },
+};
+
+const OfferSectionBadge = ({ state }: { state: OfferSectionState }) => {
+    const { label, dotClass } = OFFER_BADGE[state];
+    return (
+        <span className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-secondary shadow-xs">
+            <Dot size="sm" className={dotClass} />
+            {label}
+        </span>
+    );
+};
+
+/** IBM Plex Mono 12px label over an Inter/system 16px medium value — Figma's "at a glance" row,
+ * distinct from the generic `MetaField` (14px value) used by 01/04 elsewhere on this page. */
+const OfferField = ({ label, value, tone = "muted" }: { label: string; value: string; tone?: "muted" | "success" | "error" }) => (
+    <div className="flex flex-col px-2">
+        <span
+            className={cx(
+                "font-mono text-xs",
+                tone === "success" ? "text-fg-success-primary" : tone === "error" ? "text-fg-error-primary" : "text-tertiary",
+            )}
+        >
+            {label}
+        </span>
+        <span className="text-md font-medium text-primary">{value}</span>
+    </div>
+);
+
+/** Figma's "Buttons/Button" component — flat `bg-secondary_hover`, no ring, the same
+ * `shadow-xs-skeuomorphic` treatment the shared `Button` component's own colors use. Icons stay
+ * the same muted gray regardless of emphasis; only the label brightens for the row's primary
+ * action (matches Figma exactly — verified against the exported icon SVGs' own stroke colors). */
+const OfferButton = ({
+    icon: Icon,
+    label,
+    emphasis = "primary",
+    isDisabled,
+    onClick,
+}: {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    emphasis?: "primary" | "secondary";
+    isDisabled?: boolean;
+    onClick?: () => void;
+}) => (
+    <button
+        type="button"
+        disabled={isDisabled}
+        onClick={onClick}
+        className="relative inline-flex items-center justify-center gap-1 rounded-lg bg-secondary_hover p-3 text-xs font-semibold shadow-xs-skeuomorphic transition duration-100 ease-linear hover:bg-quaternary disabled:cursor-not-allowed disabled:opacity-50"
+    >
+        <Icon className={cx("size-5 text-fg-quaternary", emphasis === "primary" ? "text-primary" : "text-secondary")} />
+        <span className={emphasis === "primary" ? "text-primary" : "text-secondary"}>{label}</span>
+    </button>
+);
+
+/** Withdraw Offer — the one ghost/borderless button in the set, always paired with the red
+ * slash-circle icon regardless of the label's own muted tone (matches the exported SVG). */
+const OfferGhostButton = ({ label, isDisabled, onClick }: { label: string; isDisabled?: boolean; onClick?: () => void }) => (
+    <button
+        type="button"
+        disabled={isDisabled}
+        onClick={onClick}
+        className="inline-flex items-center justify-center gap-1 rounded-lg p-3 text-xs font-semibold text-tertiary transition duration-100 ease-linear hover:text-secondary disabled:cursor-not-allowed disabled:opacity-50"
+    >
+        <SlashCircle01 className="size-4 text-red-500" />
+        {label}
+    </button>
+);
+
 export const DealDetail = () => {
     const { dealId } = useParams<{ dealId: string }>();
     const navigate = useNavigate();
@@ -359,7 +443,7 @@ export const DealDetail = () => {
     // was opened from, so leaving this page restores that view instead of resetting to "All".
     // Falls back to the bare list when there's no such state (a direct link, or a page refresh).
     const backTo = (location.state as { from?: string } | null)?.from || "/deals";
-    const { deals, updateDeal, logActivity, refreshLetter, resendLetter } = useDeals();
+    const { deals, updateDeal, logActivity, resendLetter } = useDeals();
     const deal = deals.find((d) => d.id === dealId);
 
     const [applicationSlideoverOpen, setApplicationSlideoverOpen] = useState(false);
@@ -394,10 +478,12 @@ export const DealDetail = () => {
     // actual plan to build an offer against, not just a "customise it" prompt.
     const planComplete = deal.installments.length > 0;
     const letterGuardCreate = canCreateLetter(deal);
-    const letterGuardShare = canShareLetter(deal);
     const letterGuardResend = canResendLetter(deal);
     const withdrawGuard = canWithdraw(deal);
-    const offerComplete = deal.offer.state !== "none";
+    // A fleeting "created" (between clicking Share and confirming the send) reads as Pending
+    // too — there's no more standalone "drafted, not shared" resting state to show separately.
+    const offerSectionState: OfferSectionState =
+        deal.offer.state === "none" || deal.offer.state === "created" ? "pending" : deal.offer.state;
     // Shifted from >=2 to >=3 — ReachedStage grew a rank for the Plan stage (§3.3): old "reached
     // payment ongoing" (2) is now 3.
     const enrollComplete = deal.reachedStage >= 3;
@@ -413,9 +499,13 @@ export const DealDetail = () => {
     const lmsId = `LMS-${10000 + (hashId(deal.id) % 8999)}`;
     const firstSessionDate = new Date(now.getTime() + 12 * 86_400_000);
     const offerEmailHtml = resolveOfferEmail(deal, now);
-    // Once a payment has landed the inline preview is redundant clutter next to the rest of the
-    // now-locked offer controls — still reachable via "View Offer Letter", just not embedded.
-    const hasPayment = deal.installments.some((i) => i.status === "Paid");
+    // "Accepted On" has no dedicated field — the same activity-log entry the milestone rail
+    // already reads from is the single source of truth for when that happened.
+    const acceptedLogEntry = deal.activityLog.find((e) => e.text === "Offer accepted by learner");
+    // "Withdrawn on" / "Withdraw Reason" likewise aren't separate offer fields — they're exactly
+    // what withdrawOffer already appends to offerHistory, so the most recent withdrawn entry
+    // (there's only ever one, since a v2 letter start a fresh cycle) is the current withdrawal.
+    const lastWithdrawal = deal.offerHistory.filter((h) => h.endedBy === "withdrawn").at(-1);
 
     return (
         <AppShell background="gradient">
@@ -569,156 +659,140 @@ export const DealDetail = () => {
                                 </>
                             ) : (
                                 <>
-                                    <Section
-                                        number="03"
-                                        title="Offer Letter"
-                                        complete={deal.offer.state === "shared" || deal.offer.state === "accepted"}
-                                        badgeLabel={OFFER_STATE_BADGE[deal.offer.state]}
-                                    >
-                                        {offerComplete ? (
-                                            <>
-                                                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                                    <MetaField label="Template Used" value={deal.offer.template?.name ?? "—"} />
-                                                    <MetaField
+                                    <div className="flex flex-col overflow-hidden rounded-xl bg-primary_alt">
+                                        <div className="flex w-full items-center justify-between bg-tertiary/30 p-4">
+                                            <div className="flex items-center gap-2 text-sm font-semibold">
+                                                <span className="text-utility-green-500">03</span>
+                                                <span className="text-primary">Offer Letter</span>
+                                            </div>
+                                            <OfferSectionBadge state={offerSectionState} />
+                                        </div>
+
+                                        {offerSectionState === "pending" ? (
+                                            <div className="w-full p-6">
+                                                <div className="flex w-full flex-col items-start gap-4 rounded-2xl bg-gradient-to-b from-tertiary/10 to-tertiary p-6 shadow-lg">
+                                                    <p className="text-sm text-primary">
+                                                        {letterGuardCreate.allowed
+                                                            ? "An Offer Letter hasn't been shared with the Learner yet."
+                                                            : letterGuardCreate.reason}
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        disabled={!letterGuardCreate.allowed}
+                                                        onClick={() => setLetterComposerDealId(deal.id)}
+                                                        className="relative inline-flex items-center justify-center gap-1 rounded-lg bg-fg-secondary_hover px-5 py-3 text-xs font-semibold text-neutral-900 shadow-xs-skeuomorphic transition duration-100 ease-linear hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        <MagicWand01 className="size-5" />
+                                                        Create Offer Letter
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex w-full flex-col gap-8 p-6">
+                                                <div className="grid grid-cols-2 gap-2 p-2">
+                                                    <OfferField label="Template Used" value={deal.offer.template?.name ?? "—"} />
+                                                    <OfferField
                                                         label="Deadline"
                                                         value={deal.offer.deadline ? formatDeadlineDateTime(deal.offer.deadline) : "—"}
                                                     />
-                                                    <MetaField
+                                                    <OfferField
                                                         label="Net Payable (as shared)"
                                                         value={deal.offer.snapshot ? formatMoney(deal.offer.snapshot.netPayable, deal.currency) : "—"}
                                                     />
-                                                    <MetaField
+                                                    <OfferField
                                                         label="Version"
                                                         value={`v${deal.offer.version}${deal.offer.resendCount ? `.resent${deal.offer.resendCount}x` : ""}`}
                                                     />
+                                                    {offerSectionState === "accepted" && (
+                                                        <>
+                                                            <OfferField
+                                                                label="Accepted On"
+                                                                tone="success"
+                                                                value={acceptedLogEntry ? formatEventDateTime(acceptedLogEntry.ts) : "—"}
+                                                            />
+                                                            <OfferField
+                                                                label="Payment made on"
+                                                                tone="success"
+                                                                value={deal.booking.bookedOn ? formatEventDateTime(deal.booking.bookedOn) : "—"}
+                                                            />
+                                                        </>
+                                                    )}
+                                                    {offerSectionState === "withdrawn" && (
+                                                        <>
+                                                            <OfferField label="Withdraw Reason" tone="error" value={lastWithdrawal?.reason ?? "—"} />
+                                                            <OfferField
+                                                                label="Withdrawn on"
+                                                                tone="error"
+                                                                value={lastWithdrawal ? formatEventDateTime(lastWithdrawal.endedOn) : "—"}
+                                                            />
+                                                        </>
+                                                    )}
                                                 </div>
 
-                                                {deal.offer.state === "stale" && deal.offer.snapshot && (
-                                                    <div className="flex flex-col gap-1 rounded-lg bg-warning-secondary p-3 text-xs text-warning-primary">
-                                                        <span className="font-semibold">Plan changed since this letter was created</span>
-                                                        <span>
-                                                            Discount {formatMoney(deal.offer.snapshot.discount, deal.currency)} →{" "}
-                                                            {formatMoney(deal.discount, deal.currency)}
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                {offerEmailHtml && !hasPayment && <OfferEmailPreviewCard html={offerEmailHtml} />}
-
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <Button
-                                                            color="secondary"
-                                                            size="sm"
-                                                            iconLeading={ArrowUpRight}
-                                                            isDisabled={!offerEmailHtml}
-                                                            onClick={() => setEmailModalDealId(deal.id)}
-                                                        >
-                                                            View Offer Letter
-                                                        </Button>
-                                                        {(deal.offer.state === "created" || deal.offer.state === "stale") && (
-                                                            <Button
-                                                                color="secondary"
-                                                                size="sm"
-                                                                iconLeading={Pencil01}
-                                                                onClick={() => setLetterComposerDealId(deal.id)}
-                                                            >
-                                                                Edit offer letter
-                                                            </Button>
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex items-center gap-2">
+                                                        {offerSectionState === "shared" && (
+                                                            <>
+                                                                <OfferButton
+                                                                    icon={ArrowUpRight}
+                                                                    label="View Offer Letter"
+                                                                    isDisabled={!offerEmailHtml}
+                                                                    onClick={() => setEmailModalDealId(deal.id)}
+                                                                />
+                                                                <OfferButton
+                                                                    icon={RefreshCcw01}
+                                                                    label="Resend Letter"
+                                                                    emphasis="secondary"
+                                                                    isDisabled={!letterGuardResend.allowed}
+                                                                    onClick={() => resendLetter(deal.id)}
+                                                                />
+                                                            </>
                                                         )}
-                                                        {deal.offer.state === "created" && (
-                                                            <Button
-                                                                color="primary"
-                                                                size="sm"
-                                                                isDisabled={!letterGuardShare.allowed}
-                                                                onClick={() => setShareDealId(deal.id)}
-                                                            >
-                                                                Share offer letter
-                                                            </Button>
+                                                        {offerSectionState === "accepted" && (
+                                                            <OfferButton
+                                                                icon={ArrowUpRight}
+                                                                label="View Offer Letter"
+                                                                isDisabled={!offerEmailHtml}
+                                                                onClick={() => setEmailModalDealId(deal.id)}
+                                                            />
                                                         )}
-                                                        {deal.offer.state === "stale" && (
-                                                            <Button color="primary" size="sm" iconLeading={RefreshCcw01} onClick={() => refreshLetter(deal.id)}>
-                                                                Refresh letter
-                                                            </Button>
-                                                        )}
-                                                        {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                                            <Button
-                                                                color="secondary"
-                                                                size="sm"
-                                                                iconLeading={RefreshCcw01}
-                                                                isDisabled={!letterGuardResend.allowed}
-                                                                onClick={() => resendLetter(deal.id)}
-                                                            >
-                                                                Resend Letter
-                                                            </Button>
-                                                        )}
-                                                        {(deal.offer.state === "expired" || deal.offer.state === "withdrawn") && (
-                                                            <Button
-                                                                color="secondary"
-                                                                size="sm"
-                                                                isDisabled={!letterGuardCreate.allowed}
-                                                                onClick={() => setLetterComposerDealId(deal.id)}
-                                                            >
-                                                                Create offer letter (v2)
-                                                            </Button>
-                                                        )}
-                                                        {!letterGuardShare.allowed && deal.offer.state === "created" && (
-                                                            <span className="text-xs text-tertiary italic">*{letterGuardShare.reason}</span>
+                                                        {(offerSectionState === "expired" || offerSectionState === "withdrawn") && (
+                                                            <>
+                                                                <OfferButton
+                                                                    icon={ArrowUpRight}
+                                                                    label="View Last Offer Letter"
+                                                                    isDisabled={!offerEmailHtml}
+                                                                    onClick={() => setEmailModalDealId(deal.id)}
+                                                                />
+                                                                <OfferButton
+                                                                    icon={RefreshCcw01}
+                                                                    label="Create Offer Letter (v2)"
+                                                                    emphasis="secondary"
+                                                                    isDisabled={!letterGuardCreate.allowed}
+                                                                    onClick={() => setLetterComposerDealId(deal.id)}
+                                                                />
+                                                            </>
                                                         )}
                                                     </div>
-                                                    {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                                        <Button
-                                                            color="secondary-destructive"
-                                                            size="sm"
-                                                            iconLeading={SlashCircle01}
+                                                    {offerSectionState === "shared" && (
+                                                        <OfferGhostButton
+                                                            label="Withdraw Offer"
                                                             isDisabled={!withdrawGuard.allowed}
                                                             onClick={() => setWithdrawDealId(deal.id)}
-                                                        >
-                                                            Withdraw Offer
-                                                        </Button>
+                                                        />
                                                     )}
                                                 </div>
-                                                {/* Both Resend and Withdraw only ever fail (in the states where either button
-                                                 * renders) for the same reason — a payment has already landed — so one
-                                                 * combined caption replaces what would otherwise be two identical-in-substance
-                                                 * hints sitting side by side. */}
-                                                {(!letterGuardResend.allowed || !withdrawGuard.allowed) &&
-                                                    (deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                                        <span className="text-xs text-tertiary italic">
-                                                            *Can't resend or withdraw offer. A payment has already been received.
-                                                        </span>
-                                                    )}
-
-                                                {deal.offerHistory.length > 0 && (
-                                                    <div className="flex flex-col gap-1.5 border-t border-secondary pt-3">
-                                                        <span className="text-xs font-semibold tracking-wide text-quaternary uppercase">Previous versions</span>
-                                                        {deal.offerHistory.map((h, i) => (
-                                                            <div key={i} className="flex items-center justify-between text-xs text-tertiary">
-                                                                <span>
-                                                                    v{h.version} · {h.template} · {h.endedBy}
-                                                                </span>
-                                                                <span>{formatDate(h.endedOn)}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                                {/* Resend and Withdraw only ever fail (in the one state either button renders)
+                                                 * for the same reason — a payment has already landed — so one combined
+                                                 * caption replaces what would otherwise be two identical-in-substance hints. */}
+                                                {offerSectionState === "shared" && (!letterGuardResend.allowed || !withdrawGuard.allowed) && (
+                                                    <span className="text-xs text-tertiary italic">
+                                                        *Can't resend or withdraw offer. A payment has already been received.
+                                                    </span>
                                                 )}
-                                            </>
-                                        ) : (
-                                            <>
-                                                <p className="text-sm text-tertiary">
-                                                    {letterGuardCreate.allowed ? "No offer letter yet." : letterGuardCreate.reason}
-                                                </p>
-                                                <Button
-                                                    color="secondary"
-                                                    size="sm"
-                                                    isDisabled={!letterGuardCreate.allowed}
-                                                    onClick={() => setLetterComposerDealId(deal.id)}
-                                                >
-                                                    Create offer letter
-                                                </Button>
-                                            </>
+                                            </div>
                                         )}
-                                    </Section>
+                                    </div>
 
                                     <Section number="04" title="Enrolment" complete={enrollComplete}>
                                         {enrollComplete ? (
@@ -893,15 +967,6 @@ export const DealDetail = () => {
     );
 };
 
-const OFFER_STATE_BADGE: Record<Deal["offer"]["state"], string> = {
-    none: "Not started",
-    created: "Created",
-    stale: "Stale",
-    shared: "Shared",
-    expired: "Expired",
-    accepted: "Accepted",
-    withdrawn: "Withdrawn",
-};
 
 const FormSection = ({ title, children, divider = true, cols = 2 }: { title: string; children: React.ReactNode; divider?: boolean; cols?: 1 | 2 }) => (
     <div className={`flex flex-col gap-3 ${divider ? "border-b border-secondary pb-6" : ""}`}>

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { PROTOTYPE_TODAY, getPersonaLabel } from "@/data/dashboard-data";
-import { DEALS, STATUS, planSnapshot, refreshOfferStaleness } from "@/data/deals-data";
+import { DEALS, STATUS, planSnapshot } from "@/data/deals-data";
 import type { Deal, DiscountBreakdown, Installment, OfferTemplate, PlanState } from "@/data/deals-data";
 import { usePersona } from "@/providers/role-provider";
 
@@ -27,9 +27,8 @@ interface DealsContextType {
     /** Offer Letter lifecycle. */
     createLetter: (id: string, opts: { template: OfferTemplate; deadline: string }) => void;
     /** Template/deadline change on a letter that hasn't been shared yet — no-ops unless
-     * `offer.state` is `created` or `stale`. */
+     * `offer.state` is `created`. */
     editLetter: (id: string, opts: { template: OfferTemplate; deadline: string }) => void;
-    refreshLetter: (id: string) => void;
     shareLetter: (id: string) => void;
     resendLetter: (id: string) => void;
     withdrawOffer: (id: string, reason: string) => void;
@@ -140,7 +139,7 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                     const netPayable = d.courseFee - patch.discount;
                     const totalAssigned = patch.installments.reduce((sum, i) => sum + i.amount, 0);
                     const planState: PlanState = totalAssigned === netPayable ? "draft_ready" : "draft_incomplete";
-                    const next: Deal = {
+                    return {
                         ...d,
                         discount: patch.discount,
                         discountBreakdown: patch.discountBreakdown,
@@ -150,7 +149,6 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                         lastUpdate: PROTOTYPE_TODAY,
                         activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Payment plan edited", reason: withActor() }],
                     };
-                    return refreshOfferStaleness(next);
                 }),
             );
         },
@@ -166,7 +164,7 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                     // reflects it. Post-payment (the existing per-installment EMI editor, scoped to
                     // active plans per §7), the deal's status stays whatever payment stage it's in —
                     // `plan.state` alone carries the "frozen, awaiting Sales Ops" nuance.
-                    const preOffer = d.offer.state === "none" || d.offer.state === "created" || d.offer.state === "stale";
+                    const preOffer = d.offer.state === "none" || d.offer.state === "created";
                     return {
                         ...d,
                         plan: { ...d.plan, state: "awaiting_approval", approval: { state: "pending", reason: null, decidedOn: null } },
@@ -251,40 +249,23 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
         [withActor],
     );
 
-    /** Edits a letter that hasn't been shared yet (`created`/`stale`) — template/deadline change
-     * in place, same version, retaking the snapshot off the live plan (which also clears any
-     * staleness). Distinct from `createLetter`'s expired/withdrawn branch: nothing was ever
-     * delivered to the learner here, so there's no history entry to push and no version bump. */
+    /** Edits a letter that hasn't been shared yet (`created`) — template/deadline change in
+     * place, same version. Distinct from `createLetter`'s expired/withdrawn branch: nothing was
+     * ever delivered to the learner here, so there's no history entry to push and no version
+     * bump. */
     const editLetter = useCallback(
         (id: string, opts: { template: OfferTemplate; deadline: string }) => {
             setDeals((prev) =>
                 prev.map((d) => {
-                    if (d.id !== id || (d.offer.state !== "created" && d.offer.state !== "stale")) return d;
+                    if (d.id !== id || d.offer.state !== "created") return d;
                     return {
                         ...d,
-                        offer: { ...d.offer, state: "created", template: opts.template, deadline: opts.deadline, snapshot: planSnapshot(d) },
+                        offer: { ...d.offer, template: opts.template, deadline: opts.deadline, snapshot: planSnapshot(d) },
                         lastUpdate: PROTOTYPE_TODAY,
                         activityLog: [
                             ...d.activityLog,
                             { ts: PROTOTYPE_TODAY, text: "Offer letter edited", reason: withActor(`${opts.template.name} template`) },
                         ],
-                    };
-                }),
-            );
-        },
-        [withActor],
-    );
-
-    const refreshLetter = useCallback(
-        (id: string) => {
-            setDeals((prev) =>
-                prev.map((d) => {
-                    if (d.id !== id || d.offer.state !== "stale") return d;
-                    return {
-                        ...d,
-                        offer: { ...d.offer, state: "created", snapshot: planSnapshot(d) },
-                        lastUpdate: PROTOTYPE_TODAY,
-                        activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Offer letter refreshed", reason: withActor() }],
                     };
                 }),
             );
@@ -384,7 +365,6 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                 resolveApproval,
                 createLetter,
                 editLetter,
-                refreshLetter,
                 shareLetter,
                 resendLetter,
                 withdrawOffer,
