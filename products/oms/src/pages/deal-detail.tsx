@@ -359,12 +359,13 @@ const Section = ({
 // unshared-edit window staleness needed no longer exists).
 // ---------------------------------------------------------------------------
 
-type OfferSectionState = "pending" | "shared" | "accepted" | "expired" | "withdrawn";
+type OfferSectionState = "pending" | "shared" | "accepted" | "completed" | "expired" | "withdrawn";
 
 const OFFER_BADGE: Record<OfferSectionState, { label: string; dotClass: string }> = {
     pending: { label: "Pending", dotClass: "text-utility-amber-500" },
     shared: { label: "Shared", dotClass: "text-utility-amber-500" },
     accepted: { label: "Accepted", dotClass: "text-utility-green-500" },
+    completed: { label: "Completed", dotClass: "text-utility-green-500" },
     expired: { label: "Expired", dotClass: "text-utility-amber-500" },
     withdrawn: { label: "Withdrawn", dotClass: "text-utility-red-500" },
 };
@@ -483,8 +484,15 @@ export const DealDetail = () => {
     const withdrawGuard = canWithdraw(deal);
     // A fleeting "created" (between clicking Share and confirming the send) reads as Pending
     // too — there's no more standalone "drafted, not shared" resting state to show separately.
+    // An accepted offer further splits into "accepted" (nothing paid yet) vs "completed" (the
+    // first payment has landed) — the same `booking.bookedOn` signal the "Payment made on" field
+    // already reads from.
     const offerSectionState: OfferSectionState =
-        deal.offer.state === "none" || deal.offer.state === "created" ? "pending" : deal.offer.state;
+        deal.offer.state === "none" || deal.offer.state === "created"
+            ? "pending"
+            : deal.offer.state === "accepted" && deal.booking.bookedOn
+              ? "completed"
+              : deal.offer.state;
     // Shifted from >=2 to >=3 — ReachedStage grew a rank for the Plan stage (§3.3): old "reached
     // payment ongoing" (2) is now 3.
     const enrollComplete = deal.reachedStage >= 3;
@@ -696,7 +704,7 @@ export const DealDetail = () => {
                                                         label="Version"
                                                         value={`v${deal.offer.version}${deal.offer.resendCount ? `.resent${deal.offer.resendCount}x` : ""}`}
                                                     />
-                                                    {offerSectionState === "accepted" && (
+                                                    {(offerSectionState === "accepted" || offerSectionState === "completed") && (
                                                         <>
                                                             <OfferField
                                                                 label="Accepted On"
@@ -741,7 +749,7 @@ export const DealDetail = () => {
                                                                 />
                                                             </>
                                                         )}
-                                                        {offerSectionState === "accepted" && (
+                                                        {(offerSectionState === "accepted" || offerSectionState === "completed") && (
                                                             <OfferButton
                                                                 icon={ArrowUpRight}
                                                                 label="View Offer Letter"
@@ -787,7 +795,7 @@ export const DealDetail = () => {
                                         )}
                                     </div>
 
-                                    {offerSectionState !== "accepted" ? (
+                                    {offerSectionState !== "accepted" && offerSectionState !== "completed" ? (
                                         <LockedSectionRow number="04" title="Enrolment" opacity={0.4} />
                                     ) : (
                                         <Section number="04" title="Enrolment" complete={enrollComplete}>
