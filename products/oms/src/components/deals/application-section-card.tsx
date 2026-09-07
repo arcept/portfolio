@@ -109,9 +109,14 @@ export const ApplicationSectionCard = ({
 
                 {complete ? (
                     <div className="flex items-center gap-4">
-                        <Button color="secondary" size="sm" iconTrailing={ArrowUpRight} onClick={onViewApplication} className="h-11">
+                        <button
+                            type="button"
+                            onClick={onViewApplication}
+                            className="relative inline-flex items-center justify-center gap-1 rounded-lg bg-secondary_hover p-3 text-xs font-semibold text-primary shadow-xs-skeuomorphic transition duration-100 ease-linear hover:bg-quaternary disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <ArrowUpRight className="size-5 text-fg-quaternary text-primary" />
                             View Application
-                        </Button>
+                        </button>
                         <Button color="link-color" size="sm" isDisabled className="opacity-30">
                             Edit Application
                         </Button>
