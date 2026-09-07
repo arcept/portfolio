@@ -622,11 +622,15 @@ function renderCell(deal: Deal, columnId: string, handlers: RowHandlers) {
         case "assigned":
             return <AssigneeCell bdrId={deal.bdrId} />;
         case "actions": {
+            // The application form link is only relevant before the learner has filled it in —
+            // hidden from APP_FILLED onward rather than staying visible (and pointing at a form
+            // that's no longer the live next step) for the rest of the deal's lifecycle.
+            const showFormLink = deal.status.id === "APP_NEW" || deal.status.id === "APP_PENDING" || deal.status.id === "APP_EXPIRED";
             return (
                 <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     {primaryRowActions(deal, handlers)}
                     <ButtonUtility size="sm" color="tertiary" tooltip="Mark as not interested" icon={XClose} onClick={() => handlers.onNotInterested(deal)} />
-                    <ButtonUtility size="sm" color="tertiary" tooltip="Get form link" icon={Link03} onClick={() => handlers.onCopyLink(deal)} />
+                    {showFormLink && <ButtonUtility size="sm" color="tertiary" tooltip="Get form link" icon={Link03} onClick={() => handlers.onCopyLink(deal)} />}
                 </div>
             );
         }
