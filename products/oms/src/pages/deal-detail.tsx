@@ -25,6 +25,7 @@ import type { ApplicationLinkRequest } from "@/components/deals/application-link
 import { ApplicationSectionCard } from "@/components/deals/application-section-card";
 import { GlobalStatusDialog } from "@/components/deals/global-status-dialog";
 import type { GlobalStatusRequest } from "@/components/deals/global-status-dialog";
+import { LearnerSimPad } from "@/components/deals/learner-sim-pad";
 import { OfferEmailModal } from "@/components/deals/offer-email-preview";
 import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
 import { PaymentPlanSectionCard } from "@/components/deals/payment-plan-section-card";
@@ -968,6 +969,7 @@ export const DealDetail = () => {
             <OfferEmailModal dealId={emailModalDealId} onOpenChange={(open) => !open && setEmailModalDealId(null)} />
             <GlobalStatusDialog request={globalStatusRequest} onOpenChange={(open) => !open && setGlobalStatusRequest(null)} />
             <ApplicationLinkDialog request={applicationLinkRequest} onOpenChange={(open) => !open && setApplicationLinkRequest(null)} />
+            <LearnerSimPad deal={deal} />
         </AppShell>
     );
 };

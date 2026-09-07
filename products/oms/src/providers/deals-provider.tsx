@@ -32,6 +32,13 @@ interface DealsContextType {
     shareLetter: (id: string) => void;
     resendLetter: (id: string) => void;
     withdrawOffer: (id: string, reason: string) => void;
+
+    /** TEMP(dev): learner-side actions with no real UI trigger of their own — the prototype has
+     * no learner-facing surface, so the QA sim pad (`components/deals/learner-sim-pad.tsx`) is
+     * the only caller. Remove alongside it once these flows have a normal way to progress. */
+    simFillApplication: (id: string) => void;
+    simAcceptOffer: (id: string) => void;
+    simMakePayment: (id: string) => void;
 }
 
 const DealsContext = createContext<DealsContextType | undefined>(undefined);
@@ -351,6 +358,69 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
         [withActor],
     );
 
+    // TEMP(dev): the three learner actions below have no real trigger anywhere in this BDR-facing
+    // prototype — they exist only for the QA sim pad. Each mirrors the exact status/reachedStage
+    // transition and activity-log text `buildActivityLog` (above) uses for the same milestone in
+    // seed data, so a simulated deal reads identically to a generated one.
+
+    const simFillApplication = useCallback((id: string) => {
+        setDeals((prev) =>
+            prev.map((d) => {
+                if (d.id !== id || d.status.id !== "APP_PENDING") return d;
+                return {
+                    ...d,
+                    status: STATUS.APP_FILLED,
+                    lastUpdate: PROTOTYPE_TODAY,
+                    activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Application filled by learner" }],
+                };
+            }),
+        );
+    }, []);
+
+    const simAcceptOffer = useCallback((id: string) => {
+        setDeals((prev) =>
+            prev.map((d) => {
+                if (d.id !== id || d.offer.state !== "shared") return d;
+                return {
+                    ...d,
+                    offer: { ...d.offer, state: "accepted" },
+                    status: STATUS.OFFER_ACCEPTED,
+                    lastUpdate: PROTOTYPE_TODAY,
+                    activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Offer accepted by learner" }],
+                };
+            }),
+        );
+    }, []);
+
+    const simMakePayment = useCallback((id: string) => {
+        setDeals((prev) =>
+            prev.map((d) => {
+                if (d.id !== id || d.offer.state !== "accepted") return d;
+                const idx = d.installments.findIndex((i) => i.status !== "Paid");
+                if (idx === -1) return d;
+                const installments = d.installments.map((inst, i) =>
+                    i === idx ? { ...inst, status: "Paid" as const, paidOn: PROTOTYPE_TODAY } : inst,
+                );
+                const allPaid = installments.every((i) => i.status === "Paid");
+                const isFirstPayment = !d.booking.bookedOn;
+                const text = allPaid
+                    ? "Final installment received — payment completed"
+                    : isFirstPayment
+                      ? "Down payment received"
+                      : "Installment received";
+                return {
+                    ...d,
+                    installments,
+                    booking: { bookedOn: d.booking.bookedOn ?? PROTOTYPE_TODAY, bookedValue: d.netPayable },
+                    status: allPaid ? STATUS.PAY_COMPLETED : STATUS.PAY_ONGOING,
+                    reachedStage: Math.max(d.reachedStage, 3) as Deal["reachedStage"],
+                    lastUpdate: PROTOTYPE_TODAY,
+                    activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text, reason: isFirstPayment ? null : installments[idx].label }],
+                };
+            }),
+        );
+    }, []);
+
     return (
         <DealsContext.Provider
             value={{
@@ -368,6 +438,9 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                 shareLetter,
                 resendLetter,
                 withdrawOffer,
+                simFillApplication,
+                simAcceptOffer,
+                simMakePayment,
             }}
         >
             {children}
