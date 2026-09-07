@@ -25,6 +25,7 @@
  * moment — every surface (row actions, detail sections, dialogs) reads these instead of
  * inferring permission from `reachedStage`, which is how the old model tangled.
  */
+import type { FlagTypes } from "@/components/base/badges/badge-types";
 import type { Persona } from "@/types/role";
 import type { DealStageCascade, MonthGroundTruth, OrgBdr } from "./dashboard-data";
 import { MONTHS, PROTOTYPE_TODAY, bdrs, seededRandom, splitByWeights, teamLeads, teamManagers } from "./dashboard-data";
@@ -229,12 +230,26 @@ const LAST_NAMES = [
     "Wong",
     "Kim",
 ];
-const CITIES: [string, string][] = [
+const INDIA_CITIES: [string, string][] = [
     ["Mumbai", "India"],
     ["Bengaluru", "India"],
     ["Delhi", "India"],
     ["Pune", "India"],
     ["Hyderabad", "India"],
+];
+/** ISO-3166 codes for `BadgeWithFlag`/`FlagTypes` — covers every country `INDIA_CITIES` and
+ * `GLOBAL_CITIES` can produce. Centralized here (rather than per-page) since both the deals list
+ * row flag and the deal-detail header badge need to render the same country's flag. */
+export const COUNTRY_FLAG: Record<string, FlagTypes> = {
+    India: "IN",
+    UAE: "AE",
+    Singapore: "SG",
+    UK: "GB",
+    Canada: "CA",
+    Australia: "AU",
+    Nigeria: "NG",
+};
+const GLOBAL_CITIES: [string, string][] = [
     ["Dubai", "UAE"],
     ["Singapore", "Singapore"],
     ["London", "UK"],
@@ -250,7 +265,7 @@ const CURRENT_ROLES = ["Junior Architect", "Design Engineer", "Site Engineer", "
 const EXPERIENCE_BANDS = ["0–1 years", "1–3 years", "3–5 years", "5+ years"];
 const INCOME_BANDS = ["₹3–5 LPA", "₹5–8 LPA", "₹8–12 LPA", "Not disclosed"];
 /** State/province shown in the Application Details slide-over's Basic Information group —
- * only meaningful for the Indian cities `CITIES` includes; international cities fall back to
+ * only meaningful for the Indian cities `INDIA_CITIES` includes; international cities fall back to
  * their city name (there's no single "state" concept to derive for them). */
 const CITY_STATE: Record<string, string> = { Mumbai: "Maharashtra", Bengaluru: "Karnataka", Delhi: "Delhi", Pune: "Maharashtra", Hyderabad: "Telangana" };
 export function stateForCity(city: string): string {
@@ -573,12 +588,16 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
     const lastUpdateMs = Math.min(PROTOTYPE_TODAY.getTime(), createdOn.getTime() + lastUpdateDayOffset * 86_400_000);
     const lastUpdate = new Date(lastUpdateMs);
 
-    const currency: "INR" | "USD" = rand() < 0.72 ? "INR" : "USD";
+    // 15% of deals are global (outside India) and priced in USD; the remaining 85% are based
+    // in India and priced in INR. Currency and city/country are derived from the same draw so
+    // they never disagree (e.g. an "India" deal billed in USD).
+    const isGlobal = rand() < 0.15;
+    const currency: "INR" | "USD" = isGlobal ? "USD" : "INR";
     const courseFee = currency === "INR" ? pick([185_000, 210_000, 245_000, 275_000]) : pick([2400, 2800, 3200]);
     const discountPct = int(0, 20);
     const discount = Math.round(courseFee * (discountPct / 100));
     const netPayable = courseFee - discount;
-    const [city, country] = pick(CITIES);
+    const [city, country] = isGlobal ? pick(GLOBAL_CITIES) : pick(INDIA_CITIES);
 
     const id = `DL-${2100 + dealSeq}`;
     const name = genName();

@@ -13,14 +13,17 @@ const COLOR_MAP: Record<DealStatus["color"], BadgeColors> = {
     gray: "gray",
 };
 
+// "modern" badge type (flat bg-primary chrome, colored dot only) — matches the redesigned
+// Deals List frame (Figma node 442:29862 "Deal Row New" / Status column), which drops the old
+// filled colored-pill badges in favor of this flatter, dot-led style everywhere.
 export const DealStatusBadge = ({ status }: { status: DealStatus }) => (
-    <BadgeWithDot color={COLOR_MAP[status.color]} size="sm" type="pill-color">
+    <BadgeWithDot color={COLOR_MAP[status.color]} size="sm" type="modern">
         {status.stage} · {status.label}
     </BadgeWithDot>
 );
 
 export const ActionNeededBadge = () => (
-    <BadgeWithDot color="error" size="sm" type="pill-color">
-        Action needed
+    <BadgeWithDot color="error" size="sm" type="modern">
+        Action
     </BadgeWithDot>
 );

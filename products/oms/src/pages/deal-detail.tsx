@@ -19,7 +19,6 @@ import { Breadcrumb } from "@/components/application/breadcrumb";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { toast } from "@/components/application/toast/toast";
-import type { FlagTypes } from "@/components/base/badges/badge-types";
 import { BadgeWithFlag } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { ApplicationLinkDialog } from "@/components/deals/application-link-dialog";
@@ -37,20 +36,9 @@ import HubspotIcon from "@/components/foundations/integration-icons/hubspot-icon
 import WhatsappIcon from "@/components/foundations/integration-icons/whatsapp-icon";
 import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
 import type { ActivityLogEntry, Deal } from "@/data/deals-data";
-import { STATUS, applicationFormUrl, canCreateLetter, canResendApplication, canShareLetter, canWithdraw, stateForCity } from "@/data/deals-data";
+import { COUNTRY_FLAG, STATUS, applicationFormUrl, canCreateLetter, canResendApplication, canShareLetter, canWithdraw, stateForCity } from "@/data/deals-data";
 import { resolveOfferEmail } from "@/data/offer-emails";
 import { useDeals } from "@/providers/deals-provider";
-
-/** ISO-3166 codes for `BadgeWithFlag` — only the countries `CITIES` (deals-data.ts) uses. */
-const COUNTRY_FLAG: Record<string, FlagTypes> = {
-    India: "IN",
-    UAE: "AE",
-    Singapore: "SG",
-    UK: "GB",
-    Canada: "CA",
-    Australia: "AU",
-    Nigeria: "NG",
-};
 
 function copyToClipboard(value: string, label: string) {
     navigator.clipboard?.writeText(value).catch(() => {});

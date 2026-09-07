@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { FilterLines, Globe02, Link03, Mail01, Pencil01, RefreshCcw01, SearchLg, Send01, XClose } from "@untitledui/icons";
+import { FilterLines, Link03, Mail01, Pencil01, RefreshCcw01, SearchLg, Send01, Upload02, XClose } from "@untitledui/icons";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
 import { PaginationPageDefault } from "@/components/application/pagination/pagination";
 import { Table, TableCard } from "@/components/application/table/table";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
+import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Input } from "@/components/base/input/input";
@@ -21,7 +22,7 @@ import type { DealFilters } from "@/components/deals/deals-filter-panel";
 import { DealStatusBadge, ActionNeededBadge } from "@/components/deals/status-badge";
 import { PROTOTYPE_TODAY } from "@/data/dashboard-data";
 import type { Deal } from "@/data/deals-data";
-import { applicationFormUrl, canCreateLetter, canCreatePlan, canResendApplication, canShareLetter, canWithdraw, dealsForPersona, STATUS } from "@/data/deals-data";
+import { COUNTRY_FLAG, applicationFormUrl, canCreateLetter, canCreatePlan, canResendApplication, canShareLetter, canWithdraw, dealsForPersona, STATUS } from "@/data/deals-data";
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import { ROLE_LABELS } from "@/types/role";
@@ -215,45 +216,55 @@ export const DealsList = () => {
 
     return (
         <AppShell background="gradient">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-4">
                 <div className="flex flex-col gap-1">
                     <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals" }]} />
-                    <h1 className="text-xl font-semibold text-primary">Deals</h1>
-                    <p className="text-sm text-tertiary">
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-xl font-semibold text-primary">Deals</h1>
+                        <Badge type="color" color="indigo" size="sm" className="uppercase">
+                            {roleLabel}
+                        </Badge>
+                    </div>
+                    <p className="text-md text-tertiary">
                         {scoped.length} deal{scoped.length === 1 ? "" : "s"} in view — scoped to {scopeLabel(roleLabel)}.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Input aria-label="Search name or email" placeholder="Search name or email…" icon={SearchLg} size="sm" className="w-64" value={search} onChange={setSearch} />
-                    <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setFiltersOpen((v) => !v)}>
-                        Filters
+                <div className="flex items-center gap-2">
+                    <Input aria-label="Search name or email" placeholder="Search by name or email" icon={SearchLg} size="sm" shortcut className="w-64" value={search} onChange={setSearch} />
+                    <Button color="secondary" size="sm" iconLeading={Upload02} isDisabled title="Export — coming soon">
+                        Export
                     </Button>
                 </div>
             </div>
 
-            <div className="-mt-4 flex flex-wrap items-center gap-2 overflow-x-auto border-b border-secondary pb-0.5">
-                {TABS.map((t, i) => {
-                    const isActive = tab === t.key;
-                    return (
-                        <button
-                            key={t.key}
-                            type="button"
-                            onClick={() => setTab(t.key)}
-                            className={`flex shrink-0 items-center gap-2 border-b-2 px-1 py-3 text-sm font-semibold whitespace-nowrap transition duration-100 ease-linear ${
-                                isActive
-                                    ? "border-fg-brand-primary_alt text-brand-secondary"
-                                    : t.action
-                                      ? "border-transparent text-error-primary hover:text-error-primary"
-                                      : "border-transparent text-quaternary hover:text-secondary"
-                            }`}
-                        >
-                            {t.label}
-                            <span className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${isActive ? "bg-brand-primary_alt text-brand-secondary" : "bg-secondary text-tertiary"}`}>
-                                {tabCounts[i]}
-                            </span>
-                        </button>
-                    );
-                })}
+            <div className="-mt-4 flex flex-wrap items-center justify-between gap-2 border-b border-secondary">
+                <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-0.5">
+                    {TABS.map((t, i) => {
+                        const isActive = tab === t.key;
+                        return (
+                            <button
+                                key={t.key}
+                                type="button"
+                                onClick={() => setTab(t.key)}
+                                className={`flex shrink-0 items-center gap-2 border-b-2 px-1 py-3 text-sm font-semibold whitespace-nowrap transition duration-100 ease-linear ${
+                                    isActive
+                                        ? "border-fg-brand-primary_alt text-brand-secondary"
+                                        : t.action
+                                          ? "border-transparent text-error-primary hover:text-error-primary"
+                                          : "border-transparent text-quaternary hover:text-secondary"
+                                }`}
+                            >
+                                {t.label}
+                                <span className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${isActive ? "bg-brand-primary_alt text-brand-secondary" : "bg-secondary text-tertiary"}`}>
+                                    {tabCounts[i]}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+                <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setFiltersOpen((v) => !v)} className="mb-2 shrink-0">
+                    Filters
+                </Button>
             </div>
 
             {filtersOpen && <DealsFilterPanel persona={persona} filters={filters} onChange={setFilters} />}
@@ -386,9 +397,16 @@ function renderCell(deal: Deal, columnId: string, handlers: RowHandlers) {
         case "name":
             return (
                 <div className="flex flex-col gap-0.5">
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-primary">
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
                         {deal.name}
-                        {deal.intlFlag && <Globe02 className="size-3.5 text-fg-quaternary" aria-label="International" />}
+                        {deal.intlFlag && (
+                            <img
+                                src={`https://www.untitledui.com/images/flags/${COUNTRY_FLAG[deal.country] ?? "earth"}.svg`}
+                                alt={deal.country}
+                                title={deal.country}
+                                className="size-4 shrink-0 rounded-full"
+                            />
+                        )}
                     </div>
                     <div className="font-mono text-xs text-tertiary">{deal.id}</div>
                 </div>
@@ -396,7 +414,7 @@ function renderCell(deal: Deal, columnId: string, handlers: RowHandlers) {
         case "mobile":
             return (
                 <div className="flex flex-col gap-0.5">
-                    <span className="font-mono text-sm text-secondary">{deal.phone}</span>
+                    <span className="text-sm text-secondary">{deal.phone}</span>
                     <span className="max-w-40 truncate text-xs text-tertiary">{deal.email}</span>
                 </div>
             );
