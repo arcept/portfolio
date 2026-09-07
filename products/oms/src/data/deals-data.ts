@@ -471,6 +471,15 @@ export function canWithdraw(d: Deal): GuardResult {
     return { allowed: true };
 }
 
+/** Same lock as `canWithdraw` — once a payment has landed, the letter that was shared is what
+ * the learner paid against, so resending (which bumps the resend count as if renotifying them of
+ * unchanged terms) is blocked rather than left as a no-op-looking button. */
+export function canResendLetter(d: Deal): GuardResult {
+    if (d.offer.state !== "shared" && d.offer.state !== "accepted") return { allowed: false, reason: "No shared offer to resend" };
+    if (d.installments.some((i) => i.status === "Paid")) return { allowed: false, reason: "Can't resend — a payment has already been received" };
+    return { allowed: true };
+}
+
 export function planSnapshot(d: Deal): PlanSnapshot {
     return {
         netPayable: d.netPayable,

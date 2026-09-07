@@ -36,7 +36,17 @@ import HubspotIcon from "@/components/foundations/integration-icons/hubspot-icon
 import WhatsappIcon from "@/components/foundations/integration-icons/whatsapp-icon";
 import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
 import type { ActivityLogEntry, Deal } from "@/data/deals-data";
-import { COUNTRY_FLAG, STATUS, applicationFormUrl, canCreateLetter, canResendApplication, canShareLetter, canWithdraw, stateForCity } from "@/data/deals-data";
+import {
+    COUNTRY_FLAG,
+    STATUS,
+    applicationFormUrl,
+    canCreateLetter,
+    canResendApplication,
+    canResendLetter,
+    canShareLetter,
+    canWithdraw,
+    stateForCity,
+} from "@/data/deals-data";
 import { resolveOfferEmail } from "@/data/offer-emails";
 import { useDeals } from "@/providers/deals-provider";
 
@@ -385,6 +395,7 @@ export const DealDetail = () => {
     const planComplete = deal.installments.length > 0;
     const letterGuardCreate = canCreateLetter(deal);
     const letterGuardShare = canShareLetter(deal);
+    const letterGuardResend = canResendLetter(deal);
     const withdrawGuard = canWithdraw(deal);
     const offerComplete = deal.offer.state !== "none";
     // Shifted from >=2 to >=3 — ReachedStage grew a rank for the Plan stage (§3.3): old "reached
@@ -632,6 +643,7 @@ export const DealDetail = () => {
                                                                 color="secondary"
                                                                 size="sm"
                                                                 iconLeading={RefreshCcw01}
+                                                                isDisabled={!letterGuardResend.allowed}
                                                                 onClick={() => resendLetter(deal.id)}
                                                             >
                                                                 Resend Letter
@@ -650,6 +662,10 @@ export const DealDetail = () => {
                                                         {!letterGuardShare.allowed && deal.offer.state === "created" && (
                                                             <span className="text-xs text-tertiary italic">*{letterGuardShare.reason}</span>
                                                         )}
+                                                        {!letterGuardResend.allowed &&
+                                                            (deal.offer.state === "shared" || deal.offer.state === "accepted") && (
+                                                                <span className="text-xs text-tertiary italic">*{letterGuardResend.reason}</span>
+                                                            )}
                                                     </div>
                                                     {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
                                                         <div className="flex flex-col items-end gap-1">
