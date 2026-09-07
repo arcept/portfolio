@@ -45,8 +45,11 @@ const TABS: Tab[] = [
     { key: "action", label: "Action Required", action: true, test: (d) => d.status.action },
     { key: "new", label: "New", test: (d) => d.status.id === "APP_NEW" },
     { key: "application", label: "Application", test: (d) => d.status.stage === "Application" },
-    { key: "plan", label: "Plan", test: (d) => d.status.stage === "Plan" },
-    { key: "offer", label: "Offer", test: (d) => d.status.stage === "Offer" },
+    // "Plan" dropped as its own tab — every Plan-stage deal (Not Started, Draft, Awaiting
+    // Approval) now surfaces under "Offer" alongside the Offer-stage statuses. Tab/filter-level
+    // merge only: PLAN_DRAFT and the other Plan statuses keep their own badges, guards, and row
+    // actions untouched (deals-data.ts's four-gate model is unaffected).
+    { key: "offer", label: "Offer", test: (d) => d.status.stage === "Plan" || d.status.stage === "Offer" },
     { key: "payment", label: "Payment", test: (d) => d.status.stage === "Payment" },
     { key: "cancelled", label: "Cancelled", test: (d) => d.status.id === "ENR_CANCELLED" },
     { key: "not-interested", label: "Not Interested", test: (d) => d.status.id === "NOT_INTERESTED" },
