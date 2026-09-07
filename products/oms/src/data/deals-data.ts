@@ -45,7 +45,6 @@ export type DealStatusId =
     | "APP_FILLED"
     | "PLAN_NOT_STARTED"
     | "PLAN_DRAFT"
-    | "OFFER_NOT_SHARED"
     | "PLAN_AWAITING_APPROVAL"
     | "OFFER_PENDING"
     | "OFFER_EXPIRED"
@@ -87,14 +86,6 @@ export const STATUS: Record<DealStatusId, DealStatus> = {
         desc: "Application filled — payment plan not created",
     },
     PLAN_DRAFT: { id: "PLAN_DRAFT", stage: "Plan", label: "Created", color: "green", action: true, desc: "Payment plan being built or ready" },
-    OFFER_NOT_SHARED: {
-        id: "OFFER_NOT_SHARED",
-        stage: "Offer",
-        label: "Not Shared",
-        color: "green",
-        action: true,
-        desc: "Offer letter drafted — not yet shared with the learner",
-    },
     PLAN_AWAITING_APPROVAL: {
         id: "PLAN_AWAITING_APPROVAL",
         stage: "Plan",
@@ -139,7 +130,6 @@ const STAGE_RANK: Partial<Record<DealStatusId, ReachedStage>> = {
     PLAN_NOT_STARTED: 1,
     PLAN_DRAFT: 1,
     PLAN_AWAITING_APPROVAL: 1,
-    OFFER_NOT_SHARED: 2,
     OFFER_PENDING: 2,
     OFFER_EXPIRED: 2,
     OFFER_ACCEPTED: 2,
@@ -809,8 +799,10 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             return { installments: [], plan: emptyPlan(), offer: emptyOffer(), offerHistory: [], booking: emptyBooking() };
 
         case "PLAN_DRAFT": {
-            // Amount Left ≠ 0 (still being built) or settled with no letter drafted yet — once a
-            // letter exists, the deal moves to OFFER_NOT_SHARED instead (see below).
+            // Amount Left ≠ 0 (still being built) or settled with no letter drafted yet. Nothing
+            // seeds a deal mid-way through "letter drafted but not shared" — creating an offer
+            // is never a standalone, savable-for-later action (there's no Save Offer path
+            // anymore), so every seeded deal past this point has its offer already shared.
             const variant = pickStable(`${id}pv`, ["incomplete", "incomplete", "ready", "ready"] as const);
             const full = complete();
 
@@ -830,44 +822,6 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             // ready
             const plan: PlanFields = { ...emptyPlan(), state: "draft_ready", createdOn };
             return { installments: full, plan, offer: emptyOffer(), offerHistory: [], booking: emptyBooking() };
-        }
-
-        case "OFFER_NOT_SHARED": {
-            // A letter has been drafted off a ready plan but never shared — either still fresh
-            // (createable/shareable) or gone stale (the plan changed since, so Share is disabled
-            // and Refresh is offered instead, per §7 acceptance check).
-            const variant = pickStable(`${id}pv`, ["created", "stale"] as const);
-            const full = complete();
-            const plan: PlanFields = { ...emptyPlan(), state: "draft_ready", createdOn };
-
-            if (variant === "created") {
-                const offer: OfferFields = {
-                    state: "created",
-                    template: template(),
-                    deadline: offerDeadline(7),
-                    version: 1,
-                    createdOn,
-                    sharedOn: null,
-                    resendCount: 0,
-                    snapshot: takeSnapshot(discount, netPayable, full),
-                };
-                return { installments: full, plan, offer, offerHistory: [], booking: emptyBooking() };
-            }
-            // stale — the letter's frozen snapshot no longer matches the live plan (a lower
-            // discount than what's now on the plan).
-            const staleDiscount = Math.max(0, discount - Math.round(netPayable * 0.06));
-            const staleNetPayable = netPayable + (discount - staleDiscount);
-            const offer: OfferFields = {
-                state: "stale",
-                template: template(),
-                deadline: offerDeadline(7),
-                version: 1,
-                createdOn,
-                sharedOn: null,
-                resendCount: 0,
-                snapshot: takeSnapshot(staleDiscount, staleNetPayable, full),
-            };
-            return { installments: full, plan, offer, offerHistory: [], booking: emptyBooking() };
         }
 
         case "PLAN_AWAITING_APPROVAL": {
@@ -1095,8 +1049,8 @@ function generateAllDeals(): Deal[] {
         });
         offerStageDrafts = assignSubStatuses(
             offerStageDrafts,
-            ["PLAN_NOT_STARTED", "PLAN_DRAFT", "OFFER_NOT_SHARED", "PLAN_AWAITING_APPROVAL", "OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_WITHDRAWN"],
-            [10, 17, 8, 5, 35, 20, 5],
+            ["PLAN_NOT_STARTED", "PLAN_DRAFT", "PLAN_AWAITING_APPROVAL", "OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_WITHDRAWN"],
+            [10, 25, 5, 35, 20, 5],
         );
         monthDrafts.push(...offerStageDrafts);
 

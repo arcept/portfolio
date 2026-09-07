@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calendar, Check, Mail01, Save01 } from "@untitledui/icons";
+import { Calendar, Check, Mail01 } from "@untitledui/icons";
 import { DialogTrigger, Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -22,14 +22,15 @@ const SectionLabel = ({ number, label }: { number: string; label: string }) => (
 
 /** The old wizard's step 2 — three template cards, the deadline field, a live email preview —
  * now its own step, doing double duty as the **edit** surface for a letter that hasn't been
- * shared yet: **Save Offer** persists (creating or, on an already `created`/`stale` letter,
- * editing in place — same version, nothing was ever delivered to the learner) and closes;
- * **Share Offer** persists the same way and then hands off to `ShareOfferDialog` for the actual
- * send confirmation — sharing itself never skips that gate, only reaching it is now one click
- * closer (Figma node 398:5068). Save/Share sit at the bottom of the left column (not a
- * full-width footer) and Share Offer renders green, both matching that frame; the deadline
- * stays a native date input — the project's shared `DatePicker` popover defaults its visible
- * month off the real system clock, which fights this prototype's frozen "today". */
+ * shared yet. Creating an offer is never a standalone, savable-for-later action — there's no
+ * "created but not shared" resting state — so **Share Offer** is the only way out: it persists
+ * the letter (creating, or editing in place on an already `created`/`stale` letter — same
+ * version, nothing was ever delivered to the learner) and hands off to `ShareOfferDialog` for the
+ * actual send confirmation (Figma node 398:5068, minus the removed Save path). Share Offer sits
+ * at the bottom of the left column (not a full-width footer) and renders green, matching that
+ * frame; the deadline stays a native date input — the project's shared `DatePicker` popover
+ * defaults its visible month off the real system clock, which fights this prototype's frozen
+ * "today". */
 export const OfferLetterComposer = ({
     dealId,
     onOpenChange,
@@ -62,16 +63,9 @@ export const OfferLetterComposer = ({
     const template = OFFER_TEMPLATES.find((t) => t.id === templateId)!;
     const previewHtml = renderOfferEmail(deal, template, deadline, PROTOTYPE_TODAY);
 
-    const persist = () => {
+    const shareOffer = () => {
         if (isEdit) editLetter(deal.id, { template, deadline });
         else createLetter(deal.id, { template, deadline });
-    };
-    const saveOffer = () => {
-        persist();
-        close();
-    };
-    const shareOffer = () => {
-        persist();
         onOpenChange(false);
         onShareRequested?.(deal.id);
     };
@@ -145,20 +139,15 @@ export const OfferLetterComposer = ({
                                                 </div>
 
                                                 <div className="flex flex-col gap-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Button color="secondary" size="sm" iconLeading={Save01} className="h-11 flex-1" onClick={saveOffer}>
-                                                            Save Offer
-                                                        </Button>
-                                                        <Button
-                                                            color="primary"
-                                                            size="sm"
-                                                            iconTrailing={Mail01}
-                                                            className="h-11 flex-1 !bg-green-500 !text-neutral-900 !ring-green-400 hover:!bg-green-600 *:data-icon:!text-neutral-900"
-                                                            onClick={shareOffer}
-                                                        >
-                                                            Share Offer
-                                                        </Button>
-                                                    </div>
+                                                    <Button
+                                                        color="primary"
+                                                        size="sm"
+                                                        iconTrailing={Mail01}
+                                                        className="h-11 w-full !bg-green-500 !text-neutral-900 !ring-green-400 hover:!bg-green-600 *:data-icon:!text-neutral-900"
+                                                        onClick={shareOffer}
+                                                    >
+                                                        Share Offer
+                                                    </Button>
                                                     <span className="text-xs text-white/60">*Lead will receive this offer on their email</span>
                                                 </div>
                                             </div>
