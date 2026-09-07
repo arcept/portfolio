@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import bankIcon from "@/assets/payment-icons/bank-icon.svg";
 import razorpayWordmark from "@/assets/payment-icons/razorpay-wordmark.svg";
 import stripeModeIcon from "@/assets/payment-icons/stripe-mode-icon.svg";
-import type { Currency, Deal, DiscountBreakdown, Installment, InstallmentMode } from "@/data/deals-data";
+import { PAYMENT_GRACE_DAYS, type Currency, type Deal, type DiscountBreakdown, type Installment, type InstallmentMode } from "@/data/deals-data";
 import { cx } from "@/utils/cx";
 
 /** Gateway used for the plan's single non-manual mode, keyed by currency — everything else
@@ -220,7 +220,7 @@ const ModeMark = ({ mode }: { mode: InstallmentMode }) => {
 export const InstallmentPreviewCard = ({ installment, currency, isNext }: { installment: Installment; currency: Currency; isNext: boolean }) => {
     const status = installmentCardStatus(installment, isNext);
     const dueDate = new Date(`${installment.deadline}T00:00:00`);
-    const lastDate = new Date(dueDate.getTime() + 4 * 86_400_000);
+    const lastDate = new Date(dueDate.getTime() + PAYMENT_GRACE_DAYS * 86_400_000);
     const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
     return (

@@ -51,6 +51,8 @@ export type DealStatusId =
     | "OFFER_ACCEPTED"
     | "OFFER_WITHDRAWN"
     | "PAY_ONGOING"
+    | "PAY_DUE"
+    | "PAY_OVERDUE"
     | "PAY_COMPLETED"
     | "ENR_CANCELLED"
     | "NOT_INTERESTED"
@@ -96,7 +98,9 @@ export const STATUS: Record<DealStatusId, DealStatus> = {
     OFFER_EXPIRED: { id: "OFFER_EXPIRED", stage: "Offer", label: "Expired", color: "amber", action: false, desc: "Offer's acceptance window timed out" },
     OFFER_ACCEPTED: { id: "OFFER_ACCEPTED", stage: "Offer", label: "Accepted", color: "green", action: true, desc: "Accepted — no payment made yet" },
     OFFER_WITHDRAWN: { id: "OFFER_WITHDRAWN", stage: "Offer", label: "Withdrawn", color: "amber", action: true, desc: "Offer withdrawn — plan reopened" },
-    PAY_ONGOING: { id: "PAY_ONGOING", stage: "Payment", label: "Ongoing", color: "green", action: false, desc: "First payment made, installments continuing" },
+    PAY_ONGOING: { id: "PAY_ONGOING", stage: "Payment", label: "Ongoing", color: "green", action: false, desc: "First payment made, next installment not due yet" },
+    PAY_DUE: { id: "PAY_DUE", stage: "Payment", label: "Due", color: "amber", action: false, desc: "An installment is past its due date, within the grace period" },
+    PAY_OVERDUE: { id: "PAY_OVERDUE", stage: "Payment", label: "Overdue", color: "red", action: false, desc: "An installment is past its grace-period last date" },
     PAY_COMPLETED: { id: "PAY_COMPLETED", stage: "Payment", label: "Completed", color: "green", action: false, desc: "All installments paid" },
     ENR_CANCELLED: {
         id: "ENR_CANCELLED",
@@ -131,6 +135,8 @@ const STAGE_RANK: Partial<Record<DealStatusId, ReachedStage>> = {
     OFFER_ACCEPTED: 2,
     OFFER_WITHDRAWN: 2,
     PAY_ONGOING: 3,
+    PAY_DUE: 3,
+    PAY_OVERDUE: 3,
     PAY_COMPLETED: 4,
     ENR_CANCELLED: 4,
 };
@@ -554,8 +560,14 @@ function genName(): string {
     return `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`;
 }
 
+/** Local calendar date, not `toISOString().slice(0, 10)` — that converts through UTC first,
+ * which silently shifts every date back a day in any positive-UTC-offset timezone (e.g. IST)
+ * since local midnight is the previous day in UTC. Surfaced by the Payment Due/Overdue boundary
+ * check landing exactly one day off from what `PROTOTYPE_TODAY`'s local calendar day intended. */
 function toISODate(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${month}-${day}`;
 }
 
 const bdrWeights = bdrs.map((b) => b.weight);
@@ -659,12 +671,40 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
     };
 }
 
+/** Grace window between an installment's due date and its "last date" — past the due date but
+ * still inside this window is merely Due, past the last date is Overdue. Shared with the
+ * Payment Plan installment card (`payment-plan-shared.tsx`), which renders the same "Last Date"
+ * from the same rule, so the deal-level Payment status always agrees with what that card shows. */
+export const PAYMENT_GRACE_DAYS = 4;
+
+/** Classifies a single unpaid installment's deadline against `PROTOTYPE_TODAY` using the same
+ * due-date/last-date rule as the installment card. Paid installments are never "Overdue" here —
+ * callers check `paidOn`/`paidFlag` first. */
+function isInstallmentOverdue(deadline: string): boolean {
+    const dueOn = new Date(`${deadline}T00:00:00`);
+    const lastDate = new Date(dueOn.getTime() + PAYMENT_GRACE_DAYS * 86_400_000);
+    return PROTOTYPE_TODAY >= lastDate;
+}
+
 function buildInstallments(statusId: DealStatusId, currency: "INR" | "USD", netPayable: number, createdOn: Date): Installment[] {
     const modeChoices: InstallmentMode[] = currency === "INR" ? ["Razorpay", "Manual", "EMI_3P"] : ["Stripe", "Stripe EMI"];
-    const partPayment = rand() < 0.6;
+    // A Due/Overdue deal needs a genuine unpaid trailing installment to hang that status off —
+    // "first payment made" (every Payment-stage status) means a single-installment plan is
+    // already fully paid, so these two statuses always force a part payment.
+    const needsUnpaidTail = statusId === "PAY_DUE" || statusId === "PAY_OVERDUE";
+    const partPayment = needsUnpaidTail || rand() < 0.6;
     const count = partPayment ? int(2, 3) : 1;
     let remaining = netPayable;
     const installments: Installment[] = [];
+
+    // ENR_CANCELLED deals were fully paid before the enrolment was cancelled on the backend (a
+    // post-clearance event, not a payment-stage one) — same paid shape as PAY_COMPLETED.
+    const allPaid = statusId === "PAY_COMPLETED" || statusId === "ENR_CANCELLED";
+    const isPaymentActive = statusId === "PAY_ONGOING" || statusId === "PAY_DUE" || statusId === "PAY_OVERDUE";
+    // The installment right after the paid down payment (or the sole installment, if there's
+    // only one) drives the deal's Ongoing/Due/Overdue split — every other unpaid row sits safely
+    // in the future so it never outranks the intended status.
+    const drivingIndex = isPaymentActive ? (count > 1 ? 1 : 0) : -1;
 
     for (let k = 0; k < count; k++) {
         const mode = pick(modeChoices);
@@ -672,16 +712,23 @@ function buildInstallments(statusId: DealStatusId, currency: "INR" | "USD", netP
         const amount = k === count - 1 ? remaining : Math.round(remaining / (count - k) / 100) * 100;
         remaining -= amount;
 
-        // ENR_CANCELLED deals were fully paid before the enrolment was cancelled on the backend
-        // (a post-clearance event, not a payment-stage one) — same paid shape as PAY_COMPLETED.
-        const paidFlag = statusId === "PAY_COMPLETED" || statusId === "ENR_CANCELLED" ? true : statusId === "PAY_ONGOING" ? k === 0 : false;
-        const overdue = !paidFlag && statusId === "PAY_ONGOING" && k === 1 && rand() < 0.35;
+        const paidFlag = allPaid || (isPaymentActive && k === 0);
 
         const daysSinceCreated = Math.max(1, Math.round((PROTOTYPE_TODAY.getTime() - createdOn.getTime()) / 86_400_000));
         let paidOn: Date | null = paidFlag ? new Date(createdOn.getTime() + int(1, daysSinceCreated) * 86_400_000) : null;
         if (paidOn && paidOn > PROTOTYPE_TODAY) paidOn = PROTOTYPE_TODAY;
 
-        const deadlineDate = new Date(PROTOTYPE_TODAY.getTime() + int(-10, 30) * 86_400_000);
+        // Day offset (relative to today) for this installment's due date — the driving row is
+        // biased into the window matching the deal's target sub-status, everything else lands
+        // safely in the future.
+        let dayOffset = int(5, 30);
+        if (!paidFlag && k === drivingIndex) {
+            if (statusId === "PAY_DUE") dayOffset = -int(0, PAYMENT_GRACE_DAYS - 1);
+            else if (statusId === "PAY_OVERDUE") dayOffset = -int(PAYMENT_GRACE_DAYS, PAYMENT_GRACE_DAYS + 25);
+            else dayOffset = int(1, 30);
+        }
+        const deadlineDate = new Date(PROTOTYPE_TODAY.getTime() + dayOffset * 86_400_000);
+        const deadline = toISODate(deadlineDate);
 
         installments.push({
             label: partPayment ? `Installment ${k + 1}` : "Full payment",
@@ -690,8 +737,8 @@ function buildInstallments(statusId: DealStatusId, currency: "INR" | "USD", netP
             isEmi,
             emiMonths: isEmi ? pick([3, 6, 12]) : null,
             emiInterest: isEmi ? pick([180, 340, 620]) : null,
-            deadline: toISODate(deadlineDate),
-            status: paidFlag ? "Paid" : overdue ? "Overdue" : "Unpaid",
+            deadline,
+            status: paidFlag ? "Paid" : isInstallmentOverdue(deadline) ? "Overdue" : "Unpaid",
             paidOn,
         });
     }
@@ -921,6 +968,8 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
         }
 
         case "PAY_ONGOING":
+        case "PAY_DUE":
+        case "PAY_OVERDUE":
         case "PAY_COMPLETED":
         case "ENR_CANCELLED": {
             const full = complete();
@@ -980,6 +1029,10 @@ function assignSubStatuses(deals: DraftDeal[], statusIds: DealStatusId[], weight
 
 function generateAllDeals(): Deal[] {
     const draftsByMonth: DraftDeal[][] = [];
+    // Pooled across every month rather than relabeled per month — the whole-dataset paymentStage
+    // bucket is small enough (a handful of deals) that a per-month 50/20/30 split would round to
+    // zero Due/Overdue almost everywhere; pooling first keeps the ratio real at the dataset level.
+    const allPaymentStageDrafts: DraftDeal[] = [];
 
     for (const month of MONTHS) {
         const c: DealStageCascade = month.cascade;
@@ -1014,10 +1067,13 @@ function generateAllDeals(): Deal[] {
         );
         monthDrafts.push(...offerStageDrafts);
 
-        // paymentStage (= payments.overdue) → all PAY_ONGOING.
+        // paymentStage (= payments.overdue) → later split across the Ongoing/Due/Overdue
+        // installment states, pooled across all months (see `allPaymentStageDrafts` above) rather
+        // than relabeled here. A relabeling of this bucket only — the Dashboard funnel's own
+        // independent "payments.overdue" cascade number is untouched.
         const perBdrPaymentStage = splitByWeights(c.currentStage.paymentStage, bdrWeights, true);
         bdrs.forEach((bdr, i) => {
-            for (let n = 0; n < perBdrPaymentStage[i]; n++) monthDrafts.push(buildBaseDeal(bdr, month, "PAY_ONGOING"));
+            for (let n = 0; n < perBdrPaymentStage[i]; n++) allPaymentStageDrafts.push(buildBaseDeal(bdr, month, "PAY_ONGOING"));
         });
 
         // paymentCompleted → PAY_COMPLETED, then relabel a subset as ENR_CANCELLED. This is a
@@ -1056,7 +1112,8 @@ function generateAllDeals(): Deal[] {
         draftsByMonth.push(monthDrafts);
     }
 
-    const allDrafts = draftsByMonth.flat();
+    const relabeledPaymentStageDrafts = assignSubStatuses(allPaymentStageDrafts, ["PAY_ONGOING", "PAY_DUE", "PAY_OVERDUE"], [50, 20, 30]);
+    const allDrafts = [...draftsByMonth.flat(), ...relabeledPaymentStageDrafts];
 
     return allDrafts.map((draft) => {
         const lifecycle = buildLifecycle(draft.id, draft.status.id, draft.currency, draft.discount, draft.netPayable, draft.createdOn);
@@ -1110,13 +1167,13 @@ function buildActivityLog(d: Omit<Deal, "activityLog">): ActivityLogEntry[] {
     if (d.offer.resendCount > 0) {
         log.push({ ts: daysAgo(int(1, 10)), text: "Offer letter resent" });
     }
-    if (d.offer.state === "accepted" || d.status.id === "PAY_ONGOING" || d.status.id === "PAY_COMPLETED" || d.status.id === "ENR_CANCELLED") {
+    if (d.offer.state === "accepted" || d.status.stage === "Payment" || d.status.id === "ENR_CANCELLED") {
         log.push({ ts: daysAgo(int(1, 30)), text: "Offer accepted by learner" });
     }
     for (const h of d.offerHistory) {
         if (h.endedBy === "withdrawn") log.push({ ts: h.endedOn, text: "Offer withdrawn", reason: h.reason ?? undefined });
     }
-    if (d.status.id === "PAY_ONGOING" || d.status.id === "PAY_COMPLETED") {
+    if (d.status.stage === "Payment") {
         log.push({ ts: daysAgo(int(1, 20)), text: "Down payment received" });
     }
     if (d.status.id === "PAY_COMPLETED") {
