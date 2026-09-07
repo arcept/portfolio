@@ -522,7 +522,7 @@ function primaryRowActions(deal: Deal, handlers: RowHandlers) {
             />,
         ];
     }
-    if (deal.status.id === "PLAN_DRAFT") {
+    if (deal.status.id === "PLAN_DRAFT" || deal.status.id === "OFFER_NOT_SHARED") {
         if (deal.offer.state === "stale") {
             return [
                 <ButtonUtility
