@@ -13,7 +13,7 @@ import {
     XCircle,
 } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
@@ -344,6 +344,11 @@ const Section = ({
 export const DealDetail = () => {
     const { dealId } = useParams<{ dealId: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
+    // Set by the Deals List row click — the exact list URL (tab/page/search/filters) the deal
+    // was opened from, so leaving this page restores that view instead of resetting to "All".
+    // Falls back to the bare list when there's no such state (a direct link, or a page refresh).
+    const backTo = (location.state as { from?: string } | null)?.from || "/deals";
     const { deals, updateDeal, logActivity, refreshLetter, resendLetter } = useDeals();
     const deal = deals.find((d) => d.id === dealId);
 
@@ -401,10 +406,10 @@ export const DealDetail = () => {
     return (
         <AppShell background="gradient">
             <div className="flex flex-col gap-1">
-                <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals", href: "/deals" }, { label: deal.id }]} />
+                <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals", href: backTo }, { label: deal.id }]} />
                 <button
                     type="button"
-                    onClick={() => navigate("/deals")}
+                    onClick={() => navigate(backTo)}
                     className="-mx-2 flex w-max items-center gap-1 rounded px-2 py-1 text-sm font-medium text-tertiary transition-colors duration-100 ease-linear hover:bg-secondary_hover hover:text-secondary active:bg-quaternary"
                 >
                     <ChevronLeft className="size-4" />

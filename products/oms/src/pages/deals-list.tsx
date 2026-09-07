@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FilterLines, Link03, Mail01, Pencil01, RefreshCcw01, SearchLg, Send01, Upload02, XClose } from "@untitledui/icons";
 import { motion } from "motion/react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
@@ -123,16 +123,29 @@ export const DealsList = () => {
     const { persona } = usePersona();
     const { deals, updateDeal, refreshLetter, resendLetter } = useDeals();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const personaKey = persona.role === "admin" ? "admin" : persona.role === "tm" ? persona.tmId : persona.role === "tl" ? persona.tlId : persona.bdrId;
     const scoped = useMemo(() => dealsForPersona(persona, deals), [persona, deals]);
 
-    const [tab, setTab] = useState("all");
-    const [search, setSearch] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState("");
+    // Tab/page/search/filters live in the URL (not just component state) so that navigating to a
+    // deal's detail page and back — via the "Back to Deals" link or the browser's own back button
+    // — restores the exact list view you left, instead of resetting to the default "All" tab.
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [tab, setTab] = useState(() => searchParams.get("tab") ?? "all");
+    const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+    const [debouncedSearch, setDebouncedSearch] = useState(() => (searchParams.get("q") ?? "").trim().toLowerCase());
     const [filtersOpen, setFiltersOpen] = useState(false);
-    const [filters, setFilters] = useState<DealFilters>(EMPTY_FILTERS);
-    const [page, setPage] = useState(1);
+    const [filters, setFilters] = useState<DealFilters>(() => ({
+        course: searchParams.get("course") ?? "",
+        currency: searchParams.get("currency") ?? "",
+        updated: searchParams.get("updated") ?? "",
+        bdrId: searchParams.get("bdr") ?? "",
+    }));
+    const [page, setPage] = useState(() => {
+        const fromUrl = Number(searchParams.get("page"));
+        return Number.isInteger(fromUrl) && fromUrl > 0 ? fromUrl : 1;
+    });
     const [sort, setSort] = useState<{ column: string; direction: "ascending" | "descending" }>({ column: "lastUpdate", direction: "descending" });
 
     // Measures the table's own container so every column can be scaled from its Figma ratio to
@@ -157,17 +170,47 @@ export const DealsList = () => {
     }, [search]);
 
     // Switching persona (Preview as) must never leave a stale filter selecting someone out of
-    // scope, or a page number past the end of a now-smaller list.
+    // scope, or a page number past the end of a now-smaller list — but must not fire on mount,
+    // or it would immediately wipe out a tab/page/filters state just restored from the URL when
+    // navigating back from a deal's detail page. Compares against the *previous* personaKey
+    // (rather than a "have we mounted yet" boolean ref) specifically because React StrictMode
+    // double-invokes effects once in dev — a boolean flag gets consumed by that throwaway first
+    // pass, so the real pass would see it as already-mounted and fire anyway; comparing values
+    // is idempotent and safe to run twice.
+    const prevPersonaKeyRef = useRef(personaKey);
     useEffect(() => {
+        if (prevPersonaKeyRef.current === personaKey) return;
+        prevPersonaKeyRef.current = personaKey;
         setFilters(EMPTY_FILTERS);
         setTab("all");
         setSearch("");
         setPage(1);
     }, [personaKey]);
 
+    // Same reasoning — must not reset the just-restored page number back to 1 on mount.
+    const prevPageResetDepsRef = useRef({ tab, debouncedSearch, filters });
     useEffect(() => {
+        const prev = prevPageResetDepsRef.current;
+        prevPageResetDepsRef.current = { tab, debouncedSearch, filters };
+        if (prev.tab === tab && prev.debouncedSearch === debouncedSearch && prev.filters === filters) return;
         setPage(1);
     }, [tab, debouncedSearch, filters]);
+
+    // Keep the URL in sync with the list view (replacing, not pushing, so tab/page/search/filter
+    // changes don't spam browser history) — this is what lets the browser's own back button, and
+    // "Back to Deals" on a deal's detail page, return to the exact view you left.
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (tab !== "all") params.set("tab", tab);
+        if (page !== 1) params.set("page", String(page));
+        if (search) params.set("q", search);
+        if (filters.course) params.set("course", filters.course);
+        if (filters.currency) params.set("currency", filters.currency);
+        if (filters.updated) params.set("updated", filters.updated);
+        if (filters.bdrId) params.set("bdr", filters.bdrId);
+        if (params.toString() === searchParams.toString()) return;
+        setSearchParams(params, { replace: true });
+    }, [tab, page, search, filters, setSearchParams, searchParams]);
 
     // The single filtered set — tab counts AND the table both read from this, so they can never
     // disagree (the P0-1 fix from the brief: the bug was two separate computations that could
@@ -375,7 +418,7 @@ export const DealsList = () => {
                         selectionMode="multiple"
                         sortDescriptor={sort}
                         onSortChange={(descriptor) => setSort({ column: String(descriptor.column), direction: descriptor.direction ?? "descending" })}
-                        onRowAction={(key) => navigate(`/deals/${key}`)}
+                        onRowAction={(key) => navigate(`/deals/${key}`, { state: { from: `/deals${location.search}` } })}
                         size="md"
                     >
                         <Table.Header columns={columns}>
