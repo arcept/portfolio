@@ -197,15 +197,25 @@ function installmentCardStatus(installment: Installment, isNext: boolean): "due"
     return isNext ? "due" : "upcoming";
 }
 
-/** Flat background behind the amount/date content — literal (not semantic) colors, same
- * reasoning as `STATUS_STYLES` above: this card is always dark regardless of app theme. Matches
- * Figma exactly: Paid green-950, Overdue red-950, Due and Upcoming Later both the same neutral
+/** Flat background for the whole card — literal (not semantic) colors, same reasoning as
+ * `STATUS_STYLES` above: this card is always dark regardless of app theme. Matches Figma
+ * exactly: Paid green-950, Overdue red-950, Due and Upcoming Later both the same neutral
  * bg-primary-solid tone (#262626) — no tint distinguishing "due soon" from "further out" here. */
 const CARD_BACKGROUND: Record<"due" | "upcoming" | "paid" | "overdue", string> = {
     due: "bg-neutral-800",
     upcoming: "bg-neutral-800",
     paid: "bg-green-950",
     overdue: "bg-red-950",
+};
+
+/** Gradient wash layered over the flat `CARD_BACKGROUND`, behind the amount/date content only
+ * (not the header row) — amber for the row that's next up (the one carrying "Due"), neutral gray
+ * for everything else. Matches Figma's per-card tint exactly. */
+const CARD_TINT: Record<"due" | "upcoming" | "paid" | "overdue", string> = {
+    due: "from-[rgba(23,23,23,0.6)] to-[rgba(202,138,4,0.6)]",
+    upcoming: "from-[rgba(23,23,23,0.6)] to-[rgba(64,64,64,0.6)]",
+    paid: "from-[rgba(23,23,23,0.6)] to-[rgba(22,101,52,0.6)]",
+    overdue: "from-[rgba(23,23,23,0.6)] to-[rgba(153,27,27,0.6)]",
 };
 
 /** The header logo swaps with the chosen payment mode — Razorpay/Stripe wordmarks for the
@@ -240,7 +250,7 @@ export const InstallmentPreviewCard = ({ installment, currency, isNext }: { inst
                 </span>
                 <ModeMark mode={installment.mode} />
             </div>
-            <div className="flex flex-1 flex-col justify-between rounded-2xl px-4 pt-4 pb-6">
+            <div className={cx("flex flex-1 flex-col justify-between rounded-2xl bg-gradient-to-b px-4 pt-4 pb-6", CARD_TINT[status])}>
                 <div className="flex items-center justify-between">
                     <AmountValue currency={currency} amount={installment.amount} size="xl" tone="white" />
                     <span className="flex items-center gap-1">
