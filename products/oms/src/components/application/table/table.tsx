@@ -111,7 +111,10 @@ const TableRoot = ({ className, size = "md", ...props }: TableRootProps) => {
     return (
         <TableContext.Provider value={{ size: context?.size ?? size }}>
             <div className="overflow-x-auto">
-                <AriaTable className={(state) => cx("w-full overflow-x-hidden", typeof className === "function" ? className(state) : className)} {...props} />
+                <AriaTable
+                    className={(state) => cx("w-full table-fixed overflow-x-hidden", typeof className === "function" ? className(state) : className)}
+                    {...props}
+                />
             </div>
         </TableContext.Provider>
     );
@@ -165,14 +168,19 @@ TableHeader.displayName = "TableHeader";
 interface TableHeadProps extends AriaColumnProps, Omit<ThHTMLAttributes<HTMLTableCellElement>, "children" | "className" | "style" | "id"> {
     label?: string;
     tooltip?: string;
+    /** Fixed pixel width for this column. Requires the table itself to use `table-fixed` (the
+     * default) — only the header row's widths are read in that layout, so this is the one place
+     * a width needs to be set for it to hold constant across every page/sort/filter change. */
+    width?: number;
 }
 
-const TableHead = ({ className, tooltip, label, children, ...props }: TableHeadProps) => {
+const TableHead = ({ className, tooltip, label, children, width, ...props }: TableHeadProps) => {
     const { selectionBehavior } = useTableOptions();
 
     return (
         <AriaColumn
             {...props}
+            style={width ? { width, minWidth: width, maxWidth: width } : undefined}
             className={(state) =>
                 cx(
                     "relative p-0 px-6 py-2 outline-hidden focus-visible:z-1 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-bg-primary focus-visible:ring-inset",

@@ -1,28 +1,39 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
 import { FilterLines, Link03, Mail01, Pencil01, RefreshCcw01, SearchLg, Send01, Upload02, XClose } from "@untitledui/icons";
+import { motion } from "motion/react";
+import { useNavigate } from "react-router";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { PaginationPageDefault } from "@/components/application/pagination/pagination";
 import { Table, TableCard } from "@/components/application/table/table";
-import { EmptyState } from "@/components/application/empty-state/empty-state";
+import { toast } from "@/components/application/toast/toast";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Input } from "@/components/base/input/input";
-import { toast } from "@/components/application/toast/toast";
-import { AssigneeCell } from "@/components/deals/assignee-cell";
-import { DealsFilterChips, DealsFilterPanel, EMPTY_FILTERS } from "@/components/deals/deals-filter-panel";
-import { PaymentPlanEditor } from "@/components/deals/payment-plan-editor";
-import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
-import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
 import { ApplicationLinkDialog } from "@/components/deals/application-link-dialog";
 import type { ApplicationLinkRequest } from "@/components/deals/application-link-dialog";
+import { AssigneeCell } from "@/components/deals/assignee-cell";
+import { DealsFilterChips, DealsFilterPanel, EMPTY_FILTERS } from "@/components/deals/deals-filter-panel";
 import type { DealFilters } from "@/components/deals/deals-filter-panel";
-import { DealStatusBadge, ActionNeededBadge } from "@/components/deals/status-badge";
+import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
+import { PaymentPlanEditor } from "@/components/deals/payment-plan-editor";
+import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
+import { ActionNeededBadge, DealStatusBadge } from "@/components/deals/status-badge";
 import { PROTOTYPE_TODAY } from "@/data/dashboard-data";
 import type { Deal } from "@/data/deals-data";
-import { COUNTRY_FLAG, applicationFormUrl, canCreateLetter, canCreatePlan, canResendApplication, canShareLetter, canWithdraw, dealsForPersona, STATUS } from "@/data/deals-data";
+import {
+    COUNTRY_FLAG,
+    STATUS,
+    applicationFormUrl,
+    canCreateLetter,
+    canCreatePlan,
+    canResendApplication,
+    canShareLetter,
+    canWithdraw,
+    dealsForPersona,
+} from "@/data/deals-data";
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import { ROLE_LABELS } from "@/types/role";
@@ -43,18 +54,23 @@ const TABS: Tab[] = [
     { key: "saved", label: "Saved", test: (d) => d.status.id === "SAVED" },
 ];
 
-const COLUMNS: { id: string; label: string; allowsSorting?: boolean }[] = [
-    { id: "name", label: "Applicant" },
-    { id: "mobile", label: "Mobile" },
-    { id: "course", label: "Course" },
-    { id: "status", label: "Status" },
-    { id: "createdOn", label: "Created On", allowsSorting: true },
-    { id: "lastUpdate", label: "Last Update", allowsSorting: true },
-    { id: "assigned", label: "Assigned" },
-    { id: "actions", label: "" },
+// Fixed pixel widths (Figma node 442:29859, "Table header") — keeps every column's width
+// constant across pages instead of reflowing with each page's content lengths. `actions` gets
+// its own explicit width too (rather than being left to soak up the remainder) — on a narrower
+// viewport a purely flexible remainder can get squeezed to near-zero and the row's action icons
+// spill into the next column; 190px comfortably fits the busiest row (up to 4 icons).
+const COLUMNS: { id: string; label: string; allowsSorting?: boolean; width?: number }[] = [
+    { id: "name", label: "Applicant", width: 200 },
+    { id: "mobile", label: "Mobile", width: 192 },
+    { id: "course", label: "Course", width: 118 },
+    { id: "status", label: "Status", width: 280 },
+    { id: "createdOn", label: "Created On", allowsSorting: true, width: 144 },
+    { id: "lastUpdate", label: "Last Update", allowsSorting: true, width: 144 },
+    { id: "assigned", label: "Assigned", width: 80 },
+    { id: "actions", label: "", width: 190 },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 function formatDateShort(d: Date): string {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -230,7 +246,16 @@ export const DealsList = () => {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Input aria-label="Search name or email" placeholder="Search by name or email" icon={SearchLg} size="sm" shortcut className="w-64" value={search} onChange={setSearch} />
+                    <Input
+                        aria-label="Search name or email"
+                        placeholder="Search by name or email"
+                        icon={SearchLg}
+                        size="sm"
+                        shortcut
+                        className="w-64"
+                        value={search}
+                        onChange={setSearch}
+                    />
                     <Button color="secondary" size="sm" iconLeading={Upload02} isDisabled title="Export — coming soon">
                         Export
                     </Button>
@@ -255,7 +280,9 @@ export const DealsList = () => {
                                 }`}
                             >
                                 {t.label}
-                                <span className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${isActive ? "bg-brand-primary_alt text-brand-secondary" : "bg-secondary text-tertiary"}`}>
+                                <span
+                                    className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${isActive ? "bg-brand-primary_alt text-brand-secondary" : "bg-secondary text-tertiary"}`}
+                                >
                                     {tabCounts[i]}
                                 </span>
                             </button>
@@ -271,45 +298,56 @@ export const DealsList = () => {
             <DealsFilterChips filters={filters} onChange={setFilters} />
 
             <TableCard.Root>
-                {pageDeals.length === 0 ? (
-                    <EmptyState size="sm">
-                        <EmptyState.Content>
-                            <EmptyState.Description>No deals match these filters.</EmptyState.Description>
-                        </EmptyState.Content>
-                    </EmptyState>
-                ) : (
-                    // Note: interacting with this table (row click, tab/sort change) logs a
-                    // "recovered from concurrent rendering error" (React error #520 in prod
-                    // builds too, not just dev) — a known react-aria-components@1.20 + React 19
-                    // interaction with dynamic Table collections. React's own recovery always
-                    // succeeds (confirmed via extensive interaction testing, including a
-                    // production build): every render lands with correct data, no visible
-                    // corruption. Tried the library's documented fix (memoize row-render
-                    // closures via useCallback/useMemo — see rowHandlers above); didn't
-                    // eliminate the console error, only the underlying staleness risk it warns
-                    // about. Not chasing further into third-party library internals.
-                    <Table
-                        aria-label="Deals"
-                        selectionMode="multiple"
-                        sortDescriptor={sort}
-                        onSortChange={(descriptor) => setSort({ column: String(descriptor.column), direction: descriptor.direction ?? "descending" })}
-                        onRowAction={(key) => navigate(`/deals/${key}`)}
-                        size="md"
-                    >
-                        <Table.Header columns={COLUMNS}>{(column) => <Table.Head id={column.id} allowsSorting={column.allowsSorting} label={column.label} />}</Table.Header>
-                        <Table.Body items={pageDeals}>
-                            {(deal) => (
-                                <Table.Row id={deal.id} columns={COLUMNS} className="cursor-pointer">
-                                    {(column) => <Table.Cell>{renderCell(deal, column.id, rowHandlers)}</Table.Cell>}
-                                </Table.Row>
-                            )}
-                        </Table.Body>
-                    </Table>
-                )}
+                {/* Keyed on `page` so switching pages replays this fade/slide-in — mirrors the
+                 * `fadeProps` transition used for the Payment Plan section's state changes. */}
+                <motion.div key={page} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, ease: "easeInOut" }}>
+                    {pageDeals.length === 0 ? (
+                        <EmptyState size="sm">
+                            <EmptyState.Content>
+                                <EmptyState.Description>No deals match these filters.</EmptyState.Description>
+                            </EmptyState.Content>
+                        </EmptyState>
+                    ) : (
+                        // Note: interacting with this table (row click, tab/sort change) logs a
+                        // "recovered from concurrent rendering error" (React error #520 in prod
+                        // builds too, not just dev) — a known react-aria-components@1.20 + React 19
+                        // interaction with dynamic Table collections. React's own recovery always
+                        // succeeds (confirmed via extensive interaction testing, including a
+                        // production build): every render lands with correct data, no visible
+                        // corruption. Tried the library's documented fix (memoize row-render
+                        // closures via useCallback/useMemo — see rowHandlers above); didn't
+                        // eliminate the console error, only the underlying staleness risk it warns
+                        // about. Not chasing further into third-party library internals.
+                        <Table
+                            aria-label="Deals"
+                            selectionMode="multiple"
+                            sortDescriptor={sort}
+                            onSortChange={(descriptor) => setSort({ column: String(descriptor.column), direction: descriptor.direction ?? "descending" })}
+                            onRowAction={(key) => navigate(`/deals/${key}`)}
+                            size="md"
+                        >
+                            <Table.Header columns={COLUMNS}>
+                                {(column) => <Table.Head id={column.id} allowsSorting={column.allowsSorting} label={column.label} width={column.width} />}
+                            </Table.Header>
+                            <Table.Body items={pageDeals}>
+                                {(deal) => (
+                                    <Table.Row id={deal.id} columns={COLUMNS} className="cursor-pointer">
+                                        {(column) => <Table.Cell>{renderCell(deal, column.id, rowHandlers)}</Table.Cell>}
+                                    </Table.Row>
+                                )}
+                            </Table.Body>
+                        </Table>
+                    )}
+                </motion.div>
             </TableCard.Root>
 
             {sortedTabDeals.length > 0 && (
-                <PaginationPageDefault page={page} total={totalPages} onPageChange={setPage} divider={false} />
+                // Sticky rather than size-to-fit-viewport: page size stays a normal, content-driven
+                // number and the pager instead follows you down so it's always reachable without
+                // scrolling all the way to the bottom of a long table.
+                <div className="sticky bottom-0 z-10 border-t border-secondary bg-primary/95 pb-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)] backdrop-blur-sm">
+                    <PaginationPageDefault page={page} total={totalPages} onPageChange={setPage} />
+                </div>
             )}
 
             <PaymentPlanEditor dealId={planEditorDealId} onOpenChange={(open) => !open && setPlanEditorDealId(null)} />
@@ -346,34 +384,100 @@ type RowHandlers = {
  * never hidden, so the reason is always visible. */
 function primaryRowActions(deal: Deal, handlers: RowHandlers) {
     if (deal.status.id === "APP_NEW") {
-        return [<ButtonUtility key="send-app" size="sm" color="tertiary" tooltip="Send application form" icon={Send01} onClick={() => handlers.onSendApplication(deal)} />];
+        return [
+            <ButtonUtility
+                key="send-app"
+                size="sm"
+                color="tertiary"
+                tooltip="Send application form"
+                icon={Send01}
+                onClick={() => handlers.onSendApplication(deal)}
+            />,
+        ];
     }
     if (deal.status.id === "APP_PENDING" || deal.status.id === "APP_EXPIRED") {
         const guard = canResendApplication(deal);
         return [
-            <ButtonUtility key="resend-app" size="sm" color="tertiary" tooltip={guard.allowed ? "Resend application form" : guard.reason} icon={RefreshCcw01} isDisabled={!guard.allowed} onClick={() => handlers.onResendApplication(deal)} />,
+            <ButtonUtility
+                key="resend-app"
+                size="sm"
+                color="tertiary"
+                tooltip={guard.allowed ? "Resend application form" : guard.reason}
+                icon={RefreshCcw01}
+                isDisabled={!guard.allowed}
+                onClick={() => handlers.onResendApplication(deal)}
+            />,
         ];
     }
     if (deal.status.id === "APP_FILLED" || deal.status.id === "PLAN_NOT_STARTED") {
         const guard = canCreatePlan(deal);
-        return [<ButtonUtility key="plan" size="sm" color="tertiary" tooltip={guard.allowed ? "Create payment plan" : guard.reason} icon={Mail01} isDisabled={!guard.allowed} onClick={() => handlers.onCreatePlan(deal)} />];
+        return [
+            <ButtonUtility
+                key="plan"
+                size="sm"
+                color="tertiary"
+                tooltip={guard.allowed ? "Create payment plan" : guard.reason}
+                icon={Mail01}
+                isDisabled={!guard.allowed}
+                onClick={() => handlers.onCreatePlan(deal)}
+            />,
+        ];
     }
     if (deal.status.id === "PLAN_DRAFT") {
         if (deal.offer.state === "stale") {
             return [
-                <ButtonUtility key="edit" size="sm" color="tertiary" tooltip="Edit offer letter" icon={Pencil01} onClick={() => handlers.onCreateLetter(deal)} />,
-                <ButtonUtility key="refresh" size="sm" color="tertiary" tooltip="Refresh offer letter" icon={RefreshCcw01} onClick={() => handlers.onRefresh(deal)} />,
+                <ButtonUtility
+                    key="edit"
+                    size="sm"
+                    color="tertiary"
+                    tooltip="Edit offer letter"
+                    icon={Pencil01}
+                    onClick={() => handlers.onCreateLetter(deal)}
+                />,
+                <ButtonUtility
+                    key="refresh"
+                    size="sm"
+                    color="tertiary"
+                    tooltip="Refresh offer letter"
+                    icon={RefreshCcw01}
+                    onClick={() => handlers.onRefresh(deal)}
+                />,
             ];
         }
         if (deal.offer.state === "created") {
             const guard = canShareLetter(deal);
             return [
-                <ButtonUtility key="edit" size="sm" color="tertiary" tooltip="Edit offer letter" icon={Pencil01} onClick={() => handlers.onCreateLetter(deal)} />,
-                <ButtonUtility key="share" size="sm" color="tertiary" tooltip={guard.allowed ? "Share offer letter" : guard.reason} icon={Send01} isDisabled={!guard.allowed} onClick={() => handlers.onShare(deal)} />,
+                <ButtonUtility
+                    key="edit"
+                    size="sm"
+                    color="tertiary"
+                    tooltip="Edit offer letter"
+                    icon={Pencil01}
+                    onClick={() => handlers.onCreateLetter(deal)}
+                />,
+                <ButtonUtility
+                    key="share"
+                    size="sm"
+                    color="tertiary"
+                    tooltip={guard.allowed ? "Share offer letter" : guard.reason}
+                    icon={Send01}
+                    isDisabled={!guard.allowed}
+                    onClick={() => handlers.onShare(deal)}
+                />,
             ];
         }
         const guard = canCreateLetter(deal);
-        return [<ButtonUtility key="letter" size="sm" color="tertiary" tooltip={guard.allowed ? "Create offer letter" : guard.reason} icon={Mail01} isDisabled={!guard.allowed} onClick={() => handlers.onCreateLetter(deal)} />];
+        return [
+            <ButtonUtility
+                key="letter"
+                size="sm"
+                color="tertiary"
+                tooltip={guard.allowed ? "Create offer letter" : guard.reason}
+                icon={Mail01}
+                isDisabled={!guard.allowed}
+                onClick={() => handlers.onCreateLetter(deal)}
+            />,
+        ];
     }
     if (deal.status.id === "PLAN_AWAITING_APPROVAL") {
         return [<ButtonUtility key="waiting" size="sm" color="tertiary" tooltip="With Sales Ops" icon={Mail01} isDisabled />];
@@ -382,12 +486,30 @@ function primaryRowActions(deal: Deal, handlers: RowHandlers) {
         const withdrawGuard = canWithdraw(deal);
         return [
             <ButtonUtility key="resend" size="sm" color="tertiary" tooltip="Resend offer" icon={RefreshCcw01} onClick={() => handlers.onResend(deal)} />,
-            <ButtonUtility key="withdraw" size="sm" color="tertiary" tooltip={withdrawGuard.allowed ? "Withdraw offer" : withdrawGuard.reason} icon={XClose} isDisabled={!withdrawGuard.allowed} onClick={() => handlers.onWithdraw(deal)} />,
+            <ButtonUtility
+                key="withdraw"
+                size="sm"
+                color="tertiary"
+                tooltip={withdrawGuard.allowed ? "Withdraw offer" : withdrawGuard.reason}
+                icon={XClose}
+                isDisabled={!withdrawGuard.allowed}
+                onClick={() => handlers.onWithdraw(deal)}
+            />,
         ];
     }
     if (deal.status.id === "OFFER_EXPIRED" || deal.status.id === "OFFER_WITHDRAWN") {
         const guard = canCreateLetter(deal);
-        return [<ButtonUtility key="v2" size="sm" color="tertiary" tooltip="Create offer letter (v2)" icon={Mail01} isDisabled={!guard.allowed} onClick={() => handlers.onCreateLetter(deal)} />];
+        return [
+            <ButtonUtility
+                key="v2"
+                size="sm"
+                color="tertiary"
+                tooltip="Create offer letter (v2)"
+                icon={Mail01}
+                isDisabled={!guard.allowed}
+                onClick={() => handlers.onCreateLetter(deal)}
+            />,
+        ];
     }
     return [];
 }
