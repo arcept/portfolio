@@ -12,9 +12,9 @@ import earlyBirdHtml from "@/assets/emailers/novatr-offer-early-bird.html?raw";
 import withoutScholarshipHtml from "@/assets/emailers/novatr-offer-without-scholarship.html?raw";
 import withScholarshipHtml from "@/assets/emailers/novatr-offer-with-scholarship.html?raw";
 import novatrLogo from "@/assets/emailers/novatr-logo.png";
-import panelEarlyBird from "@/assets/emailers/panel-early-bird.png";
-import panelRegular from "@/assets/emailers/panel-regular.png";
-import panelScholarship from "@/assets/emailers/panel-scholarship.png";
+import panelEarlyBird from "@/assets/emailers/panel-early-bird.jpg";
+import panelRegular from "@/assets/emailers/panel-regular.jpg";
+import panelScholarship from "@/assets/emailers/panel-scholarship.jpg";
 import { bdrs } from "./dashboard-data";
 import type { Deal, OfferTemplate } from "./deals-data";
 
@@ -27,9 +27,9 @@ const TEMPLATE_HTML: Record<string, string> = {
 /** The exact `{{cdn_url}}/<file>` reference each template's markup uses, per the emailer's own
  * README — swapped for the real bundled asset URL rather than trying to fake a CDN host. */
 const TEMPLATE_PANEL: Record<string, { file: string; src: string }> = {
-    "early-bird": { file: "panel-early-bird.png", src: panelEarlyBird },
-    "no-scholarship": { file: "panel-regular.png", src: panelRegular },
-    "with-scholarship": { file: "panel-scholarship.png", src: panelScholarship },
+    "early-bird": { file: "panel-early-bird.jpg", src: panelEarlyBird },
+    "no-scholarship": { file: "panel-regular.jpg", src: panelRegular },
+    "with-scholarship": { file: "panel-scholarship.jpg", src: panelScholarship },
 };
 
 function formatMoney(amount: number, currency: "INR" | "USD"): string {
