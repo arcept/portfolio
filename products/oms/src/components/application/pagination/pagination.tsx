@@ -11,6 +11,9 @@ import { Pagination } from "./pagination-base";
 interface PaginationProps extends Partial<Omit<PaginationRootProps, "children">> {
     /** Whether the pagination buttons are rounded. */
     rounded?: boolean;
+    /** Whether to draw the top divider line above the pagination row.
+     * @default true */
+    divider?: boolean;
 }
 
 const PaginationItem = ({ value, rounded, isCurrent }: { value: number; rounded?: boolean; isCurrent: boolean }) => {
@@ -68,7 +71,7 @@ const MobilePagination = ({ page = 1, total = 10, className, onPageChange }: Mob
     );
 };
 
-export const PaginationPageDefault = ({ rounded, page = 1, total = 10, className, ...props }: PaginationProps) => {
+export const PaginationPageDefault = ({ rounded, divider = true, page = 1, total = 10, className, ...props }: PaginationProps) => {
     const isDesktop = useBreakpoint("md");
 
     return (
@@ -76,16 +79,8 @@ export const PaginationPageDefault = ({ rounded, page = 1, total = 10, className
             {...props}
             page={page}
             total={total}
-            className={cx("flex w-full items-center justify-between gap-3 border-t border-secondary pt-4 md:pt-5", className)}
+            className={cx("flex w-full items-center gap-3 pt-4 md:pt-5", divider && "border-t border-secondary", className)}
         >
-            <div className="hidden flex-1 justify-start md:flex">
-                <Pagination.PrevTrigger asChild>
-                    <Button iconLeading={ArrowLeft} color="link-gray" size="sm">
-                        {isDesktop ? "Previous" : undefined}
-                    </Button>
-                </Pagination.PrevTrigger>
-            </div>
-
             <Pagination.PrevTrigger asChild className="md:hidden">
                 <Button iconLeading={ArrowLeft} color="secondary" size="sm">
                     {isDesktop ? "Previous" : undefined}
@@ -95,7 +90,7 @@ export const PaginationPageDefault = ({ rounded, page = 1, total = 10, className
             <Pagination.Context>
                 {({ pages, currentPage, total }) => (
                     <>
-                        <div className="hidden justify-center gap-0.5 md:flex">
+                        <div className="hidden flex-1 justify-start gap-0.5 md:flex">
                             {pages.map((page, index) =>
                                 page.type === "page" ? (
                                     <PaginationItem key={index} rounded={rounded} {...page} />
@@ -107,20 +102,26 @@ export const PaginationPageDefault = ({ rounded, page = 1, total = 10, className
                             )}
                         </div>
 
-                        <div className="flex justify-center text-sm whitespace-pre text-fg-secondary md:hidden">
+                        <div className="flex flex-1 justify-center text-sm whitespace-pre text-fg-secondary md:hidden">
                             Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{total}</span>
                         </div>
                     </>
                 )}
             </Pagination.Context>
 
-            <div className="hidden flex-1 justify-end md:flex">
+            <div className="hidden items-center gap-2 md:flex">
+                <Pagination.PrevTrigger asChild>
+                    <Button iconLeading={ArrowLeft} color="link-gray" size="sm">
+                        Previous
+                    </Button>
+                </Pagination.PrevTrigger>
                 <Pagination.NextTrigger asChild>
                     <Button iconTrailing={ArrowRight} color="link-gray" size="sm">
-                        {isDesktop ? "Next" : undefined}
+                        Next
                     </Button>
                 </Pagination.NextTrigger>
             </div>
+
             <Pagination.NextTrigger asChild className="md:hidden">
                 <Button iconTrailing={ArrowRight} color="secondary" size="sm">
                     {isDesktop ? "Next" : undefined}

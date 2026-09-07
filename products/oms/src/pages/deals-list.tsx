@@ -309,7 +309,7 @@ export const DealsList = () => {
             </TableCard.Root>
 
             {sortedTabDeals.length > 0 && (
-                <PaginationPageDefault page={page} total={totalPages} onPageChange={setPage} />
+                <PaginationPageDefault page={page} total={totalPages} onPageChange={setPage} divider={false} />
             )}
 
             <PaymentPlanEditor dealId={planEditorDealId} onOpenChange={(open) => !open && setPlanEditorDealId(null)} />
