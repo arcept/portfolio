@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Copy04, CreditCardPlus, FlipBackward, Pencil01, Shield01 } from "@untitledui/icons";
+import { Copy04, CreditCardPlus, FlipBackward, Shield01 } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "@/components/application/toast/toast";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { PaymentPlanForm } from "@/components/deals/payment-plan-editor";
-import { FeeBreakdown, InstallmentPreviewCard, formatMoney, paymentTypeLabel } from "@/components/deals/payment-plan-shared";
+import { FeeBreakdown, InstallmentPreviewCard, paymentTypeLabel } from "@/components/deals/payment-plan-shared";
 import { Dot } from "@/components/foundations/dot-icon";
 import type { Deal } from "@/data/deals-data";
 import { canEditPlan, paymentPlanUrl } from "@/data/deals-data";
@@ -121,14 +121,18 @@ const PlanCreatedView = ({ deal, onEditRequest }: { deal: Deal; onEditRequest: (
                 ))}
             </div>
 
-            {deal.plan.state === "active" &&
-                deal.installments.map((installment, i) => installment.isEmi && <EmiResubmitRow key={i} deal={deal} installment={installment} />)}
-
             {deal.plan.state === "awaiting_approval" && <SimulateApprovalControl onDecide={(decision, reason) => resolveApproval(deal.id, decision, reason)} />}
 
             <div className="flex flex-col gap-1">
                 <div className="flex items-start gap-2">
-                    <Button color="secondary" size="md" iconLeading={FlipBackward} isDisabled={!guard.allowed} onClick={onEditRequest} className="w-max">
+                    <Button
+                        color="secondary"
+                        size="md"
+                        iconLeading={FlipBackward}
+                        isDisabled={!guard.allowed}
+                        onClick={onEditRequest}
+                        className="w-max !rounded-lg !bg-secondary_hover !p-3 !ring-0"
+                    >
                         Edit Payment Plan
                     </Button>
                     <PaymentLinkField value={url} onCopy={() => copyToClipboard(url, "Payment link")} />
@@ -154,57 +158,6 @@ const PaymentLinkField = ({ value, onCopy }: { value: string; onCopy: () => void
         </button>
     </div>
 );
-
-/** Post-payment EMI restructuring — proposing new terms on an already-active plan's EMI
- * installment freezes the plan for Sales Ops approval (`submitPlanForApproval`). No Figma frame
- * covers this state, so it's kept as a plain inline control below the card grid rather than
- * redesigned into it. */
-const EmiResubmitRow = ({ deal, installment }: { deal: Deal; installment: Deal["installments"][number] }) => {
-    const { submitPlanForApproval } = useDeals();
-    const [editing, setEditing] = useState(false);
-    const [months, setMonths] = useState(String(installment.emiMonths ?? ""));
-    const [amount, setAmount] = useState(String(installment.amount));
-
-    if (!editing) {
-        return (
-            <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="flex items-center gap-1.5 self-start px-2 text-xs font-medium text-tertiary transition-colors duration-100 ease-linear hover:text-secondary"
-            >
-                <Pencil01 className="size-3.5" />
-                Propose new EMI terms for {installment.label}
-            </button>
-        );
-    }
-
-    return (
-        <div className="flex flex-col gap-3 rounded-lg border border-secondary p-3">
-            <div className="grid grid-cols-2 gap-2">
-                <Input label="Tenure (months)" type="number" size="sm" value={months} onChange={setMonths} />
-                <Input label="Monthly amount" type="number" size="sm" value={amount} onChange={setAmount} />
-            </div>
-            <div className="flex items-center gap-2">
-                <Button color="secondary" size="sm" onClick={() => setEditing(false)}>
-                    Cancel
-                </Button>
-                <Button
-                    color="primary"
-                    size="sm"
-                    onClick={() => {
-                        const newMonths = Number(months) || installment.emiMonths || 0;
-                        const newAmount = Number(amount) || 0;
-                        submitPlanForApproval(deal.id, `${installment.label}: new terms ${newMonths} months at ${formatMoney(newAmount, deal.currency)}/mo`);
-                        toast("EMI change submitted for Sales Ops approval");
-                        setEditing(false);
-                    }}
-                >
-                    Submit for re-approval
-                </Button>
-            </div>
-        </div>
-    );
-};
 
 /** "Simulate Sales Ops decision" — there's no Sales Ops persona in this prototype, so this
  * stands in for one. Labeled visibly as a prototype affordance. */

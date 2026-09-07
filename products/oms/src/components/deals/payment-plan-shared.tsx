@@ -102,13 +102,19 @@ export const FeeBreakdown = ({
     const rowPad = compact ? "py-2" : "py-3";
     const topSize: AmountSize = compact ? "md" : "lg";
     const topLabelClass = compact ? "text-sm font-normal text-primary" : "text-md font-semibold text-primary";
+    // Fixed label/amount column widths (matching Figma's 176px/136px) so the dashed rule between
+    // them resolves to the exact same length on every row — a label or amount sized to its own
+    // content (as Total Discount's chevron-button and the differently-wide amount strings were)
+    // throws that off row to row.
+    const LABEL_COL = "w-44 shrink-0";
+    const AMOUNT_COL = "w-[136px] shrink-0 justify-end";
 
     return (
         <div className="flex w-full flex-col items-start px-2">
             <div className={cx("flex w-full items-center gap-6", rowPad, "px-2")}>
-                <span className={cx("w-44 shrink-0", topLabelClass)}>Course Fees (A)</span>
+                <span className={cx(LABEL_COL, topLabelClass)}>Course Fees (A)</span>
                 <DottedRule />
-                <AmountValue currency={currency} amount={courseFee} size={topSize} />
+                <AmountValue currency={currency} amount={courseFee} size={topSize} className={AMOUNT_COL} />
             </div>
 
             <div className="flex w-full flex-col items-start">
@@ -116,13 +122,13 @@ export const FeeBreakdown = ({
                     <button
                         type="button"
                         onClick={() => setManualExpanded(!expanded)}
-                        className="flex shrink-0 items-center gap-2 text-sm font-semibold text-placeholder"
+                        className={cx("flex items-center gap-2", LABEL_COL, topLabelClass)}
                     >
                         Total Discount (B)
                         <ChevronDown className={cx("size-5 text-fg-quaternary transition-transform duration-150", expanded && "rotate-180")} />
                     </button>
                     <DottedRule />
-                    <AmountValue currency={currency} amount={totalDiscount} size="md" />
+                    <AmountValue currency={currency} amount={totalDiscount} size={topSize} className={AMOUNT_COL} />
                 </div>
 
                 <AnimatePresence initial={false}>
@@ -151,12 +157,12 @@ export const FeeBreakdown = ({
                 </AnimatePresence>
             </div>
 
-            <div className={cx("flex w-full items-center gap-6 border-t border-primary px-2 py-4")}>
-                <span className={cx("w-44 shrink-0", compact ? "text-sm font-semibold text-primary" : "text-md font-semibold text-primary")}>
+            <div className={cx("flex w-full items-center gap-6 px-2", compact ? rowPad : "border-t border-primary py-4")}>
+                <span className={cx(LABEL_COL, compact ? "text-sm font-semibold text-primary" : "text-md font-semibold text-primary")}>
                     Net Payable Fee (A-B)
                 </span>
                 <DottedRule />
-                <AmountValue currency={currency} amount={netPayable} size={topSize} />
+                <AmountValue currency={currency} amount={netPayable} size={topSize} className={AMOUNT_COL} />
             </div>
         </div>
     );
@@ -191,13 +197,15 @@ function installmentCardStatus(installment: Installment, isNext: boolean): "due"
     return isNext ? "due" : "upcoming";
 }
 
-/** Gradient wash behind the amount/date content — amber for the row that's next up (the one
- * carrying "Due"), neutral gray for everything else. Matches Figma's per-card tint exactly. */
-const CARD_TINT: Record<"due" | "upcoming" | "paid" | "overdue", string> = {
-    due: "from-[rgba(23,23,23,0.6)] to-[rgba(202,138,4,0.6)]",
-    upcoming: "from-[rgba(23,23,23,0.6)] to-[rgba(64,64,64,0.6)]",
-    paid: "from-[rgba(23,23,23,0.6)] to-[rgba(22,101,52,0.6)]",
-    overdue: "from-[rgba(23,23,23,0.6)] to-[rgba(153,27,27,0.6)]",
+/** Flat background behind the amount/date content — literal (not semantic) colors, same
+ * reasoning as `STATUS_STYLES` above: this card is always dark regardless of app theme. Matches
+ * Figma exactly: Paid green-950, Overdue red-950, Due and Upcoming Later both the same neutral
+ * bg-primary-solid tone (#262626) — no tint distinguishing "due soon" from "further out" here. */
+const CARD_BACKGROUND: Record<"due" | "upcoming" | "paid" | "overdue", string> = {
+    due: "bg-neutral-800",
+    upcoming: "bg-neutral-800",
+    paid: "bg-green-950",
+    overdue: "bg-red-950",
 };
 
 /** The header logo swaps with the chosen payment mode — Razorpay/Stripe wordmarks for the
@@ -232,7 +240,7 @@ export const InstallmentPreviewCard = ({ installment, currency, isNext }: { inst
                 </span>
                 <ModeMark mode={installment.mode} />
             </div>
-            <div className={cx("flex flex-1 flex-col justify-between rounded-2xl bg-gradient-to-b px-4 pt-4 pb-6", CARD_TINT[status])}>
+            <div className={cx("flex flex-1 flex-col justify-between rounded-2xl px-4 pt-4 pb-6", CARD_BACKGROUND[status])}>
                 <div className="flex items-center justify-between">
                     <AmountValue currency={currency} amount={installment.amount} size="xl" tone="white" />
                     <span className="flex items-center gap-1">

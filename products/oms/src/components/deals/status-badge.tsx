@@ -18,7 +18,9 @@ const COLOR_MAP: Record<DealStatus["color"], BadgeColors> = {
 // filled colored-pill badges in favor of this flatter, dot-led style everywhere.
 export const DealStatusBadge = ({ status }: { status: DealStatus }) => (
     <BadgeWithDot color={COLOR_MAP[status.color]} size="sm" type="modern">
-        {status.stage} · {status.label}
+        {/* "Global" isn't a funnel stage a BDR recognizes — Not Interested/Rejected/Saved read on
+         * their own, so skip the stage prefix these three otherwise share with every other row. */}
+        {status.stage === "Global" ? status.label : `${status.stage} · ${status.label}`}
     </BadgeWithDot>
 );
 
