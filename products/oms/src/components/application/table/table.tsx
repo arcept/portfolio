@@ -183,9 +183,11 @@ interface TableHeadProps extends AriaColumnProps, Omit<ThHTMLAttributes<HTMLTabl
      * so a column that needs to flex within a floor can't be expressed here; it has to be given
      * an already-resolved pixel number computed by the caller (e.g. from a `ResizeObserver`). */
     fixedWidth?: number;
+    /** Horizontal alignment of the label within the column. @default "start" */
+    labelAlign?: "start" | "end";
 }
 
-const TableHead = ({ className, tooltip, label, children, fixedWidth, ...props }: TableHeadProps) => {
+const TableHead = ({ className, tooltip, label, children, fixedWidth, labelAlign = "start", ...props }: TableHeadProps) => {
     const { selectionBehavior } = useTableOptions();
 
     const style = fixedWidth !== undefined ? { width: fixedWidth, minWidth: fixedWidth, maxWidth: fixedWidth } : undefined;
@@ -204,7 +206,7 @@ const TableHead = ({ className, tooltip, label, children, fixedWidth, ...props }
             }
         >
             {(state) => (
-                <AriaGroup className="flex items-center gap-1">
+                <AriaGroup className={cx("flex items-center gap-1", labelAlign === "end" && "w-full justify-end")}>
                     <div className="flex items-center gap-1">
                         {label && <span className="text-xs font-semibold whitespace-nowrap text-quaternary">{label}</span>}
                         {typeof children === "function" ? children(state) : children}

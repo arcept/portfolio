@@ -379,7 +379,15 @@ export const DealsList = () => {
                         size="md"
                     >
                         <Table.Header columns={columns}>
-                            {(column) => <Table.Head id={column.id} allowsSorting={column.allowsSorting} label={column.label} fixedWidth={column.width} />}
+                            {(column) => (
+                                <Table.Head
+                                    id={column.id}
+                                    allowsSorting={column.allowsSorting}
+                                    label={column.label}
+                                    fixedWidth={column.width}
+                                    labelAlign={column.id === "actions" ? "end" : "start"}
+                                />
+                            )}
                         </Table.Header>
                         <Table.Body items={pageDeals}>
                             {(deal) => (
