@@ -1,4 +1,4 @@
-import { Tooltip } from "@/components/base/tooltip/tooltip";
+import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
 
 /** One "Assigned" column showing the LC's first name, with the full LC / TL / TM chain on
@@ -22,7 +22,12 @@ export const AssigneeCell = ({ bdrId }: { bdrId: string }) => {
             }
             placement="top"
         >
-            <span className="cursor-default text-sm font-medium text-secondary underline decoration-dotted underline-offset-2">{bdr.name.split(" ")[0]}</span>
+            {/* `Tooltip`'s hover state only attaches to a react-aria-compatible trigger (see
+             * every other `<Tooltip>` usage in the codebase) — a plain `<span>` here silently
+             * never opened the tooltip on hover. */}
+            <TooltipTrigger className="cursor-default text-sm font-medium text-secondary underline decoration-dotted underline-offset-2">
+                {bdr.name.split(" ")[0]}
+            </TooltipTrigger>
         </Tooltip>
     );
 };

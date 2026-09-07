@@ -316,12 +316,12 @@ export const DealsList = () => {
                                 key={t.key}
                                 type="button"
                                 onClick={() => setTab(t.key)}
-                                className={`flex shrink-0 items-center gap-2 border-b-2 px-1 py-3 text-sm font-semibold whitespace-nowrap transition duration-100 ease-linear ${
+                                className={`relative flex shrink-0 items-center gap-2 px-1 py-3 text-sm font-semibold whitespace-nowrap transition-colors duration-100 ease-linear ${
                                     isActive
-                                        ? "border-fg-brand-primary_alt text-brand-secondary"
+                                        ? "text-brand-secondary"
                                         : t.action
-                                          ? "border-transparent text-error-primary hover:text-error-primary"
-                                          : "border-transparent text-quaternary hover:text-secondary"
+                                          ? "text-error-primary hover:text-error-primary"
+                                          : "text-quaternary hover:text-secondary"
                                 }`}
                             >
                                 {t.label}
@@ -330,6 +330,16 @@ export const DealsList = () => {
                                 >
                                     {tabCounts[i]}
                                 </span>
+                                {/* Shared `layoutId` — motion animates this sliding from the
+                                 * previously active tab to this one instead of the underline
+                                 * just jumping straight there. */}
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="deals-tab-indicator"
+                                        className="absolute inset-x-0 -bottom-px h-0.5 bg-fg-brand-primary_alt"
+                                        transition={{ type: "tween", duration: 0.25, ease: "easeInOut" }}
+                                    />
+                                )}
                             </button>
                         );
                     })}

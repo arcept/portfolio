@@ -78,10 +78,10 @@ export const STATUS: Record<DealStatusId, DealStatus> = {
     PLAN_NOT_STARTED: {
         id: "PLAN_NOT_STARTED",
         stage: "Plan",
-        label: "Not started",
+        label: "Not Created",
         color: "green",
         action: true,
-        desc: "Application filled — payment plan not started",
+        desc: "Application filled — payment plan not created",
     },
     PLAN_DRAFT: { id: "PLAN_DRAFT", stage: "Plan", label: "Draft", color: "green", action: true, desc: "Payment plan being built" },
     PLAN_AWAITING_APPROVAL: {
