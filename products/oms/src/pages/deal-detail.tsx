@@ -413,6 +413,9 @@ export const DealDetail = () => {
     const lmsId = `LMS-${10000 + (hashId(deal.id) % 8999)}`;
     const firstSessionDate = new Date(now.getTime() + 12 * 86_400_000);
     const offerEmailHtml = resolveOfferEmail(deal, now);
+    // Once a payment has landed the inline preview is redundant clutter next to the rest of the
+    // now-locked offer controls — still reachable via "View Offer Letter", just not embedded.
+    const hasPayment = deal.installments.some((i) => i.status === "Paid");
 
     return (
         <AppShell background="gradient">
@@ -600,7 +603,7 @@ export const DealDetail = () => {
                                                     </div>
                                                 )}
 
-                                                {offerEmailHtml && <OfferEmailPreviewCard html={offerEmailHtml} />}
+                                                {offerEmailHtml && !hasPayment && <OfferEmailPreviewCard html={offerEmailHtml} />}
 
                                                 <div className="flex items-center justify-between gap-2">
                                                     <div className="flex flex-wrap items-center gap-2">
@@ -662,28 +665,29 @@ export const DealDetail = () => {
                                                         {!letterGuardShare.allowed && deal.offer.state === "created" && (
                                                             <span className="text-xs text-tertiary italic">*{letterGuardShare.reason}</span>
                                                         )}
-                                                        {!letterGuardResend.allowed &&
-                                                            (deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                                                <span className="text-xs text-tertiary italic">*{letterGuardResend.reason}</span>
-                                                            )}
                                                     </div>
                                                     {(deal.offer.state === "shared" || deal.offer.state === "accepted") && (
-                                                        <div className="flex flex-col items-end gap-1">
-                                                            <Button
-                                                                color="secondary-destructive"
-                                                                size="sm"
-                                                                iconLeading={SlashCircle01}
-                                                                isDisabled={!withdrawGuard.allowed}
-                                                                onClick={() => setWithdrawDealId(deal.id)}
-                                                            >
-                                                                Withdraw Offer
-                                                            </Button>
-                                                            {!withdrawGuard.allowed && (
-                                                                <span className="text-xs text-tertiary italic">*{withdrawGuard.reason}</span>
-                                                            )}
-                                                        </div>
+                                                        <Button
+                                                            color="secondary-destructive"
+                                                            size="sm"
+                                                            iconLeading={SlashCircle01}
+                                                            isDisabled={!withdrawGuard.allowed}
+                                                            onClick={() => setWithdrawDealId(deal.id)}
+                                                        >
+                                                            Withdraw Offer
+                                                        </Button>
                                                     )}
                                                 </div>
+                                                {/* Both Resend and Withdraw only ever fail (in the states where either button
+                                                 * renders) for the same reason — a payment has already landed — so one
+                                                 * combined caption replaces what would otherwise be two identical-in-substance
+                                                 * hints sitting side by side. */}
+                                                {(!letterGuardResend.allowed || !withdrawGuard.allowed) &&
+                                                    (deal.offer.state === "shared" || deal.offer.state === "accepted") && (
+                                                        <span className="text-xs text-tertiary italic">
+                                                            *Can't resend or withdraw offer. A payment has already been received.
+                                                        </span>
+                                                    )}
 
                                                 {deal.offerHistory.length > 0 && (
                                                     <div className="flex flex-col gap-1.5 border-t border-secondary pt-3">

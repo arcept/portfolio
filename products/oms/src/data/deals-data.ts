@@ -966,7 +966,10 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             const offer: OfferFields = {
                 state: "accepted",
                 template: template(),
-                deadline: null,
+                // Kept, not cleared — the acceptance window closing isn't the same as it never
+                // having existed; "Deadline" (Section 03) and the letter preview both still read
+                // it after acceptance.
+                deadline: offerDeadline(7),
                 version: 1,
                 createdOn,
                 sharedOn,
@@ -993,7 +996,8 @@ function buildLifecycle(id: string, statusId: DealStatusId, currency: "INR" | "U
             const offer: OfferFields = {
                 state: "accepted",
                 template: template(),
-                deadline: null,
+                // Kept, not cleared — see the OFFER_ACCEPTED case above.
+                deadline: offerDeadline(7),
                 version: 1,
                 createdOn,
                 sharedOn,
