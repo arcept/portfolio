@@ -295,9 +295,9 @@ const SideRow = ({ label, value }: { label: string; value: React.ReactNode }) =>
 /** Neutral bordered pill matching `MilestoneStageBadge`'s look, reused here for section
  * completion state ("Completed" vs "Pending") since the redesign uses the same badge
  * language for both. */
-const SectionStatusBadge = ({ complete, label }: { complete: boolean; label?: string }) => (
+const SectionStatusBadge = ({ complete, label, dotClass }: { complete: boolean; label?: string; dotClass: string }) => (
     <span className="flex items-center gap-1 rounded-md border border-primary bg-primary px-1.5 py-0.5 text-[10px] font-medium text-secondary shadow-xs">
-        <Dot size="sm" className={complete ? "text-fg-success-secondary" : "text-fg-quaternary"} />
+        <Dot size="sm" className={dotClass} />
         {label ?? (complete ? "Completed" : "Pending")}
     </span>
 );
@@ -313,7 +313,7 @@ const LockedSectionRow = ({ number, title, opacity }: { number: string; title: s
             <span className="text-tertiary">{title}</span>
         </div>
         <div className="opacity-30">
-            <SectionStatusBadge complete={false} />
+            <SectionStatusBadge complete={false} dotClass="text-fg-quaternary" />
         </div>
     </div>
 );
@@ -333,18 +333,21 @@ const Section = ({
     complete: boolean;
     badgeLabel?: string;
     children: React.ReactNode;
-}) => (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-secondary bg-primary">
-        <div className="flex items-center justify-between gap-2 bg-secondary px-4 py-4">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-                <span className="text-blue-400">{number}</span>
-                <span className="text-primary">{title}</span>
+}) => {
+    const dotClass = complete ? "text-fg-success-secondary" : "text-fg-quaternary";
+    return (
+        <div className="flex flex-col overflow-hidden rounded-xl border border-secondary bg-primary">
+            <div className="flex items-center justify-between gap-2 bg-secondary px-4 py-4">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                    <span className={dotClass}>{number}</span>
+                    <span className="text-primary">{title}</span>
+                </div>
+                <SectionStatusBadge complete={complete} label={badgeLabel} dotClass={dotClass} />
             </div>
-            <SectionStatusBadge complete={complete} label={badgeLabel} />
+            <div className="flex flex-col gap-6 px-4 py-6">{children}</div>
         </div>
-        <div className="flex flex-col gap-6 px-4 py-6">{children}</div>
-    </div>
-);
+    );
+};
 
 // ---------------------------------------------------------------------------
 // "03 Offer Letter" — a bespoke, pixel-matched rebuild of Figma node 466-42458,
@@ -652,7 +655,7 @@ export const DealDetail = () => {
                                     <div className="flex flex-col overflow-hidden rounded-xl bg-primary_alt">
                                         <div className="flex w-full items-center justify-between bg-tertiary/30 p-4">
                                             <div className="flex items-center gap-2 text-sm font-semibold">
-                                                <span className="text-utility-green-500">03</span>
+                                                <span className={OFFER_BADGE[offerSectionState].dotClass}>03</span>
                                                 <span className="text-primary">Offer Letter</span>
                                             </div>
                                             <OfferSectionBadge state={offerSectionState} />
