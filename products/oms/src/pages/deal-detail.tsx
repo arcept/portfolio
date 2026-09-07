@@ -360,7 +360,7 @@ type OfferSectionState = "pending" | "shared" | "accepted" | "expired" | "withdr
 
 const OFFER_BADGE: Record<OfferSectionState, { label: string; dotClass: string }> = {
     pending: { label: "Pending", dotClass: "text-utility-amber-500" },
-    shared: { label: "Completed", dotClass: "text-utility-green-500" },
+    shared: { label: "Shared", dotClass: "text-utility-amber-500" },
     accepted: { label: "Accepted", dotClass: "text-utility-green-500" },
     expired: { label: "Expired", dotClass: "text-utility-amber-500" },
     withdrawn: { label: "Withdrawn", dotClass: "text-utility-red-500" },
