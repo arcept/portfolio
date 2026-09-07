@@ -353,47 +353,43 @@ export const DealsList = () => {
             <DealsFilterChips filters={filters} onChange={setFilters} />
 
             <TableCard.Root ref={tableWrapperRef}>
-                {/* Keyed on `page` so switching pages replays this fade/slide-in — mirrors the
-                 * `fadeProps` transition used for the Payment Plan section's state changes. */}
-                <motion.div key={page} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, ease: "easeInOut" }}>
-                    {pageDeals.length === 0 ? (
-                        <EmptyState size="sm">
-                            <EmptyState.Content>
-                                <EmptyState.Description>No deals match these filters.</EmptyState.Description>
-                            </EmptyState.Content>
-                        </EmptyState>
-                    ) : (
-                        // Note: interacting with this table (row click, tab/sort change) logs a
-                        // "recovered from concurrent rendering error" (React error #520 in prod
-                        // builds too, not just dev) — a known react-aria-components@1.20 + React 19
-                        // interaction with dynamic Table collections. React's own recovery always
-                        // succeeds (confirmed via extensive interaction testing, including a
-                        // production build): every render lands with correct data, no visible
-                        // corruption. Tried the library's documented fix (memoize row-render
-                        // closures via useCallback/useMemo — see rowHandlers above); didn't
-                        // eliminate the console error, only the underlying staleness risk it warns
-                        // about. Not chasing further into third-party library internals.
-                        <Table
-                            aria-label="Deals"
-                            selectionMode="multiple"
-                            sortDescriptor={sort}
-                            onSortChange={(descriptor) => setSort({ column: String(descriptor.column), direction: descriptor.direction ?? "descending" })}
-                            onRowAction={(key) => navigate(`/deals/${key}`)}
-                            size="md"
-                        >
-                            <Table.Header columns={columns}>
-                                {(column) => <Table.Head id={column.id} allowsSorting={column.allowsSorting} label={column.label} fixedWidth={column.width} />}
-                            </Table.Header>
-                            <Table.Body items={pageDeals}>
-                                {(deal) => (
-                                    <Table.Row id={deal.id} columns={columns} className="cursor-pointer">
-                                        {(column) => <Table.Cell>{renderCell(deal, column.id, rowHandlers)}</Table.Cell>}
-                                    </Table.Row>
-                                )}
-                            </Table.Body>
-                        </Table>
-                    )}
-                </motion.div>
+                {pageDeals.length === 0 ? (
+                    <EmptyState size="sm">
+                        <EmptyState.Content>
+                            <EmptyState.Description>No deals match these filters.</EmptyState.Description>
+                        </EmptyState.Content>
+                    </EmptyState>
+                ) : (
+                    // Note: interacting with this table (row click, tab/sort change) logs a
+                    // "recovered from concurrent rendering error" (React error #520 in prod
+                    // builds too, not just dev) — a known react-aria-components@1.20 + React 19
+                    // interaction with dynamic Table collections. React's own recovery always
+                    // succeeds (confirmed via extensive interaction testing, including a
+                    // production build): every render lands with correct data, no visible
+                    // corruption. Tried the library's documented fix (memoize row-render
+                    // closures via useCallback/useMemo — see rowHandlers above); didn't
+                    // eliminate the console error, only the underlying staleness risk it warns
+                    // about. Not chasing further into third-party library internals.
+                    <Table
+                        aria-label="Deals"
+                        selectionMode="multiple"
+                        sortDescriptor={sort}
+                        onSortChange={(descriptor) => setSort({ column: String(descriptor.column), direction: descriptor.direction ?? "descending" })}
+                        onRowAction={(key) => navigate(`/deals/${key}`)}
+                        size="md"
+                    >
+                        <Table.Header columns={columns}>
+                            {(column) => <Table.Head id={column.id} allowsSorting={column.allowsSorting} label={column.label} fixedWidth={column.width} />}
+                        </Table.Header>
+                        <Table.Body items={pageDeals}>
+                            {(deal) => (
+                                <Table.Row id={deal.id} columns={columns} className="cursor-pointer">
+                                    {(column) => <Table.Cell>{renderCell(deal, column.id, rowHandlers)}</Table.Cell>}
+                                </Table.Row>
+                            )}
+                        </Table.Body>
+                    </Table>
+                )}
             </TableCard.Root>
 
             {sortedTabDeals.length > 0 && (
