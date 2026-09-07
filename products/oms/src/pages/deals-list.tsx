@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { FilterLines, Link03, Mail01, Pencil01, RefreshCcw01, SearchLg, Send01, Upload02, XClose } from "@untitledui/icons";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
-import { AppShell, GRADIENT_BACKGROUND } from "@/components/application/app-shell";
+import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { PaginationPageDefault } from "@/components/application/pagination/pagination";
@@ -387,10 +387,7 @@ export const DealsList = () => {
                 // Sticky rather than size-to-fit-viewport: page size stays a normal, content-driven
                 // number and the pager instead follows you down so it's always reachable without
                 // scrolling all the way to the bottom of a long table.
-                <div
-                    className="sticky bottom-0 z-10 border-t border-secondary pb-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)]"
-                    style={{ background: GRADIENT_BACKGROUND }}
-                >
+                <div className="sticky bottom-0 z-10 border-t border-secondary pb-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)]">
                     <PaginationPageDefault page={page} total={totalPages} onPageChange={setPage} />
                 </div>
             )}
