@@ -787,19 +787,23 @@ export const DealDetail = () => {
                                         )}
                                     </div>
 
-                                    <Section number="04" title="Enrolment" complete={enrollComplete}>
-                                        {enrollComplete ? (
-                                            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                                                <MetaField label="Applicant Name" value={deal.name} />
-                                                <MetaField label="Admission Counsellor" value={bdr?.name ?? "—"} />
-                                                <MetaField label="Application ID" value={deal.id} onCopy={() => copyToClipboard(deal.id, "Application ID")} />
-                                                <MetaField label="LMS ID" value={lmsId} onCopy={() => copyToClipboard(lmsId, "LMS ID")} />
-                                                <MetaField label="First Session at" value={formatDateTime(firstSessionDate)} />
-                                            </div>
-                                        ) : (
-                                            <p className="text-sm text-tertiary">Enrolment unlocks after the first payment.</p>
-                                        )}
-                                    </Section>
+                                    {offerSectionState !== "accepted" ? (
+                                        <LockedSectionRow number="04" title="Enrolment" opacity={0.4} />
+                                    ) : (
+                                        <Section number="04" title="Enrolment" complete={enrollComplete}>
+                                            {enrollComplete ? (
+                                                <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                                                    <MetaField label="Applicant Name" value={deal.name} />
+                                                    <MetaField label="Admission Counsellor" value={bdr?.name ?? "—"} />
+                                                    <MetaField label="Application ID" value={deal.id} onCopy={() => copyToClipboard(deal.id, "Application ID")} />
+                                                    <MetaField label="LMS ID" value={lmsId} onCopy={() => copyToClipboard(lmsId, "LMS ID")} />
+                                                    <MetaField label="First Session at" value={formatDateTime(firstSessionDate)} />
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-tertiary">Enrolment unlocks after the first payment.</p>
+                                            )}
+                                        </Section>
+                                    )}
                                 </>
                             )}
                         </>
