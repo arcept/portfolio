@@ -384,12 +384,9 @@ export const DealsList = () => {
             </TableCard.Root>
 
             {sortedTabDeals.length > 0 && (
-                // Sticky rather than size-to-fit-viewport: page size stays a normal, content-driven
-                // number and the pager instead follows you down so it's always reachable without
-                // scrolling all the way to the bottom of a long table.
-                <div className="sticky bottom-0 z-10 border-t border-secondary pb-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)]">
-                    <PaginationPageDefault page={page} total={totalPages} onPageChange={setPage} />
-                </div>
+                // `divider={false}`: matches the table's own now-borderless, background-less look
+                // rather than reintroducing a line the rest of this page has deliberately dropped.
+                <PaginationPageDefault page={page} total={totalPages} onPageChange={setPage} divider={false} />
             )}
 
             <PaymentPlanEditor dealId={planEditorDealId} onOpenChange={(open) => !open && setPlanEditorDealId(null)} />
