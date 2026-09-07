@@ -3,7 +3,6 @@ import {
     ArrowUpRight,
     Bookmark,
     ChevronDown,
-    ChevronLeft,
     Copy04,
     DotsVertical,
     LinkExternal01,
@@ -13,7 +12,7 @@ import {
     XCircle,
 } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
@@ -437,7 +436,6 @@ const OfferGhostButton = ({ label, isDisabled, onClick }: { label: string; isDis
 
 export const DealDetail = () => {
     const { dealId } = useParams<{ dealId: string }>();
-    const navigate = useNavigate();
     const location = useLocation();
     // Set by the Deals List row click — the exact list URL (tab/page/search/filters) the deal
     // was opened from, so leaving this page restores that view instead of resetting to "All".
@@ -511,14 +509,6 @@ export const DealDetail = () => {
         <AppShell background="gradient">
             <div className="flex flex-col gap-1">
                 <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals", href: backTo }, { label: deal.id }]} />
-                <button
-                    type="button"
-                    onClick={() => navigate(backTo)}
-                    className="-mx-2 flex w-max items-center gap-1 rounded px-2 py-1 text-sm font-medium text-tertiary transition-colors duration-100 ease-linear hover:bg-secondary_hover hover:text-secondary active:bg-quaternary"
-                >
-                    <ChevronLeft className="size-4" />
-                    Back to Deals
-                </button>
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr_320px]">
