@@ -97,7 +97,7 @@ function buildColumns(containerWidth: number) {
         allowsSorting: c.allowsSorting,
         width: Math.round(c.figmaWidth * columnScale),
     }));
-    return [...scaled, { id: "actions", label: "", width: actionsWidth }];
+    return [...scaled, { id: "actions", label: "Actions", width: actionsWidth }];
 }
 
 const PAGE_SIZE = 20;
