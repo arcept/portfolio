@@ -548,7 +548,7 @@ export const DealDetail = () => {
 
     if (!deal) {
         return (
-            <AppShell background="gradient">
+            <AppShell>
                 <EmptyState size="sm">
                     <EmptyState.Content>
                         <EmptyState.Description>Deal not found.</EmptyState.Description>
@@ -605,7 +605,7 @@ export const DealDetail = () => {
     const lastWithdrawal = deal.offerHistory.filter((h) => h.endedBy === "withdrawn").at(-1);
 
     return (
-        <AppShell background="gradient">
+        <AppShell>
             <div className="flex flex-col gap-1">
                 <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals", href: backTo }, { label: deal.id }]} />
             </div>

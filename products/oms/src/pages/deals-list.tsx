@@ -310,7 +310,7 @@ export const DealsList = () => {
     );
 
     return (
-        <AppShell background="gradient">
+        <AppShell>
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div className="flex flex-col gap-1">
                     <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals" }]} />
