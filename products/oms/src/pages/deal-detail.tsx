@@ -190,13 +190,14 @@ const CheckGlyph = ({ className }: { className?: string }) => (
     </svg>
 );
 
-/** 12px empty ring — a substage that hasn't happened yet. Exact path/color from the Figma
- * "placeholder" asset. */
+/** 12px empty ring — a substage that hasn't happened yet. Gray, matching the same "pending"
+ * tone as the stage ring (#A3A3A3) — the exported "placeholder" asset's own stroke read purple,
+ * but that's not what the pending state actually looks like in Figma. */
 const PendingRingIcon = () => (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="block">
         <path
             d="M6 11C8.76142 11 11 8.76142 11 6C11 3.23858 8.76142 1 6 1C3.23858 1 1 3.23858 1 6C1 8.76142 3.23858 11 6 11Z"
-            stroke="#7F56D9"
+            stroke="#A3A3A3"
             strokeLinecap="round"
             strokeLinejoin="round"
         />
