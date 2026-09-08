@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, CreditCardPlus } from "@untitledui/icons";
+import { Button as AriaButton } from "react-aria-components";
 import bankIcon from "@/assets/payment-icons/bank-icon.svg";
 import razorpayModeIcon from "@/assets/payment-icons/razorpay-mode-icon.svg";
 import stripeModeIcon from "@/assets/payment-icons/stripe-mode-icon.svg";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { EMI_MODE, FeeBreakdown, GATEWAY_MODE, InstallmentPreviewCard, formatMoney, tierAmount } from "@/components/deals/payment-plan-shared";
 import { PROTOTYPE_TODAY } from "@/data/dashboard-data";
 import type { Currency, Deal, DiscountBreakdown, Installment, InstallmentMode } from "@/data/deals-data";
@@ -462,24 +464,33 @@ const PaymentModeSelector = ({ currency, value, onChange }: { currency: Currency
         <div className="flex flex-col gap-2 px-2">
             <span className="text-sm text-tertiary">Payment Mode</span>
             <div className="flex flex-wrap items-center gap-6">
-                <button
-                    type="button"
-                    disabled={razorpayDisabled}
-                    onClick={() => onChange("Razorpay")}
-                    className="flex items-center gap-3 p-2 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                    <RadioDot selected={value === "Razorpay"} />
-                    <img src={razorpayModeIcon} alt="Razorpay" className="h-6 w-auto" />
-                </button>
-                <button
-                    type="button"
-                    disabled={stripeDisabled}
-                    onClick={() => onChange("Stripe")}
-                    className="flex items-center gap-3 p-2 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                    <RadioDot selected={value === "Stripe"} />
-                    <img src={stripeModeIcon} alt="Stripe" className="h-6 w-auto" />
-                </button>
+                {/* `AriaButton`, not a plain `<button>` — a hover-triggered `Tooltip` only reaches
+                 * components that call react-aria's `useFocusable` internally, which a bare host
+                 * element never does. And deliberately not `isDisabled` on it either: react-aria
+                 * renders that as the native `disabled` attribute (no pointer events fire on that
+                 * at all) *and* separately skips forwarding the tooltip's own hover props whenever
+                 * `isDisabled` is set. `aria-disabled` gets the same visual/semantic disabled state
+                 * — the click handler below is what actually blocks switching to it. */}
+                <Tooltip title="Only available for INR deals" isDisabled={!razorpayDisabled}>
+                    <AriaButton
+                        aria-disabled={razorpayDisabled || undefined}
+                        onPress={() => !razorpayDisabled && onChange("Razorpay")}
+                        className="flex cursor-pointer items-center gap-3 p-2 outline-hidden aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
+                    >
+                        <RadioDot selected={value === "Razorpay"} />
+                        <img src={razorpayModeIcon} alt="Razorpay" className="h-6 w-auto" />
+                    </AriaButton>
+                </Tooltip>
+                <Tooltip title="Only available for USD deals" isDisabled={!stripeDisabled}>
+                    <AriaButton
+                        aria-disabled={stripeDisabled || undefined}
+                        onPress={() => !stripeDisabled && onChange("Stripe")}
+                        className="flex cursor-pointer items-center gap-3 p-2 outline-hidden aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
+                    >
+                        <RadioDot selected={value === "Stripe"} />
+                        <img src={stripeModeIcon} alt="Stripe" className="h-6 w-auto" />
+                    </AriaButton>
+                </Tooltip>
                 <button type="button" onClick={() => onChange("Manual")} className="flex items-center gap-3 p-2 text-left">
                     <RadioDot selected={value === "Manual"} />
                     <img src={bankIcon} alt="" className="size-8" />

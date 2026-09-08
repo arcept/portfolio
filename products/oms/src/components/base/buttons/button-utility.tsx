@@ -77,11 +77,22 @@ export const ButtonUtility = ({
             ...(isDisabled ? { "data-rac": true, "data-disabled": true } : {}),
         };
     } else {
+        const { onClick, ...rest } = otherProps as ButtonProps;
         props = {
-            ...otherProps,
+            ...rest,
 
             type: otherProps.type || "button",
-            isDisabled,
+
+            // Deliberately not `isDisabled` on the underlying react-aria Button — for a <button>
+            // element it renders as the native `disabled` attribute, and browsers fire zero
+            // pointer events (not even hover) on a natively-disabled element, so a `tooltip`
+            // explaining *why* (call sites swap it to `guard.reason`) could never be reached.
+            // `data-disabled`/`aria-disabled` preserve the same visual/semantic disabled state —
+            // the `disabled:` classes below already resolve against `data-disabled` via the
+            // react-aria Tailwind plugin — while the click handler is what actually blocks the
+            // action, so the button stays fully hoverable and focusable.
+            ...(isDisabled ? { "data-disabled": true, "aria-disabled": true } : {}),
+            onClick: isDisabled ? undefined : onClick,
         };
     }
 
@@ -107,7 +118,7 @@ export const ButtonUtility = ({
 
     if (tooltip) {
         return (
-            <Tooltip title={tooltip} placement={tooltipPlacement} isDisabled={isDisabled} offset={size === "xs" ? 4 : 6}>
+            <Tooltip title={tooltip} placement={tooltipPlacement} offset={size === "xs" ? 4 : 6}>
                 {content}
             </Tooltip>
         );

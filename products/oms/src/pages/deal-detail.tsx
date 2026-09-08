@@ -12,6 +12,7 @@ import {
     XCircle,
 } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
+import { Button as AriaButton } from "react-aria-components";
 import { useLocation, useParams } from "react-router";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
@@ -20,6 +21,7 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { toast } from "@/components/application/toast/toast";
 import { BadgeWithFlag } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { ApplicationLinkDialog } from "@/components/deals/application-link-dialog";
 import type { ApplicationLinkRequest } from "@/components/deals/application-link-dialog";
 import { ApplicationSectionCard } from "@/components/deals/application-section-card";
@@ -406,38 +408,62 @@ const OfferButton = ({
     label,
     emphasis = "primary",
     isDisabled,
+    disabledReason,
     onClick,
 }: {
     icon: React.ComponentType<{ className?: string }>;
     label: string;
     emphasis?: "primary" | "secondary";
     isDisabled?: boolean;
+    /** Shown on hover when disabled — not the native `disabled` attribute below, since a
+     * natively-disabled button fires no pointer events at all and could never be hovered. */
+    disabledReason?: string;
     onClick?: () => void;
-}) => (
-    <button
-        type="button"
-        disabled={isDisabled}
-        onClick={onClick}
-        className="relative inline-flex items-center justify-center gap-1 rounded-lg bg-secondary_hover p-3 text-xs font-semibold shadow-xs-skeuomorphic transition duration-100 ease-linear hover:bg-quaternary disabled:cursor-not-allowed disabled:opacity-50"
-    >
-        <Icon className={cx("size-5 text-fg-quaternary", emphasis === "primary" ? "text-primary" : "text-secondary")} />
-        <span className={emphasis === "primary" ? "text-primary" : "text-secondary"}>{label}</span>
-    </button>
-);
+}) => {
+    // `AriaButton`, not a plain `<button>` — a hover-triggered `Tooltip` only reaches components
+    // that call react-aria's `useFocusable` internally, which a bare host element never does. And
+    // deliberately not `isDisabled` on it either: react-aria renders that as the native `disabled`
+    // attribute (no pointer events fire on that at all) *and* separately skips forwarding the
+    // tooltip's own hover props whenever `isDisabled` is set. `aria-disabled` gets the same
+    // visual/semantic disabled state — the press handler below is what actually blocks the click.
+    const button = (
+        <AriaButton
+            aria-disabled={isDisabled || undefined}
+            onPress={() => !isDisabled && onClick?.()}
+            className="relative inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg bg-secondary_hover p-3 text-xs font-semibold shadow-xs-skeuomorphic outline-hidden transition duration-100 ease-linear hover:bg-quaternary aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+        >
+            <Icon className={cx("size-5 text-fg-quaternary", emphasis === "primary" ? "text-primary" : "text-secondary")} />
+            <span className={emphasis === "primary" ? "text-primary" : "text-secondary"}>{label}</span>
+        </AriaButton>
+    );
+    return isDisabled && disabledReason ? <Tooltip title={disabledReason}>{button}</Tooltip> : button;
+};
 
 /** Withdraw Offer — the one ghost/borderless button in the set, always paired with the red
  * slash-circle icon regardless of the label's own muted tone (matches the exported SVG). */
-const OfferGhostButton = ({ label, isDisabled, onClick }: { label: string; isDisabled?: boolean; onClick?: () => void }) => (
-    <button
-        type="button"
-        disabled={isDisabled}
-        onClick={onClick}
-        className="inline-flex items-center justify-center gap-1 rounded-lg p-3 text-xs font-semibold text-tertiary transition duration-100 ease-linear hover:text-secondary disabled:cursor-not-allowed disabled:opacity-50"
-    >
-        <SlashCircle01 className="size-4 text-red-500" />
-        {label}
-    </button>
-);
+const OfferGhostButton = ({
+    label,
+    isDisabled,
+    disabledReason,
+    onClick,
+}: {
+    label: string;
+    isDisabled?: boolean;
+    disabledReason?: string;
+    onClick?: () => void;
+}) => {
+    const button = (
+        <AriaButton
+            aria-disabled={isDisabled || undefined}
+            onPress={() => !isDisabled && onClick?.()}
+            className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg p-3 text-xs font-semibold text-tertiary outline-hidden transition duration-100 ease-linear hover:text-secondary aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+        >
+            <SlashCircle01 className="size-4 text-red-500" />
+            {label}
+        </AriaButton>
+    );
+    return isDisabled && disabledReason ? <Tooltip title={disabledReason}>{button}</Tooltip> : button;
+};
 
 export const DealDetail = () => {
     const { dealId } = useParams<{ dealId: string }>();
@@ -746,6 +772,7 @@ export const DealDetail = () => {
                                                                     label="Resend Letter"
                                                                     emphasis="secondary"
                                                                     isDisabled={!letterGuardResend.allowed}
+                                                                    disabledReason={letterGuardResend.reason}
                                                                     onClick={() => resendLetter(deal.id)}
                                                                 />
                                                             </>
@@ -771,6 +798,7 @@ export const DealDetail = () => {
                                                                     label="Create Offer Letter (v2)"
                                                                     emphasis="secondary"
                                                                     isDisabled={!letterGuardCreate.allowed}
+                                                                    disabledReason={letterGuardCreate.reason}
                                                                     onClick={() => setLetterComposerDealId(deal.id)}
                                                                 />
                                                             </>
@@ -780,6 +808,7 @@ export const DealDetail = () => {
                                                         <OfferGhostButton
                                                             label="Withdraw Offer"
                                                             isDisabled={!withdrawGuard.allowed}
+                                                            disabledReason={withdrawGuard.reason}
                                                             onClick={() => setWithdrawDealId(deal.id)}
                                                         />
                                                     )}
