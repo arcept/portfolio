@@ -5,7 +5,6 @@ import razorpayModeIcon from "@/assets/payment-icons/razorpay-mode-icon.svg";
 import stripeModeIcon from "@/assets/payment-icons/stripe-mode-icon.svg";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Button } from "@/components/base/buttons/button";
-import { Input } from "@/components/base/input/input";
 import { EMI_MODE, FeeBreakdown, GATEWAY_MODE, InstallmentPreviewCard, formatMoney, tierAmount } from "@/components/deals/payment-plan-shared";
 import { PROTOTYPE_TODAY } from "@/data/dashboard-data";
 import type { Currency, Deal, DiscountBreakdown, Installment, InstallmentMode } from "@/data/deals-data";
@@ -27,7 +26,7 @@ const UPFRONT_AUTO_PCT = 5;
 const EARLY_BIRD_PCT = 10;
 const MERIT_PCT = 15;
 const SUPER_MERIT_PCT = 25;
-const CUSTOM_DISCOUNT_MAX = 20_000;
+const CUSTOM_DISCOUNT_MAX_PCT = 10;
 const EMI_TENURES: EmiTenure[] = [3, 6, 12];
 const EMI_INTEREST_PCT: Record<EmiTenure, number> = { 3: 3, 6: 6, 12: 10 };
 
@@ -113,14 +112,17 @@ export const PaymentPlanForm = ({ deal, onSaved }: { deal: Deal; onSaved?: () =>
 
     const earlyBirdAvailable = isEarlyBirdAvailable(PROTOTYPE_TODAY);
     const upfrontAutoDiscount = paymentType === "upfront" ? tierAmount(deal.courseFee, currency, UPFRONT_AUTO_PCT) : 0;
+    // Capped relative to this deal's own fee, not a flat number — a fixed rupee cap would be
+    // trivial on a large course fee and too tight on a small one.
+    const customDiscountMax = tierAmount(deal.courseFee, currency, CUSTOM_DISCOUNT_MAX_PCT);
 
     const discountBreakdown: DiscountBreakdown = useMemo(() => {
         const items: DiscountBreakdown["items"] = [];
         if (selectedTiers.has("early-bird")) items.push({ label: "Early Bird Offer", amount: tierAmount(deal.courseFee, currency, EARLY_BIRD_PCT) });
         if (selectedTiers.has("merit")) items.push({ label: "Merit Scholarship", amount: tierAmount(deal.courseFee, currency, MERIT_PCT) });
-        if (selectedTiers.has("custom")) items.push({ label: "Custom BDR Discount", amount: Math.min(customDiscount, CUSTOM_DISCOUNT_MAX) });
+        if (selectedTiers.has("custom")) items.push({ label: "Custom BDR Discount", amount: Math.min(customDiscount, customDiscountMax) });
         return { upfront: upfrontAutoDiscount, items };
-    }, [selectedTiers, customDiscount, deal.courseFee, currency, upfrontAutoDiscount]);
+    }, [selectedTiers, customDiscount, customDiscountMax, deal.courseFee, currency, upfrontAutoDiscount]);
 
     const totalDiscount = discountBreakdown.upfront + discountBreakdown.items.reduce((sum, i) => sum + i.amount, 0);
     const netPayable = Math.max(0, deal.courseFee - totalDiscount);
@@ -153,6 +155,7 @@ export const PaymentPlanForm = ({ deal, onSaved }: { deal: Deal; onSaved?: () =>
                 onToggle={toggleTier}
                 earlyBirdAvailable={earlyBirdAvailable}
                 customDiscount={customDiscount}
+                customDiscountMax={customDiscountMax}
                 onCustomDiscountChange={setCustomDiscount}
             />
 
@@ -286,6 +289,7 @@ const DiscountTierList = ({
     onToggle,
     earlyBirdAvailable,
     customDiscount,
+    customDiscountMax,
     onCustomDiscountChange,
 }: {
     currency: Currency;
@@ -295,6 +299,7 @@ const DiscountTierList = ({
     onToggle: (id: DiscountTierId) => void;
     earlyBirdAvailable: boolean;
     customDiscount: number;
+    customDiscountMax: number;
     onCustomDiscountChange: (v: number) => void;
 }) => {
     const tiers: TierMeta[] = [
@@ -339,16 +344,12 @@ const DiscountTierList = ({
                             onClick={() => !tier.locked && onToggle(tier.id)}
                         />
                         {tier.id === "custom" && selected.has("custom") && (
-                            <div className="pt-1 pr-2 pb-2 pl-9">
-                                <Input
-                                    label={`Custom discount (${currency})`}
-                                    type="number"
-                                    size="sm"
-                                    value={String(customDiscount)}
-                                    hint={`Maximum ${formatMoney(CUSTOM_DISCOUNT_MAX, currency)}`}
-                                    onChange={(v) => onCustomDiscountChange(Math.min(CUSTOM_DISCOUNT_MAX, Math.max(0, Number(v) || 0)))}
-                                />
-                            </div>
+                            <CustomDiscountInput
+                                currency={currency}
+                                customDiscount={customDiscount}
+                                max={customDiscountMax}
+                                onApply={onCustomDiscountChange}
+                            />
                         )}
                     </div>
                 ))}
@@ -392,13 +393,59 @@ const DiscountTierRow = ({
                 <span className={`text-sm ${isSelected ? "text-success-primary" : "text-secondary"}`}>{tier.title}</span>
                 {tier.sub && <span className={`text-[10px] text-tertiary ${tier.italicSub ? "italic" : ""}`}>{tier.sub}</span>}
             </div>
-            <span className="text-md font-semibold text-primary">
-                {tier.id === "custom" ? `${formatMoney(amount, currency)} off` : `${formatMoney(amount, currency)} off (${tier.pct}%)`}
-            </span>
+            {/* Once expanded, the input below is the source of truth for the amount — showing it
+             * here too would just be a second, staler copy of the same number (Figma node
+             * 481:8552, Property1=Variant2). */}
+            {!(tier.id === "custom" && isSelected) && (
+                <span className="text-md font-semibold text-primary">
+                    {tier.id === "custom" ? `${formatMoney(amount, currency)} off` : `${formatMoney(amount, currency)} off (${tier.pct}%)`}
+                </span>
+            )}
         </div>
         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${BADGE_TONE_CLASSES[tier.badge.tone]}`}>{tier.badge.label}</span>
     </button>
 );
+
+/** Custom BDR Discount's expanded state (Figma node 481:8552, Property1=Variant2) — a staged
+ * input rather than live-as-you-type, so a BDR can enter a number, reconsider it, and only commit
+ * with "Apply Discount" rather than every keystroke immediately changing Net Payable. */
+const CustomDiscountInput = ({
+    currency,
+    customDiscount,
+    max,
+    onApply,
+}: {
+    currency: Currency;
+    customDiscount: number;
+    max: number;
+    onApply: (v: number) => void;
+}) => {
+    const [draft, setDraft] = useState(String(customDiscount));
+
+    return (
+        <div className="flex flex-col gap-2 py-2 pr-3 pl-9">
+            <div className="flex h-[34px] items-center gap-2">
+                <div className="flex h-full flex-1 items-center rounded border border-fg-quaternary px-2 py-1">
+                    <input
+                        type="number"
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        className="w-full bg-transparent text-md font-semibold text-primary outline-none"
+                    />
+                </div>
+                <Button
+                    size="sm"
+                    color="primary"
+                    className="!bg-green-600 !ring-green-400 hover:!bg-green-700"
+                    onClick={() => onApply(Math.min(max, Math.max(0, Number(draft) || 0)))}
+                >
+                    Apply Discount
+                </Button>
+            </div>
+            <span className="text-sm text-tertiary">Maximum Discount {formatMoney(max, currency)}</span>
+        </div>
+    );
+};
 
 const RadioDot = ({ selected }: { selected: boolean }) => (
     <span className={`flex size-4 shrink-0 items-center justify-center rounded-full ${selected ? "bg-success-solid" : "border-2 border-secondary"}`}>
@@ -433,7 +480,7 @@ const PaymentModeSelector = ({ currency, value, onChange }: { currency: Currency
                     <RadioDot selected={value === "Stripe"} />
                     <img src={stripeModeIcon} alt="Stripe" className="h-6 w-auto" />
                 </button>
-                <button type="button" onClick={() => onChange("Manual")} className="flex items-center gap-3 p-2">
+                <button type="button" onClick={() => onChange("Manual")} className="flex items-center gap-3 p-2 text-left">
                     <RadioDot selected={value === "Manual"} />
                     <img src={bankIcon} alt="" className="size-8" />
                     <span className="text-sm font-semibold text-tertiary">
@@ -457,7 +504,7 @@ const InstallmentPlanPicker = ({ value, onChange }: { value: InstallmentPlanId; 
         <span className="text-sm text-tertiary">Instalment Plan</span>
         <div className="flex flex-wrap gap-6">
             {(["dp3", "dp6"] as const).map((id) => (
-                <button key={id} type="button" onClick={() => onChange(id)} className="flex items-center gap-3 p-2">
+                <button key={id} type="button" onClick={() => onChange(id)} className="flex items-center gap-3 p-2 text-left">
                     <RadioDot selected={value === id} />
                     <span className="flex flex-col">
                         <span className="text-sm font-semibold text-primary">{INSTALLMENT_PLAN_LABEL[id].top}</span>
