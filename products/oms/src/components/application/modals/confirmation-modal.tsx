@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import type { FC, ReactNode } from "react";
 import { Copy04 } from "@untitledui/icons";
 import confirmationBanner from "@/assets/modals/confirmation-banner.jpg";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/application/modals/modal";
@@ -23,6 +23,8 @@ export type ConfirmationModalProps = {
      * until checked. Omit for confirmations that don't need an explicit acknowledgement. */
     acknowledgementLabel?: string;
     cancelLabel?: string;
+    /** Leading icon on the cancel button — e.g. Share Offer's "Go back" (Figma node 466:43276). */
+    cancelIcon?: FC<{ className?: string }>;
     confirmLabel: string;
     onConfirm: () => void;
     /** Extra condition (e.g. a permission guard) that disables confirm regardless of acknowledgement. */
@@ -42,6 +44,7 @@ export const ConfirmationModal = ({
     children,
     acknowledgementLabel,
     cancelLabel = "Cancel",
+    cancelIcon,
     confirmLabel,
     onConfirm,
     isConfirmDisabled,
@@ -83,7 +86,7 @@ export const ConfirmationModal = ({
                                             <Checkbox size="sm" label={acknowledgementLabel} isSelected={acknowledged} onChange={setAcknowledged} />
                                         )}
                                         <div className="flex flex-1 items-center justify-end gap-3">
-                                            <Button color="secondary" size="md" onClick={close}>
+                                            <Button color="secondary" size="md" iconLeading={cancelIcon} onClick={close}>
                                                 {cancelLabel}
                                             </Button>
                                             <Button
