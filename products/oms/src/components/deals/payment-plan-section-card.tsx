@@ -91,7 +91,7 @@ const PlanNotCreatedView = ({ deal, onCustomise }: { deal: Deal; onCustomise: ()
                 size="md"
                 iconLeading={CreditCardPlus}
                 onClick={onCustomise}
-                className="w-max !bg-yellow-500 !text-neutral-900 !ring-yellow-400 hover:!bg-yellow-600 *:data-icon:!text-neutral-900"
+                className="w-max !bg-green-600 !ring-green-400 hover:!bg-green-700"
             >
                 Customise Payment Plan
             </Button>
