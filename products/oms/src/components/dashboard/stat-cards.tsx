@@ -1,14 +1,16 @@
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowNarrowRight, ArrowUpRight, Copy01, Download01, Edit01, TrendUp02 } from "@untitledui/icons";
+import { ArrowDownRight, ArrowNarrowRight, ArrowUpRight, Copy01, Download01, Edit01, TrendUp02 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
 import { cx } from "@/utils/cx";
+import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import type { PeriodSelection } from "@/data/dashboard-data";
-import { cascadeToDealStages, formatIndianNumber, getPeriodSelectionKey, getSelectedPeriodChartData, scalePeriodDataForPersona } from "@/data/dashboard-data";
+import { cascadeToDealStages, formatIndianNumber, getPeriodSelectionKey } from "@/data/dashboard-data";
+import { changeDirectionFromText, getLostDealsSummaryForSelection, getPeriodChartDataLive } from "@/data/dashboard-metrics";
 import { BookedChart } from "./booked-chart";
 
 const CardActionsMenu = () => (
@@ -65,10 +67,13 @@ const FadeOnSelection = ({ selectionKey, className, children }: { selectionKey: 
 
 export const StatCardsRow = ({ selection }: { selection: PeriodSelection }) => {
     const { persona } = usePersona();
-    const booked = scalePeriodDataForPersona(getSelectedPeriodChartData(selection), persona);
+    const { deals } = useDeals();
+    const booked = getPeriodChartDataLive(selection, persona, deals);
     const selectionKey = getPeriodSelectionKey(selection);
     const dealStages = cascadeToDealStages(booked.cascade);
     const dealStagesMax = Math.max(...dealStages.map((stage) => stage.value));
+    const changeDirection = changeDirectionFromText(booked.changeText);
+    const lost = getLostDealsSummaryForSelection(selection, persona, deals);
 
     return (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[1.4fr_1fr_1fr]">
@@ -87,7 +92,8 @@ export const StatCardsRow = ({ selection }: { selection: PeriodSelection }) => {
                     </div>
 
                     <div className="flex w-max items-center gap-1 rounded-md bg-primary_alt px-1.5 py-0.5 shadow-xs">
-                        <ArrowUpRight className="size-3 text-fg-success-secondary" />
+                        {changeDirection === "up" && <ArrowUpRight className="size-3 text-fg-success-secondary" />}
+                        {changeDirection === "down" && <ArrowDownRight className="size-3 text-fg-error-secondary" />}
                         <span className="text-sm font-medium text-secondary">{booked.changeText}</span>
                     </div>
                 </FadeOnSelection>
@@ -144,11 +150,16 @@ export const StatCardsRow = ({ selection }: { selection: PeriodSelection }) => {
                 </FadeOnSelection>
             </Card>
 
-            {/* Lost deals */}
+            {/* Lost deals — same cohort (applications sent this period, scoped to the persona) as
+                the Deal Stages bars above, so this always agrees with them. */}
             <Card>
                 <p className="text-xs font-medium text-tertiary">Lost deals</p>
-                <span className="text-display-md font-normal tracking-tight text-primary">4%</span>
-                <p className="text-sm text-secondary">You closed 12 out of 124 deals</p>
+                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-1">
+                    <span className="text-display-md font-normal tracking-tight text-primary">{lost.percent}%</span>
+                    <p className="text-sm text-secondary">
+                        You closed {lost.closedCount} out of {lost.cohortSize} deals
+                    </p>
+                </FadeOnSelection>
                 <Button color="link-color" size="sm" iconTrailing={ArrowNarrowRight}>
                     All deals
                 </Button>

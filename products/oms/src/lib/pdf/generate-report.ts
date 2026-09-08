@@ -1,7 +1,8 @@
 import type { Persona } from "@/types/role";
 import { ROLE_LABELS } from "@/types/role";
-import type { PeriodChartData } from "@/data/dashboard-data";
-import { getFunnelCohorts, getTeamManagerSummaries } from "@/data/dashboard-data";
+import type { Deal } from "@/data/deals-data";
+import type { PeriodSelection } from "@/data/dashboard-data";
+import { getFunnelCohortsLive, getPeriodChartDataLive, getTeamManagerSummariesLive } from "@/data/dashboard-metrics";
 
 function slugify(text: string): string {
     return text
@@ -15,14 +16,15 @@ function slugify(text: string): string {
  * the document it renders) so the bundle only pays for pdfkit + its layout engine on the click
  * that actually needs it — this button is admin-only and most sessions never touch it.
  */
-export async function generateAndDownloadReport(data: PeriodChartData, persona: Persona): Promise<void> {
+export async function generateAndDownloadReport(selection: PeriodSelection, persona: Persona, deals: Deal[]): Promise<void> {
     const [{ pdf }, { DashboardReportDocument }] = await Promise.all([import("@react-pdf/renderer"), import("./report-document")]);
 
     const scopeLabel = persona.role === "admin" ? "Admin · All Teams" : ROLE_LABELS[persona.role];
     const generatedAt = new Date();
 
-    const funnelStages = getFunnelCohorts(data, persona)[0].stages;
-    const teamManagerSummaries = persona.role === "admin" ? getTeamManagerSummaries(data) : null;
+    const data = getPeriodChartDataLive(selection, persona, deals);
+    const funnelStages = getFunnelCohortsLive(selection, persona, deals)[0].stages;
+    const teamManagerSummaries = persona.role === "admin" ? getTeamManagerSummariesLive(selection, deals) : null;
 
     const doc = DashboardReportDocument({
         data,

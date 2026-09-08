@@ -3,9 +3,10 @@ import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/but
 import { Badge } from "@/components/base/badges/badges";
 import { Dot } from "@/components/foundations/dot-icon";
 import { cx } from "@/utils/cx";
+import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import type { FunnelStage, PeriodSelection } from "@/data/dashboard-data";
-import { getFunnelCohorts, getSelectedPeriodChartData, scalePeriodDataForPersona } from "@/data/dashboard-data";
+import { getFunnelCohortsLive } from "@/data/dashboard-metrics";
 
 export const FunnelStageCard = ({ stage }: { stage: FunnelStage }) => (
     <div className="flex flex-1 flex-col gap-5 rounded-xl border border-secondary bg-primary p-4">
@@ -49,8 +50,8 @@ export const OverviewPerformanceToggle = ({ id }: { id: string }) => {
 
 export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => {
     const { persona } = usePersona();
-    const data = scalePeriodDataForPersona(getSelectedPeriodChartData(selection), persona);
-    const cohorts = getFunnelCohorts(data, persona);
+    const { deals } = useDeals();
+    const cohorts = getFunnelCohortsLive(selection, persona, deals);
     const isAggregateHeading = persona.role === "admin";
 
     return (
@@ -96,8 +97,8 @@ export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => 
  * case study can show exactly the Admin Funnel row in isolation, rather
  * than the whole admin sweep across every team. */
 export const AdminFunnelAggregateRow = ({ selection }: { selection: PeriodSelection }) => {
-    const data = scalePeriodDataForPersona(getSelectedPeriodChartData(selection), { role: "admin" });
-    const [aggregate] = getFunnelCohorts(data, { role: "admin" });
+    const { deals } = useDeals();
+    const [aggregate] = getFunnelCohortsLive(selection, { role: "admin" }, deals);
 
     return (
         <section className="flex flex-col gap-6">

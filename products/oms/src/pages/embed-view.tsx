@@ -2,6 +2,7 @@ import { AdminFunnelAggregateRow, FunnelSection } from "@/components/dashboard/f
 import { StatCardsRow } from "@/components/dashboard/stat-cards";
 import { TeamDrilldown } from "@/components/dashboard/team-drilldown";
 import type { PeriodSelection } from "@/data/dashboard-data";
+import { DealsProvider } from "@/providers/deals-provider";
 import { RoleProvider } from "@/providers/role-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import type { Persona } from "@/types/role";
@@ -52,9 +53,11 @@ export const EmbedView = ({ view }: { view: EmbedViewKey }) => {
     return (
         <ThemeProvider defaultTheme="dark">
             <RoleProvider initialPersona={EMBED_PERSONAS[view]}>
-                <div className={`bg-primary ${EMBED_PADDING[view]}`}>
-                    <Component />
-                </div>
+                <DealsProvider>
+                    <div className={`bg-primary ${EMBED_PADDING[view]}`}>
+                        <Component />
+                    </div>
+                </DealsProvider>
             </RoleProvider>
         </ThemeProvider>
     );

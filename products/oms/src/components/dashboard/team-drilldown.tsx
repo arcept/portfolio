@@ -4,31 +4,25 @@ import { Avatar } from "@/components/base/avatar/avatar";
 import { Input } from "@/components/base/input/input";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { cx } from "@/utils/cx";
+import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import { getVisibleSections } from "@/utils/role-visibility";
 import type { OrgBdr, OrgTeamLead, OrgTeamManager, PeriodSelection } from "@/data/dashboard-data";
-import {
-    TM_TOTAL_WEIGHT,
-    bdrs,
-    getFunnelCohorts,
-    getSelectedPeriodChartData,
-    scaleForWeight,
-    scalePeriodDataForPersona,
-    teamLeads,
-    teamManagers,
-} from "@/data/dashboard-data";
+import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
+import { getFunnelCohortsLive, getNodeBookedTotal, getNodeChangePercent, resolvePeriodBounds } from "@/data/dashboard-metrics";
 import { FunnelStageCard } from "./funnel-section";
 
 type Row = { id: string; name: string; amount: string; changePercent: string };
 
-/** Rows always show a real, absolute org-wide rupee share — walked fresh from `orgWideData`
- * through the node's actual ancestor weights, regardless of which persona is currently
- * browsing (a TM's own TLs still show real rupees, not a total re-based to their own 100%). */
-const toRow = (node: { id: string; name: string }, absoluteAmount: number): Row => ({
+/** Rows show a real, absolute rupee total — a literal sum of that node's own deals (each
+ * `Deal` already carries its own `tmId`/`tlId`/`bdrId`, so no need to walk/sum through
+ * children), regardless of which persona is currently browsing (a TM's own TLs still show
+ * real rupees, not a total re-based to their own 100%). */
+const toRow = (node: { id: string; name: string }, absoluteAmount: number, changePercent: string): Row => ({
     id: node.id,
     name: node.name,
     amount: `₹${(absoluteAmount / 100_000).toFixed(2)} L`,
-    changePercent: "0%",
+    changePercent,
 });
 
 const RowButton = ({ row, isSelected, onSelect }: { row: Row; isSelected: boolean; onSelect: () => void }) => (
@@ -65,26 +59,20 @@ const WaitingForSelection = ({ label }: { label: string }) => (
 
 export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => {
     const { persona } = usePersona();
+    const { deals } = useDeals();
     const { drilldownColumns, showBdrSearch } = getVisibleSections(persona);
 
-    const orgWideData = getSelectedPeriodChartData(selection);
+    const bounds = resolvePeriodBounds(selection);
 
-    // Absolute-rupee walkers — always start from org-wide, so a node's amount is the same
-    // real number no matter which persona is currently browsing the tree.
-    const tmShareOf = (tmId: string): number => {
-        const tm = teamManagers.find((t) => t.id === tmId);
-        return tm ? scaleForWeight(orgWideData.bookedTotal, tm.weight, TM_TOTAL_WEIGHT) : 0;
-    };
-    const tlShareOf = (tl: OrgTeamLead): number => {
-        const siblingTotal = teamLeads.filter((t) => t.tmId === tl.tmId).reduce((sum, t) => sum + t.weight, 0);
-        return scaleForWeight(tmShareOf(tl.tmId), tl.weight, siblingTotal);
-    };
-    const bdrShareOf = (bdr: OrgBdr): number => {
-        const tl = teamLeads.find((t) => t.id === bdr.tlId);
-        if (!tl) return 0;
-        const siblingTotal = bdrs.filter((b) => b.tlId === bdr.tlId).reduce((sum, b) => sum + b.weight, 0);
-        return scaleForWeight(tlShareOf(tl), bdr.weight, siblingTotal);
-    };
+    // A node's amount is a literal sum of its own deals — a `Deal` already carries its own
+    // `tmId`/`tlId`/`bdrId`, so no need to walk/sum through children, and the number is the
+    // same real rupees no matter which persona is currently browsing the tree.
+    const tmShareOf = (tmId: string): number => getNodeBookedTotal("tmId", tmId, bounds, deals);
+    const tlShareOf = (tl: OrgTeamLead): number => getNodeBookedTotal("tlId", tl.id, bounds, deals);
+    const bdrShareOf = (bdr: OrgBdr): number => getNodeBookedTotal("bdrId", bdr.id, bounds, deals);
+    const tmChangeOf = (tmId: string): string => getNodeChangePercent("tmId", tmId, selection, deals);
+    const tlChangeOf = (tl: OrgTeamLead): string => getNodeChangePercent("tlId", tl.id, selection, deals);
+    const bdrChangeOf = (bdr: OrgBdr): string => getNodeChangePercent("bdrId", bdr.id, selection, deals);
 
     // Admin's own TM column is real TMs; a TM persona has no TM column at all — their "top"
     // level is their own TLs directly, so `ownTmId` anchors everything below it.
@@ -120,7 +108,7 @@ export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => 
     const detailCohort = selectedBdr
         ? (() => {
               const bdrPersona = { role: "bdr" as const, tmId: selectedBdr.tmId, tlId: selectedBdr.tlId, bdrId: selectedBdr.id };
-              return getFunnelCohorts(scalePeriodDataForPersona(orgWideData, bdrPersona), bdrPersona)[0];
+              return getFunnelCohortsLive(selection, bdrPersona, deals)[0];
           })()
         : null;
 
@@ -151,7 +139,7 @@ export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => 
                             {teamManagers.map((tm: OrgTeamManager) => (
                                 <RowButton
                                     key={tm.id}
-                                    row={toRow(tm, tmShareOf(tm.id))}
+                                    row={toRow(tm, tmShareOf(tm.id), tmChangeOf(tm.id))}
                                     isSelected={tm.id === selectedTmId}
                                     onSelect={() => {
                                         setSelectedTmId(tm.id);
@@ -170,7 +158,7 @@ export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => 
                             {tlSiblings.map((tl: OrgTeamLead) => (
                                 <RowButton
                                     key={tl.id}
-                                    row={toRow(tl, tlShareOf(tl))}
+                                    row={toRow(tl, tlShareOf(tl), tlChangeOf(tl))}
                                     isSelected={tl.id === selectedTlId}
                                     onSelect={() => {
                                         setSelectedTlId(tl.id);
@@ -189,7 +177,7 @@ export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => 
                         searchResults.length > 0 ? (
                             <div className="flex flex-col gap-1">
                                 {searchResults.map((bdr) => (
-                                    <RowButton key={bdr.id} row={toRow(bdr, bdrShareOf(bdr))} isSelected={bdr.id === selectedBdrId} onSelect={() => selectBdr(bdr)} />
+                                    <RowButton key={bdr.id} row={toRow(bdr, bdrShareOf(bdr), bdrChangeOf(bdr))} isSelected={bdr.id === selectedBdrId} onSelect={() => selectBdr(bdr)} />
                                 ))}
                             </div>
                         ) : (
@@ -198,7 +186,7 @@ export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => 
                     ) : activeTl ? (
                         <div className="flex flex-col gap-1">
                             {bdrSiblings.map((bdr) => (
-                                <RowButton key={bdr.id} row={toRow(bdr, bdrShareOf(bdr))} isSelected={bdr.id === selectedBdrId} onSelect={() => selectBdr(bdr)} />
+                                <RowButton key={bdr.id} row={toRow(bdr, bdrShareOf(bdr), bdrChangeOf(bdr))} isSelected={bdr.id === selectedBdrId} onSelect={() => selectBdr(bdr)} />
                             ))}
                         </div>
                     ) : (

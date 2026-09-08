@@ -146,7 +146,7 @@ export const DashboardReportDocument = ({ data, persona, scopeLabel, periodLabel
                             delta={`${unitProgressPercent}% of target`}
                             deltaTone={unitProgressPercent >= 100 ? "positive" : "neutral"}
                         />
-                        <Kpi label="Revenue Booked" value={rupee(data.bookedTotal)} delta={data.changeText.replace(/^Out of which.*is realised/, "").trim() || "vs last period"} deltaTone="positive" />
+                        <Kpi label="Revenue Booked" value={rupee(data.bookedTotal)} delta={data.changeText} deltaTone={data.changeText.startsWith("-") ? "neutral" : "positive"} />
                         <Kpi label="Revenue Realised" value={rupee(data.totalRealised)} delta={realisedPercentText} deltaTone="neutral" />
                         <Kpi label="Average Ticket Size" value={rupee(data.ats)} delta="per unit sold" deltaTone="positive" />
                     </View>

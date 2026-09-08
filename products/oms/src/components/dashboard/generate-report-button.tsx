@@ -3,21 +3,21 @@ import { FileDownload03 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { DialogTrigger, Modal, ModalOverlay, Dialog } from "@/components/application/modals/modal";
+import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import { generateAndDownloadReport } from "@/lib/pdf/generate-report";
 import type { PeriodSelection } from "@/data/dashboard-data";
-import { getSelectedPeriodChartData, scalePeriodDataForPersona } from "@/data/dashboard-data";
 
 export const GenerateReportButton = ({ selection }: { selection: PeriodSelection }) => {
     const { persona } = usePersona();
+    const { deals } = useDeals();
     const [agreed, setAgreed] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
 
     const handleConfirm = async (close: () => void) => {
         setIsGenerating(true);
         try {
-            const data = scalePeriodDataForPersona(getSelectedPeriodChartData(selection), persona);
-            await generateAndDownloadReport(data, persona);
+            await generateAndDownloadReport(selection, persona, deals);
         } finally {
             setIsGenerating(false);
             close();
