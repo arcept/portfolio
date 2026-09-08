@@ -1,4 +1,5 @@
-import type { FunnelFlow, FunnelFlowNodeId } from "@/data/dashboard-metrics";
+import { useState } from "react";
+import type { FunnelFlow, FunnelFlowNodeId, FunnelFlowSubBand } from "@/data/dashboard-metrics";
 
 /**
  * Hand-rolled SVG "glowing stream" ribbon, styled after Manik's reference (a continuous,
@@ -8,9 +9,15 @@ import type { FunnelFlow, FunnelFlowNodeId } from "@/data/dashboard-metrics";
  * copies of that same path, a hard minimum floor for the sparse case) is plain arithmetic and
  * bezier math, not a layout problem a Sankey library solves for us.
  *
- * Sub-status detail (Pending/Filled/etc.) intentionally isn't drawn as separate bands anymore —
- * the reference's bands read as glow/depth layers around ONE flowing shape, not a real
- * breakdown, so that detail moved into hover tooltips (see `titleFor`) instead of stacked rects.
+ * Sub-status detail (Pending/Filled/etc.) intentionally isn't drawn as separate bands — the
+ * reference's bands read as glow/depth layers around ONE flowing shape, not a real breakdown —
+ * it surfaces on hover instead, via the floating tooltip below.
+ *
+ * Interactivity: the whole visible width is covered by exactly one of 3 "zone" hit-areas (no
+ * dead space between the old per-checkpoint hit-rects — that was the bug where most clicks did
+ * nothing), each spanning from the previous zone boundary to the next and the full node+pill
+ * height, plus up to 2 dropout hit-areas below. Hover shows a rich tooltip (matching the app's
+ * existing ChartTooltipContent styling) and a soft "spotlight" wash over the hovered zone.
  *
  * Colors come from `--color-sales-funnel-*` (theme.css) fed straight into SVG props as
  * `var(...)` strings — same convention as booked-chart.tsx — so light/dark theming (including
@@ -63,8 +70,9 @@ function buildFlowPath(points: Point[]): string {
     return `${d} Z`;
 }
 
-const titleFor = (nodeLabel: string, value: number, subBands: { label: string; count: number }[]) =>
-    `${nodeLabel}: ${value} (${subBands.map((b) => `${b.label}: ${b.count}`).join(", ")})`;
+type TooltipContent = { title: string; lines: string[]; hint?: string };
+
+const formatSubBands = (subBands: FunnelFlowSubBand[]) => subBands.filter((b) => b.count > 0).map((b) => `${b.label}: ${b.count}`);
 
 export type SalesFunnelRibbonProps = {
     flow: FunnelFlow;
@@ -76,6 +84,7 @@ export type SalesFunnelRibbonProps = {
 export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFunnelRibbonProps) => {
     const [application, offer, payment] = flow.nodes;
     const maxValue = Math.max(application.value, 1);
+    const [hover, setHover] = useState<{ zone: string; content: TooltipContent; x: number; y: number } | null>(null);
 
     const columnX = [width * 0.08, width * 0.5, width * 0.92];
     const centerY = TOP_RESERVED + (height - TOP_RESERVED - BOTTOM_RESERVED) * 0.42;
@@ -97,8 +106,11 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
             const endX = startX + (columnX[i + 1] - startX) * DROPOUT_FADE_FRACTION;
             return {
                 key: `dropout-${i}`,
+                zoneIndex: i,
                 from: (i === 0 ? "application" : "offer") as FunnelFlowNodeId,
+                fromLabel: i === 0 ? "Application" : "Offer",
                 count: flow.dropouts[i],
+                breakdown: flow.dropoutBreakdown[i],
                 path: buildFlowPath([
                     { x: startX, y0: dropoutBaseY - half, y1: dropoutBaseY + half },
                     { x: endX, y0: dropoutBaseY, y1: dropoutBaseY },
@@ -111,105 +123,191 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
     const nodeIds: FunnelFlowNodeId[] = ["application", "offer", "payment"];
     const nodes = [application, offer, payment];
 
+    // Zone boundaries — the entire width is exactly one of these 3 zones, so there's no dead
+    // space between them (the bug in the previous version: only narrow per-checkpoint hit-rects
+    // were clickable, so most clicks on the visible ribbon did nothing).
+    const zoneEdges = [0, (columnX[0] + columnX[1]) / 2, (columnX[1] + columnX[2]) / 2, width];
+    const mainZoneY0 = 0;
+    const mainZoneY1 = dropoutBaseY - DROPOUT_GAP / 2;
+    const dropoutZoneY1 = height;
+
     const pillWidth = (text: string) => Math.max(34, 18 + text.length * 9);
 
+    const nodeTooltip = (i: number): TooltipContent => {
+        const node = nodes[i];
+        const lines = formatSubBands(node.subBands);
+        if (i > 0) {
+            const prevValue = nodes[i - 1].value;
+            lines.push(`${flow.conversionPct[i - 1]}% of ${nodes[i - 1].label} (${node.value} of ${prevValue})`);
+        }
+        return { title: `${node.label} — ${node.value}`, lines, hint: `Click to view ${node.label} deals →` };
+    };
+
+    const dropoutTooltip = (r: (typeof dropoutRibbons)[number]): TooltipContent => ({
+        title: `Dropped after ${r.fromLabel} — ${r.count}`,
+        lines: formatSubBands(r.breakdown),
+        hint: `Click to view these deals →`,
+    });
+
+    const showHover = (zone: string, content: TooltipContent, e: React.MouseEvent<SVGRectElement>) => {
+        const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+        if (!rect) return;
+        setHover({ zone, content, x: e.clientX - rect.left, y: e.clientY - rect.top });
+    };
+    const moveHover = (zone: string, content: TooltipContent, e: React.MouseEvent<SVGRectElement>) => showHover(zone, content, e);
+    const clearHover = () => setHover(null);
+
     return (
-        <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} className="h-auto w-full min-w-160" role="img" aria-label="Sales funnel flow">
-            <defs>
-                <filter id="sf-glow-blur" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="18" />
-                </filter>
-                <linearGradient id="sf-dropout-gradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="var(--color-fg-quaternary)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="var(--color-fg-quaternary)" stopOpacity={0} />
-                </linearGradient>
-            </defs>
+        <div className="relative">
+            <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} className="block h-auto w-full min-w-160" role="img" aria-label="Sales funnel flow">
+                <defs>
+                    <filter id="sf-glow-blur" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="18" />
+                    </filter>
+                    <linearGradient id="sf-dropout-gradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="var(--color-fg-quaternary)" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="var(--color-fg-quaternary)" stopOpacity={0} />
+                    </linearGradient>
+                </defs>
 
-            {/* Soft ambient halo behind the flow — a blurred, oversized copy of the outermost layer. */}
-            <path d={buildFlowPath(mainPoints)} fill="var(--color-sales-funnel-glow)" opacity={0.22} filter="url(#sf-glow-blur)" />
+                {/* Soft ambient halo behind the flow — a blurred, oversized copy of the outermost layer. */}
+                <path d={buildFlowPath(mainPoints)} fill="var(--color-sales-funnel-glow)" opacity={0.22} filter="url(#sf-glow-blur)" />
 
-            {dropoutRibbons.map((r) => (
-                <path
-                    key={r.key}
-                    d={r.path}
-                    fill="url(#sf-dropout-gradient)"
-                    className={onBandClick ? "cursor-pointer" : undefined}
-                    onClick={onBandClick ? () => onBandClick(r.from, "dropout") : undefined}
+                {dropoutRibbons.map((r) => (
+                    <path key={r.key} d={r.path} fill="url(#sf-dropout-gradient)" opacity={hover && hover.zone !== r.key ? 0.55 : 1} />
+                ))}
+
+                {GLOW_LAYERS.map((layer, i) => (
+                    <path
+                        key={i}
+                        d={buildFlowPath(mainPoints.map((p) => ({ x: p.x, y0: centerY - (centerY - p.y0) * layer.scale, y1: centerY + (p.y1 - centerY) * layer.scale })))}
+                        fill={layer.color}
+                        opacity={hover && hover.zone.startsWith("main-") && hover.zone !== "main-all" ? layer.opacity * 0.7 : layer.opacity}
+                    />
+                ))}
+
+                {/* Spotlight wash over the hovered zone. */}
+                {hover?.zone.startsWith("main-") &&
+                    (() => {
+                        const i = Number(hover.zone.split("-")[1]);
+                        return (
+                            <rect
+                                x={zoneEdges[i]}
+                                y={centerY - mainHalf[i] - 6}
+                                width={zoneEdges[i + 1] - zoneEdges[i]}
+                                height={mainHalf[i] * 2 + 12}
+                                rx={mainHalf[i]}
+                                fill="var(--color-text-white)"
+                                opacity={0.08}
+                                style={{ pointerEvents: "none" }}
+                            />
+                        );
+                    })()}
+
+                {/* Full-zone hit-areas for the main flow — the entire width is covered, no gaps. */}
+                {nodeIds.map((id, i) => (
+                    <rect
+                        key={id}
+                        x={zoneEdges[i]}
+                        y={mainZoneY0}
+                        width={zoneEdges[i + 1] - zoneEdges[i]}
+                        height={mainZoneY1 - mainZoneY0}
+                        fill="transparent"
+                        className={onBandClick ? "cursor-pointer" : undefined}
+                        onMouseEnter={(e) => showHover(`main-${i}`, nodeTooltip(i), e)}
+                        onMouseMove={(e) => moveHover(`main-${i}`, nodeTooltip(i), e)}
+                        onMouseLeave={clearHover}
+                        onClick={onBandClick ? () => onBandClick(id, "main") : undefined}
+                    />
+                ))}
+
+                {/* Dropout hit-areas, one per real transition. */}
+                {dropoutRibbons.map((r) => (
+                    <rect
+                        key={r.key}
+                        x={zoneEdges[r.zoneIndex]}
+                        y={mainZoneY1}
+                        width={zoneEdges[r.zoneIndex + 1] - zoneEdges[r.zoneIndex]}
+                        height={dropoutZoneY1 - mainZoneY1}
+                        fill="transparent"
+                        className={onBandClick ? "cursor-pointer" : undefined}
+                        onMouseEnter={(e) => showHover(r.key, dropoutTooltip(r), e)}
+                        onMouseMove={(e) => moveHover(r.key, dropoutTooltip(r), e)}
+                        onMouseLeave={clearHover}
+                        onClick={onBandClick ? () => onBandClick(r.from, "dropout") : undefined}
+                    />
+                ))}
+
+                {/* Node value pills, above the flow, with a guide line down to the ribbon. */}
+                {nodeIds.map((id, i) => {
+                    const text = String(nodes[i].value);
+                    const w = pillWidth(text);
+                    const pillY = TOP_RESERVED - PILL_HEIGHT - LABEL_GAP;
+                    return (
+                        <g key={id} style={{ pointerEvents: "none" }}>
+                            <line x1={columnX[i]} y1={pillY + PILL_HEIGHT} x2={columnX[i]} y2={centerY - mainHalf[i]} stroke="var(--color-border-secondary)" strokeWidth={1} />
+                            <rect x={columnX[i] - w / 2} y={pillY} width={w} height={PILL_HEIGHT} rx={PILL_HEIGHT / 2} fill="var(--color-bg-primary-solid)" />
+                            <text x={columnX[i]} y={pillY + PILL_HEIGHT / 2 + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-primary_on-brand)">
+                                {text}
+                            </text>
+                            <text x={columnX[i]} y={pillY - NODE_LABEL_HEIGHT + 14} textAnchor="middle" fontSize={11} fontWeight={600} fill="var(--color-text-secondary)">
+                                {nodes[i].label}
+                            </text>
+                        </g>
+                    );
+                })}
+
+                {/* Dropout pills, below the flow, one per real transition. */}
+                {dropoutRibbons.map((r) => {
+                    const text = String(r.count);
+                    const w = pillWidth(text);
+                    const pillY = height - BOTTOM_RESERVED + LABEL_GAP - 6;
+                    return (
+                        <g key={r.key} style={{ pointerEvents: "none" }}>
+                            <line x1={r.labelX} y1={r.labelY} x2={r.labelX} y2={pillY} stroke="var(--color-border-secondary)" strokeWidth={1} />
+                            <rect x={r.labelX - w / 2} y={pillY} width={w} height={PILL_HEIGHT} rx={PILL_HEIGHT / 2} fill="var(--color-bg-secondary)" />
+                            <text x={r.labelX} y={pillY + PILL_HEIGHT / 2 + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-secondary)">
+                                {text}
+                            </text>
+                        </g>
+                    );
+                })}
+
+                {/* Conversion % at each junction's midpoint, centered in the ribbon — also hoverable. */}
+                {[
+                    { x: (columnX[0] + columnX[1]) / 2, pct: flow.conversionPct[0], zone: "main-0" },
+                    { x: (columnX[1] + columnX[2]) / 2, pct: flow.conversionPct[1], zone: "main-1" },
+                ].map((junction, i) => (
+                    <text
+                        key={i}
+                        x={junction.x}
+                        y={centerY + 4}
+                        textAnchor="middle"
+                        fontSize={12}
+                        fontWeight={700}
+                        fill="var(--color-text-white)"
+                        opacity={0.9}
+                        style={{ pointerEvents: "none" }}
+                    >
+                        {junction.pct}%
+                    </text>
+                ))}
+            </svg>
+
+            {hover && (
+                <div
+                    className="pointer-events-none absolute z-10 flex w-max max-w-64 flex-col gap-0.5 rounded-lg bg-primary-solid px-3 py-2 shadow-lg"
+                    style={{ left: hover.x, top: hover.y, transform: "translate(-50%, calc(-100% - 14px))" }}
                 >
-                    <title>Dropped after {r.from === "application" ? "Application" : "Offer"}: {r.count}</title>
-                </path>
-            ))}
-
-            {GLOW_LAYERS.map((layer, i) => (
-                <path
-                    key={i}
-                    d={buildFlowPath(mainPoints.map((p) => ({ x: p.x, y0: centerY - (centerY - p.y0) * layer.scale, y1: centerY + (p.y1 - centerY) * layer.scale })))}
-                    fill={layer.color}
-                    opacity={layer.opacity}
-                />
-            ))}
-
-            {/* Invisible per-node hit areas — wide enough to click reliably, click-through target
-                is the whole node now that sub-bands aren't separately drawn. */}
-            {nodeIds.map((id, i) => (
-                <rect
-                    key={id}
-                    x={columnX[i] - (i === 0 ? 40 : 55)}
-                    y={centerY - mainHalf[i] - 4}
-                    width={i === 0 ? 95 : 110}
-                    height={mainHalf[i] * 2 + 8}
-                    fill="transparent"
-                    className={onBandClick ? "cursor-pointer" : undefined}
-                    onClick={onBandClick ? () => onBandClick(id, "main") : undefined}
-                >
-                    <title>{titleFor(nodes[i].label, nodes[i].value, nodes[i].subBands)}</title>
-                </rect>
-            ))}
-
-            {/* Node value pills, above the flow, with a guide line down to the ribbon. */}
-            {nodeIds.map((id, i) => {
-                const text = String(nodes[i].value);
-                const w = pillWidth(text);
-                const pillY = TOP_RESERVED - PILL_HEIGHT - LABEL_GAP;
-                return (
-                    <g key={id}>
-                        <line x1={columnX[i]} y1={pillY + PILL_HEIGHT} x2={columnX[i]} y2={centerY - mainHalf[i]} stroke="var(--color-border-secondary)" strokeWidth={1} />
-                        <rect x={columnX[i] - w / 2} y={pillY} width={w} height={PILL_HEIGHT} rx={PILL_HEIGHT / 2} fill="var(--color-bg-primary-solid)" />
-                        <text x={columnX[i]} y={pillY + PILL_HEIGHT / 2 + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-primary_on-brand)">
-                            {text}
-                        </text>
-                        <text x={columnX[i]} y={pillY - NODE_LABEL_HEIGHT + 14} textAnchor="middle" fontSize={11} fontWeight={600} fill="var(--color-text-secondary)">
-                            {nodes[i].label}
-                        </text>
-                    </g>
-                );
-            })}
-
-            {/* Dropout pills, below the flow, one per real transition. */}
-            {dropoutRibbons.map((r) => {
-                const text = String(r.count);
-                const w = pillWidth(text);
-                const pillY = height - BOTTOM_RESERVED + LABEL_GAP - 6;
-                return (
-                    <g key={r.key}>
-                        <line x1={r.labelX} y1={r.labelY} x2={r.labelX} y2={pillY} stroke="var(--color-border-secondary)" strokeWidth={1} />
-                        <rect x={r.labelX - w / 2} y={pillY} width={w} height={PILL_HEIGHT} rx={PILL_HEIGHT / 2} fill="var(--color-bg-secondary)" />
-                        <text x={r.labelX} y={pillY + PILL_HEIGHT / 2 + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-secondary)">
-                            {text}
-                        </text>
-                    </g>
-                );
-            })}
-
-            {/* Conversion % at each junction's midpoint, centered in the ribbon. */}
-            {[
-                { x: (columnX[0] + columnX[1]) / 2, pct: flow.conversionPct[0] },
-                { x: (columnX[1] + columnX[2]) / 2, pct: flow.conversionPct[1] },
-            ].map((junction, i) => (
-                <text key={i} x={junction.x} y={centerY + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-white)" opacity={0.9}>
-                    {junction.pct}%
-                </text>
-            ))}
-        </svg>
+                    <p className="text-xs font-semibold text-white">{hover.content.title}</p>
+                    {hover.content.lines.map((line, i) => (
+                        <p key={i} className="text-xs text-tooltip-supporting-text">
+                            {line}
+                        </p>
+                    ))}
+                    {hover.content.hint && <p className="mt-1 text-xs font-medium text-tooltip-supporting-text">{hover.content.hint}</p>}
+                </div>
+            )}
+        </div>
     );
 };

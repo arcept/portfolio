@@ -547,12 +547,32 @@ export type FunnelFlow = {
      * goes cold mid-payment has nowhere to peel toward (Payment is the last node) — it's folded
      * into that node's own "Went Cold" sub-band instead of a 3rd dropout edge to nowhere. */
     dropouts: [number, number];
+    /** Why, for each of the two transitions — same deals as `dropouts`, broken out by status. */
+    dropoutBreakdown: [FunnelFlowSubBand[], FunnelFlowSubBand[]];
     /** (count continuing forward) / (count entering that stage): Offer/Application, then
      * Payment/Offer. */
     conversionPct: [number, number];
 };
 
 const DROPPED_STATUS_IDS: DealStatusId[] = ["APP_EXPIRED", "OFFER_EXPIRED", "NOT_INTERESTED", "REJECTED", "SAVED"];
+const DROPPED_STATUS_LABELS: Partial<Record<DealStatusId, string>> = {
+    APP_EXPIRED: "Expired",
+    OFFER_EXPIRED: "Expired",
+    NOT_INTERESTED: "Not Interested",
+    REJECTED: "Rejected",
+    SAVED: "Saved",
+};
+
+function dropoutBreakdownFor(deals: Deal[]): FunnelFlowSubBand[] {
+    const counts = new Map<string, number>();
+    for (const d of deals) {
+        const label = DROPPED_STATUS_LABELS[d.status.id] ?? d.status.id;
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+        .map(([label, count]) => ({ key: label.toLowerCase().replace(/\s+/g, "-"), label, count }))
+        .sort((a, b) => b.count - a.count);
+}
 
 function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
     const offerCohort = cohort.filter((d) => d.reachedStage >= 2);
@@ -564,8 +584,10 @@ function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
     // exactly what "furthest point reached" means, so reading it here to place them is a
     // legitimate use of the same field, not a new interpretation of it.
     const dropped = cohort.filter((d) => DROPPED_STATUS_IDS.includes(d.status.id));
-    const droppedAtApplication = dropped.filter((d) => d.reachedStage <= 1).length;
-    const droppedAtOffer = dropped.filter((d) => d.reachedStage === 2).length;
+    const droppedAtApplicationDeals = dropped.filter((d) => d.reachedStage <= 1);
+    const droppedAtOfferDeals = dropped.filter((d) => d.reachedStage === 2);
+    const droppedAtApplication = droppedAtApplicationDeals.length;
+    const droppedAtOffer = droppedAtOfferDeals.length;
     const wentColdAtPayment = dropped.filter((d) => d.reachedStage === 3).length;
 
     const applicationPending = cohort.filter((d) => d.status.id === "APP_PENDING").length;
@@ -616,6 +638,7 @@ function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
         cohortSize: cohort.length,
         nodes,
         dropouts: [droppedAtApplication, droppedAtOffer],
+        dropoutBreakdown: [dropoutBreakdownFor(droppedAtApplicationDeals), dropoutBreakdownFor(droppedAtOfferDeals)],
         conversionPct: [
             cohort.length === 0 ? 0 : Math.round((offerCohort.length / cohort.length) * 100),
             offerCohort.length === 0 ? 0 : Math.round((paymentCohort.length / offerCohort.length) * 100),
