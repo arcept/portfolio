@@ -189,7 +189,7 @@ export const NavAccountCard = ({
     }
 
     return (
-        <div ref={triggerRef} className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset">
+        <div ref={triggerRef} className="relative flex items-center gap-4 rounded-xl p-3">
             <AvatarLabelGroup
                 size="md"
                 src={selectedAccount.avatar}
@@ -198,6 +198,10 @@ export const NavAccountCard = ({
                 subtitle={selectedAccount.email}
                 status={selectedAccount.status}
                 rounded={avatarRounded}
+                // Figma node 496:10810 — the closed nav card's own avatar gets a fixed
+                // orange-to-red gradient fill with white initials, not the shared Avatar
+                // component's default transparent/gray-initials look.
+                contentClassName="bg-[linear-gradient(135deg,#F49062_0%,#FD371F_100%)] [&>span]:text-white"
             />
 
             <AriaDialogTrigger>

@@ -48,45 +48,49 @@ const SidebarNavBadge = ({ children }: { children: ReactNode }) => (
  * active (full opacity, filled pill, accent bar), enabled-but-inactive (60% opacity, e.g. Home
  * when Deals is open), and disabled (40% opacity, regular instead of medium weight, not-allowed
  * cursor, "Coming soon" on hover — not the native `disabled` attribute, since anchors don't
- * support one and this keeps it hoverable for the tooltip regardless). */
+ * support one and this keeps it hoverable for the tooltip regardless).
+ *
+ * The accent bar sits outside the link/tooltip trigger — for a disabled item the link itself
+ * only hugs the icon+label (no badge to justify stretching it full-width), so the tooltip
+ * anchors right against the content you're actually hovering rather than the row's far right
+ * edge, 200+px from the cursor. */
 const SidebarNavItem = ({ label, href, icon: Icon, badge, active, disabled }: SidebarNavItemProps) => {
-    const row = (
+    const link = (
         <AriaLink
             href={disabled ? undefined : href}
             aria-disabled={disabled || undefined}
             className={cx(
-                "group/nav-item flex h-[50px] w-full items-center gap-2 outline-hidden",
-                disabled ? "cursor-not-allowed" : "cursor-pointer",
+                "flex items-center overflow-hidden rounded-lg px-1 py-[5px] outline-hidden transition duration-100 ease-linear",
+                disabled ? "cursor-not-allowed" : "w-full flex-1 cursor-pointer",
+                active ? "bg-primary_alt" : disabled ? "opacity-40" : "opacity-60 hover:bg-primary_hover hover:opacity-100",
             )}
         >
-            <span className={cx("h-full w-1 shrink-0 rounded-lg bg-fg-brand-secondary_alt transition-opacity duration-100 ease-linear", active ? "opacity-100" : "opacity-0")} />
-            <span
-                className={cx(
-                    "flex flex-1 items-center overflow-hidden rounded-lg px-1 py-[5px] transition duration-100 ease-linear",
-                    active
-                        ? "bg-primary_alt"
-                        : disabled
-                          ? "opacity-40"
-                          : "opacity-60 group-hover/nav-item:bg-primary_hover group-hover/nav-item:opacity-100",
-                )}
-            >
-                <span className="flex flex-1 items-center gap-3 rounded-md p-2">
-                    <span className="flex min-w-0 flex-1 items-center gap-2">
-                        <Icon className="size-5 shrink-0 text-primary" />
-                        <span className={cx("truncate text-md text-primary", disabled ? "font-normal" : "font-medium")}>{label}</span>
-                    </span>
-                    {badge}
+            <span className="flex flex-1 items-center gap-3 rounded-md p-2">
+                <span className="flex min-w-0 items-center gap-2">
+                    <Icon className="size-5 shrink-0 text-primary" />
+                    <span className={cx("truncate text-md text-primary", disabled ? "font-normal" : "font-medium")}>{label}</span>
                 </span>
+                {badge}
             </span>
         </AriaLink>
     );
 
-    return disabled ? (
-        <Tooltip title="Coming soon" placement="right">
-            {row}
-        </Tooltip>
-    ) : (
-        row
+    return (
+        <div className="flex h-[50px] w-full items-center gap-2">
+            <span
+                className={cx(
+                    "h-full w-1 shrink-0 rounded-lg bg-fg-brand-secondary_alt transition-opacity duration-100 ease-linear",
+                    active ? "opacity-100" : "opacity-0",
+                )}
+            />
+            {disabled ? (
+                <Tooltip title="Coming soon" placement="right">
+                    {link}
+                </Tooltip>
+            ) : (
+                link
+            )}
+        </div>
     );
 };
 
@@ -145,7 +149,7 @@ export const DashboardSidebar = () => {
                     </div>
                 </div>
 
-                <ul className="flex flex-col gap-1 px-4 py-16">
+                <ul className="flex flex-col gap-1 px-4 pt-8 pb-16">
                     {navItems.map((item) => (
                         <li key={item.label}>
                             <SidebarNavItem {...item} />
