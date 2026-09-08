@@ -1,198 +1,70 @@
 import type { FunnelFlow, FunnelFlowNodeId } from "@/data/dashboard-metrics";
 
 /**
- * Hand-rolled SVG Sankey ribbon — no d3-sankey/@nivo dependency. Neither library's automatic
- * layout cleanly fit two requirements this diagram actually needs: (1) a node can have
- * population with NO outgoing link at all (still-pending/still-accepted deals that haven't
- * resolved either way yet — a node's height must include that even though nothing flows out of
- * it), and (2) a hard minimum pixel floor per segment so a low-volume BDR view never collapses
- * to an invisible sliver. Both are a few lines of plain arithmetic here; fighting a layout
- * library into supporting them would've been more code, not less. Colors are fed as CSS
- * `var(--color-*)` strings straight into SVG props, same convention as booked-chart.tsx, so
- * dark/light theming is automatic — no JS color resolution.
+ * Hand-rolled SVG "glowing stream" ribbon, styled after Manik's reference (a continuous,
+ * tapering multi-layer glow — no hard node boxes, floating pill labels with guide lines, a soft
+ * blurred halo). No d3-sankey/@nivo dependency, same reasoning as before: the shape this needs
+ * (one smooth path spanning all three checkpoints, a nested-glow fill built from re-scaled
+ * copies of that same path, a hard minimum floor for the sparse case) is plain arithmetic and
+ * bezier math, not a layout problem a Sankey library solves for us.
+ *
+ * Sub-status detail (Pending/Filled/etc.) intentionally isn't drawn as separate bands anymore —
+ * the reference's bands read as glow/depth layers around ONE flowing shape, not a real
+ * breakdown, so that detail moved into hover tooltips (see `titleFor`) instead of stacked rects.
+ *
+ * Colors come from `--color-sales-funnel-*` (theme.css) fed straight into SVG props as
+ * `var(...)` strings — same convention as booked-chart.tsx — so light/dark theming (including
+ * the dark-mode-only multi-hue swap) is automatic, zero JS color logic.
  */
 
-const NODE_THICKNESS = 16;
-const MIN_NODE_HEIGHT = 28;
-const MIN_SEGMENT_HEIGHT = 6;
-const COLUMN_GAP_FRACTION = 0.34; // fraction of width between a node's right edge and the next node's left edge
-// Reserved space above/below the node columns for the label and count text — without this, the
-// largest node (Application, which the whole diagram scales against) fills close to the full
-// height and its own label/count get clipped by the SVG's own edges.
-const LABEL_PADDING = 30;
+const MIN_HALF_HEIGHT = 10;
+const LABEL_GAP = 10;
+const PILL_HEIGHT = 26;
+const NODE_LABEL_HEIGHT = 18; // "Application" / "Offer" / "Payment" text sitting above the pill
+const TOP_RESERVED = NODE_LABEL_HEIGHT + PILL_HEIGHT + LABEL_GAP + 6;
+const BOTTOM_RESERVED = PILL_HEIGHT + LABEL_GAP + 6;
+const DROPOUT_GAP = 26; // vertical gap between the main flow's bottom edge and the dropout lane's top
+const DROPOUT_MAX_HALF = 22;
+const DROPOUT_FADE_FRACTION = 0.62; // dropout ribbon dissipates to nothing this far into the gap to the next checkpoint
 
-type SegmentRole = "remainder" | "forward" | "dropout";
-type Segment = { key: string; label: string; count: number; y0: number; y1: number; role: SegmentRole; fill: string };
-type LayoutNode = { id: FunnelFlowNodeId; label: string; value: number; x: number; y0: number; y1: number; segments: Segment[] };
-type Ribbon = { key: string; kind: "forward" | "dropout"; from: FunnelFlowNodeId; sourceX: number; sourceY0: number; sourceY1: number; targetX: number; targetY0: number; targetY1: number };
+// Outer (widest, most transparent) to core (narrowest, brightest) — painted in this order so
+// each layer sits on top of the wider one behind it.
+const GLOW_LAYERS = [
+    { scale: 1, color: "var(--color-sales-funnel-layer-4)", opacity: 0.14 },
+    { scale: 0.72, color: "var(--color-sales-funnel-layer-3)", opacity: 0.32 },
+    { scale: 0.46, color: "var(--color-sales-funnel-layer-2)", opacity: 0.6 },
+    { scale: 0.22, color: "var(--color-sales-funnel-core)", opacity: 0.95 },
+];
 
-const REMAINDER_FILLS: Record<string, string> = {
-    pending: "var(--color-utility-orange-300)",
-    filled: "var(--color-utility-amber-500)",
-    withdrawn: "var(--color-utility-orange-400)",
-    accepted: "var(--color-utility-amber-500)",
-};
-// Ongoing (still live) gets the warm palette; Completed gets the fullest saturation ("arrived");
-// Cancelled/Went-Cold are negative outcomes after the fact, so they read as the same muted gray
-// as the dropout band rather than the live orange/amber path, even though they never left the
-// Payment node.
-const PAYMENT_FILLS: Record<string, string> = {
-    ongoing: "var(--color-utility-amber-500)",
-    completed: "var(--color-utility-orange-600)",
-    cancelled: "var(--color-fg-quaternary)",
-    "went-cold": "var(--color-fg-quaternary)",
-};
+type Point = { x: number; y0: number; y1: number };
 
-function layoutColumn(id: FunnelFlowNodeId, label: string, value: number, maxValue: number, totalHeight: number, remainderKeys: [string, number][], forward: number, dropout: number): LayoutNode {
-    const columnHeight = totalHeight - LABEL_PADDING * 2;
-    const pxPerUnit = maxValue === 0 ? 0 : columnHeight / maxValue;
-    const rawHeight = value * pxPerUnit;
-    const height = Math.max(MIN_NODE_HEIGHT, rawHeight);
-    const y0 = LABEL_PADDING + (columnHeight - height) / 2;
+/** One continuous closed path across N checkpoints — top edge left-to-right, bottom edge
+ * right-to-left, cubic beziers between consecutive checkpoints (control points at the
+ * horizontal midpoint). Generalizes a single tapering ribbon to a multi-segment flowing shape
+ * with no visible seam at the middle checkpoint. */
+function buildFlowPath(points: Point[]): string {
+    const top = points.map((p) => ({ x: p.x, y: p.y0 }));
+    const bottom = [...points].reverse().map((p) => ({ x: p.x, y: p.y1 }));
 
-    const order: { key: string; label: string; count: number; role: SegmentRole; fill: string }[] = [
-        ...remainderKeys.map(([key, count]) => ({ key, label: key, count, role: "remainder" as const, fill: REMAINDER_FILLS[key] ?? "var(--color-utility-amber-500)" })),
-        ...(forward > 0 || id !== "payment" ? [{ key: "forward", label: "Continuing", count: forward, role: "forward" as const, fill: "var(--color-utility-orange-600)" }] : []),
-        ...(dropout > 0 || id !== "payment" ? [{ key: "dropout", label: "Dropped", count: dropout, role: "dropout" as const, fill: "var(--color-fg-quaternary)" }] : []),
-    ].filter((s) => id === "payment" || s.count > 0 || s.role !== "remainder");
-
-    let cursor = y0;
-    const totalCount = order.reduce((sum, s) => sum + s.count, 0) || 1;
-    const segments: Segment[] = order.map((s) => {
-        const segHeight = Math.max(s.count > 0 ? MIN_SEGMENT_HEIGHT : 0, (s.count / totalCount) * height);
-        const seg: Segment = { key: s.key, label: s.label, count: s.count, y0: cursor, y1: cursor + segHeight, role: s.role, fill: s.fill };
-        cursor += segHeight;
-        return seg;
-    });
-
-    return { id, label, value, x: 0, y0, y1: cursor, segments };
+    let d = `M ${top[0].x} ${top[0].y}`;
+    for (let i = 1; i < top.length; i++) {
+        const prev = top[i - 1];
+        const cur = top[i];
+        const midX = (prev.x + cur.x) / 2;
+        d += ` C ${midX} ${prev.y}, ${midX} ${cur.y}, ${cur.x} ${cur.y}`;
+    }
+    d += ` L ${bottom[0].x} ${bottom[0].y}`;
+    for (let i = 1; i < bottom.length; i++) {
+        const prev = bottom[i - 1];
+        const cur = bottom[i];
+        const midX = (prev.x + cur.x) / 2;
+        d += ` C ${midX} ${prev.y}, ${midX} ${cur.y}, ${cur.x} ${cur.y}`;
+    }
+    return `${d} Z`;
 }
 
-export function computeSalesFunnelLayout(flow: FunnelFlow, width: number, height: number) {
-    const [application, offer, payment] = flow.nodes;
-    const maxValue = Math.max(application.value, 1);
-
-    const columnX = [width * 0.06, width * 0.5, width * (1 - 0.06) - NODE_THICKNESS];
-
-    const applicationSubBands = application.subBands.filter((b) => b.key !== "forward");
-    const offerSubBands = offer.subBands.filter((b) => b.key !== "forward");
-
-    const nodes: LayoutNode[] = [
-        {
-            ...layoutColumn(
-                "application",
-                application.label,
-                application.value,
-                maxValue,
-                height,
-                applicationSubBands.map((b) => [b.key, b.count]),
-                offer.value,
-                flow.dropouts[0],
-            ),
-            x: columnX[0],
-        },
-        {
-            ...layoutColumn("offer", offer.label, offer.value, maxValue, height, offerSubBands.map((b) => [b.key, b.count]), payment.value, flow.dropouts[1]),
-            x: columnX[1],
-        },
-        {
-            ...layoutColumn(
-                "payment",
-                payment.label,
-                payment.value,
-                maxValue,
-                height,
-                payment.subBands.map((b) => [b.key, b.count]),
-                0,
-                0,
-            ),
-            x: columnX[2],
-        },
-    ];
-    // Payment's sub-bands use their own fill map (ongoing/completed/cancelled/went-cold), not
-    // the remainder palette every other node's leftover segments use.
-    nodes[2].segments = nodes[2].segments.map((s) => ({ ...s, fill: PAYMENT_FILLS[s.key] ?? s.fill }));
-
-    const [applicationNode, offerNode, paymentNode] = nodes;
-    const ribbonTargetInset = (columnX[1] - columnX[0]) * COLUMN_GAP_FRACTION;
-
-    const forwardSeg = (n: LayoutNode) => n.segments.find((s) => s.role === "forward");
-    const dropoutSeg = (n: LayoutNode) => n.segments.find((s) => s.role === "dropout");
-
-    const ribbons: Ribbon[] = [];
-    const appForward = forwardSeg(applicationNode);
-    if (appForward) {
-        ribbons.push({
-            key: "app-offer",
-            kind: "forward",
-            from: "application",
-            sourceX: applicationNode.x + NODE_THICKNESS,
-            sourceY0: appForward.y0,
-            sourceY1: appForward.y1,
-            targetX: offerNode.x,
-            targetY0: offerNode.y0,
-            targetY1: offerNode.y1,
-        });
-    }
-    const appDropout = dropoutSeg(applicationNode);
-    if (appDropout && appDropout.count > 0) {
-        ribbons.push({
-            key: "app-dropout",
-            kind: "dropout",
-            from: "application",
-            sourceX: applicationNode.x + NODE_THICKNESS,
-            sourceY0: appDropout.y0,
-            sourceY1: appDropout.y1,
-            targetX: applicationNode.x + NODE_THICKNESS + ribbonTargetInset * 2.4,
-            targetY0: appDropout.y0,
-            targetY1: appDropout.y1,
-        });
-    }
-    const offerForward = forwardSeg(offerNode);
-    if (offerForward) {
-        ribbons.push({
-            key: "offer-payment",
-            kind: "forward",
-            from: "offer",
-            sourceX: offerNode.x + NODE_THICKNESS,
-            sourceY0: offerForward.y0,
-            sourceY1: offerForward.y1,
-            targetX: paymentNode.x,
-            targetY0: paymentNode.y0,
-            targetY1: paymentNode.y1,
-        });
-    }
-    const offerDropout = dropoutSeg(offerNode);
-    if (offerDropout && offerDropout.count > 0) {
-        ribbons.push({
-            key: "offer-dropout",
-            kind: "dropout",
-            from: "offer",
-            sourceX: offerNode.x + NODE_THICKNESS,
-            sourceY0: offerDropout.y0,
-            sourceY1: offerDropout.y1,
-            targetX: offerNode.x + NODE_THICKNESS + ribbonTargetInset * 2.4,
-            targetY0: offerDropout.y0,
-            targetY1: offerDropout.y1,
-        });
-    }
-
-    return { nodes, ribbons, columnX };
-}
-
-/** Closed, tapering ribbon path — two cubic beziers (top edge, bottom edge) meeting at the
- * source and target ends, control points at the horizontal midpoint. The standard technique
- * for an organic Sankey ribbon (plain cubic bezier math, no library needed). */
-function ribbonPath(r: Ribbon): string {
-    const midX = (r.sourceX + r.targetX) / 2;
-    return [
-        `M ${r.sourceX} ${r.sourceY0}`,
-        `C ${midX} ${r.sourceY0}, ${midX} ${r.targetY0}, ${r.targetX} ${r.targetY0}`,
-        `L ${r.targetX} ${r.targetY1}`,
-        `C ${midX} ${r.targetY1}, ${midX} ${r.sourceY1}, ${r.sourceX} ${r.sourceY1}`,
-        "Z",
-    ].join(" ");
-}
+const titleFor = (nodeLabel: string, value: number, subBands: { label: string; count: number }[]) =>
+    `${nodeLabel}: ${value} (${subBands.map((b) => `${b.label}: ${b.count}`).join(", ")})`;
 
 export type SalesFunnelRibbonProps = {
     flow: FunnelFlow;
@@ -202,58 +74,139 @@ export type SalesFunnelRibbonProps = {
 };
 
 export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFunnelRibbonProps) => {
-    const { nodes, ribbons, columnX } = computeSalesFunnelLayout(flow, width, height);
+    const [application, offer, payment] = flow.nodes;
+    const maxValue = Math.max(application.value, 1);
+
+    const columnX = [width * 0.08, width * 0.5, width * 0.92];
+    const centerY = TOP_RESERVED + (height - TOP_RESERVED - BOTTOM_RESERVED) * 0.42;
+    const mainAreaHeight = height - TOP_RESERVED - BOTTOM_RESERVED;
+
+    const halfHeightFor = (value: number) => Math.max(MIN_HALF_HEIGHT, (value / maxValue) * (mainAreaHeight / 2));
+    const mainHalf = [halfHeightFor(application.value), halfHeightFor(offer.value), halfHeightFor(payment.value)];
+
+    const mainPoints: Point[] = columnX.map((x, i) => ({ x, y0: centerY - mainHalf[i], y1: centerY + mainHalf[i] }));
+
+    const dropoutBaseY = centerY + mainHalf[0] + DROPOUT_GAP;
+    const dropoutHalfFor = (value: number) => (value === 0 ? 0 : Math.max(6, Math.min(DROPOUT_MAX_HALF, (value / maxValue) * (mainAreaHeight / 2))));
+
+    const dropoutRibbons = [0, 1]
+        .filter((i) => flow.dropouts[i] > 0)
+        .map((i) => {
+            const half = dropoutHalfFor(flow.dropouts[i]);
+            const startX = columnX[i];
+            const endX = startX + (columnX[i + 1] - startX) * DROPOUT_FADE_FRACTION;
+            return {
+                key: `dropout-${i}`,
+                from: (i === 0 ? "application" : "offer") as FunnelFlowNodeId,
+                count: flow.dropouts[i],
+                path: buildFlowPath([
+                    { x: startX, y0: dropoutBaseY - half, y1: dropoutBaseY + half },
+                    { x: endX, y0: dropoutBaseY, y1: dropoutBaseY },
+                ]),
+                labelX: startX,
+                labelY: dropoutBaseY + half,
+            };
+        });
+
+    const nodeIds: FunnelFlowNodeId[] = ["application", "offer", "payment"];
+    const nodes = [application, offer, payment];
+
+    const pillWidth = (text: string) => Math.max(34, 18 + text.length * 9);
 
     return (
         <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} className="h-auto w-full min-w-160" role="img" aria-label="Sales funnel flow">
             <defs>
-                <linearGradient id="sf-forward-gradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="var(--color-utility-amber-500)" />
-                    <stop offset="100%" stopColor="var(--color-utility-orange-600)" />
-                </linearGradient>
+                <filter id="sf-glow-blur" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="18" />
+                </filter>
                 <linearGradient id="sf-dropout-gradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="var(--color-fg-quaternary)" stopOpacity={0.45} />
+                    <stop offset="0%" stopColor="var(--color-fg-quaternary)" stopOpacity={0.4} />
                     <stop offset="100%" stopColor="var(--color-fg-quaternary)" stopOpacity={0} />
                 </linearGradient>
             </defs>
 
-            {ribbons.map((r) => (
-                <path key={r.key} d={ribbonPath(r)} fill={r.kind === "forward" ? "url(#sf-forward-gradient)" : "url(#sf-dropout-gradient)"} opacity={r.kind === "forward" ? 0.85 : 1} />
+            {/* Soft ambient halo behind the flow — a blurred, oversized copy of the outermost layer. */}
+            <path d={buildFlowPath(mainPoints)} fill="var(--color-sales-funnel-glow)" opacity={0.22} filter="url(#sf-glow-blur)" />
+
+            {dropoutRibbons.map((r) => (
+                <path
+                    key={r.key}
+                    d={r.path}
+                    fill="url(#sf-dropout-gradient)"
+                    className={onBandClick ? "cursor-pointer" : undefined}
+                    onClick={onBandClick ? () => onBandClick(r.from, "dropout") : undefined}
+                >
+                    <title>Dropped after {r.from === "application" ? "Application" : "Offer"}: {r.count}</title>
+                </path>
             ))}
 
-            {nodes.map((node) => (
-                <g key={node.id}>
-                    {node.segments.map((seg) => (
-                        <rect
-                            key={seg.key}
-                            x={node.x}
-                            y={seg.y0}
-                            width={NODE_THICKNESS}
-                            height={Math.max(0, seg.y1 - seg.y0)}
-                            fill={seg.fill}
-                            rx={2}
-                            className={onBandClick ? "cursor-pointer" : undefined}
-                            onClick={onBandClick ? () => onBandClick(node.id, seg.key) : undefined}
-                        >
-                            <title>
-                                {seg.label}: {seg.count}
-                            </title>
-                        </rect>
-                    ))}
-                    <text x={node.x + NODE_THICKNESS / 2} y={node.y0 - 10} textAnchor="middle" fontSize={12} fontWeight={600} fill="var(--color-text-primary)">
-                        {node.label}
-                    </text>
-                    <text x={node.x + NODE_THICKNESS / 2} y={node.y1 + 16} textAnchor="middle" fontSize={11} fill="var(--color-text-tertiary)">
-                        {node.value}
-                    </text>
-                </g>
+            {GLOW_LAYERS.map((layer, i) => (
+                <path
+                    key={i}
+                    d={buildFlowPath(mainPoints.map((p) => ({ x: p.x, y0: centerY - (centerY - p.y0) * layer.scale, y1: centerY + (p.y1 - centerY) * layer.scale })))}
+                    fill={layer.color}
+                    opacity={layer.opacity}
+                />
             ))}
 
+            {/* Invisible per-node hit areas — wide enough to click reliably, click-through target
+                is the whole node now that sub-bands aren't separately drawn. */}
+            {nodeIds.map((id, i) => (
+                <rect
+                    key={id}
+                    x={columnX[i] - (i === 0 ? 40 : 55)}
+                    y={centerY - mainHalf[i] - 4}
+                    width={i === 0 ? 95 : 110}
+                    height={mainHalf[i] * 2 + 8}
+                    fill="transparent"
+                    className={onBandClick ? "cursor-pointer" : undefined}
+                    onClick={onBandClick ? () => onBandClick(id, "main") : undefined}
+                >
+                    <title>{titleFor(nodes[i].label, nodes[i].value, nodes[i].subBands)}</title>
+                </rect>
+            ))}
+
+            {/* Node value pills, above the flow, with a guide line down to the ribbon. */}
+            {nodeIds.map((id, i) => {
+                const text = String(nodes[i].value);
+                const w = pillWidth(text);
+                const pillY = TOP_RESERVED - PILL_HEIGHT - LABEL_GAP;
+                return (
+                    <g key={id}>
+                        <line x1={columnX[i]} y1={pillY + PILL_HEIGHT} x2={columnX[i]} y2={centerY - mainHalf[i]} stroke="var(--color-border-secondary)" strokeWidth={1} />
+                        <rect x={columnX[i] - w / 2} y={pillY} width={w} height={PILL_HEIGHT} rx={PILL_HEIGHT / 2} fill="var(--color-bg-primary-solid)" />
+                        <text x={columnX[i]} y={pillY + PILL_HEIGHT / 2 + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-primary_on-brand)">
+                            {text}
+                        </text>
+                        <text x={columnX[i]} y={pillY - NODE_LABEL_HEIGHT + 14} textAnchor="middle" fontSize={11} fontWeight={600} fill="var(--color-text-secondary)">
+                            {nodes[i].label}
+                        </text>
+                    </g>
+                );
+            })}
+
+            {/* Dropout pills, below the flow, one per real transition. */}
+            {dropoutRibbons.map((r) => {
+                const text = String(r.count);
+                const w = pillWidth(text);
+                const pillY = height - BOTTOM_RESERVED + LABEL_GAP - 6;
+                return (
+                    <g key={r.key}>
+                        <line x1={r.labelX} y1={r.labelY} x2={r.labelX} y2={pillY} stroke="var(--color-border-secondary)" strokeWidth={1} />
+                        <rect x={r.labelX - w / 2} y={pillY} width={w} height={PILL_HEIGHT} rx={PILL_HEIGHT / 2} fill="var(--color-bg-secondary)" />
+                        <text x={r.labelX} y={pillY + PILL_HEIGHT / 2 + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-secondary)">
+                            {text}
+                        </text>
+                    </g>
+                );
+            })}
+
+            {/* Conversion % at each junction's midpoint, centered in the ribbon. */}
             {[
                 { x: (columnX[0] + columnX[1]) / 2, pct: flow.conversionPct[0] },
                 { x: (columnX[1] + columnX[2]) / 2, pct: flow.conversionPct[1] },
             ].map((junction, i) => (
-                <text key={i} x={junction.x} y={height / 2} textAnchor="middle" fontSize={12} fontWeight={600} fill="var(--color-text-secondary)">
+                <text key={i} x={junction.x} y={centerY + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-white)" opacity={0.9}>
                     {junction.pct}%
                 </text>
             ))}
