@@ -1192,12 +1192,6 @@ export function dealById(id: string, deals: Deal[] = DEALS): Deal | undefined {
     return deals.find((d) => d.id === id);
 }
 
-/** Deals not in a Global status and not Payment Completed — what the sidebar's Deals badge
- * counts. */
-export function openDealCount(persona: Persona, deals: Deal[] = DEALS): number {
-    return dealsForPersona(persona, deals).filter((d) => d.status.stage !== "Global" && d.status.id !== "PAY_COMPLETED").length;
-}
-
 // ---------------------------------------------------------------------------
 // Dev-time invariant checks — mirrors the pattern already established in
 // dashboard-data.ts (no test runner in this scaffold yet).

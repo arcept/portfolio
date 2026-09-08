@@ -5,7 +5,7 @@ import { useLocation } from "react-router";
 import { NavAccountCard } from "@/components/application/app-navigation/base-components/nav-account-card";
 import { MobileNavigationHeader } from "@/components/application/app-navigation/base-components/mobile-header";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
-import { openDealCount } from "@/data/deals-data";
+import { dealsForPersona } from "@/data/deals-data";
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import { ROLE_LABELS } from "@/types/role";
@@ -65,7 +65,7 @@ const SidebarNavItem = ({ label, href, icon: Icon, badge, active, disabled }: Si
                 active ? "bg-primary_alt" : disabled ? "opacity-40" : "opacity-60 hover:bg-primary_hover hover:opacity-100",
             )}
         >
-            <span className="flex flex-1 items-center gap-3 rounded-md p-2">
+            <span className="flex flex-1 items-center justify-between gap-3 rounded-md p-2">
                 <span className="flex min-w-0 items-center gap-2">
                     <Icon className="size-5 shrink-0 text-primary" />
                     <span className={cx("truncate text-md text-primary", disabled ? "font-normal" : "font-medium")}>{label}</span>
@@ -102,7 +102,7 @@ export const DashboardSidebar = () => {
     const activeUrl = pathname.startsWith("/deals") ? "/deals" : pathname;
     const navItems: SidebarNavItemProps[] = [
         { label: "Home", href: "/", icon: Codepen },
-        { label: "Deals", href: "/deals", icon: AlignCenter, badge: <SidebarNavBadge>{openDealCount(persona, deals)}</SidebarNavBadge> },
+        { label: "Deals", href: "/deals", icon: AlignCenter, badge: <SidebarNavBadge>{dealsForPersona(persona, deals).length}</SidebarNavBadge> },
         { label: "Payments", icon: CreditCardCheck, disabled: true },
         { label: "Form", icon: LetterSpacing01, disabled: true },
         { label: "Content", icon: Heading02, disabled: true },
