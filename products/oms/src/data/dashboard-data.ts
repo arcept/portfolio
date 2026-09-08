@@ -244,17 +244,18 @@ const BACKLOG_DRAW_RATE = 0.3; // fraction of the pool collected each month
 export type PaymentModeBreakdown = { mode: string; percent: number; amount: number }[];
 
 // ---------------------------------------------------------------------------
-// Period model (This Month / Last Month / This Quarter / Last Quarter) — the
-// four pills currently on screen.
+// Period model (This Month / Last Month / This Quarter / Last Quarter /
+// Lifetime) — the five pills currently on screen.
 // ---------------------------------------------------------------------------
 
-export type PeriodId = "this-month" | "last-month" | "this-quarter" | "last-quarter";
+export type PeriodId = "this-month" | "last-month" | "this-quarter" | "last-quarter" | "lifetime";
 
 export const periods: { id: PeriodId; label: string }[] = [
     { id: "this-month", label: "This Month" },
     { id: "last-month", label: "Last Month" },
     { id: "this-quarter", label: "This Quarter" },
     { id: "last-quarter", label: "Last Quarter" },
+    { id: "lifetime", label: "Lifetime" },
 ];
 
 function daysInMonth(year: number, monthIndex0: number): number {

@@ -74,11 +74,11 @@ export const DashboardHeader = ({ selection, onSelectionChange }: DashboardHeade
                 {showReportButton && <GenerateReportButton selection={selection} />}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
                 {/* Matches the Figma "Horizontal tabs" spec exactly (bg-primary/border-secondary
                     container, each tab individually rounded with a 2px gap — not a joined
                     segmented control), rather than the base ButtonGroup component's styling. */}
-                <div className="flex items-center gap-0.5 rounded-lg border border-secondary bg-primary p-0">
+                <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-lg border border-secondary bg-primary p-0">
                     {periods.map((filter) => {
                         const isActive = selection.kind === "preset" && selection.id === filter.id;
                         return (

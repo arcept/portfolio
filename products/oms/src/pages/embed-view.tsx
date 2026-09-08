@@ -1,4 +1,5 @@
 import { AdminFunnelAggregateRow, FunnelSection } from "@/components/dashboard/funnel-section";
+import { SalesFunnelSection } from "@/components/dashboard/sales-funnel-section";
 import { StatCardsRow } from "@/components/dashboard/stat-cards";
 import { TeamDrilldown } from "@/components/dashboard/team-drilldown";
 import type { PeriodSelection } from "@/data/dashboard-data";
@@ -14,7 +15,7 @@ import type { Persona } from "@/types/role";
  * the real components and data, so any future change to the dashboard
  * shows up here automatically; there is nothing to keep in sync by hand.
  */
-export type EmbedViewKey = "admin-funnel" | "team-manager-funnel" | "team-drilldown" | "stat-cards";
+export type EmbedViewKey = "admin-funnel" | "team-manager-funnel" | "team-drilldown" | "stat-cards" | "sales-funnel";
 
 const DEFAULT_SELECTION: PeriodSelection = { kind: "preset", id: "this-month" };
 
@@ -26,6 +27,7 @@ const EMBED_PERSONAS: Record<EmbedViewKey, Persona> = {
     "team-manager-funnel": { role: "tm", tmId: "ish-kumar" },
     "team-drilldown": { role: "admin" },
     "stat-cards": { role: "admin" },
+    "sales-funnel": { role: "admin" },
 };
 
 const EMBED_COMPONENTS: Record<EmbedViewKey, () => React.ReactElement> = {
@@ -33,18 +35,21 @@ const EMBED_COMPONENTS: Record<EmbedViewKey, () => React.ReactElement> = {
     "team-manager-funnel": () => <FunnelSection selection={DEFAULT_SELECTION} />,
     "team-drilldown": () => <TeamDrilldown selection={DEFAULT_SELECTION} />,
     "stat-cards": () => <StatCardsRow selection={DEFAULT_SELECTION} />,
+    "sales-funnel": () => <SalesFunnelSection selection={DEFAULT_SELECTION} scope={{ role: "admin" }} />,
 };
 
 // The funnel and stat-card views are bare grids of individually-bordered
 // cards with no outer frame of their own, so the wrapper's padding is the
-// only breathing room they get. TeamDrilldown renders its own complete card
-// (border, radius, background, padding) — wrapping that in more padding
-// just adds a visible gap around an already-framed box, so it gets none.
+// only breathing room they get. TeamDrilldown/SalesFunnelSection render
+// their own complete card (border, radius, background, padding) — wrapping
+// that in more padding just adds a visible gap around an already-framed
+// box, so they get none.
 const EMBED_PADDING: Record<EmbedViewKey, string> = {
     "admin-funnel": "p-6",
     "team-manager-funnel": "p-6",
     "team-drilldown": "",
     "stat-cards": "",
+    "sales-funnel": "",
 };
 
 export const EmbedView = ({ view }: { view: EmbedViewKey }) => {

@@ -7,7 +7,7 @@
  */
 import type { Persona } from "@/types/role";
 import type { Deal, DealStatusId } from "./deals-data";
-import { dealsForPersona } from "./deals-data";
+import { COURSES, dealsForPersona } from "./deals-data";
 import type {
     ChartPoint,
     DealStageCascade,
@@ -18,6 +18,7 @@ import type {
     TeamManagerSummary,
 } from "./dashboard-data";
 import {
+    DATA_WINDOW_END,
     DATA_WINDOW_START,
     MONTHS,
     ORG_WIDE_DAILY_TARGET_RATE,
@@ -91,6 +92,8 @@ export function resolvePeriodBounds(selection: PeriodSelection): PeriodBounds {
             const q = Math.floor(now.getMonth() / 3) - 1;
             return q >= 0 ? { ...quarterBounds(now.getFullYear(), q), truncated: false } : { ...quarterBounds(now.getFullYear() - 1, 3), truncated: false };
         }
+        case "lifetime":
+            return { from: DATA_WINDOW_START, to: DATA_WINDOW_END, truncated: false };
     }
 }
 
@@ -136,6 +139,9 @@ export function getPreviousEquivalentBounds(selection: PeriodSelection): PeriodB
                         : { ...quarterBounds(current.from.getFullYear() - 1, 3), truncated: false };
                 break;
             }
+            case "lifetime":
+                // No period exists before the seeded data's own start — there's nothing to compare against.
+                return null;
         }
     }
 
@@ -171,6 +177,8 @@ export function resolveUnitTarget(selection: PeriodSelection): number {
             const q = Math.floor(now.getMonth() / 3) - 1;
             return q >= 0 ? sumMonths(now.getFullYear(), q) : sumMonths(now.getFullYear() - 1, 3);
         }
+        case "lifetime":
+            return MONTHS.reduce((sum, m) => sum + m.unitTarget, 0);
     }
 }
 
@@ -269,6 +277,10 @@ function previousPeriodLabel(selection: PeriodSelection): string {
             return "vs Last Quarter";
         case "last-quarter":
             return "vs Previous Quarter";
+        case "lifetime":
+            // Unreachable in practice — getPreviousEquivalentBounds returns null for "lifetime",
+            // so computeChangeText's null-check short-circuits before this is ever called.
+            return "vs Previous Period";
     }
 }
 
@@ -347,7 +359,8 @@ function buildXAxisMeta(bounds: PeriodBounds, selection: PeriodSelection): { xDo
         return { xDomain: [1, totalDays], xTicks: ticks, xTickFormatter: (x) => labels.get(x) ?? "" };
     }
 
-    // Custom range — no fixed calendar shape to hang ticks off, so just space a handful out.
+    // Custom range (and Lifetime, which spans a fixed but non-quarter-aligned window) — no
+    // fixed calendar shape to hang ticks off, so just space a handful out.
     const tickCount = Math.min(6, totalDays);
     const xTicks = Array.from({ length: tickCount }, (_, i) => Math.round(1 + (i * (totalDays - 1)) / Math.max(1, tickCount - 1)));
     return { xDomain: [1, totalDays], xTicks, xTickFormatter: (x) => formatShortDate(addDays(bounds.from, x - 1)) };
@@ -516,6 +529,170 @@ export function getFunnelCohortsLive(selection: PeriodSelection, persona: Person
 }
 
 // ---------------------------------------------------------------------------
+// Sales Funnel flow (Sankey) — reuses the exact same cohort and `reachedStage` thresholds
+// `buildFunnelStages` already uses for its Application/Offer/Payment values (checked by a
+// dev-time assertion below, so the two can never silently disagree). What's new here:
+// `buildFunnelStages` pools every Expired/Not-Interested/Rejected deal into one remainder
+// bucket per stage without caring *when* it fell off — this needs to know which transition,
+// which the existing shape doesn't expose.
+// ---------------------------------------------------------------------------
+
+export type FunnelFlowSubBand = { key: string; label: string; count: number };
+export type FunnelFlowNodeId = "application" | "offer" | "payment";
+export type FunnelFlowNode = { id: FunnelFlowNodeId; label: string; value: number; subBands: FunnelFlowSubBand[] };
+export type FunnelFlow = {
+    cohortSize: number;
+    nodes: [FunnelFlowNode, FunnelFlowNode, FunnelFlowNode];
+    /** Count peeling off at each transition: Application→Offer, then Offer→Payment. A deal that
+     * goes cold mid-payment has nowhere to peel toward (Payment is the last node) — it's folded
+     * into that node's own "Went Cold" sub-band instead of a 3rd dropout edge to nowhere. */
+    dropouts: [number, number];
+    /** (count continuing forward) / (count entering that stage): Offer/Application, then
+     * Payment/Offer. */
+    conversionPct: [number, number];
+};
+
+const DROPPED_STATUS_IDS: DealStatusId[] = ["APP_EXPIRED", "OFFER_EXPIRED", "NOT_INTERESTED", "REJECTED", "SAVED"];
+
+function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
+    const offerCohort = cohort.filter((d) => d.reachedStage >= 2);
+    const paymentCohort = cohort.filter((d) => d.reachedStage >= 3);
+
+    // Dropout attribution: `APP_EXPIRED`/`OFFER_EXPIRED` always carry a fixed `reachedStage`
+    // (0 and 2 respectively, per STAGE_RANK). The three "Global" statuses (Not Interested /
+    // Rejected / Saved) are seeded with a random `reachedStage` independent of their label —
+    // exactly what "furthest point reached" means, so reading it here to place them is a
+    // legitimate use of the same field, not a new interpretation of it.
+    const dropped = cohort.filter((d) => DROPPED_STATUS_IDS.includes(d.status.id));
+    const droppedAtApplication = dropped.filter((d) => d.reachedStage <= 1).length;
+    const droppedAtOffer = dropped.filter((d) => d.reachedStage === 2).length;
+    const wentColdAtPayment = dropped.filter((d) => d.reachedStage === 3).length;
+
+    const applicationPending = cohort.filter((d) => d.status.id === "APP_PENDING").length;
+    const applicationFilled = cohort.length - offerCohort.length - droppedAtApplication - applicationPending;
+
+    const offerPending = offerCohort.filter((d) => d.status.id === "OFFER_PENDING").length;
+    const offerWithdrawn = offerCohort.filter((d) => d.status.id === "OFFER_WITHDRAWN").length;
+    const offerAccepted = offerCohort.length - paymentCohort.length - droppedAtOffer - offerPending - offerWithdrawn;
+
+    const paymentOngoing = paymentCohort.filter((d) => PAYMENT_STAGE_IDS.has(d.status.id)).length;
+    const paymentCompleted = paymentCohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
+    const paymentCancelled = paymentCohort.filter((d) => d.status.id === "ENR_CANCELLED").length;
+
+    const nodes: [FunnelFlowNode, FunnelFlowNode, FunnelFlowNode] = [
+        {
+            id: "application",
+            label: "Application",
+            value: cohort.length,
+            subBands: [
+                { key: "pending", label: "Pending", count: applicationPending },
+                { key: "filled", label: "Filled", count: applicationFilled },
+            ],
+        },
+        {
+            id: "offer",
+            label: "Offer",
+            value: offerCohort.length,
+            subBands: [
+                { key: "pending", label: "Pending", count: offerPending },
+                { key: "withdrawn", label: "Withdrawn", count: offerWithdrawn },
+                { key: "accepted", label: "Accepted", count: offerAccepted },
+            ],
+        },
+        {
+            id: "payment",
+            label: "Payment",
+            value: paymentCohort.length,
+            subBands: [
+                { key: "ongoing", label: "Ongoing", count: paymentOngoing },
+                { key: "completed", label: "Completed", count: paymentCompleted },
+                { key: "cancelled", label: "Cancelled", count: paymentCancelled },
+                { key: "went-cold", label: "Went Cold", count: wentColdAtPayment },
+            ],
+        },
+    ];
+
+    const flow: FunnelFlow = {
+        cohortSize: cohort.length,
+        nodes,
+        dropouts: [droppedAtApplication, droppedAtOffer],
+        conversionPct: [
+            cohort.length === 0 ? 0 : Math.round((offerCohort.length / cohort.length) * 100),
+            offerCohort.length === 0 ? 0 : Math.round((paymentCohort.length / offerCohort.length) * 100),
+        ],
+    };
+
+    if (import.meta.env.DEV) {
+        const stages = buildFunnelStages(cohort);
+        if (flow.nodes[0].value !== stages[0].value || flow.nodes[1].value !== stages[1].value || flow.nodes[2].value !== stages[2].value) {
+            console.error("[sales-funnel-flow invariant failed] node totals diverge from buildFunnelStages", { flow, stages });
+        }
+    }
+
+    return flow;
+}
+
+export function getSalesFunnelFlow(selection: PeriodSelection, persona: Persona, deals: Deal[]): FunnelFlow {
+    const bounds = resolvePeriodBounds(selection);
+    return buildSalesFunnelFlow(getCohort(persona, bounds, deals));
+}
+
+export function getSalesFunnelHeadline(
+    selection: PeriodSelection,
+    persona: Persona,
+    deals: Deal[],
+): { applicationsSent: number; applicationsSentChangePct: number | null; conversionPct: number; conversionChangePct: number | null } {
+    const bounds = resolvePeriodBounds(selection);
+    const cohort = getCohort(persona, bounds, deals);
+    const completed = cohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
+    const conversionPct = cohort.length === 0 ? 0 : Math.round((completed / cohort.length) * 100);
+
+    const previousBounds = getPreviousEquivalentBounds(selection);
+    let applicationsSentChangePct: number | null = null;
+    let conversionChangePct: number | null = null;
+    if (previousBounds) {
+        const previousCohort = getCohort(persona, previousBounds, deals);
+        applicationsSentChangePct = computeChangePercent(cohort.length, previousCohort.length);
+        const previousCompleted = previousCohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
+        const previousConversionPct = previousCohort.length === 0 ? 0 : (previousCompleted / previousCohort.length) * 100;
+        conversionChangePct = computeChangePercent(conversionPct, previousConversionPct);
+    }
+
+    return { applicationsSent: cohort.length, applicationsSentChangePct, conversionPct, conversionChangePct };
+}
+
+export type SalesFunnelCourseRow = {
+    courseId: string;
+    courseLabel: string;
+    application: number;
+    offer: number;
+    offerConversionPct: number;
+    payment: number;
+    paymentConversionPct: number;
+};
+
+export function getSalesFunnelCourseBreakdown(selection: PeriodSelection, persona: Persona, deals: Deal[]): SalesFunnelCourseRow[] {
+    const bounds = resolvePeriodBounds(selection);
+    const cohort = getCohort(persona, bounds, deals);
+
+    return COURSES.map((course) => {
+        const courseCohort = cohort.filter((d) => d.course.id === course.id);
+        const application = courseCohort.length;
+        const offer = courseCohort.filter((d) => d.reachedStage >= 2).length;
+        const payment = courseCohort.filter((d) => d.reachedStage >= 3).length;
+        return {
+            courseId: course.id,
+            courseLabel: course.short,
+            application,
+            offer,
+            offerConversionPct: application === 0 ? 0 : Math.round((offer / application) * 100),
+            payment,
+            paymentConversionPct: offer === 0 ? 0 : Math.round((payment / offer) * 100),
+        };
+    });
+}
+
+// ---------------------------------------------------------------------------
 // Lost Deals
 // ---------------------------------------------------------------------------
 
@@ -547,6 +724,10 @@ function periodDescriptionFor(selection: PeriodSelection, bounds: PeriodBounds):
 
     if (selection.id === "this-month" || selection.id === "last-month") {
         return `${label} (${MONTH_ABBR[bounds.from.getMonth()]})`;
+    }
+
+    if (selection.id === "lifetime") {
+        return `${label} (${formatShortDate(bounds.from)} – ${formatShortDate(bounds.to)})`;
     }
 
     const q = Math.floor(bounds.from.getMonth() / 3);

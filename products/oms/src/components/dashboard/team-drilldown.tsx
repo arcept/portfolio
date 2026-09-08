@@ -10,6 +10,7 @@ import { getVisibleSections } from "@/utils/role-visibility";
 import type { OrgBdr, OrgTeamLead, OrgTeamManager, PeriodSelection } from "@/data/dashboard-data";
 import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
 import { getFunnelCohortsLive, getNodeBookedTotal, getNodeChangePercent, resolvePeriodBounds } from "@/data/dashboard-metrics";
+import type { Persona } from "@/types/role";
 import { FunnelStageCard } from "./funnel-section";
 
 type Row = { id: string; name: string; amount: string; changePercent: string };
@@ -57,7 +58,7 @@ const WaitingForSelection = ({ label }: { label: string }) => (
     </EmptyState>
 );
 
-export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => {
+export const TeamDrilldown = ({ selection, onScopeChange }: { selection: PeriodSelection; onScopeChange?: (scope: Persona) => void }) => {
     const { persona } = usePersona();
     const { deals } = useDeals();
     const { drilldownColumns, showBdrSearch } = getVisibleSections(persona);
@@ -102,6 +103,7 @@ export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => 
         setSelectedTlId(bdr.tlId);
         setSelectedBdrId(bdr.id);
         setSearch("");
+        onScopeChange?.({ role: "bdr", tmId: bdr.tmId, tlId: bdr.tlId, bdrId: bdr.id });
     };
 
     const selectedBdr = bdrs.find((b) => b.id === selectedBdrId);
@@ -145,6 +147,7 @@ export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => 
                                         setSelectedTmId(tm.id);
                                         setSelectedTlId(undefined);
                                         setSelectedBdrId(undefined);
+                                        onScopeChange?.({ role: "tm", tmId: tm.id });
                                     }}
                                 />
                             ))}
@@ -163,6 +166,7 @@ export const TeamDrilldown = ({ selection }: { selection: PeriodSelection }) => 
                                     onSelect={() => {
                                         setSelectedTlId(tl.id);
                                         setSelectedBdrId(undefined);
+                                        onScopeChange?.({ role: "tl", tmId: tl.tmId, tlId: tl.id });
                                     }}
                                 />
                             ))}
