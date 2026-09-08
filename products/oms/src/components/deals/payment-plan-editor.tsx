@@ -328,7 +328,7 @@ const DiscountTierList = ({
     return (
         <div className="flex flex-col gap-2 px-2">
             <span className="text-sm text-tertiary">Discount</span>
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-1">
                 {tiers.map((tier) => (
                     <div key={tier.id}>
                         <DiscountTierRow
@@ -374,7 +374,7 @@ const DiscountTierRow = ({
         type="button"
         disabled={tier.locked}
         onClick={onClick}
-        className={`flex items-start gap-3 rounded-lg p-3 text-left transition duration-100 ease-linear disabled:cursor-not-allowed ${
+        className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition duration-100 ease-linear disabled:cursor-not-allowed ${
             isSelected ? "bg-tertiary/50" : "opacity-60 hover:opacity-100"
         }`}
     >
