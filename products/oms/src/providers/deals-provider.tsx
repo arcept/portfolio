@@ -39,6 +39,8 @@ interface DealsContextType {
     simFillApplication: (id: string) => void;
     simAcceptOffer: (id: string) => void;
     simMakePayment: (id: string) => void;
+    simOpenApplication: (id: string) => void;
+    simOpenOfferLetter: (id: string) => void;
 }
 
 const DealsContext = createContext<DealsContextType | undefined>(undefined);
@@ -377,6 +379,38 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
         );
     }, []);
 
+    // No dedicated "opened" field on either `application` or `offer` — like every other
+    // milestone substage, the milestone rail (deal-detail.tsx) reads this straight off the
+    // activity log, so the log entry alone is the source of truth (and doubles as the guard
+    // against logging it twice).
+    const simOpenApplication = useCallback((id: string) => {
+        setDeals((prev) =>
+            prev.map((d) => {
+                const alreadyOpened = d.activityLog.some((e) => e.text === "Application form opened by learner");
+                if (d.id !== id || !d.application.sentOn || alreadyOpened) return d;
+                return {
+                    ...d,
+                    lastUpdate: PROTOTYPE_TODAY,
+                    activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Application form opened by learner" }],
+                };
+            }),
+        );
+    }, []);
+
+    const simOpenOfferLetter = useCallback((id: string) => {
+        setDeals((prev) =>
+            prev.map((d) => {
+                const alreadyOpened = d.activityLog.some((e) => e.text === "Offer letter opened by learner");
+                if (d.id !== id || !d.offer.sharedOn || alreadyOpened) return d;
+                return {
+                    ...d,
+                    lastUpdate: PROTOTYPE_TODAY,
+                    activityLog: [...d.activityLog, { ts: PROTOTYPE_TODAY, text: "Offer letter opened by learner" }],
+                };
+            }),
+        );
+    }, []);
+
     const simAcceptOffer = useCallback((id: string) => {
         setDeals((prev) =>
             prev.map((d) => {
@@ -441,6 +475,8 @@ export const DealsProvider = ({ children }: { children: ReactNode }) => {
                 simFillApplication,
                 simAcceptOffer,
                 simMakePayment,
+                simOpenApplication,
+                simOpenOfferLetter,
             }}
         >
             {children}

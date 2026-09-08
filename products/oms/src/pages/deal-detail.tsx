@@ -114,19 +114,24 @@ function statusForSubstages(substages: MilestoneSubstage[]): MilestoneGroupStatu
     return "Pending";
 }
 
-/** Groups the deal's funnel into three stage-level milestones (Application & Plan / Offer /
- * Payment & Enrolment), each broken into the substages that `activityLog` already tracks — no
- * separate milestone data model, just a different read of the same log entries
- * `buildActivityLog` (deals-data.ts) always produces. The Plan stage (2026-09-05
- * offer-separation brief) extends the first group's label rather than adding a fourth group
- * (§7) — Payment Plan created sits between Application Filled and Offer Letter Created. */
+/** Groups the deal's funnel into three stage-level milestones (Application / Offer / Payment &
+ * Enrolment), each broken into the substages that `activityLog` already tracks — no separate
+ * milestone data model, just a different read of the same log entries `buildActivityLog`
+ * (deals-data.ts) always produces (Figma node 487:9788). Payment Plan Created lives under Offer,
+ * not Application — a plan has to exist before a letter can be created off it, so it's the first
+ * thing that happens in that stage. "Application Form Opened" and "Offer Letter Opened" have no
+ * real signal behind them yet (this prototype has no learner-facing surface to detect it) — they
+ * only move off "Pending" via the QA sim pad's matching buttons (TEMP(dev), see
+ * `learner-sim-pad.tsx`). */
 function getMilestoneGroups(deal: Deal): MilestoneGroup[] {
     const findEntry = (text: string): ActivityLogEntry | null => deal.activityLog.find((e) => e.text === text) ?? null;
 
+    const appOpened = findEntry("Application form opened by learner");
     const appFilled = findEntry("Application filled by learner");
     const planCreated = findEntry("Payment plan created");
     const offerCreated = findEntry("Offer letter created");
     const offerShared = findEntry("Offer letter shared");
+    const offerOpened = findEntry("Offer letter opened by learner");
     const offerAccepted = findEntry("Offer accepted by learner");
     const downPayment = findEntry("Down payment received");
     const paymentCompleted = findEntry("Final installment received — payment completed");
@@ -138,14 +143,16 @@ function getMilestoneGroups(deal: Deal): MilestoneGroup[] {
     const planStatus: MilestoneSubstageStatus =
         deal.plan.state === "none" ? "pending" : deal.plan.state === "committed" || deal.plan.state === "active" ? "done" : "ongoing";
 
-    const applicationAndPlan: MilestoneSubstage[] = [
+    const application: MilestoneSubstage[] = [
         { label: "Application Sent", status: deal.application.sentOn ? "done" : "pending", ts: deal.application.sentOn },
+        { label: "Application Form Opened", status: appOpened ? "done" : "pending", ts: appOpened?.ts ?? null },
         { label: "Application Filled", status: appFilled ? "done" : "pending", ts: appFilled?.ts ?? null },
-        { label: "Payment Plan Created", status: planStatus, ts: planCreated?.ts ?? null },
     ];
     const offer: MilestoneSubstage[] = [
+        { label: "Payment Plan Created", status: planStatus, ts: planCreated?.ts ?? null },
         { label: "Offer Letter Created", status: offerCreated ? "done" : "pending", ts: offerCreated?.ts ?? null },
         { label: "Offer Letter Shared", status: offerShared ? "done" : "pending", ts: offerShared?.ts ?? null },
+        { label: "Offer Letter Opened", status: offerOpened ? "done" : "pending", ts: offerOpened?.ts ?? null },
         { label: "Offer Accepted", status: offerAccepted ? "done" : "pending", ts: offerAccepted?.ts ?? null },
     ];
     const paymentAndEnrolment: MilestoneSubstage[] = [
@@ -155,7 +162,7 @@ function getMilestoneGroups(deal: Deal): MilestoneGroup[] {
     ];
 
     return [
-        { name: "Application & Plan", status: statusForSubstages(applicationAndPlan), substages: applicationAndPlan },
+        { name: "Application", status: statusForSubstages(application), substages: application },
         { name: "Offer", status: statusForSubstages(offer), substages: offer },
         { name: "Payment & Enrolment", status: statusForSubstages(paymentAndEnrolment), substages: paymentAndEnrolment },
     ];

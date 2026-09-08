@@ -1,27 +1,34 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { CheckCircle, CreditCard01, FileCheck02 } from "@untitledui/icons";
+import { CheckCircle, CreditCard01, Eye, FileCheck02 } from "@untitledui/icons";
 import type { Deal } from "@/data/deals-data";
 import { useDeals } from "@/providers/deals-provider";
 
 /** TEMP(dev): floating QA control pad for driving the learner's side of a deal — this prototype
  * has no learner-facing surface, so there's otherwise no way to move a deal past "sent"/"shared"
- * without hand-editing seed data. Docked to the right edge as a slim vertical tab; click it to
- * pop out the full control list (all three actions always shown, individually disabled when not
- * applicable to the open deal's current state) — deliberately styled as a debug tool (not part of
- * the Figma design) so it reads as scaffolding. Delete this file, its import in
- * `deal-detail.tsx`, and the three `sim*` actions on `DealsProvider` once no longer needed. */
+ * (or trigger the "opened" milestones, which have no real signal to detect at all) without
+ * hand-editing seed data. Docked to the right edge as a slim vertical tab; click it to pop out
+ * the full control list (all actions always shown, individually disabled when not applicable to
+ * the open deal's current state) — deliberately styled as a debug tool (not part of the Figma
+ * design) so it reads as scaffolding. Delete this file, its import in `deal-detail.tsx`, and the
+ * five `sim*` actions on `DealsProvider` once no longer needed. */
 export const LearnerSimPad = ({ deal }: { deal: Deal }) => {
-    const { simFillApplication, simAcceptOffer, simMakePayment } = useDeals();
+    const { simFillApplication, simAcceptOffer, simMakePayment, simOpenApplication, simOpenOfferLetter } = useDeals();
     const [open, setOpen] = useState(false);
 
+    const appOpened = deal.activityLog.some((e) => e.text === "Application form opened by learner");
+    const offerOpened = deal.activityLog.some((e) => e.text === "Offer letter opened by learner");
+    const canOpenApplication = !!deal.application.sentOn && !appOpened;
     const canFill = deal.status.id === "APP_PENDING";
+    const canOpenOffer = !!deal.offer.sharedOn && !offerOpened;
     const canAccept = deal.offer.state === "shared";
     const unpaidCount = deal.installments.filter((i) => i.status !== "Paid").length;
     const canPay = deal.offer.state === "accepted" && unpaidCount > 0;
 
     const actions = [
+        { key: "open-app", label: "Open Application", icon: Eye, enabled: canOpenApplication, onClick: () => simOpenApplication(deal.id) },
         { key: "fill", label: "Fill Application", icon: FileCheck02, enabled: canFill, onClick: () => simFillApplication(deal.id) },
+        { key: "open-offer", label: "Open Offer Letter", icon: Eye, enabled: canOpenOffer, onClick: () => simOpenOfferLetter(deal.id) },
         { key: "accept", label: "Accept Offer", icon: CheckCircle, enabled: canAccept, onClick: () => simAcceptOffer(deal.id) },
         {
             key: "pay",
