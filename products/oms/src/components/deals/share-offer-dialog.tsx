@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, ArrowLeft, Check } from "@untitledui/icons";
+import confirmationBanner from "@/assets/modals/confirmation-banner.jpg";
 import { ConfirmationModal } from "@/components/application/modals/confirmation-modal";
 import { DialogTrigger, Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Button } from "@/components/base/buttons/button";
@@ -37,7 +38,42 @@ export const ShareOfferDialog = ({ dealId, onOpenChange }: { dealId: string | nu
         setShared(true);
     };
 
-    if (shared || !guard.allowed) {
+    if (shared) {
+        return (
+            <DialogTrigger isOpen={!!dealId} onOpenChange={onOpenChange}>
+                <ModalOverlay>
+                    <Modal className="max-w-[640px]">
+                        <Dialog>
+                            {() => (
+                                <div className="relative flex w-full flex-col overflow-hidden rounded-2xl shadow-xl">
+                                    <div className="relative h-14 w-full shrink-0 overflow-hidden">
+                                        <img src={confirmationBanner} alt="" className="absolute top-[-168.75%] left-[-2.23%] h-[437.5%] w-[104.45%] max-w-none" />
+                                    </div>
+                                    <div className="relative flex w-full flex-col items-center gap-3 bg-primary px-6 pt-10 pb-8 text-center">
+                                        <CloseButton size="sm" className="absolute top-3 right-3" onClick={close} />
+                                        <span className="flex size-12 items-center justify-center rounded-full bg-success-primary">
+                                            <Check className="size-6 text-fg-success-primary" />
+                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-lg font-semibold text-primary">Offer shared with {deal.name.split(" ")[0]}!</span>
+                                            <span className="max-w-sm text-sm text-tertiary">
+                                                They'll receive it by email, with a link back to their offer. The payment plan is now locked.
+                                            </span>
+                                        </div>
+                                        <Button color="primary" size="sm" onClick={close}>
+                                            Done
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </Dialog>
+                    </Modal>
+                </ModalOverlay>
+            </DialogTrigger>
+        );
+    }
+
+    if (!guard.allowed) {
         return (
             <DialogTrigger isOpen={!!dealId} onOpenChange={onOpenChange}>
                 <ModalOverlay>
@@ -46,27 +82,8 @@ export const ShareOfferDialog = ({ dealId, onOpenChange }: { dealId: string | nu
                             {() => (
                                 <div className="relative flex w-full flex-col gap-5 rounded-2xl bg-primary p-6 shadow-xl">
                                     <CloseButton size="sm" className="absolute top-3 right-3" onClick={close} />
-                                    {shared ? (
-                                        <div className="flex flex-col items-center gap-3 py-6 text-center">
-                                            <span className="flex size-12 items-center justify-center rounded-full bg-success-primary">
-                                                <Check className="size-6 text-fg-success-primary" />
-                                            </span>
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-lg font-semibold text-primary">Offer shared with {deal.name.split(" ")[0]}!</span>
-                                                <span className="max-w-sm text-sm text-tertiary">
-                                                    They'll receive it by email, with a link back to their offer. The payment plan is now locked.
-                                                </span>
-                                            </div>
-                                            <Button color="primary" size="sm" onClick={close}>
-                                                Done
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <span className="text-md font-semibold text-primary">Can't share yet</span>
-                                            <p className="text-sm text-tertiary">{guard.reason}</p>
-                                        </>
-                                    )}
+                                    <span className="text-md font-semibold text-primary">Can't share yet</span>
+                                    <p className="text-sm text-tertiary">{guard.reason}</p>
                                 </div>
                             )}
                         </Dialog>
