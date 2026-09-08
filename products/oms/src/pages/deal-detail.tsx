@@ -436,7 +436,13 @@ const OfferButton = ({
             <span className={emphasis === "primary" ? "text-primary" : "text-secondary"}>{label}</span>
         </AriaButton>
     );
-    return isDisabled && disabledReason ? <Tooltip title={disabledReason}>{button}</Tooltip> : button;
+    return isDisabled && disabledReason ? (
+        <Tooltip title={disabledReason} placement="bottom">
+            {button}
+        </Tooltip>
+    ) : (
+        button
+    );
 };
 
 /** Withdraw Offer — the one ghost/borderless button in the set, always paired with the red
@@ -462,7 +468,13 @@ const OfferGhostButton = ({
             {label}
         </AriaButton>
     );
-    return isDisabled && disabledReason ? <Tooltip title={disabledReason}>{button}</Tooltip> : button;
+    return isDisabled && disabledReason ? (
+        <Tooltip title={disabledReason} placement="bottom">
+            {button}
+        </Tooltip>
+    ) : (
+        button
+    );
 };
 
 export const DealDetail = () => {

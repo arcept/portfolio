@@ -471,7 +471,7 @@ const PaymentModeSelector = ({ currency, value, onChange }: { currency: Currency
                  * at all) *and* separately skips forwarding the tooltip's own hover props whenever
                  * `isDisabled` is set. `aria-disabled` gets the same visual/semantic disabled state
                  * — the click handler below is what actually blocks switching to it. */}
-                <Tooltip title="Only available for INR deals" isDisabled={!razorpayDisabled}>
+                <Tooltip title="Only available for INR deals" placement="bottom" isDisabled={!razorpayDisabled}>
                     <AriaButton
                         aria-disabled={razorpayDisabled || undefined}
                         onPress={() => !razorpayDisabled && onChange("Razorpay")}
@@ -481,7 +481,7 @@ const PaymentModeSelector = ({ currency, value, onChange }: { currency: Currency
                         <img src={razorpayModeIcon} alt="Razorpay" className="h-6 w-auto" />
                     </AriaButton>
                 </Tooltip>
-                <Tooltip title="Only available for USD deals" isDisabled={!stripeDisabled}>
+                <Tooltip title="Only available for USD deals" placement="bottom" isDisabled={!stripeDisabled}>
                     <AriaButton
                         aria-disabled={stripeDisabled || undefined}
                         onPress={() => !stripeDisabled && onChange("Stripe")}

@@ -68,9 +68,13 @@ body {
 }
 
 /* Native <button> defaults to the arrow cursor (only <a> gets pointer for free) — every
- * clickable button across the app should read as clickable. */
-button:not(:disabled),
-[role="button"]:not(:disabled) {
+ * clickable button across the app should read as clickable. Also excludes `aria-disabled` —
+ * a button explaining *why* it's disabled via a hover tooltip stays off the native `disabled`
+ * attribute (which blocks pointer events outright) in favor of `aria-disabled`, and this being
+ * plain unlayered CSS would otherwise beat that button's own `aria-disabled:cursor-not-allowed`
+ * utility class regardless of specificity. */
+button:not(:disabled):not([aria-disabled="true"]),
+[role="button"]:not(:disabled):not([aria-disabled="true"]) {
     cursor: pointer;
 }
 
