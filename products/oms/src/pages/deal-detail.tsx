@@ -98,15 +98,20 @@ const COURSE_DURATION_PROFILES = [
     { weeks: 48, months: 12, hoursPerWeek: "6-8" },
 ];
 
-type MilestoneSubstage = { label: string; done: boolean; ts: Date | null };
+/** A third state beyond done/not-done — a substage that's actively underway (Figma node
+ * 404:11525, Property1=Ongoing) rather than either finished or not started. Only "Payment Plan
+ * Created" has a real underlying tri-state to read this off (`deal.plan.state`); every other
+ * substage is a single discrete event, so it only ever lands on "done" or "pending". */
+type MilestoneSubstageStatus = "done" | "ongoing" | "pending";
+type MilestoneSubstage = { label: string; status: MilestoneSubstageStatus; ts: Date | null };
 type MilestoneGroupStatus = "Completed" | "In Progress" | "Pending";
 type MilestoneGroup = { name: string; status: MilestoneGroupStatus; substages: MilestoneSubstage[] };
 
 function statusForSubstages(substages: MilestoneSubstage[]): MilestoneGroupStatus {
-    const doneCount = substages.filter((s) => s.done).length;
-    if (doneCount === 0) return "Pending";
+    const doneCount = substages.filter((s) => s.status === "done").length;
     if (doneCount === substages.length) return "Completed";
-    return "In Progress";
+    if (doneCount > 0 || substages.some((s) => s.status === "ongoing")) return "In Progress";
+    return "Pending";
 }
 
 /** Groups the deal's funnel into three stage-level milestones (Application & Plan / Offer /
@@ -127,20 +132,26 @@ function getMilestoneGroups(deal: Deal): MilestoneGroup[] {
     const paymentCompleted = findEntry("Final installment received — payment completed");
     const enrolled = deal.status.id === "PAY_COMPLETED";
 
+    // Not started / drafted-or-with-Sales-Ops / locked — the three plan.state buckets that
+    // actually matter for "is this substage done yet", rather than the flat "does a plan exist"
+    // read `!!planCreated` gave every other state.
+    const planStatus: MilestoneSubstageStatus =
+        deal.plan.state === "none" ? "pending" : deal.plan.state === "committed" || deal.plan.state === "active" ? "done" : "ongoing";
+
     const applicationAndPlan: MilestoneSubstage[] = [
-        { label: "Application Sent", done: !!deal.application.sentOn, ts: deal.application.sentOn },
-        { label: "Application Filled", done: !!appFilled, ts: appFilled?.ts ?? null },
-        { label: "Payment Plan Created", done: !!planCreated, ts: planCreated?.ts ?? null },
+        { label: "Application Sent", status: deal.application.sentOn ? "done" : "pending", ts: deal.application.sentOn },
+        { label: "Application Filled", status: appFilled ? "done" : "pending", ts: appFilled?.ts ?? null },
+        { label: "Payment Plan Created", status: planStatus, ts: planCreated?.ts ?? null },
     ];
     const offer: MilestoneSubstage[] = [
-        { label: "Offer Letter Created", done: !!offerCreated, ts: offerCreated?.ts ?? null },
-        { label: "Offer Letter Shared", done: !!offerShared, ts: offerShared?.ts ?? null },
-        { label: "Offer Accepted", done: !!offerAccepted, ts: offerAccepted?.ts ?? null },
+        { label: "Offer Letter Created", status: offerCreated ? "done" : "pending", ts: offerCreated?.ts ?? null },
+        { label: "Offer Letter Shared", status: offerShared ? "done" : "pending", ts: offerShared?.ts ?? null },
+        { label: "Offer Accepted", status: offerAccepted ? "done" : "pending", ts: offerAccepted?.ts ?? null },
     ];
     const paymentAndEnrolment: MilestoneSubstage[] = [
-        { label: "Down Payment Received", done: !!downPayment, ts: downPayment?.ts ?? null },
-        { label: "Payment Completed", done: !!paymentCompleted, ts: paymentCompleted?.ts ?? null },
-        { label: "Enrolment", done: enrolled, ts: enrolled ? deal.lastUpdate : null },
+        { label: "Down Payment Received", status: downPayment ? "done" : "pending", ts: downPayment?.ts ?? null },
+        { label: "Payment Completed", status: paymentCompleted ? "done" : "pending", ts: paymentCompleted?.ts ?? null },
+        { label: "Enrolment", status: enrolled ? "done" : "pending", ts: enrolled ? deal.lastUpdate : null },
     ];
 
     return [
@@ -150,13 +161,19 @@ function getMilestoneGroups(deal: Deal): MilestoneGroup[] {
     ];
 }
 
-/** Dashed 18px ring used on the stage rail — green+check when the stage is done, blue (no
- * check) otherwise. Exact path/colors from the Figma "Indicator" + "check" assets. */
-const StageRingIcon = ({ done }: { done: boolean }) => (
+/** Dashed 18px ring used on the stage rail — color keys off the stage's own three-way status
+ * (green/amber/gray), not just done-vs-not. Exact paths/colors from the Figma "Indicator" assets
+ * (node 487:10163, Completed/In Progress/Upcoming). */
+const STAGE_RING_COLOR: Record<MilestoneGroupStatus, string> = {
+    Completed: "#22C55E",
+    "In Progress": "#F59E0B",
+    Pending: "#A3A3A3",
+};
+const StageRingIcon = ({ status }: { status: MilestoneGroupStatus }) => (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="block">
         <path
             d="M9 1C4.58172 1 1 4.58172 1 9C1 13.4183 4.58172 17 9 17C13.4183 17 17 13.4183 17 9C17 4.58172 13.4183 1 9 1Z"
-            stroke={done ? "#22C55E" : "#60A5FA"}
+            stroke={STAGE_RING_COLOR[status]}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -186,16 +203,31 @@ const PendingRingIcon = () => (
     </svg>
 );
 
+/** 12px asterisk — a substage that's actively underway (e.g. a payment plan drafted but not
+ * yet locked), distinct from done (check) and not-yet-started (empty ring). Exact path/color
+ * from the Figma "asterisk-02" asset. */
+const OngoingGlyph = () => (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="block">
+        <path d="M6 2V10M9 3L3 9M10 6H2M9 9L3 3" stroke="#F59E0B" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
 const MILESTONE_DOT_COLOR: Record<MilestoneGroupStatus, string> = {
-    Completed: "text-fg-success-secondary",
-    "In Progress": "text-fg-brand-primary",
-    Pending: "text-fg-quaternary",
+    Completed: "text-[#22C55E]",
+    "In Progress": "text-[#EAB308]",
+    Pending: "text-[#64748B]",
 };
 
-/** Neutral bordered pill (bg-primary/border-primary) with just the dot colored by status —
- * the Figma milestone Badge, distinct from the app's filled `BadgeWithDot`. */
+/** Neutral bordered pill with just the dot colored by status — the Figma milestone Badge,
+ * distinct from the app's filled `BadgeWithDot`. Only the Pending badge fills solid
+ * (bg-primary); Completed/In Progress stay border-only with brighter text (Figma node
+ * 487:9788's three Badge instances). */
 const MilestoneStageBadge = ({ status }: { status: MilestoneGroupStatus }) => (
-    <span className="flex items-center gap-1 rounded-md border border-primary bg-primary py-0.5 pr-2 pl-1.5 text-[10px] font-medium text-secondary shadow-xs">
+    <span
+        className={`flex items-center gap-1 rounded-md border border-primary py-0.5 pr-2 pl-1.5 text-[10px] font-medium shadow-xs ${
+            status === "Pending" ? "bg-primary text-placeholder" : "text-secondary"
+        }`}
+    >
         <Dot size="sm" className={MILESTONE_DOT_COLOR[status]} />
         {status}
     </span>
@@ -221,7 +253,7 @@ const MilestoneTimeline = ({ deal }: { deal: Deal }) => {
                 <div key={group.name} className="flex flex-col gap-3">
                     <div className="relative flex items-center justify-between gap-2">
                         <span className="absolute top-1/2 -left-7 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary">
-                            <StageRingIcon done={group.status === "Completed"} />
+                            <StageRingIcon status={group.status} />
                             {group.status === "Completed" && <CheckGlyph className="absolute inset-0 m-auto" />}
                         </span>
                         <span className="text-lg font-semibold text-primary">{group.name}</span>
@@ -232,12 +264,21 @@ const MilestoneTimeline = ({ deal }: { deal: Deal }) => {
                             <div key={substage.label} className="flex flex-col gap-0.5">
                                 <div className="flex items-center gap-2">
                                     <span className="flex size-3 shrink-0 items-center justify-center">
-                                        {substage.done ? <CheckGlyph /> : <PendingRingIcon />}
+                                        {substage.status === "done" ? (
+                                            <CheckGlyph />
+                                        ) : substage.status === "ongoing" ? (
+                                            <OngoingGlyph />
+                                        ) : (
+                                            <PendingRingIcon />
+                                        )}
                                     </span>
-                                    <span className={`flex-1 text-xs ${substage.done ? "text-secondary" : "text-secondary_hover"}`}>{substage.label}</span>
-                                    {!substage.done && <span className="font-mono text-[10px] text-tertiary">Pending</span>}
+                                    <span className={`flex-1 text-xs ${substage.status === "done" ? "text-secondary" : "text-secondary_hover"}`}>
+                                        {substage.label}
+                                    </span>
+                                    {substage.status === "ongoing" && <span className="font-mono text-[10px] text-[#EAB308]">Ongoing</span>}
+                                    {substage.status === "pending" && <span className="font-mono text-[10px] text-tertiary">Pending</span>}
                                 </div>
-                                {substage.ts && (
+                                {substage.status === "done" && substage.ts && (
                                     <span className="pl-5 font-mono text-[10px] text-placeholder">
                                         {formatDate(substage.ts)}, {substage.ts.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                                     </span>
