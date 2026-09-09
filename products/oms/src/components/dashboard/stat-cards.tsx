@@ -218,7 +218,8 @@ const DealStageBarColumn = ({
                                 className="flex w-full items-center justify-center rounded-full"
                                 style={{
                                     height: `${Math.round(attentionFraction * 100)}%`,
-                                    minHeight: 20,
+                                    minHeight: 40,
+                                    minWidth: 40,
                                     backgroundColor: `color-mix(in srgb, ${hue} 55%, black)`,
                                 }}
                             >
