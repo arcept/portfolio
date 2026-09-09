@@ -23,9 +23,14 @@ const MAX_VALUE = REFERENCE_TODAY;
 interface DashboardHeaderProps {
     selection: PeriodSelection;
     onSelectionChange: (selection: PeriodSelection) => void;
+    /** Lifted up to `dashboard-sales-head.tsx` and shared with `TeamDrilldown`'s own BDR search
+     * (mirrors the existing `funnelScope` lift for the same page/component pair) — so this field
+     * and `TeamDrilldown`'s "Search BDR..." input stay in sync as two entry points to one search. */
+    search: string;
+    onSearchChange: (value: string) => void;
 }
 
-export const DashboardHeader = ({ selection, onSelectionChange }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ selection, onSelectionChange, search, onSearchChange }: DashboardHeaderProps) => {
     const { persona } = usePersona();
     const { showReportButton } = getVisibleSections(persona);
     const [pickedRange, setPickedRange] = useState<{ start: DateValue; end: DateValue } | null>(null);
@@ -61,15 +66,6 @@ export const DashboardHeader = ({ selection, onSelectionChange }: DashboardHeade
 
                     <p className="text-xs text-tertiary">Here&apos;s how the floor is tracking</p>
                 </div>
-
-                <Input
-                    shortcut
-                    size="sm"
-                    aria-label="Search deals"
-                    placeholder="Search deals"
-                    icon={SearchLg}
-                    className="max-w-70 min-w-50 flex-1"
-                />
 
                 {showReportButton && <GenerateReportButton selection={selection} />}
             </div>
@@ -114,6 +110,17 @@ export const DashboardHeader = ({ selection, onSelectionChange }: DashboardHeade
                     onCancel={() =>
                         setPickedRange(selection.kind === "custom" ? { start: toCalendarDate(selection.from), end: toCalendarDate(selection.to) } : null)
                     }
+                />
+
+                <Input
+                    shortcut
+                    size="sm"
+                    aria-label="Search by BDR name"
+                    placeholder="Search by BDR name"
+                    icon={SearchLg}
+                    value={search}
+                    onChange={onSearchChange}
+                    className="max-w-70 min-w-50 flex-1"
                 />
             </div>
         </div>

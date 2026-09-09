@@ -1,6 +1,7 @@
 import { AdminFunnelAggregateRow, FunnelSection } from "@/components/dashboard/funnel-section";
+import { ConversionCard } from "@/components/dashboard/conversion-card";
 import { SalesFunnelSection } from "@/components/dashboard/sales-funnel-section";
-import { StatCardsRow } from "@/components/dashboard/stat-cards";
+import { BookedRevenueCard, DealStagesCard, RealisedAndTicketCards } from "@/components/dashboard/stat-cards";
 import { TeamDrilldown } from "@/components/dashboard/team-drilldown";
 import type { PeriodSelection } from "@/data/dashboard-data";
 import { DealsProvider } from "@/providers/deals-provider";
@@ -30,11 +31,25 @@ const EMBED_PERSONAS: Record<EmbedViewKey, Persona> = {
     "sales-funnel": { role: "admin" },
 };
 
+// "stat-cards" bundles everything the old single-grid `StatCardsRow` used to show — now split
+// across the Booked card and the Realised/Conversion/Deal Stages row (per the Home redesign) —
+// into one self-contained embeddable block, so this key's content stays equivalent.
+const StatCardsBundle = () => (
+    <div className="flex flex-col gap-4">
+        <BookedRevenueCard selection={DEFAULT_SELECTION} />
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[0.78fr_1fr_1.26fr]">
+            <RealisedAndTicketCards selection={DEFAULT_SELECTION} />
+            <ConversionCard selection={DEFAULT_SELECTION} />
+            <DealStagesCard selection={DEFAULT_SELECTION} />
+        </div>
+    </div>
+);
+
 const EMBED_COMPONENTS: Record<EmbedViewKey, () => React.ReactElement> = {
     "admin-funnel": () => <AdminFunnelAggregateRow selection={DEFAULT_SELECTION} />,
     "team-manager-funnel": () => <FunnelSection selection={DEFAULT_SELECTION} />,
     "team-drilldown": () => <TeamDrilldown selection={DEFAULT_SELECTION} />,
-    "stat-cards": () => <StatCardsRow selection={DEFAULT_SELECTION} />,
+    "stat-cards": () => <StatCardsBundle />,
     "sales-funnel": () => <SalesFunnelSection selection={DEFAULT_SELECTION} scope={{ role: "admin" }} />,
 };
 

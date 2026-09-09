@@ -1,16 +1,16 @@
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowDownRight, ArrowNarrowRight, ArrowUpRight, Copy01, Download01, Edit01, TrendUp02 } from "@untitledui/icons";
-import { Button } from "@/components/base/buttons/button";
+import { ArrowDownRight, ArrowUpRight, Copy01, Download01, Edit01, TrendUp02 } from "@untitledui/icons";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { ProgressBarBase } from "@/components/base/progress-indicators/progress-indicators";
+import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
+import { Badge } from "@/components/base/badges/badges";
 import { cx } from "@/utils/cx";
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import type { PeriodSelection } from "@/data/dashboard-data";
-import { cascadeToDealStages, formatIndianNumber, getPeriodSelectionKey } from "@/data/dashboard-data";
-import { changeDirectionFromText, getLostDealsSummaryForSelection, getPeriodChartDataLive } from "@/data/dashboard-metrics";
+import { formatIndianCompact, formatIndianNumber, getPeriodSelectionKey } from "@/data/dashboard-data";
+import { changeDirectionFromText, getDealStageBars, getPeriodChartDataLive } from "@/data/dashboard-metrics";
 import { BookedChart } from "./booked-chart";
 
 const CardActionsMenu = () => (
@@ -32,7 +32,7 @@ const CardActionsMenu = () => (
     </Dropdown.Root>
 );
 
-const Card = ({ className, children }: { className?: string; children: ReactNode }) => (
+export const Card = ({ className, children }: { className?: string; children: ReactNode }) => (
     <div className={cx("relative flex flex-col gap-4 rounded-xl border border-secondary bg-primary p-4 shadow-xs", className)}>{children}</div>
 );
 
@@ -50,7 +50,7 @@ const fadeTransition = { duration: 0.25, ease: "easeOut" as const };
 
 /** Wraps a card's contents in the same crossfade used everywhere else a card follows the
  * period selection, so switching periods always reads as "refreshed", not a hard cut. */
-const FadeOnSelection = ({ selectionKey, className, children }: { selectionKey: string; className?: string; children: ReactNode }) => (
+export const FadeOnSelection = ({ selectionKey, className, children }: { selectionKey: string; className?: string; children: ReactNode }) => (
     <AnimatePresence mode="wait">
         <motion.div
             key={selectionKey}
@@ -65,47 +65,67 @@ const FadeOnSelection = ({ selectionKey, className, children }: { selectionKey: 
     </AnimatePresence>
 );
 
-export const StatCardsRow = ({ selection }: { selection: PeriodSelection }) => {
+/** Row 1, left card — Booked Revenue + its own realised-of-this-period line. Sits beside
+ * `SalesFunnelSection` in the page's top grid row (Figma Container 118:28881). */
+export const BookedRevenueCard = ({ selection }: { selection: PeriodSelection }) => {
     const { persona } = usePersona();
     const { deals } = useDeals();
     const booked = getPeriodChartDataLive(selection, persona, deals);
     const selectionKey = getPeriodSelectionKey(selection);
-    const dealStages = cascadeToDealStages(booked.cascade);
-    const dealStagesMax = Math.max(...dealStages.map((stage) => stage.value));
     const changeDirection = changeDirectionFromText(booked.changeText);
-    const lost = getLostDealsSummaryForSelection(selection, persona, deals);
 
     return (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[1.4fr_1fr_1fr]">
-            {/* Booked - selected period */}
-            <Card className="row-span-2 min-h-104">
-                <div className="absolute top-4 right-4">
-                    <CardActionsMenu />
+        <Card className="min-h-104 min-w-0">
+            <div className="absolute top-4 right-4">
+                <CardActionsMenu />
+            </div>
+
+            <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                    <p className="text-md font-semibold text-primary">Booked Revenue</p>
+                    <Badge color="gray" type="color" size="sm">
+                        {booked.label}
+                    </Badge>
                 </div>
 
-                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
-                    <p className="max-w-[calc(100%-2rem)] text-xs font-medium text-tertiary">{booked.headingLabel}</p>
-
+                <div className="flex flex-col gap-3">
                     <div className="flex items-baseline gap-1">
                         <span className="text-xl font-medium text-primary">INR</span>
                         <span className="text-display-sm font-semibold tracking-tight text-primary">{formatIndianNumber(booked.bookedTotal)}</span>
+                        <span className="ml-1 flex items-center gap-0.5">
+                            {changeDirection === "up" && <ArrowUpRight className="size-3.5 text-fg-success-secondary" />}
+                            {changeDirection === "down" && <ArrowDownRight className="size-3.5 text-fg-error-secondary" />}
+                            <span className="text-sm font-medium text-secondary">{booked.changeText}</span>
+                        </span>
                     </div>
 
-                    <div className="flex w-max items-center gap-1 rounded-md bg-primary_alt px-1.5 py-0.5 shadow-xs">
-                        {changeDirection === "up" && <ArrowUpRight className="size-3 text-fg-success-secondary" />}
-                        {changeDirection === "down" && <ArrowDownRight className="size-3 text-fg-error-secondary" />}
-                        <span className="text-sm font-medium text-secondary">{booked.changeText}</span>
-                    </div>
-                </FadeOnSelection>
-
-                <div className="min-h-0 flex-1">
-                    <BookedChart data={booked} selectionKey={selectionKey} />
+                    <p className="text-sm text-tertiary">
+                        Out of which {formatIndianCompact(booked.realisedTotal)} is realised ({booked.realisedPercent.toFixed(2)}%)
+                    </p>
                 </div>
-            </Card>
+            </FadeOnSelection>
 
-            {/* Realised of previously booked + Total Realised — now follows the period pill too:
-                "previously booked" is the backlog-ledger draw, "Total Realised" is that plus the
-                period's own bookings realised (booked.totalRealised), so the two always sum. */}
+            <div className="min-h-0 flex-1">
+                <BookedChart data={booked} selectionKey={selectionKey} />
+            </div>
+        </Card>
+    );
+};
+
+/** Row 2, left column — the two short stacked mini-cards (Figma Frame 1000012501), rendered as
+ * one flex column so they behave as a single grid item next to the taller Conversion/Deal Stages
+ * cards. */
+export const RealisedAndTicketCards = ({ selection }: { selection: PeriodSelection }) => {
+    const { persona } = usePersona();
+    const { deals } = useDeals();
+    const booked = getPeriodChartDataLive(selection, persona, deals);
+    const selectionKey = getPeriodSelectionKey(selection);
+
+    return (
+        <div className="flex min-w-0 flex-col gap-4">
+            {/* Realised of previously booked + Total Realised — "previously booked" is the
+                backlog-ledger draw, "Total Realised" is that plus the period's own bookings
+                realised (booked.totalRealised), so the two always sum. */}
             <Card>
                 <div className="absolute top-4 right-4">
                     <CardActionsMenu />
@@ -116,7 +136,6 @@ export const StatCardsRow = ({ selection }: { selection: PeriodSelection }) => {
                 </FadeOnSelection>
             </Card>
 
-            {/* Average Ticket Size + Unit Sales / Target — also follows the period pill. */}
             <Card>
                 <div className="absolute top-4 right-4">
                     <CardActionsMenu />
@@ -131,39 +150,72 @@ export const StatCardsRow = ({ selection }: { selection: PeriodSelection }) => {
                     </div>
                 </FadeOnSelection>
             </Card>
+        </div>
+    );
+};
 
-            {/* Deal Stages — follows the period pill via the same cascade the Booked card reads. */}
-            <Card>
-                <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium text-tertiary">Deal Stages</p>
-                    <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
+/** One pill-in-track bar of the Deal Stages chart (Figma node 548:15755) — bottom-anchored fill,
+ * proportional to `value/max` with a small floor so a near-zero stage still reads as a sliver
+ * rather than vanishing, matching the precedent in `sales-funnel-ribbon.tsx`. The two "loss"
+ * buckets (DP Not Paid, Not Interested/Rejected) get a fixed diagonal-hatch treatment per the
+ * Figma spec — a style choice on those two positions, not a data-driven flag. */
+const DEAL_STAGE_MIN_FILL_FRACTION = 0.08;
+
+/** `colorClassName` is always a `bg-<token>` utility (see `cascadeToDealStages`) — deriving the
+ * matching `--color-<token>` custom property from it lets the hatch stripes reuse the exact same
+ * hue as the solid fill, without hardcoding a second color per hatched stage. */
+const cssVarFromBgClass = (bgClassName: string) => `var(${bgClassName.replace(/^bg-/, "--color-")})`;
+
+const DealStageBarColumn = ({ label, value, colorClassName, hatched, gradient, max }: { label: string; value: number; colorClassName: string; hatched?: boolean; gradient?: boolean; max: number }) => {
+    const fraction = max === 0 ? 0 : Math.max(value === 0 ? 0 : DEAL_STAGE_MIN_FILL_FRACTION, value / max);
+    const hue = cssVarFromBgClass(colorClassName);
+
+    return (
+        <Tooltip title={`${label}: ${value}`} placement="top">
+            <TooltipTrigger className="flex h-full w-12 shrink-0 flex-col items-center justify-center gap-2">
+                <div className="flex h-full w-full flex-1 items-end justify-center rounded-[40px] bg-quaternary">
+                    <div
+                        className={cx("w-full rounded-full", !hatched && !gradient && colorClassName)}
+                        style={{
+                            height: `${Math.round(fraction * 100)}%`,
+                            ...(gradient && { background: `linear-gradient(to top, var(--color-fg-success-secondary), var(--color-fg-success-primary))` }),
+                            ...(hatched && {
+                                backgroundColor: `color-mix(in srgb, ${hue} 30%, transparent)`,
+                                backgroundImage: `repeating-linear-gradient(45deg, ${hue} 0, ${hue} 2px, transparent 2px, transparent 6px)`,
+                            }),
+                        }}
+                    />
                 </div>
+                <span className="font-mono text-xs text-secondary">{String(value).padStart(2, "0")}</span>
+            </TooltipTrigger>
+        </Tooltip>
+    );
+};
 
-                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-3">
+/** Row 2, right column — the redesigned 8-bar Deal Stages chart (Figma node 548:15755),
+ * replacing the old horizontal `ProgressBarBase` list. Reads the same shared cascade as the
+ * Booked card so the two never drift apart for a given period. */
+export const DealStagesCard = ({ selection }: { selection: PeriodSelection }) => {
+    const { persona } = usePersona();
+    const { deals } = useDeals();
+    const selectionKey = getPeriodSelectionKey(selection);
+    const dealStages = getDealStageBars(selection, persona, deals);
+    const dealStagesMax = Math.max(...dealStages.map((stage) => stage.value));
+
+    return (
+        <Card className="h-full min-w-0">
+            <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-tertiary">Deal Stages</p>
+                <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
+            </div>
+
+            <div className="min-w-0 flex-1 overflow-x-auto">
+                <FadeOnSelection selectionKey={selectionKey} className="flex h-full items-stretch gap-3">
                     {dealStages.map((stage) => (
-                        <div key={stage.label} className="flex items-center gap-3">
-                            <span className="w-27.5 shrink-0 text-xs text-secondary">{stage.label}</span>
-                            <ProgressBarBase value={stage.value} max={dealStagesMax} className="bg-quaternary" progressClassName={stage.colorClassName} />
-                            <span className="w-4 shrink-0 text-right font-mono text-[13px] text-secondary">{stage.value}</span>
-                        </div>
+                        <DealStageBarColumn key={stage.label} max={dealStagesMax} {...stage} />
                     ))}
                 </FadeOnSelection>
-            </Card>
-
-            {/* Lost deals — same cohort (applications sent this period, scoped to the persona) as
-                the Deal Stages bars above, so this always agrees with them. */}
-            <Card>
-                <p className="text-xs font-medium text-tertiary">Lost deals</p>
-                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-1">
-                    <span className="text-display-md font-normal tracking-tight text-primary">{lost.percent}%</span>
-                    <p className="text-sm text-secondary">
-                        You closed {lost.closedCount} out of {lost.cohortSize} deals
-                    </p>
-                </FadeOnSelection>
-                <Button color="link-color" size="sm" iconTrailing={ArrowNarrowRight}>
-                    All deals
-                </Button>
-            </Card>
-        </div>
+            </div>
+        </Card>
     );
 };

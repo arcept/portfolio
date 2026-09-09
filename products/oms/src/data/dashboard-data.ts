@@ -43,6 +43,15 @@ export function formatIndianNumber(value: number): string {
     return value < 0 ? `-${formatted}` : formatted;
 }
 
+/** Indian lakh/crore compact form: 422000 -> "4.22 L", 12500000 -> "1.25 Cr". */
+export function formatIndianCompact(value: number): string {
+    const abs = Math.abs(value);
+    const sign = value < 0 ? "-" : "";
+    if (abs >= 1_00_00_000) return `${sign}${(abs / 1_00_00_000).toFixed(2)} Cr`;
+    if (abs >= 1_00_000) return `${sign}${(abs / 1_00_000).toFixed(2)} L`;
+    return `${sign}${formatIndianNumber(abs)}`;
+}
+
 // ---------------------------------------------------------------------------
 // Deterministic "organic" curve generator — seeded so the wobble is stable
 // across renders instead of re-randomizing on every mount.
@@ -471,21 +480,7 @@ export function listAllBdrs(): { id: string; label: string; persona: Persona }[]
     });
 }
 
-export type DealStageBar = { label: string; value: number; colorClassName: string };
-
-/** Deal Stages is the same 6-bucket cascade snapshot for every card that shows it (the bar
- * list here and the funnel cards below) — reading off one shared cascade per period keeps
- * them from ever drifting apart, per whichever period is currently selected. */
-export function cascadeToDealStages(cascade: DealStageCascade): DealStageBar[] {
-    return [
-        { label: "Application", value: cascade.currentStage.applicationStage, colorClassName: "bg-fg-brand-primary" },
-        { label: "Offer", value: cascade.currentStage.offerStage, colorClassName: "bg-fg-warning-primary" },
-        { label: "Payment", value: cascade.currentStage.paymentStage, colorClassName: "bg-fg-error-secondary" },
-        { label: "Completed", value: cascade.currentStage.paymentCompleted, colorClassName: "bg-fg-success-primary" },
-        { label: "Not Interested", value: cascade.currentStage.notInterested, colorClassName: "bg-fg-brand-secondary_hover" },
-        { label: "Rejected", value: cascade.currentStage.expired, colorClassName: "bg-fg-error-primary" },
-    ];
-}
+export type DealStageBar = { label: string; value: number; colorClassName: string; hatched?: boolean; gradient?: boolean };
 
 export type FunnelBreakdownItem = {
     label: string;

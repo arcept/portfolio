@@ -5,10 +5,9 @@ import { Copy01, Download01, Edit01 } from "@untitledui/icons";
 import { useDeals } from "@/providers/deals-provider";
 import { useCountUp } from "@/hooks/use-count-up";
 import { getPersonaLabel, type PeriodSelection } from "@/data/dashboard-data";
-import { getSalesFunnelCourseBreakdown, getSalesFunnelFlow, getSalesFunnelHeadline } from "@/data/dashboard-metrics";
+import { getSalesFunnelFlow, getSalesFunnelHeadline } from "@/data/dashboard-metrics";
 import type { FunnelFlowNodeId } from "@/data/dashboard-metrics";
 import type { Persona } from "@/types/role";
-import { SalesFunnelCourseTable } from "./sales-funnel-course-table";
 import { SalesFunnelRibbon } from "./sales-funnel-ribbon";
 
 /** Below this many deals in the cohort, the ribbon renders too small/sparse to read
@@ -62,7 +61,6 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
 
     const flow = getSalesFunnelFlow(selection, scope, deals);
     const headline = getSalesFunnelHeadline(selection, scope, deals);
-    const courseRows = getSalesFunnelCourseBreakdown(selection, scope, deals);
     const scopeLabel = scope.role === "admin" ? "Org-wide" : getPersonaLabel(scope);
     const animatedApplicationsSent = useCountUp(headline.applicationsSent);
     const animatedConversionPct = useCountUp(headline.conversionPct);
@@ -104,10 +102,6 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
                     <SalesFunnelRibbon flow={flow} width={RIBBON_WIDTH} height={RIBBON_HEIGHT} onBandClick={(nodeId) => goToDeals(`tab=${TAB_BY_NODE[nodeId]}`)} />
                 </div>
             )}
-
-            <div className="min-w-0 border-t border-secondary pt-4">
-                <SalesFunnelCourseTable rows={courseRows} onRowClick={(courseId) => goToDeals(`course=${courseId}`)} />
-            </div>
         </div>
     );
 };

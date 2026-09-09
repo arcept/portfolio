@@ -58,7 +58,17 @@ const WaitingForSelection = ({ label }: { label: string }) => (
     </EmptyState>
 );
 
-export const TeamDrilldown = ({ selection, onScopeChange }: { selection: PeriodSelection; onScopeChange?: (scope: Persona) => void }) => {
+interface TeamDrilldownProps {
+    selection: PeriodSelection;
+    onScopeChange?: (scope: Persona) => void;
+    /** Controlled BDR search, shared with `DashboardHeader`'s "Search by BDR name" field via a
+     * lift to `dashboard-sales-head.tsx` — falls back to an internal `useState` when omitted, so
+     * nothing breaks for callers that don't need the cross-component sync. */
+    search?: string;
+    onSearchChange?: (value: string) => void;
+}
+
+export const TeamDrilldown = ({ selection, onScopeChange, search: controlledSearch, onSearchChange }: TeamDrilldownProps) => {
     const { persona } = usePersona();
     const { deals } = useDeals();
     const { drilldownColumns, showBdrSearch } = getVisibleSections(persona);
@@ -82,7 +92,9 @@ export const TeamDrilldown = ({ selection, onScopeChange }: { selection: PeriodS
     const [selectedTmId, setSelectedTmId] = useState<string | undefined>(drilldownColumns === 3 ? teamManagers[0]?.id : ownTmId);
     const [selectedTlId, setSelectedTlId] = useState<string | undefined>(undefined);
     const [selectedBdrId, setSelectedBdrId] = useState<string | undefined>(undefined);
-    const [search, setSearch] = useState("");
+    const [internalSearch, setInternalSearch] = useState("");
+    const search = controlledSearch ?? internalSearch;
+    const setSearch = onSearchChange ?? setInternalSearch;
 
     const activeTmId = drilldownColumns === 3 ? selectedTmId : ownTmId;
     const activeTm = teamManagers.find((t) => t.id === activeTmId);

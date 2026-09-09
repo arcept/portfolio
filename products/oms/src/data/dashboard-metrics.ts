@@ -10,6 +10,7 @@ import type { Deal, DealStatusId } from "./deals-data";
 import { COURSES, dealsForPersona } from "./deals-data";
 import type {
     ChartPoint,
+    DealStageBar,
     DealStageCascade,
     FunnelCohort,
     FunnelStage,
@@ -407,6 +408,36 @@ export function buildLiveCascade(cohort: Deal[]): DealStageCascade {
         clearance: { completed: paymentCompleted, enrolmentCancelled: 0 },
         currentStage: { applicationStage, offerStage, paymentStage, paymentCompleted, expired, notInterested },
     };
+}
+
+const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassName: string; hatched?: boolean; gradient?: boolean }[] = [
+    { label: "Application", ids: ["APP_PENDING", "APP_FILLED"], colorClassName: "bg-utility-blue-400" },
+    { label: "Drafting Payment Plan", ids: ["PLAN_NOT_STARTED", "PLAN_DRAFT", "PLAN_AWAITING_APPROVAL"], colorClassName: "bg-utility-purple-400", hatched: true },
+    { label: "Offer", ids: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_WITHDRAWN"], colorClassName: "bg-fg-warning-secondary" },
+    { label: "Payment Overdue", ids: ["PAY_OVERDUE"], colorClassName: "bg-fg-error-secondary" },
+    { label: "Payment Ongoing", ids: ["PAY_ONGOING", "PAY_DUE"], colorClassName: "bg-utility-indigo-400" },
+    { label: "Payment Completed", ids: ["PAY_COMPLETED"], colorClassName: "bg-fg-success-primary", gradient: true },
+    { label: "Enrolment Cancelled", ids: ["ENR_CANCELLED"], colorClassName: "bg-fg-tertiary" },
+    { label: "Not Interested / Rejected", ids: ["NOT_INTERESTED", "SAVED", "REJECTED", "APP_EXPIRED", "OFFER_EXPIRED"], colorClassName: "bg-fg-error-primary", hatched: true },
+];
+
+/** Deal Stages (Figma node 548:15755) — 8 bars classified directly off each deal's real
+ * `status.id`, the same way `buildLiveCascade` classifies its 6, just with finer splits where
+ * the status model actually supports them (Payment Ongoing/Due vs Overdue; drafting-a-payment-
+ * plan as its own bucket; Enrolment Cancelled surfaced instead of folded into "expired"). Every
+ * non-APP_NEW status lands in exactly one group, so this always partitions the cohort exactly
+ * once — `cohort.length` never contains APP_NEW deals anyway (`getCohort` only includes deals
+ * whose application was actually sent). */
+export function getDealStageBars(selection: PeriodSelection, persona: Persona, deals: Deal[]): DealStageBar[] {
+    const cohort = getCohort(persona, resolvePeriodBounds(selection), deals);
+
+    return DEAL_STAGE_BAR_GROUPS.map((group) => ({
+        label: group.label,
+        value: cohort.filter((d) => group.ids.includes(d.status.id)).length,
+        colorClassName: group.colorClassName,
+        hatched: group.hatched,
+        gradient: group.gradient,
+    }));
 }
 
 // ---------------------------------------------------------------------------
