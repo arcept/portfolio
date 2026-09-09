@@ -111,9 +111,16 @@ export type DealStageCascade = {
     };
 };
 
-function buildCascade(unitsAchieved: number, seed: number): DealStageCascade {
+function buildCascade(unitsAchieved: number, seed: number, quality: number): DealStageCascade {
     const rand = seededRandom(seed);
     const branch = (of: number, min: number, max: number) => Math.max(1, Math.round(of * (min + rand() * (max - min))));
+    // `quality` scales just the "loss" branches (expired/not-interested/rejected — deals that
+    // stop progressing) inversely: >1 shrinks them (a stronger-converting month), <1 grows them
+    // (a weaker one). Friction/in-progress branches (overdue, dpNotPaid, offer/app pending) are
+    // untouched by it — those aren't conversion, just where a still-live deal currently sits.
+    // This is what makes each month's stage-to-stage conversion % genuinely different from the
+    // next, not just mildly jittered by a different random seed within the same fixed range.
+    const lossBranch = (of: number, min: number, max: number) => branch(of, min / quality, max / quality);
 
     // Payment step — `unitsAchieved` is booked units (>=1 payment): cleared + overdue +
     // payment-stage not-interested/rejected, every "accepted" deal except dpNotPaid. `cleared`
@@ -121,15 +128,15 @@ function buildCascade(unitsAchieved: number, seed: number): DealStageCascade {
     // (§9(a) of the offer-separation brief) — a deal books the moment it starts paying, whether
     // or not it's finished.
     const overdue = branch(unitsAchieved, 0.12, 0.22);
-    const paymentNotInterestedOrRejected = branch(unitsAchieved, 0.06, 0.12);
+    const paymentNotInterestedOrRejected = lossBranch(unitsAchieved, 0.06, 0.12);
     const cleared = Math.max(1, unitsAchieved - overdue - paymentNotInterestedOrRejected);
     const dpNotPaid = branch(unitsAchieved, 0.2, 0.32);
     const accepted = cleared + dpNotPaid + overdue + paymentNotInterestedOrRejected;
 
     // Offer step — backward from `accepted`.
     const offerPending = branch(accepted, 0.16, 0.26);
-    const offerExpired = branch(accepted, 0.08, 0.14);
-    const offerNotInterestedOrRejected = branch(accepted, 0.12, 0.2);
+    const offerExpired = lossBranch(accepted, 0.08, 0.14);
+    const offerNotInterestedOrRejected = lossBranch(accepted, 0.12, 0.2);
     const filled = accepted + offerPending + offerExpired + offerNotInterestedOrRejected;
 
     // Application step — backward from `filled`. Widened per Manik's ask for a bigger sample of
@@ -137,8 +144,8 @@ function buildCascade(unitsAchieved: number, seed: number): DealStageCascade {
     // `filled` (and everything downstream of it — Plan/Offer/Payment) is computed independently
     // above and never reads this fraction back.
     const appPending = branch(filled, 0.22, 0.34);
-    const appExpired = branch(filled, 0.06, 0.12);
-    const appNotInterestedOrRejected = branch(filled, 0.08, 0.16);
+    const appExpired = lossBranch(filled, 0.06, 0.12);
+    const appNotInterestedOrRejected = lossBranch(filled, 0.08, 0.16);
     const applicationsSent = filled + appPending + appExpired + appNotInterestedOrRejected;
 
     // Enrolment cancellations are a small, decorative post-clearance event — they don't
@@ -192,6 +199,10 @@ function defineMonth(
     ats: number,
     realisedRatio: number,
     cascadeSeed: number,
+    /** >1 = a stronger-converting month (fewer deals expire/fall through at every stage), <1 =
+     * weaker — see `lossBranch` in buildCascade. This is what gives each month a genuinely
+     * different Application→Offer→Payment→Completed conversion story, not just volume. */
+    quality: number,
 ): MonthGroundTruth {
     const booked = unitsAchieved * ats;
     return {
@@ -202,7 +213,7 @@ function defineMonth(
         ats,
         booked,
         realisedThisPeriod: Math.round(booked * realisedRatio),
-        cascade: buildCascade(unitsAchieved, cascadeSeed),
+        cascade: buildCascade(unitsAchieved, cascadeSeed, quality),
         realisedOfPreviouslyBooked: 0,
         totalRealised: 0,
     };
@@ -211,14 +222,20 @@ function defineMonth(
 // Jan–Mar: the quarter before the Apr–Jun window this dashboard used to start at (added on
 // Manik's ask for a sample of deals from that earlier quarter) — a smaller, ramping-up team
 // output that leads naturally into April's already-established upward trend.
-const JANUARY = defineMonth(2025, 0, 7, 6, 165_000, 0.195, 98);
-const FEBRUARY = defineMonth(2025, 1, 8, 6, 168_000, 0.2, 99);
-const MARCH = defineMonth(2025, 2, 9, 7, 170_000, 0.205, 100);
-const APRIL = defineMonth(2025, 3, 10, 8, 172_000, 0.21, 101);
-const MAY = defineMonth(2025, 4, 11, 9, 175_000, 0.215, 102);
-const JUNE = defineMonth(2025, 5, 12, 10, 176_000, 0.22, 103);
-const JULY = defineMonth(2025, 6, 13, 11, 178_000, 0.225, 104);
-const AUGUST = defineMonth(2025, 7, 12, 11, 180_000, 0.2235, 105);
+//
+// unitsAchieved (30–42/month) is tuned so applicationsSent lands around 90–120/month on average
+// (per Manik's ask) — see the cascade math in buildCascade: applicationsSent ends up roughly
+// unitsAchieved × 2.7–2.9 once every stage's random branch ratios compound. `quality` varies
+// deliberately non-monotonically (not a smooth ramp) so conversion swings from a genuinely weak
+// month (March) to a genuinely strong one (May), rather than every month reading about the same.
+const JANUARY = defineMonth(2025, 0, 38, 34, 165_000, 0.195, 98, 0.85);
+const FEBRUARY = defineMonth(2025, 1, 43, 38, 168_000, 0.2, 99, 1.15);
+const MARCH = defineMonth(2025, 2, 36, 32, 170_000, 0.205, 100, 0.75);
+const APRIL = defineMonth(2025, 3, 45, 40, 172_000, 0.21, 101, 1.0);
+const MAY = defineMonth(2025, 4, 40, 36, 175_000, 0.215, 102, 1.3);
+const JUNE = defineMonth(2025, 5, 43, 38, 176_000, 0.22, 103, 0.9);
+const JULY = defineMonth(2025, 6, 44, 39, 178_000, 0.225, 104, 1.1);
+const AUGUST = defineMonth(2025, 7, 41, 37, 180_000, 0.2235, 105, 0.95);
 
 export const MONTHS: MonthGroundTruth[] = [JANUARY, FEBRUARY, MARCH, APRIL, MAY, JUNE, JULY, AUGUST];
 
