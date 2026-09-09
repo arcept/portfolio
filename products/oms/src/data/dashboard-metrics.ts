@@ -435,14 +435,15 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
     // it. Flagging rather than guessing again: any deal sitting at APP_FILLED currently isn't
     // counted in any Deal Stages bar.
     { label: "Application", ids: ["APP_NEW", "APP_PENDING", "APP_EXPIRED"], colorClassName: "bg-utility-blue-400", attentionIds: ["APP_NEW", "APP_EXPIRED"], attentionLabel: "need attention" },
-    { label: "Payment Plan Pending", ids: ["PLAN_NOT_STARTED", "PLAN_DRAFT", "PLAN_AWAITING_APPROVAL"], colorClassName: "bg-utility-purple-400", hatched: true },
-    // Total = all 4 statuses below; the attention count is the same 4 (per Manik's spec, "Plan
-    // Created" was dropped from the total since nothing in the status model represents it), so
-    // the whole bar renders as the attention shade — every deal here is offer-stage and past the
-    // "just sent" moment, so all of it is actionable.
+    { label: "Payment Plan Pending", ids: ["PLAN_NOT_STARTED", "PLAN_AWAITING_APPROVAL"], colorClassName: "bg-utility-purple-400", hatched: true },
+    // PLAN_DRAFT (displayed "Plan · Created" — label is literally "Created", see deals-data.ts)
+    // is the actual status for "plan created, offer not yet shared" that Manik was originally
+    // after — moved here from Payment Plan Pending. It's counted in the total but deliberately
+    // left out of `attentionIds`, matching the original spec ("the number inside the 3rd bar
+    // should include Offer Pending/Accepted/Expired/Withdrawn" — Plan Created wasn't one of them).
     {
         label: "Offer Letters",
-        ids: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_EXPIRED", "OFFER_WITHDRAWN"],
+        ids: ["PLAN_DRAFT", "OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_EXPIRED", "OFFER_WITHDRAWN"],
         colorClassName: "bg-fg-warning-secondary",
         attentionIds: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_EXPIRED", "OFFER_WITHDRAWN"],
         attentionLabel: "need attention",
