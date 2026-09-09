@@ -460,10 +460,9 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
         attentionIds: ["PAY_OVERDUE"],
         attentionLabel: "overdue",
     },
-    // ENR_CANCELLED joins Payment Completed here — those deals were fully paid before the
-    // enrolment was cancelled on the backend (see deals-data.ts:697), so they're still
-    // "completed" payments, just with a later cancellation event layered on top.
-    { label: "Payment Completed", ids: ["PAY_COMPLETED", "ENR_CANCELLED"], colorClassName: "bg-fg-success-primary", gradient: true },
+    // ENR_CANCELLED removed per Manik — not claimed by any bar below, same as APP_FILLED (see
+    // the note above "Application"). Flagging rather than guessing a new home for it.
+    { label: "Payment Completed", ids: ["PAY_COMPLETED"], colorClassName: "bg-fg-success-primary", gradient: true },
     // SAVED split out into its own bar below — this is just NOT_INTERESTED now.
     { label: "Not Interested", ids: ["NOT_INTERESTED"], colorClassName: "bg-fg-tertiary" },
     { label: "Saved for Later", ids: ["SAVED"], colorClassName: "bg-utility-brand-700" },
@@ -476,8 +475,9 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
  * `status.id`, the same way `buildLiveCascade` classifies its 6, just with finer splits where
  * the status model actually supports them (Payment Ongoing/Due vs Overdue; payment-plan-pending
  * as its own bucket; Not Interested and Rejected surfaced separately instead of folded into one
- * "expired" bucket). Every status *except* `APP_FILLED` lands in exactly one group — see the
- * note above the "Application" entry in `DEAL_STAGE_BAR_GROUPS` for why that one's unclaimed.
+ * "expired" bucket). Every status *except* `APP_FILLED` and `ENR_CANCELLED` lands in exactly one
+ * group — see the notes above the "Application" and "Payment Completed" entries in
+ * `DEAL_STAGE_BAR_GROUPS` for why those two are unclaimed.
  *
  * Unlike the Sales Funnel (which reads `getCohort`, scoped to deals whose application was
  * actually *sent*), this reads the raw `createdOn`-filtered roster — the same basis the Deals
