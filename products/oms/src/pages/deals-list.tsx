@@ -114,10 +114,7 @@ const REFERENCE_TODAY = toCalendarDate(DATA_WINDOW_END);
 const MIN_VALUE = toCalendarDate(DATA_WINDOW_START);
 const MAX_VALUE = REFERENCE_TODAY;
 
-// "Lifetime" is the default — matches today's behavior (every deal in scope, unfiltered) rather
-// than the Figma mock's "This Month" default, so shipping this redesign doesn't hide deals that
-// were visible before it.
-const DEFAULT_PERIOD: PeriodSelection = { kind: "preset", id: "lifetime" };
+const DEFAULT_PERIOD: PeriodSelection = { kind: "preset", id: "this-month" };
 const isPeriodId = (id: string): id is PeriodId => periods.some((p) => p.id === id);
 
 function formatDateShort(d: Date): string {
@@ -239,7 +236,7 @@ export const DealsList = () => {
         if (filters.currency) params.set("currency", filters.currency);
         if (filters.updated) params.set("updated", filters.updated);
         if (filters.bdrId) params.set("bdr", filters.bdrId);
-        if (period.kind === "preset" && period.id !== "lifetime") params.set("period", period.id);
+        if (period.kind === "preset" && period.id !== "this-month") params.set("period", period.id);
         if (period.kind === "custom") {
             params.set("periodFrom", period.from.toISOString().slice(0, 10));
             params.set("periodTo", period.to.toISOString().slice(0, 10));
