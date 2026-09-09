@@ -205,6 +205,7 @@ const DealStageBarColumn = ({
                         className={cx("relative flex w-full items-start justify-center overflow-hidden rounded-full p-1", !hatched && !gradient && colorClassName)}
                         style={{
                             height: `${Math.round(fraction * 100)}%`,
+                            minHeight: value > 0 ? 64 : undefined,
                             ...(gradient && { background: `linear-gradient(to top, var(--color-fg-success-secondary), var(--color-fg-success-primary))` }),
                             ...(hatched && {
                                 backgroundColor: `color-mix(in srgb, ${hue} 30%, transparent)`,
