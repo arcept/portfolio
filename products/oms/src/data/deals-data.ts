@@ -684,15 +684,50 @@ function isInstallmentOverdue(deadline: string): boolean {
 }
 
 function buildInstallments(statusId: DealStatusId, currency: "INR" | "USD", netPayable: number, createdOn: Date): Installment[] {
-    const modeChoices: InstallmentMode[] = currency === "INR" ? ["Razorpay", "Manual", "EMI_3P"] : ["Stripe", "Stripe EMI"];
+    const gatewayMode: InstallmentMode = currency === "INR" ? pick(["Razorpay", "Manual"]) : "Stripe";
+    const emiMode: InstallmentMode = currency === "INR" ? "EMI_3P" : "Stripe EMI";
+    const roundTo = currency === "INR" ? 100 : 10;
+
     // A Due/Overdue deal needs a genuine unpaid trailing installment to hang that status off —
     // "first payment made" (every Payment-stage status) means a single-installment plan is
-    // already fully paid, so these two statuses always force a part payment.
+    // already fully paid, so these two statuses always force a part-payment plan.
     const needsUnpaidTail = statusId === "PAY_DUE" || statusId === "PAY_OVERDUE";
-    const partPayment = needsUnpaidTail || rand() < 0.6;
-    const count = partPayment ? int(2, 3) : 1;
-    let remaining = netPayable;
-    const installments: Installment[] = [];
+
+    // Deal-level payment type (not a per-installment coin-flip like this used to be — that let
+    // EMI_3P land on ~1/3 of individual installments, making most deals read as "EMI 3rd Party"
+    // regardless of how the plan was actually structured). Target mix, per Manik: ~65% Part
+    // Payment (35% of that on a 3-month plan, 65% on a 6-month plan), ~30% Upfront, ~5% EMI 3rd
+    // Party — see `paymentTypeLabel` in payment-plan-shared.tsx for how a deal's installments
+    // resolve back into this label.
+    const roll = rand();
+    let paymentType: "emi" | "upfront" | "part3" | "part6" = roll < 0.05 ? "emi" : roll < 0.35 ? "upfront" : rand() < 0.35 ? "part3" : "part6";
+    // Upfront/EMI's single-installment shape can't carry a genuine unpaid trailing row — fall
+    // back to a part-payment plan for those regardless of the roll, so the 65/30/5 mix describes
+    // the population overall, not each individual status bucket.
+    if (needsUnpaidTail && paymentType !== "part3" && paymentType !== "part6") paymentType = rand() < 0.35 ? "part3" : "part6";
+
+    const isEmiType = paymentType === "emi";
+    const months = paymentType === "part3" ? 3 : paymentType === "part6" ? 6 : 0;
+    const mode = isEmiType ? emiMode : gatewayMode;
+
+    // Downpayment is a fixed 15% of Net Payable, remainder split evenly across the tenure, final
+    // installment absorbing the rounding remainder — mirrors `buildPartPaymentInstallments` in
+    // payment-plan-editor.tsx so a seeded plan looks like one a BDR could have built by hand.
+    const rows: { label: string; amount: number }[] = [];
+    if (months > 0) {
+        const downpayment = Math.round((netPayable * 0.15) / roundTo) * roundTo;
+        const per = Math.round((netPayable - downpayment) / months / roundTo) * roundTo;
+        rows.push({ label: "Downpayment", amount: downpayment });
+        let assigned = downpayment;
+        for (let i = 0; i < months; i++) {
+            const amount = i === months - 1 ? netPayable - assigned : per;
+            assigned += amount;
+            rows.push({ label: `Installment ${i + 1}`, amount });
+        }
+    } else {
+        rows.push({ label: isEmiType ? "Full Payment" : "Full payment", amount: netPayable });
+    }
+    const count = rows.length;
 
     // ENR_CANCELLED deals were fully paid before the enrolment was cancelled on the backend (a
     // post-clearance event, not a payment-stage one) — same paid shape as PAY_COMPLETED.
@@ -703,12 +738,8 @@ function buildInstallments(statusId: DealStatusId, currency: "INR" | "USD", netP
     // in the future so it never outranks the intended status.
     const drivingIndex = isPaymentActive ? (count > 1 ? 1 : 0) : -1;
 
+    const installments: Installment[] = [];
     for (let k = 0; k < count; k++) {
-        const mode = pick(modeChoices);
-        const isEmi = mode.includes("EMI");
-        const amount = k === count - 1 ? remaining : Math.round(remaining / (count - k) / 100) * 100;
-        remaining -= amount;
-
         const paidFlag = allPaid || (isPaymentActive && k === 0);
 
         // Capped at 30 days regardless of how long ago the deal was created — otherwise an early
@@ -736,12 +767,12 @@ function buildInstallments(statusId: DealStatusId, currency: "INR" | "USD", netP
         const deadline = toISODate(deadlineDate);
 
         installments.push({
-            label: partPayment ? `Installment ${k + 1}` : "Full payment",
-            amount,
+            label: rows[k].label,
+            amount: rows[k].amount,
             mode,
-            isEmi,
-            emiMonths: isEmi ? pick([3, 6, 12]) : null,
-            emiInterest: isEmi ? pick([180, 340, 620]) : null,
+            isEmi: isEmiType,
+            emiMonths: isEmiType ? pick([3, 6, 12]) : null,
+            emiInterest: isEmiType ? pick([180, 340, 620]) : null,
             deadline,
             status: paidFlag ? "Paid" : isInstallmentOverdue(deadline) ? "Overdue" : "Unpaid",
             paidOn,
