@@ -464,7 +464,9 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
     // enrolment was cancelled on the backend (see deals-data.ts:697), so they're still
     // "completed" payments, just with a later cancellation event layered on top.
     { label: "Payment Completed", ids: ["PAY_COMPLETED", "ENR_CANCELLED"], colorClassName: "bg-fg-success-primary", gradient: true },
-    { label: "Not Interested", ids: ["NOT_INTERESTED", "SAVED"], colorClassName: "bg-fg-tertiary" },
+    // SAVED split out into its own bar below — this is just NOT_INTERESTED now.
+    { label: "Not Interested", ids: ["NOT_INTERESTED"], colorClassName: "bg-fg-tertiary" },
+    { label: "Saved for Later", ids: ["SAVED"], colorClassName: "bg-utility-brand-700" },
     // OFFER_EXPIRED moved to "Offer Letters" above per Manik's spec — kept here previously, now
     // just REJECTED so nothing is double-counted across bars.
     { label: "Rejected", ids: ["REJECTED"], colorClassName: "bg-fg-error-primary", hatched: true },
