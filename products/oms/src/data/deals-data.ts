@@ -1160,7 +1160,12 @@ function buildActivityLog(d: Omit<Deal, "activityLog">): ActivityLogEntry[] {
         log.push({ ts: daysAgo(int(1, 20)), text: "Application form resent" });
     }
     if (d.status.id !== "APP_NEW" && d.status.id !== "APP_PENDING" && d.status.id !== "APP_EXPIRED") {
-        log.push({ ts: daysAgo(int(30, 90)), text: "Application filled by learner" });
+        // A learner can't fill a form they never opened — log "opened" a few days before
+        // "filled" so the milestone rail's earlier substages read as done too, not stuck on
+        // "Pending" underneath a later substage that's already complete.
+        const filledOn = daysAgo(int(30, 90));
+        log.push({ ts: new Date(filledOn.getTime() - int(1, 3) * 86_400_000), text: "Application form opened by learner" });
+        log.push({ ts: filledOn, text: "Application filled by learner" });
     }
     if (d.plan.state !== "none") {
         log.push({ ts: d.plan.createdOn ?? daysAgo(int(20, 60)), text: "Payment plan created" });
@@ -1182,7 +1187,13 @@ function buildActivityLog(d: Omit<Deal, "activityLog">): ActivityLogEntry[] {
         log.push({ ts: daysAgo(int(1, 10)), text: "Offer letter resent" });
     }
     if (d.offer.state === "accepted" || d.status.stage === "Payment" || d.status.id === "ENR_CANCELLED") {
-        log.push({ ts: daysAgo(int(1, 30)), text: "Offer accepted by learner" });
+        // Same fix as "Application form opened" above — "opened" has to precede "accepted", and
+        // (since it's an independently-seeded real field, not a daysAgo() pick) can't precede
+        // "shared" either, so clamp to whichever is later.
+        const acceptedOn = daysAgo(int(1, 30));
+        const openedOn = new Date(Math.max(acceptedOn.getTime() - int(1, 3) * 86_400_000, (d.offer.sharedOn?.getTime() ?? -Infinity) + 1 * 86_400_000));
+        log.push({ ts: openedOn < acceptedOn ? openedOn : new Date(acceptedOn.getTime() - 1), text: "Offer letter opened by learner" });
+        log.push({ ts: acceptedOn, text: "Offer accepted by learner" });
     }
     for (const h of d.offerHistory) {
         if (h.endedBy === "withdrawn") log.push({ ts: h.endedOn, text: "Offer withdrawn", reason: h.reason ?? undefined });
