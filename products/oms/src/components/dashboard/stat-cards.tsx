@@ -160,8 +160,8 @@ export const RealisedAndTicketCards = ({ selection }: { selection: PeriodSelecti
 /** One pill-in-track bar of the Deal Stages chart (Figma node 548:15755) — bottom-anchored fill,
  * proportional to `value/max` with a small floor so a near-zero stage still reads as a sliver
  * rather than vanishing, matching the precedent in `sales-funnel-ribbon.tsx`. The two "loss"
- * buckets (DP Not Paid, Not Interested/Rejected) get a fixed diagonal-hatch treatment per the
- * Figma spec — a style choice on those two positions, not a data-driven flag. */
+ * buckets (Payment Plan Pending, Rejected) get a fixed diagonal-hatch treatment per the Figma
+ * spec — a style choice on those two positions, not a data-driven flag. */
 const DEAL_STAGE_MIN_FILL_FRACTION = 0.08;
 
 /** `colorClassName` is always a `bg-<token>` utility (see `cascadeToDealStages`) — deriving the

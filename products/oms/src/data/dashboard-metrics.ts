@@ -427,11 +427,26 @@ export function buildLiveCascade(cohort: Deal[]): DealStageCascade {
 const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassName: string; hatched?: boolean; gradient?: boolean; attentionIds?: DealStatusId[]; attentionLabel?: string }[] = [
     // "Needs attention" = New (assigned, form not even sent yet) + Expired (form sent but the
     // window lapsed with no action) — both are stalled and need a BDR to act, unlike Pending
-    // (form sent, still within its live window). APP_FILLED (form submitted, awaiting an offer)
-    // moves to the Offer bucket below since it's no longer really "at" the application step.
+    // (form sent, still within its live window).
+    //
+    // NOTE: APP_FILLED isn't claimed by any of the 8 groups below — it was previously folded
+    // into "Offer Letters" as a stand-in, but that bar is now explicitly scoped to exactly
+    // OFFER_PENDING/ACCEPTED/EXPIRED/WITHDRAWN per Manik's spec, with nowhere else specified for
+    // it. Flagging rather than guessing again: any deal sitting at APP_FILLED currently isn't
+    // counted in any Deal Stages bar.
     { label: "Application", ids: ["APP_NEW", "APP_PENDING", "APP_EXPIRED"], colorClassName: "bg-utility-blue-400", attentionIds: ["APP_NEW", "APP_EXPIRED"], attentionLabel: "need attention" },
-    { label: "Drafting Payment Plan", ids: ["PLAN_NOT_STARTED", "PLAN_DRAFT", "PLAN_AWAITING_APPROVAL"], colorClassName: "bg-utility-purple-400", hatched: true },
-    { label: "Offer", ids: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_WITHDRAWN", "APP_FILLED"], colorClassName: "bg-fg-warning-secondary" },
+    { label: "Payment Plan Pending", ids: ["PLAN_NOT_STARTED", "PLAN_DRAFT", "PLAN_AWAITING_APPROVAL"], colorClassName: "bg-utility-purple-400", hatched: true },
+    // Total = all 4 statuses below; the attention count is the same 4 (per Manik's spec, "Plan
+    // Created" was dropped from the total since nothing in the status model represents it), so
+    // the whole bar renders as the attention shade — every deal here is offer-stage and past the
+    // "just sent" moment, so all of it is actionable.
+    {
+        label: "Offer Letters",
+        ids: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_EXPIRED", "OFFER_WITHDRAWN"],
+        colorClassName: "bg-fg-warning-secondary",
+        attentionIds: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_EXPIRED", "OFFER_WITHDRAWN"],
+        attentionLabel: "need attention",
+    },
     { label: "Payment Overdue", ids: ["PAY_OVERDUE"], colorClassName: "bg-fg-error-secondary" },
     { label: "Payment Ongoing", ids: ["PAY_ONGOING", "PAY_DUE"], colorClassName: "bg-utility-indigo-400" },
     // ENR_CANCELLED joins Payment Completed here — those deals were fully paid before the
@@ -439,15 +454,17 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
     // "completed" payments, just with a later cancellation event layered on top.
     { label: "Payment Completed", ids: ["PAY_COMPLETED", "ENR_CANCELLED"], colorClassName: "bg-fg-success-primary", gradient: true },
     { label: "Not Interested", ids: ["NOT_INTERESTED", "SAVED"], colorClassName: "bg-fg-tertiary" },
-    { label: "Rejected", ids: ["REJECTED", "OFFER_EXPIRED"], colorClassName: "bg-fg-error-primary", hatched: true },
+    // OFFER_EXPIRED moved to "Offer Letters" above per Manik's spec — kept here previously, now
+    // just REJECTED so nothing is double-counted across bars.
+    { label: "Rejected", ids: ["REJECTED"], colorClassName: "bg-fg-error-primary", hatched: true },
 ];
 
 /** Deal Stages (Figma node 548:15755) — 8 bars classified directly off each deal's real
  * `status.id`, the same way `buildLiveCascade` classifies its 6, just with finer splits where
- * the status model actually supports them (Payment Ongoing/Due vs Overdue; drafting-a-payment-
- * plan as its own bucket; Not Interested and Rejected surfaced separately instead of folded into
- * one "expired" bucket). Every status lands in exactly one group, so this always partitions the
- * roster exactly once.
+ * the status model actually supports them (Payment Ongoing/Due vs Overdue; payment-plan-pending
+ * as its own bucket; Not Interested and Rejected surfaced separately instead of folded into one
+ * "expired" bucket). Every status *except* `APP_FILLED` lands in exactly one group — see the
+ * note above the "Application" entry in `DEAL_STAGE_BAR_GROUPS` for why that one's unclaimed.
  *
  * Unlike the Sales Funnel (which reads `getCohort`, scoped to deals whose application was
  * actually *sent*), this reads the raw `createdOn`-filtered roster — the same basis the Deals
