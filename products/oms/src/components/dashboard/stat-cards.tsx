@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowDownRight, ArrowUpRight, Copy01, Download01, Edit01, TrendUp02 } from "@untitledui/icons";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
@@ -157,12 +158,17 @@ export const RealisedAndTicketCards = ({ selection }: { selection: PeriodSelecti
     );
 };
 
-/** One pill-in-track bar of the Deal Stages chart (Figma node 548:15755) — bottom-anchored fill,
- * proportional to `value/max` with a small floor so a near-zero stage still reads as a sliver
- * rather than vanishing, matching the precedent in `sales-funnel-ribbon.tsx`. The two "loss"
- * buckets (Payment Plan Pending, Rejected) get a fixed diagonal-hatch treatment per the Figma
- * spec — a style choice on those two positions, not a data-driven flag. */
-const DEAL_STAGE_MIN_FILL_FRACTION = 0.08;
+/** One pill-in-track bar of the Deal Stages chart (Figma node 548:15755) — bottom-anchored fill.
+ * The two "loss" buckets (Payment Plan Pending, Rejected) get a fixed diagonal-hatch treatment
+ * per the Figma spec — a style choice on those two positions, not a data-driven flag.
+ *
+ * `fraction` is precomputed by `DealStagesCard` (see `dealStageFraction` below) rather than
+ * derived here from a simple `value/max` ratio — when the smallest bar's true ratio would fall
+ * under the 64px floor, every bar's height is rescaled relative to *that* bar's value instead of
+ * just flooring the one bar in isolation, so the whole chart stays on one consistent, kink-free
+ * scale (per Manik's ask) rather than the floor visually lying about how much bigger the other
+ * bars really are. */
+const DEAL_STAGE_MIN_HEIGHT_PX = 64;
 
 /** `colorClassName` is always a `bg-<token>` utility (see `cascadeToDealStages`) — deriving the
  * matching `--color-<token>` custom property from it lets the hatch stripes reuse the exact same
@@ -177,7 +183,7 @@ const DealStageBarColumn = ({
     gradient,
     attentionValue,
     attentionLabel,
-    max,
+    fraction,
 }: {
     label: string;
     value: number;
@@ -186,9 +192,8 @@ const DealStageBarColumn = ({
     gradient?: boolean;
     attentionValue?: number;
     attentionLabel?: string;
-    max: number;
+    fraction: number;
 }) => {
-    const fraction = max === 0 ? 0 : Math.max(value === 0 ? 0 : DEAL_STAGE_MIN_FILL_FRACTION, value / max);
     const hue = cssVarFromBgClass(colorClassName);
     // At least a third of the bar's own height, so the attention count stays legible even when
     // it's a small slice of a small bar — capped at the bar's full height.
@@ -234,6 +239,24 @@ const DealStageBarColumn = ({
     );
 };
 
+/** Linear scale from [smallest nonzero value → the 64px floor] to [largest value → the track's
+ * full height] — rather than a flat `value/max` ratio with the smallest bar independently
+ * floored, this anchors the *whole* chart's scale on those two points so every bar's height
+ * stays relative to the others on one consistent line, with no kink at the floor. When every
+ * nonzero bar shares the same value (or there's only one), there's nothing to scale between, so
+ * they all just fill the track. */
+function dealStageFraction(value: number, values: number[], trackHeightPx: number): number {
+    if (value === 0) return 0;
+    const nonZero = values.filter((v) => v > 0);
+    const min = Math.min(...nonZero);
+    const max = Math.max(...nonZero);
+    const floorFraction = trackHeightPx > 0 ? DEAL_STAGE_MIN_HEIGHT_PX / trackHeightPx : 0.2;
+    if (max === min) return 1;
+
+    const slope = (1 - floorFraction) / (max - min);
+    return Math.min(1, Math.max(floorFraction, floorFraction + slope * (value - min)));
+}
+
 /** Row 2, right column — the redesigned 8-bar Deal Stages chart (Figma node 548:15755),
  * replacing the old horizontal `ProgressBarBase` list. Reads the same shared cascade as the
  * Booked card so the two never drift apart for a given period. */
@@ -242,7 +265,17 @@ export const DealStagesCard = ({ selection }: { selection: PeriodSelection }) =>
     const { deals } = useDeals();
     const selectionKey = getPeriodSelectionKey(selection);
     const dealStages = getDealStageBars(selection, persona, deals);
-    const dealStagesMax = Math.max(...dealStages.map((stage) => stage.value));
+    const values = dealStages.map((stage) => stage.value);
+
+    const trackRef = useRef<HTMLDivElement>(null);
+    const [trackHeightPx, setTrackHeightPx] = useState(0);
+    useEffect(() => {
+        const el = trackRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver(([entry]) => setTrackHeightPx(entry.contentRect.height));
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     return (
         <Card className="h-full min-w-0">
@@ -251,10 +284,10 @@ export const DealStagesCard = ({ selection }: { selection: PeriodSelection }) =>
                 <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
             </div>
 
-            <div className="min-w-0 flex-1 overflow-x-auto">
+            <div ref={trackRef} className="min-w-0 flex-1 overflow-x-auto">
                 <FadeOnSelection selectionKey={selectionKey} className="flex h-full items-stretch gap-3">
                     {dealStages.map((stage) => (
-                        <DealStageBarColumn key={stage.label} max={dealStagesMax} {...stage} />
+                        <DealStageBarColumn key={stage.label} fraction={dealStageFraction(stage.value, values, trackHeightPx)} {...stage} />
                     ))}
                 </FadeOnSelection>
             </div>
