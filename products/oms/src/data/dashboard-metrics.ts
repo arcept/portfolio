@@ -448,8 +448,17 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
         attentionIds: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_EXPIRED", "OFFER_WITHDRAWN"],
         attentionLabel: "need attention",
     },
-    { label: "Payment Overdue", ids: ["PAY_OVERDUE"], colorClassName: "bg-fg-error-secondary" },
-    { label: "Payment Ongoing", ids: ["PAY_ONGOING", "PAY_DUE"], colorClassName: "bg-utility-indigo-400" },
+    // Combined Payment Due + Payment Overdue into one bar — total includes both, but the
+    // attention count is scoped to just PAY_OVERDUE (past the grace period entirely), not
+    // PAY_DUE (still within it).
+    {
+        label: "Payment Overdue",
+        ids: ["PAY_DUE", "PAY_OVERDUE"],
+        colorClassName: "bg-fg-error-secondary",
+        attentionIds: ["PAY_OVERDUE"],
+        attentionLabel: "overdue",
+    },
+    { label: "Payment Ongoing", ids: ["PAY_ONGOING"], colorClassName: "bg-utility-indigo-400" },
     // ENR_CANCELLED joins Payment Completed here — those deals were fully paid before the
     // enrolment was cancelled on the backend (see deals-data.ts:697), so they're still
     // "completed" payments, just with a later cancellation event layered on top.
