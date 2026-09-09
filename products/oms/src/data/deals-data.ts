@@ -711,8 +711,16 @@ function buildInstallments(statusId: DealStatusId, currency: "INR" | "USD", netP
 
         const paidFlag = allPaid || (isPaymentActive && k === 0);
 
+        // Capped at 30 days regardless of how long ago the deal was created — otherwise an early
+        // deal's first-payment date gets drawn from a uniform range spanning its entire lifetime
+        // (months, for anything created back in Q1), smearing most of its booking probability
+        // mass forward into later months instead of shortly after its own creation. That was
+        // making a period's booked chart look empty right at the start of the window and only
+        // pick up well after it — payment should land soon after creation, same fast-pipeline
+        // assumption `lastUpdateDayOffset` above already makes.
         const daysSinceCreated = Math.max(1, Math.round((PROTOTYPE_TODAY.getTime() - createdOn.getTime()) / 86_400_000));
-        let paidOn: Date | null = paidFlag ? new Date(createdOn.getTime() + int(1, daysSinceCreated) * 86_400_000) : null;
+        const maxDaysToFirstPayment = Math.min(daysSinceCreated, 30);
+        let paidOn: Date | null = paidFlag ? new Date(createdOn.getTime() + int(1, maxDaysToFirstPayment) * 86_400_000) : null;
         if (paidOn && paidOn > PROTOTYPE_TODAY) paidOn = PROTOTYPE_TODAY;
 
         // Day offset (relative to today) for this installment's due date — the driving row is

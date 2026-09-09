@@ -208,13 +208,19 @@ function defineMonth(
     };
 }
 
+// Jan–Mar: the quarter before the Apr–Jun window this dashboard used to start at (added on
+// Manik's ask for a sample of deals from that earlier quarter) — a smaller, ramping-up team
+// output that leads naturally into April's already-established upward trend.
+const JANUARY = defineMonth(2025, 0, 7, 6, 165_000, 0.195, 98);
+const FEBRUARY = defineMonth(2025, 1, 8, 6, 168_000, 0.2, 99);
+const MARCH = defineMonth(2025, 2, 9, 7, 170_000, 0.205, 100);
 const APRIL = defineMonth(2025, 3, 10, 8, 172_000, 0.21, 101);
 const MAY = defineMonth(2025, 4, 11, 9, 175_000, 0.215, 102);
 const JUNE = defineMonth(2025, 5, 12, 10, 176_000, 0.22, 103);
 const JULY = defineMonth(2025, 6, 13, 11, 178_000, 0.225, 104);
 const AUGUST = defineMonth(2025, 7, 12, 11, 180_000, 0.2235, 105);
 
-export const MONTHS: MonthGroundTruth[] = [APRIL, MAY, JUNE, JULY, AUGUST];
+export const MONTHS: MonthGroundTruth[] = [JANUARY, FEBRUARY, MARCH, APRIL, MAY, JUNE, JULY, AUGUST];
 
 // ---------------------------------------------------------------------------
 // Backlog ledger (brief §7) — resolves "Realised of previously booked" for
@@ -222,7 +228,7 @@ export const MONTHS: MonthGroundTruth[] = [APRIL, MAY, JUNE, JULY, AUGUST];
 // exceed what's actually outstanding.
 // ---------------------------------------------------------------------------
 
-const BACKLOG_SEED_POOL = 11_00_000; // outstanding balance carried in from before April
+const BACKLOG_SEED_POOL = 11_00_000; // outstanding balance carried in from before January
 const BACKLOG_DRAW_RATE = 0.3; // fraction of the pool collected each month
 
 (function resolveBacklogLedger() {
@@ -293,7 +299,7 @@ export type PeriodChartData = {
 // window, the only range that has real seeded deals behind it.
 // ---------------------------------------------------------------------------
 
-export const DATA_WINDOW_START = new Date(APRIL.year, APRIL.month, 1);
+export const DATA_WINDOW_START = new Date(MONTHS[0].year, MONTHS[0].month, 1);
 export const DATA_WINDOW_END = PROTOTYPE_TODAY;
 
 export type PeriodSelection = { kind: "preset"; id: PeriodId } | { kind: "custom"; from: Date; to: Date };
