@@ -496,15 +496,17 @@
     --outline-color-brand-solid_hover: var(--color-bg-brand-solid_hover);
 
     /* SALES FUNNEL RIBBON — a warm orange/amber glow, kept distinct from the app's violet brand
-     * and from the blue/amber/green/red/gray status-legend colors used everywhere else. Ordered
-     * core (brightest, innermost layer) to outer (most muted) for the ribbon's nested-glow
-     * rendering. Dark mode swaps to a different hue family entirely (see below) rather than
-     * just inverting shades, so both are defined as their own explicit scale, not derived from
-     * each other. */
-    --color-sales-funnel-core: var(--color-orange-600);
-    --color-sales-funnel-layer-2: var(--color-orange-500);
-    --color-sales-funnel-layer-3: var(--color-amber-400);
-    --color-sales-funnel-layer-4: var(--color-orange-300);
+     * and from the blue/amber/green/red/gray status-legend colors used everywhere else. Color
+     * carries two meanings here: (1) stage — the ribbon's hue shifts left-to-right across
+     * Application → Offer → Payment as a horizontal gradient, and (2) conversion health — a
+     * junction whose conversion % drops below the weak threshold overrides the *next* stage's
+     * stop with --weak instead of its normal hue. Dark mode swaps to a different hue family
+     * entirely (see below) rather than just inverting shades, so both are defined as their own
+     * explicit scale, not derived from each other. */
+    --color-sales-funnel-stage-application: var(--color-orange-300);
+    --color-sales-funnel-stage-offer: var(--color-orange-500);
+    --color-sales-funnel-stage-payment: var(--color-orange-600);
+    --color-sales-funnel-weak: var(--color-red-500);
     --color-sales-funnel-glow: var(--color-orange-400);
 }
 
@@ -868,11 +870,12 @@
         --outline-color-brand_alt: var(--color-border-brand_alt);
 
         /* SALES FUNNEL RIBBON — dark mode trades the light-mode orange/amber for a multi-hue
-         * green → cyan → blue → violet glow (per Manik's reference), core to outer. */
-        --color-sales-funnel-core: var(--color-green-400);
-        --color-sales-funnel-layer-2: var(--color-cyan-400);
-        --color-sales-funnel-layer-3: var(--color-blue-500);
-        --color-sales-funnel-layer-4: var(--color-violet-500);
-        --color-sales-funnel-glow: var(--color-blue-500);
+         * green → cyan → blue glow across the 3 stages (per Manik's reference); violet lives on
+         * in the ambient halo, so the full 4-hue impression survives the stage/depth split. */
+        --color-sales-funnel-stage-application: var(--color-green-400);
+        --color-sales-funnel-stage-offer: var(--color-cyan-400);
+        --color-sales-funnel-stage-payment: var(--color-blue-500);
+        --color-sales-funnel-weak: var(--color-red-500);
+        --color-sales-funnel-glow: var(--color-violet-500);
     }
 }

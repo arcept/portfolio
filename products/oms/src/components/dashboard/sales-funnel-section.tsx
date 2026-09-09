@@ -3,6 +3,7 @@ import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { Copy01, Download01, Edit01 } from "@untitledui/icons";
 import { useDeals } from "@/providers/deals-provider";
+import { useCountUp } from "@/hooks/use-count-up";
 import { getPersonaLabel, type PeriodSelection } from "@/data/dashboard-data";
 import { getSalesFunnelCourseBreakdown, getSalesFunnelFlow, getSalesFunnelHeadline } from "@/data/dashboard-metrics";
 import type { FunnelFlowNodeId } from "@/data/dashboard-metrics";
@@ -63,6 +64,8 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
     const headline = getSalesFunnelHeadline(selection, scope, deals);
     const courseRows = getSalesFunnelCourseBreakdown(selection, scope, deals);
     const scopeLabel = scope.role === "admin" ? "Org-wide" : getPersonaLabel(scope);
+    const animatedApplicationsSent = useCountUp(headline.applicationsSent);
+    const animatedConversionPct = useCountUp(headline.conversionPct);
 
     const goToDeals = (params: string) => navigate(`/deals?${params}`);
 
@@ -82,8 +85,8 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
                 </div>
 
                 <div className="flex flex-wrap items-center gap-8">
-                    <HeadlineFigure label="Applications Sent" value={String(headline.applicationsSent)} changePct={headline.applicationsSentChangePct} changeSuffix="vs prior period" />
-                    <HeadlineFigure label="Overall Conversion" value={`${headline.conversionPct}%`} changePct={headline.conversionChangePct} changeSuffix="vs prior period" />
+                    <HeadlineFigure label="Applications Sent" value={String(animatedApplicationsSent)} changePct={headline.applicationsSentChangePct} changeSuffix="vs prior period" />
+                    <HeadlineFigure label="Overall Conversion" value={`${animatedConversionPct}%`} changePct={headline.conversionChangePct} changeSuffix="vs prior period" />
                 </div>
             </div>
 
