@@ -372,6 +372,7 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
                                 textAnchor="middle"
                                 fontSize={isHero ? 18 : 12}
                                 fontWeight={700}
+                                fontFamily="var(--font-mono)"
                                 fill={isHero ? "var(--color-text-white)" : "var(--color-text-primary_on-brand)"}
                             >
                                 {text}
@@ -392,7 +393,15 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
                         <g key={r.key} style={{ pointerEvents: "none" }}>
                             <line x1={r.labelX} y1={r.labelY} x2={r.labelX} y2={pillY} stroke="var(--color-border-secondary)" strokeWidth={1} />
                             <rect x={r.labelX - w / 2} y={pillY} width={w} height={PILL_HEIGHT} rx={PILL_HEIGHT / 2} fill="var(--color-bg-secondary)" />
-                            <text x={r.labelX} y={pillY + PILL_HEIGHT / 2 + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-text-secondary)">
+                            <text
+                                x={r.labelX}
+                                y={pillY + PILL_HEIGHT / 2 + 4}
+                                textAnchor="middle"
+                                fontSize={12}
+                                fontWeight={700}
+                                fontFamily="var(--font-mono)"
+                                fill="var(--color-text-secondary)"
+                            >
                                 {text}
                             </text>
                         </g>
@@ -408,6 +417,7 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
                         textAnchor="middle"
                         fontSize={12}
                         fontWeight={700}
+                        fontFamily="var(--font-mono)"
                         fill="var(--color-text-white)"
                         opacity={0.9}
                         style={{ pointerEvents: "none" }}

@@ -41,10 +41,10 @@ export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: {
                     <table className="w-full min-w-72 border-collapse text-sm">
                         <thead>
                             <tr className="border-b border-secondary text-xs text-tertiary">
-                                <th className="py-2 pr-2 text-left font-medium">Course</th>
+                                <th className="py-2 pr-2 pl-2 text-left font-medium">Course</th>
                                 <th className="py-2 pr-2 text-right font-medium">App</th>
                                 <th className="py-2 pr-2 text-right font-medium">Offer</th>
-                                <th className="py-2 text-right font-medium">Payment</th>
+                                <th className="py-2 pr-2 text-right font-medium">Payment</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -54,23 +54,23 @@ export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: {
                                     onClick={onCourseClick ? () => onCourseClick(row.courseId) : undefined}
                                     className={onCourseClick ? "cursor-pointer border-b border-secondary transition duration-100 ease-linear hover:bg-primary_hover" : "border-b border-secondary"}
                                 >
-                                    <td className="py-2.5 pr-2 font-medium text-primary">{row.courseLabel}</td>
+                                    <td className="py-2.5 pr-2 pl-2 font-medium text-primary">{row.courseLabel}</td>
                                     <td className="py-2.5 pr-2 text-right font-mono text-secondary">{String(row.application).padStart(2, "0")}</td>
                                     <td className="py-2.5 pr-2 text-right font-mono text-secondary">
                                         {String(row.offer).padStart(2, "0")} <span className="text-tertiary">{row.offerConversionPct}%</span>
                                     </td>
-                                    <td className="py-2.5 text-right font-mono text-secondary">
+                                    <td className="py-2.5 pr-2 text-right font-mono text-secondary">
                                         {String(row.payment).padStart(2, "0")} <span className="text-tertiary">{row.paymentConversionPct}%</span>
                                     </td>
                                 </tr>
                             ))}
                             <tr className="font-semibold">
-                                <td className="py-2.5 pr-2 text-primary">Overall</td>
+                                <td className="py-2.5 pr-2 pl-2 text-primary">Overall</td>
                                 <td className="py-2.5 pr-2 text-right font-mono text-primary">{String(overall.application).padStart(2, "0")}</td>
                                 <td className="py-2.5 pr-2 text-right font-mono text-primary">
                                     {String(overall.offer).padStart(2, "0")} <span className="font-normal text-fg-success-secondary">{overall.offerConversionPct}%</span>
                                 </td>
-                                <td className="py-2.5 text-right font-mono text-primary">
+                                <td className="py-2.5 pr-2 text-right font-mono text-primary">
                                     {String(overall.payment).padStart(2, "0")} <span className="font-normal text-fg-success-secondary">{overall.paymentConversionPct}%</span>
                                 </td>
                             </tr>
@@ -78,14 +78,14 @@ export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: {
                     </table>
                 </div>
 
-                <div className="mt-auto flex items-center justify-between gap-3 border-t border-secondary pt-4">
-                    <div className="flex flex-col gap-1">
+                <div className="mt-auto flex items-center gap-3 rounded-lg bg-primary_alt px-4 py-2">
+                    <div className="flex flex-1 flex-col">
                         <div className="flex items-baseline gap-2">
-                            <p className="text-xs font-medium text-tertiary">Lost Deals</p>
-                            <span className="text-md font-semibold text-primary">{lost.percent}%</span>
+                            <p className="text-md font-medium text-secondary">Lost Deals</p>
+                            <span className="font-mono text-md font-medium text-primary">{lost.percent}%</span>
                         </div>
-                        <p className="text-xs text-tertiary">
-                            You closed {lost.closedCount} out of {lost.cohortSize} deals
+                        <p className="text-sm text-secondary">
+                            You closed <span className="font-mono">{lost.closedCount}</span> out of <span className="font-mono">{lost.cohortSize}</span> deals
                         </p>
                     </div>
                     <ButtonUtility size="sm" color="tertiary" tooltip="All deals" icon={TrendUp02} onClick={onLostDealsClick} />

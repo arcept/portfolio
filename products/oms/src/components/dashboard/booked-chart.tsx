@@ -39,7 +39,7 @@ export const BookedChart = ({ data, selectionKey }: { data: PeriodChartData; sel
                                 tickFormatter={data.xTickFormatter}
                                 axisLine={false}
                                 tickLine={false}
-                                tick={{ fontSize: 12, fill: "var(--color-text-tertiary)" }}
+                                tick={{ fontSize: 12, fontFamily: "var(--font-mono)", fill: "var(--color-text-tertiary)" }}
                                 padding={{ left: 12, right: 12 }}
                             />
 

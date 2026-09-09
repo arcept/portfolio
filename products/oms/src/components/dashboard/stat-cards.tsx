@@ -33,7 +33,7 @@ const CardActionsMenu = () => (
 );
 
 export const Card = ({ className, children }: { className?: string; children: ReactNode }) => (
-    <div className={cx("relative flex flex-col gap-4 rounded-xl border border-secondary bg-primary p-4 shadow-xs", className)}>{children}</div>
+    <div className={cx("relative flex flex-col gap-4 rounded-xl border border-secondary bg-primary px-8 py-6 shadow-xs", className)}>{children}</div>
 );
 
 const HeadingAndNumber = ({ heading, value }: { heading: string; value: string }) => (
@@ -41,7 +41,7 @@ const HeadingAndNumber = ({ heading, value }: { heading: string; value: string }
         <p className="text-xs font-medium text-tertiary">{heading}</p>
         <div className="flex items-baseline gap-0.5">
             <span className="text-xl font-medium text-primary">INR</span>
-            <span className="text-xl font-semibold tracking-tight text-primary">{value}</span>
+            <span className="font-mono text-xl font-semibold tracking-tight text-primary">{value}</span>
         </div>
     </div>
 );
@@ -76,7 +76,7 @@ export const BookedRevenueCard = ({ selection }: { selection: PeriodSelection })
 
     return (
         <Card className="min-h-104 min-w-0">
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-6 right-8">
                 <CardActionsMenu />
             </div>
 
@@ -91,16 +91,17 @@ export const BookedRevenueCard = ({ selection }: { selection: PeriodSelection })
                 <div className="flex flex-col gap-3">
                     <div className="flex items-baseline gap-1">
                         <span className="text-xl font-medium text-primary">INR</span>
-                        <span className="text-display-sm font-semibold tracking-tight text-primary">{formatIndianNumber(booked.bookedTotal)}</span>
+                        <span className="font-mono text-display-sm font-semibold tracking-tight text-primary">{formatIndianNumber(booked.bookedTotal)}</span>
                         <span className="ml-1 flex items-center gap-0.5">
                             {changeDirection === "up" && <ArrowUpRight className="size-3.5 text-fg-success-secondary" />}
                             {changeDirection === "down" && <ArrowDownRight className="size-3.5 text-fg-error-secondary" />}
-                            <span className="text-sm font-medium text-secondary">{booked.changeText}</span>
+                            <span className="font-mono text-sm font-medium text-secondary">{booked.changeText}</span>
                         </span>
                     </div>
 
                     <p className="text-sm text-tertiary">
-                        Out of which {formatIndianCompact(booked.realisedTotal)} is realised ({booked.realisedPercent.toFixed(2)}%)
+                        Out of which <span className="font-mono">{formatIndianCompact(booked.realisedTotal)}</span> is realised (
+                        <span className="font-mono">{booked.realisedPercent.toFixed(2)}%</span>)
                     </p>
                 </div>
             </FadeOnSelection>
@@ -122,12 +123,14 @@ export const RealisedAndTicketCards = ({ selection }: { selection: PeriodSelecti
     const selectionKey = getPeriodSelectionKey(selection);
 
     return (
-        <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex h-full min-w-0 flex-col gap-4">
             {/* Realised of previously booked + Total Realised — "previously booked" is the
                 backlog-ledger draw, "Total Realised" is that plus the period's own bookings
-                realised (booked.totalRealised), so the two always sum. */}
-            <Card>
-                <div className="absolute top-4 right-4">
+                realised (booked.totalRealised), so the two always sum. `flex-1` on both cards
+                (rather than a fixed height) so the pair always fills the row's full height to
+                match Conversion/Deal Stages beside them, whatever that height ends up being. */}
+            <Card className="flex-1">
+                <div className="absolute top-6 right-8">
                     <CardActionsMenu />
                 </div>
                 <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
@@ -136,15 +139,15 @@ export const RealisedAndTicketCards = ({ selection }: { selection: PeriodSelecti
                 </FadeOnSelection>
             </Card>
 
-            <Card>
-                <div className="absolute top-4 right-4">
+            <Card className="flex-1">
+                <div className="absolute top-6 right-8">
                     <CardActionsMenu />
                 </div>
                 <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
                     <HeadingAndNumber heading="Average Ticket Size" value={formatIndianNumber(booked.ats)} />
                     <div className="flex flex-col gap-0.5">
                         <p className="text-xs font-medium text-tertiary">Unit Sales / Target</p>
-                        <span className="text-xl font-semibold text-primary">
+                        <span className="font-mono text-xl font-semibold text-primary">
                             {booked.unitsAchieved} / {booked.unitTarget}
                         </span>
                     </div>

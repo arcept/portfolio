@@ -1,8 +1,11 @@
 @theme {
-    /* FONT FAMILY */
-    --font-body: var(--font-inter, "Inter"), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    --font-display: var(--font-inter, "Inter"), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    --font-mono: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    /* FONT FAMILY — IBM Plex Sans/Mono per the Figma redesign's per-layer font assignments
+       (headings/labels → Plex Sans, numeric/tabular values → Plex Mono); Inter and system
+       monospace stay in the fallback chain rather than the dedicated `--font-inter` plug-point,
+       since Inter is still the loaded fallback while Plex Sans/Mono finish loading. */
+    --font-body: var(--font-plex-sans, "IBM Plex Sans"), var(--font-inter, "Inter"), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-display: var(--font-plex-sans, "IBM Plex Sans"), var(--font-inter, "Inter"), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: var(--font-plex-mono, "IBM Plex Mono"), ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     /* Available via the `font-figtree` utility — not applied anywhere by default. */
     --font-figtree: "Figtree", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 

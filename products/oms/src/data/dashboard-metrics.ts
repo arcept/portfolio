@@ -416,18 +416,21 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
     { label: "Offer", ids: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_WITHDRAWN"], colorClassName: "bg-fg-warning-secondary" },
     { label: "Payment Overdue", ids: ["PAY_OVERDUE"], colorClassName: "bg-fg-error-secondary" },
     { label: "Payment Ongoing", ids: ["PAY_ONGOING", "PAY_DUE"], colorClassName: "bg-utility-indigo-400" },
-    { label: "Payment Completed", ids: ["PAY_COMPLETED"], colorClassName: "bg-fg-success-primary", gradient: true },
-    { label: "Enrolment Cancelled", ids: ["ENR_CANCELLED"], colorClassName: "bg-fg-tertiary" },
-    { label: "Not Interested / Rejected", ids: ["NOT_INTERESTED", "SAVED", "REJECTED", "APP_EXPIRED", "OFFER_EXPIRED"], colorClassName: "bg-fg-error-primary", hatched: true },
+    // ENR_CANCELLED joins Payment Completed here — those deals were fully paid before the
+    // enrolment was cancelled on the backend (see deals-data.ts:697), so they're still
+    // "completed" payments, just with a later cancellation event layered on top.
+    { label: "Payment Completed", ids: ["PAY_COMPLETED", "ENR_CANCELLED"], colorClassName: "bg-fg-success-primary", gradient: true },
+    { label: "Not Interested", ids: ["NOT_INTERESTED", "SAVED"], colorClassName: "bg-fg-tertiary" },
+    { label: "Rejected", ids: ["REJECTED", "APP_EXPIRED", "OFFER_EXPIRED"], colorClassName: "bg-fg-error-primary", hatched: true },
 ];
 
 /** Deal Stages (Figma node 548:15755) — 8 bars classified directly off each deal's real
  * `status.id`, the same way `buildLiveCascade` classifies its 6, just with finer splits where
  * the status model actually supports them (Payment Ongoing/Due vs Overdue; drafting-a-payment-
- * plan as its own bucket; Enrolment Cancelled surfaced instead of folded into "expired"). Every
- * non-APP_NEW status lands in exactly one group, so this always partitions the cohort exactly
- * once — `cohort.length` never contains APP_NEW deals anyway (`getCohort` only includes deals
- * whose application was actually sent). */
+ * plan as its own bucket; Not Interested and Rejected surfaced separately instead of folded into
+ * one "expired" bucket). Every non-APP_NEW status lands in exactly one group, so this always
+ * partitions the cohort exactly once — `cohort.length` never contains APP_NEW deals anyway
+ * (`getCohort` only includes deals whose application was actually sent). */
 export function getDealStageBars(selection: PeriodSelection, persona: Persona, deals: Deal[]): DealStageBar[] {
     const cohort = getCohort(persona, resolvePeriodBounds(selection), deals);
 

@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { Copy01, Download01, Edit01 } from "@untitledui/icons";
 import { useDeals } from "@/providers/deals-provider";
 import { useCountUp } from "@/hooks/use-count-up";
+import { cx } from "@/utils/cx";
 import { getPersonaLabel, type PeriodSelection } from "@/data/dashboard-data";
 import { getSalesFunnelFlow, getSalesFunnelHeadline } from "@/data/dashboard-metrics";
 import type { FunnelFlowNodeId } from "@/data/dashboard-metrics";
@@ -42,11 +43,11 @@ const HeadlineFigure = ({ label, value, changePct, changeSuffix }: { label: stri
     <div className="flex flex-col gap-0.5">
         <p className="text-xs font-medium text-tertiary">{label}</p>
         <div className="flex items-baseline gap-2">
-            <span className="text-display-xs font-semibold tracking-tight text-primary">{value}</span>
+            <span className="font-mono text-display-xs font-semibold tracking-tight text-primary">{value}</span>
             {changePct !== null && (
-                <span className={changePct >= 0 ? "text-sm font-medium text-fg-success-secondary" : "text-sm font-medium text-fg-error-secondary"}>
+                <span className={cx("font-mono text-sm font-medium", changePct >= 0 ? "text-fg-success-secondary" : "text-fg-error-secondary")}>
                     {changePct >= 0 ? "+" : ""}
-                    {changePct.toFixed(0)}% {changeSuffix}
+                    {changePct.toFixed(0)}% <span className="font-sans">{changeSuffix}</span>
                 </span>
             )}
         </div>
@@ -68,8 +69,8 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
     const goToDeals = (params: string) => navigate(`/deals?${params}`);
 
     return (
-        <div className="relative flex min-w-0 flex-col gap-6 rounded-xl border border-secondary bg-primary p-4">
-            <div className="absolute top-4 right-4">
+        <div className="relative flex min-w-0 flex-col gap-6 rounded-xl border border-secondary bg-primary px-8 py-6">
+            <div className="absolute top-6 right-8">
                 <CardActionsMenu />
             </div>
 
