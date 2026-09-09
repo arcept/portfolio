@@ -688,10 +688,13 @@ function buildInstallments(statusId: DealStatusId, currency: "INR" | "USD", netP
     const emiMode: InstallmentMode = currency === "INR" ? "EMI_3P" : "Stripe EMI";
     const roundTo = currency === "INR" ? 100 : 10;
 
-    // A Due/Overdue deal needs a genuine unpaid trailing installment to hang that status off —
-    // "first payment made" (every Payment-stage status) means a single-installment plan is
-    // already fully paid, so these two statuses always force a part-payment plan.
-    const needsUnpaidTail = statusId === "PAY_DUE" || statusId === "PAY_OVERDUE";
+    // Ongoing/Due/Overdue all mean "first payment made, plan not finished yet" — which requires
+    // a genuine unpaid trailing installment to hang that meaning off. A single-installment plan
+    // marks its one row Paid the moment `isPaymentActive` is true (see `paidFlag` below), which
+    // makes it fully paid, i.e. actually PAY_COMPLETED — so an Upfront/EMI roll for any of these
+    // three statuses would silently produce a "Payment Ongoing" deal whose sole installment is
+    // already Paid and locked. Force a part-payment plan for all three, not just Due/Overdue.
+    const needsUnpaidTail = statusId === "PAY_ONGOING" || statusId === "PAY_DUE" || statusId === "PAY_OVERDUE";
 
     // Deal-level payment type (not a per-installment coin-flip like this used to be — that let
     // EMI_3P land on ~1/3 of individual installments, making most deals read as "EMI 3rd Party"
