@@ -484,7 +484,17 @@ export function listAllBdrs(): { id: string; label: string; persona: Persona }[]
     });
 }
 
-export type DealStageBar = { label: string; value: number; colorClassName: string; hatched?: boolean; gradient?: boolean };
+export type DealStageBar = {
+    label: string;
+    value: number;
+    colorClassName: string;
+    hatched?: boolean;
+    gradient?: boolean;
+    /** Subset of `value` that needs attention (e.g. Application's `APP_NEW` deals — assigned but
+     * not yet sent). Rendered as a highlighted cap inside the bar (Figma node 556:17421). */
+    attentionValue?: number;
+    attentionLabel?: string;
+};
 
 export type FunnelBreakdownItem = {
     label: string;

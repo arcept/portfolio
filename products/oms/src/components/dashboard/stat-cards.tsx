@@ -169,16 +169,40 @@ const DEAL_STAGE_MIN_FILL_FRACTION = 0.08;
  * hue as the solid fill, without hardcoding a second color per hatched stage. */
 const cssVarFromBgClass = (bgClassName: string) => `var(${bgClassName.replace(/^bg-/, "--color-")})`;
 
-const DealStageBarColumn = ({ label, value, colorClassName, hatched, gradient, max }: { label: string; value: number; colorClassName: string; hatched?: boolean; gradient?: boolean; max: number }) => {
+const DealStageBarColumn = ({
+    label,
+    value,
+    colorClassName,
+    hatched,
+    gradient,
+    attentionValue,
+    attentionLabel,
+    max,
+}: {
+    label: string;
+    value: number;
+    colorClassName: string;
+    hatched?: boolean;
+    gradient?: boolean;
+    attentionValue?: number;
+    attentionLabel?: string;
+    max: number;
+}) => {
     const fraction = max === 0 ? 0 : Math.max(value === 0 ? 0 : DEAL_STAGE_MIN_FILL_FRACTION, value / max);
     const hue = cssVarFromBgClass(colorClassName);
+    // At least a third of the bar's own height, so the attention count stays legible even when
+    // it's a small slice of a small bar — capped at the bar's full height.
+    const attentionFraction = attentionValue && value > 0 ? Math.min(1, Math.max(1 / 3, attentionValue / value)) : 0;
 
     return (
-        <Tooltip title={`${label}: ${value}`} placement="top">
+        <Tooltip
+            title={attentionValue ? `${label}: ${value} (${attentionValue} ${attentionLabel ?? "need attention"})` : `${label}: ${value}`}
+            placement="top"
+        >
             <TooltipTrigger className="flex h-full w-12 shrink-0 flex-col items-center justify-center gap-2">
                 <div className="flex h-full w-full flex-1 items-end justify-center rounded-[40px] bg-quaternary">
                     <div
-                        className={cx("w-full rounded-full", !hatched && !gradient && colorClassName)}
+                        className={cx("relative flex w-full items-start justify-center overflow-hidden rounded-full p-1", !hatched && !gradient && colorClassName)}
                         style={{
                             height: `${Math.round(fraction * 100)}%`,
                             ...(gradient && { background: `linear-gradient(to top, var(--color-fg-success-secondary), var(--color-fg-success-primary))` }),
@@ -187,7 +211,21 @@ const DealStageBarColumn = ({ label, value, colorClassName, hatched, gradient, m
                                 backgroundImage: `repeating-linear-gradient(45deg, ${hue} 0, ${hue} 2px, transparent 2px, transparent 6px)`,
                             }),
                         }}
-                    />
+                    >
+                        {!!attentionValue && (
+                            <div
+                                className="flex w-full items-center justify-center rounded-full"
+                                style={{
+                                    height: `${Math.round(attentionFraction * 100)}%`,
+                                    background: `linear-gradient(to bottom, color-mix(in srgb, ${hue} 45%, black), transparent)`,
+                                }}
+                            >
+                                <span className="font-mono text-sm font-semibold" style={{ color: `color-mix(in srgb, ${hue} 70%, black)` }}>
+                                    {attentionValue}
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <span className="font-mono text-xs font-medium text-secondary">{String(value).padStart(2, "0")}</span>
             </TooltipTrigger>

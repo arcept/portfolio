@@ -424,10 +424,13 @@ export function buildLiveCascade(cohort: Deal[]): DealStageCascade {
     };
 }
 
-const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassName: string; hatched?: boolean; gradient?: boolean }[] = [
-    { label: "Application", ids: ["APP_PENDING", "APP_FILLED"], colorClassName: "bg-utility-blue-400" },
+const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassName: string; hatched?: boolean; gradient?: boolean; attentionIds?: DealStatusId[]; attentionLabel?: string }[] = [
+    // Application New is the "needs attention" subset — freshly assigned deals whose form
+    // hasn't even been sent yet. APP_FILLED (form submitted, awaiting an offer) moves to the
+    // Offer bucket below since it's no longer really "at" the application step.
+    { label: "Application", ids: ["APP_NEW", "APP_PENDING", "APP_EXPIRED"], colorClassName: "bg-utility-blue-400", attentionIds: ["APP_NEW"], attentionLabel: "New" },
     { label: "Drafting Payment Plan", ids: ["PLAN_NOT_STARTED", "PLAN_DRAFT", "PLAN_AWAITING_APPROVAL"], colorClassName: "bg-utility-purple-400", hatched: true },
-    { label: "Offer", ids: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_WITHDRAWN"], colorClassName: "bg-fg-warning-secondary" },
+    { label: "Offer", ids: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_WITHDRAWN", "APP_FILLED"], colorClassName: "bg-fg-warning-secondary" },
     { label: "Payment Overdue", ids: ["PAY_OVERDUE"], colorClassName: "bg-fg-error-secondary" },
     { label: "Payment Ongoing", ids: ["PAY_ONGOING", "PAY_DUE"], colorClassName: "bg-utility-indigo-400" },
     // ENR_CANCELLED joins Payment Completed here — those deals were fully paid before the
@@ -435,18 +438,23 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
     // "completed" payments, just with a later cancellation event layered on top.
     { label: "Payment Completed", ids: ["PAY_COMPLETED", "ENR_CANCELLED"], colorClassName: "bg-fg-success-primary", gradient: true },
     { label: "Not Interested", ids: ["NOT_INTERESTED", "SAVED"], colorClassName: "bg-fg-tertiary" },
-    { label: "Rejected", ids: ["REJECTED", "APP_EXPIRED", "OFFER_EXPIRED"], colorClassName: "bg-fg-error-primary", hatched: true },
+    { label: "Rejected", ids: ["REJECTED", "OFFER_EXPIRED"], colorClassName: "bg-fg-error-primary", hatched: true },
 ];
 
 /** Deal Stages (Figma node 548:15755) — 8 bars classified directly off each deal's real
  * `status.id`, the same way `buildLiveCascade` classifies its 6, just with finer splits where
  * the status model actually supports them (Payment Ongoing/Due vs Overdue; drafting-a-payment-
  * plan as its own bucket; Not Interested and Rejected surfaced separately instead of folded into
- * one "expired" bucket). Every non-APP_NEW status lands in exactly one group, so this always
- * partitions the cohort exactly once — `cohort.length` never contains APP_NEW deals anyway
- * (`getCohort` only includes deals whose application was actually sent). */
+ * one "expired" bucket). Every status lands in exactly one group, so this always partitions the
+ * roster exactly once.
+ *
+ * Unlike the Sales Funnel (which reads `getCohort`, scoped to deals whose application was
+ * actually *sent*), this reads the raw `createdOn`-filtered roster — the same basis the Deals
+ * List page uses — because the Application bar needs to surface `APP_NEW` deals (assigned but
+ * not yet sent) as the "needs attention" count, and `getCohort` excludes those by design. */
 export function getDealStageBars(selection: PeriodSelection, persona: Persona, deals: Deal[]): DealStageBar[] {
-    const cohort = getCohort(persona, resolvePeriodBounds(selection), deals);
+    const bounds = resolvePeriodBounds(selection);
+    const cohort = dealsForPersona(persona, deals).filter((d) => inRange(d.createdOn, bounds));
 
     return DEAL_STAGE_BAR_GROUPS.map((group) => ({
         label: group.label,
@@ -454,6 +462,8 @@ export function getDealStageBars(selection: PeriodSelection, persona: Persona, d
         colorClassName: group.colorClassName,
         hatched: group.hatched,
         gradient: group.gradient,
+        attentionValue: group.attentionIds ? cohort.filter((d) => group.attentionIds!.includes(d.status.id)).length : undefined,
+        attentionLabel: group.attentionLabel,
     }));
 }
 
