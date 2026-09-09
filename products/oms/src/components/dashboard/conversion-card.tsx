@@ -32,13 +32,13 @@ export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: {
     return (
         <Card className="h-full min-w-0">
             <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-tertiary">Conversion</p>
+                <p className="text-md font-normal text-secondary">Conversion</p>
                 <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
             </div>
 
             <FadeOnSelection selectionKey={selectionKey} className="flex min-w-0 flex-1 flex-col gap-4">
                 <div className="min-w-0 overflow-x-auto">
-                    <table className="w-full min-w-72 border-collapse text-sm">
+                    <table className="w-full min-w-72 border-collapse">
                         <thead>
                             <tr className="border-b border-secondary text-xs text-tertiary">
                                 <th className="py-2 pr-2 pl-2 text-left font-medium">Course</th>
@@ -54,24 +54,24 @@ export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: {
                                     onClick={onCourseClick ? () => onCourseClick(row.courseId) : undefined}
                                     className={onCourseClick ? "cursor-pointer border-b border-secondary transition duration-100 ease-linear hover:bg-primary_hover" : "border-b border-secondary"}
                                 >
-                                    <td className="py-2.5 pr-2 pl-2 font-medium text-primary">{row.courseLabel}</td>
-                                    <td className="py-2.5 pr-2 text-right font-mono text-secondary">{String(row.application).padStart(2, "0")}</td>
-                                    <td className="py-2.5 pr-2 text-right font-mono text-secondary">
-                                        {String(row.offer).padStart(2, "0")} <span className="text-tertiary">{row.offerConversionPct}%</span>
+                                    <td className="py-2.5 pr-2 pl-2 text-md font-normal text-primary">{row.courseLabel}</td>
+                                    <td className="py-2.5 pr-2 text-right font-mono text-md text-primary">{String(row.application).padStart(2, "0")}</td>
+                                    <td className="py-2.5 pr-2 text-right font-mono text-md text-primary">
+                                        {String(row.offer).padStart(2, "0")} <span className="text-[10px] font-normal text-success-primary">{row.offerConversionPct}%</span>
                                     </td>
-                                    <td className="py-2.5 pr-2 text-right font-mono text-secondary">
-                                        {String(row.payment).padStart(2, "0")} <span className="text-tertiary">{row.paymentConversionPct}%</span>
+                                    <td className="py-2.5 pr-2 text-right font-mono text-md text-primary">
+                                        {String(row.payment).padStart(2, "0")} <span className="text-[10px] font-normal text-success-primary">{row.paymentConversionPct}%</span>
                                     </td>
                                 </tr>
                             ))}
-                            <tr className="font-semibold">
-                                <td className="py-2.5 pr-2 pl-2 text-primary">Overall</td>
-                                <td className="py-2.5 pr-2 text-right font-mono text-primary">{String(overall.application).padStart(2, "0")}</td>
-                                <td className="py-2.5 pr-2 text-right font-mono text-primary">
-                                    {String(overall.offer).padStart(2, "0")} <span className="font-normal text-fg-success-secondary">{overall.offerConversionPct}%</span>
+                            <tr>
+                                <td className="py-2.5 pr-2 pl-2 text-md font-medium text-primary">Overall</td>
+                                <td className="py-2.5 pr-2 text-right font-mono text-md font-semibold text-primary">{String(overall.application).padStart(2, "0")}</td>
+                                <td className="py-2.5 pr-2 text-right font-mono text-md font-semibold text-primary">
+                                    {String(overall.offer).padStart(2, "0")} <span className="text-[10px] font-normal text-success-primary">{overall.offerConversionPct}%</span>
                                 </td>
-                                <td className="py-2.5 pr-2 text-right font-mono text-primary">
-                                    {String(overall.payment).padStart(2, "0")} <span className="font-normal text-fg-success-secondary">{overall.paymentConversionPct}%</span>
+                                <td className="py-2.5 pr-2 text-right font-mono text-md font-semibold text-primary">
+                                    {String(overall.payment).padStart(2, "0")} <span className="text-[10px] font-normal text-success-primary">{overall.paymentConversionPct}%</span>
                                 </td>
                             </tr>
                         </tbody>

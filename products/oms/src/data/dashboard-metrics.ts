@@ -42,6 +42,20 @@ import {
 export type PeriodBounds = { from: Date; to: Date; truncated: boolean };
 
 const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_FULL = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+];
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const firstDayOfMonth = (year: number, month: number) => new Date(year, month, 1);
@@ -825,6 +839,18 @@ function periodDescriptionFor(selection: PeriodSelection, bounds: PeriodBounds):
     return `${label} (${MONTH_ABBR[bounds.from.getMonth()]}-${MONTH_ABBR[endMonth]})`;
 }
 
+/** The actual month/quarter this period covers, e.g. "August" or "Q3 2025" — for the Booked
+ * Revenue card's badge (Figma node 118:28883 literally reads "August"), which shouldn't just
+ * repeat the period-pill label ("This Month") already shown above it in the filter row. */
+function periodBadgeLabel(selection: PeriodSelection, bounds: PeriodBounds): string {
+    if (selection.kind === "custom") return `${formatShortDate(bounds.from)} – ${formatShortDate(bounds.to)}`;
+    if (selection.id === "lifetime") return "Lifetime";
+    if (selection.id === "this-month" || selection.id === "last-month") return MONTH_FULL[bounds.from.getMonth()];
+
+    const quarter = Math.floor(bounds.from.getMonth() / 3) + 1;
+    return `Q${quarter} ${bounds.from.getFullYear()}`;
+}
+
 // ---------------------------------------------------------------------------
 // Top-level entry point — replaces `getSelectedPeriodChartData` + `scalePeriodDataForPersona`
 // combined: resolves the period, scopes to the persona's real deals, and computes every field
@@ -852,6 +878,7 @@ export function getPeriodChartDataLive(selection: PeriodSelection, persona: Pers
         label: periodLabelFor(selection),
         periodLabel: description,
         headingLabel: `Booked - ${description}`,
+        badgeLabel: periodBadgeLabel(selection, bounds),
         bookedTotal,
         realisedTotal,
         realisedPercent,

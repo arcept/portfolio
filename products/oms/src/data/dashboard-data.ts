@@ -303,6 +303,10 @@ export type PeriodChartData = {
      * "Jul 1 – Jul 31" — headingLabel is "Booked - " + this; other cards reuse it directly. */
     periodLabel: string;
     headingLabel: string;
+    /** The actual month/quarter the period covers, e.g. "August" or "Q3 2025" — for the Booked
+     * Revenue card's badge, distinct from `label` ("This Month") already shown in the filter
+     * pills above it. */
+    badgeLabel: string;
     bookedTotal: number;
     realisedTotal: number;
     realisedPercent: number;

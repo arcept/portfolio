@@ -37,10 +37,10 @@ export const Card = ({ className, children }: { className?: string; children: Re
 );
 
 const HeadingAndNumber = ({ heading, value }: { heading: string; value: string }) => (
-    <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-medium text-tertiary">{heading}</p>
+    <div className="flex flex-col gap-1">
+        <p className="text-md font-normal text-secondary">{heading}</p>
         <div className="flex items-baseline gap-0.5">
-            <span className="text-xl font-medium text-primary">INR</span>
+            <span className="text-sm font-medium text-tertiary">INR</span>
             <span className="font-mono text-xl font-semibold tracking-tight text-primary">{value}</span>
         </div>
     </div>
@@ -82,9 +82,9 @@ export const BookedRevenueCard = ({ selection }: { selection: PeriodSelection })
 
             <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
-                    <p className="text-md font-semibold text-primary">Booked Revenue</p>
+                    <p className="text-xl font-semibold text-secondary">Booked Revenue</p>
                     <Badge color="gray" type="color" size="sm">
-                        {booked.label}
+                        {booked.badgeLabel}
                     </Badge>
                 </div>
 
@@ -99,7 +99,7 @@ export const BookedRevenueCard = ({ selection }: { selection: PeriodSelection })
                         </span>
                     </div>
 
-                    <p className="text-sm text-tertiary">
+                    <p className="text-md text-tertiary">
                         Out of which <span className="font-mono">{formatIndianCompact(booked.realisedTotal)}</span> is realised (
                         <span className="font-mono">{booked.realisedPercent.toFixed(2)}%</span>)
                     </p>
@@ -145,8 +145,8 @@ export const RealisedAndTicketCards = ({ selection }: { selection: PeriodSelecti
                 </div>
                 <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
                     <HeadingAndNumber heading="Average Ticket Size" value={formatIndianNumber(booked.ats)} />
-                    <div className="flex flex-col gap-0.5">
-                        <p className="text-xs font-medium text-tertiary">Unit Sales / Target</p>
+                    <div className="flex flex-col gap-1">
+                        <p className="text-md font-normal text-secondary">Unit Sales / Target</p>
                         <span className="font-mono text-xl font-semibold text-primary">
                             {booked.unitsAchieved} / {booked.unitTarget}
                         </span>
@@ -189,7 +189,7 @@ const DealStageBarColumn = ({ label, value, colorClassName, hatched, gradient, m
                         }}
                     />
                 </div>
-                <span className="font-mono text-xs text-secondary">{String(value).padStart(2, "0")}</span>
+                <span className="font-mono text-xs font-medium text-secondary">{String(value).padStart(2, "0")}</span>
             </TooltipTrigger>
         </Tooltip>
     );
@@ -208,7 +208,7 @@ export const DealStagesCard = ({ selection }: { selection: PeriodSelection }) =>
     return (
         <Card className="h-full min-w-0">
             <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-tertiary">Deal Stages</p>
+                <p className="text-md font-normal text-secondary">Deal Stages</p>
                 <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
             </div>
 

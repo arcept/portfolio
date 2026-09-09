@@ -40,10 +40,10 @@ const CardActionsMenu = () => (
 );
 
 const HeadlineFigure = ({ label, value, changePct, changeSuffix }: { label: string; value: string; changePct: number | null; changeSuffix: string }) => (
-    <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-medium text-tertiary">{label}</p>
+    <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium text-secondary">{label}</p>
         <div className="flex items-baseline gap-2">
-            <span className="font-mono text-display-xs font-semibold tracking-tight text-primary">{value}</span>
+            <span className="font-mono text-display-md font-semibold tracking-tight text-primary">{value}</span>
             {changePct !== null && (
                 <span className={cx("font-mono text-sm font-medium", changePct >= 0 ? "text-fg-success-secondary" : "text-fg-error-secondary")}>
                     {changePct >= 0 ? "+" : ""}
@@ -77,7 +77,7 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
             <div className="flex flex-wrap items-start justify-between gap-4 pr-8">
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-md font-semibold text-primary">Sales Funnel</h2>
+                        <h2 className="text-xl font-semibold text-secondary">Sales Funnel</h2>
                         <span className="rounded-md bg-primary_alt px-1.5 py-0.5 text-xs font-medium text-secondary shadow-xs">Showing: {scopeLabel}</span>
                     </div>
                     <p className="text-xs text-tertiary">Application → Offer → Payment → Completed, with where deals drop out along the way</p>
