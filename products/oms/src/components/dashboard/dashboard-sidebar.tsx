@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from "react";
-import { AlignCenter, Codepen, CreditCardCheck, Heading02, LetterSpacing01 } from "@untitledui/icons";
+import { AlignCenter, Codepen, CreditCardCheck, Gift01, Heading02, LetterSpacing01 } from "@untitledui/icons";
 import { Link as AriaLink } from "react-aria-components";
 import { useLocation } from "react-router";
 import { NavAccountCard } from "@/components/application/app-navigation/base-components/nav-account-card";
@@ -105,6 +105,7 @@ export const DashboardSidebar = () => {
         { label: "Deals", href: "/deals", icon: AlignCenter, badge: <SidebarNavBadge>{dealsForPersona(persona, deals).length}</SidebarNavBadge> },
         { label: "Payments", icon: CreditCardCheck, disabled: true },
         { label: "Form", icon: LetterSpacing01, disabled: true },
+        { label: "Incentives", icon: Gift01, disabled: true },
         { label: "Content", icon: Heading02, disabled: true },
     ].map((item) => ({ ...item, active: !!item.href && item.href === activeUrl }));
 
