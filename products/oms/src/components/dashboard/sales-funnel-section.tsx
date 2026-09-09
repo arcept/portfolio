@@ -54,7 +54,7 @@ const HeadlineFigure = ({ label, value, changePct, changeSuffix }: { label: stri
     </div>
 );
 
-const TAB_BY_NODE: Record<FunnelFlowNodeId, string> = { application: "application", offer: "offer", payment: "payment" };
+const TAB_BY_NODE: Record<FunnelFlowNodeId, string> = { application: "application", offer: "offer", payment: "payment", completed: "completed" };
 
 export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSelection; scope: Persona }) => {
     const { deals } = useDeals();
@@ -81,7 +81,7 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
                         <h2 className="text-md font-semibold text-primary">Sales Funnel</h2>
                         <span className="rounded-md bg-primary_alt px-1.5 py-0.5 text-xs font-medium text-secondary shadow-xs">Showing: {scopeLabel}</span>
                     </div>
-                    <p className="text-xs text-tertiary">Application → Offer → Payment, with where deals drop out along the way</p>
+                    <p className="text-xs text-tertiary">Application → Offer → Payment → Completed, with where deals drop out along the way</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-8">
@@ -94,7 +94,8 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
                 <EmptyState size="sm" className="mx-auto max-w-none py-6">
                     <EmptyState.Content>
                         <EmptyState.Description>
-                            Not enough deals in this range to visualize — {flow.nodes[0].value} Application · {flow.nodes[1].value} Offer · {flow.nodes[2].value} Payment.
+                            Not enough deals in this range to visualize — {flow.nodes[0].value} Application · {flow.nodes[1].value} Offer · {flow.nodes[2].value} Payment ·{" "}
+                            {flow.nodes[3].value} Completed.
                         </EmptyState.Description>
                     </EmptyState.Content>
                 </EmptyState>

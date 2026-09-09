@@ -57,6 +57,7 @@ const TABS: Tab[] = [
     // actions untouched (deals-data.ts's four-gate model is unaffected).
     { key: "offer", label: "Offer", test: (d) => d.status.stage === "Plan" || d.status.stage === "Offer" },
     { key: "payment", label: "Payment", test: (d) => d.status.stage === "Payment" },
+    { key: "completed", label: "Completed", test: (d) => d.status.id === "PAY_COMPLETED" },
     { key: "cancelled", label: "Cancelled", test: (d) => d.status.id === "ENR_CANCELLED" },
     { key: "not-interested", label: "Not Interested", test: (d) => d.status.id === "NOT_INTERESTED" },
     { key: "rejected", label: "Rejected", test: (d) => d.status.id === "REJECTED" },

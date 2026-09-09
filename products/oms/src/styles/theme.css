@@ -495,22 +495,39 @@
     --outline-color-brand-solid: var(--color-bg-brand-solid);
     --outline-color-brand-solid_hover: var(--color-bg-brand-solid_hover);
 
-    /* SALES FUNNEL RIBBON — a warm orange/amber glow, kept distinct from the app's violet brand
-     * and from the blue/amber/green/red/gray status-legend colors used everywhere else. Color
-     * carries two meanings here: (1) stage — the ribbon's hue shifts left-to-right across
-     * Application → Offer → Payment as a horizontal gradient, and (2) conversion health — a
-     * junction whose conversion % drops below the weak threshold overrides the *next* stage's
-     * stop with --weak instead of its normal hue. Dark mode swaps to a different hue family
-     * entirely (see below) rather than just inverting shades, so both are defined as their own
-     * explicit scale, not derived from each other. */
-    --color-sales-funnel-stage-application: var(--color-orange-300);
-    --color-sales-funnel-stage-offer: var(--color-orange-500);
-    --color-sales-funnel-stage-payment: var(--color-orange-600);
-    --color-sales-funnel-weak: var(--color-red-500);
-    --color-sales-funnel-glow: var(--color-orange-400);
 }
 
 @layer base {
+    /* SALES FUNNEL RIBBON — a warm orange/amber glow, kept distinct from the app's violet brand
+     * and from the blue/amber/green/red/gray status-legend colors used everywhere else. Color
+     * carries two meanings here: (1) stage — the ribbon's hue shifts left-to-right across
+     * Application → Offer → Payment → Completed as a horizontal gradient, and (2) conversion
+     * health — a junction whose conversion % drops below the weak threshold overrides the *next*
+     * stage's stop with --weak instead of its normal hue. Dark mode swaps to a different hue
+     * family entirely (see `.dark-mode` below) rather than just inverting shades, so both are
+     * defined as their own explicit scale, not derived from each other.
+     *
+     * Deliberately declared as plain `:root` CSS, NOT inside the `@theme {}` block above —
+     * Tailwind v4's @theme compiler silently drops 3 of these 4 stage tokens from its emitted
+     * output (confirmed in the actual production build's compiled CSS, not just dev-server
+     * behavior; true regardless of whether the 4 stage names share a family prefix or are each
+     * fully unique — never isolated the exact trigger). Plain `:root` custom properties bypass
+     * that pipeline entirely. Placed inside `@layer base`, BEFORE `.dark-mode` — an unlayered
+     * `:root` rule unconditionally beats a `@layer base` rule regardless of specificity/source
+     * order (that's what cascade layers mean), which silently broke dark mode the first time this
+     * lived outside any layer. Inside the same layer, normal source-order rules apply again, so
+     * `.dark-mode`'s override below still wins for dark theme. These are never consumed via a
+     * Tailwind utility class (only ever `var(--color-sf-*)` inline in sales-funnel-ribbon.tsx's
+     * SVG props), so there's no downside to keeping them outside @theme. */
+    :root {
+        --color-sf-application-hue: var(--color-orange-300);
+        --color-sf-offer-hue: var(--color-orange-500);
+        --color-sf-payment-hue: var(--color-orange-600);
+        --color-sf-completed-hue: var(--color-orange-700);
+        --color-sf-weak: var(--color-red-500);
+        --color-sf-glow: var(--color-orange-400);
+    }
+
     /* DARK MODE VARIABLES */
 
     .dark-mode {
@@ -870,12 +887,18 @@
         --outline-color-brand_alt: var(--color-border-brand_alt);
 
         /* SALES FUNNEL RIBBON — dark mode trades the light-mode orange/amber for a multi-hue
-         * green → cyan → blue glow across the 3 stages (per Manik's reference); violet lives on
-         * in the ambient halo, so the full 4-hue impression survives the stage/depth split. */
-        --color-sales-funnel-stage-application: var(--color-green-400);
-        --color-sales-funnel-stage-offer: var(--color-cyan-400);
-        --color-sales-funnel-stage-payment: var(--color-blue-500);
-        --color-sales-funnel-weak: var(--color-red-500);
-        --color-sales-funnel-glow: var(--color-violet-500);
+         * green → cyan → blue → violet glow across the 4 stages (per Manik's reference); the
+         * Completed stage now genuinely earns the violet the ambient halo was already borrowing.
+         * Same `--color-sf-<stage>-hue` naming as the light block above (not the @theme-unsafe
+         * `sales-funnel-stage-*` family) — this block isn't inside @theme so the bug that forced
+         * the rename doesn't reach here, but the token names must still match what the component
+         * references, and dark-mode text must actually override the light default, not just
+         * silently inherit it. */
+        --color-sf-application-hue: var(--color-green-400);
+        --color-sf-offer-hue: var(--color-cyan-400);
+        --color-sf-payment-hue: var(--color-blue-500);
+        --color-sf-completed-hue: var(--color-violet-500);
+        --color-sf-weak: var(--color-red-500);
+        --color-sf-glow: var(--color-violet-500);
     }
 }

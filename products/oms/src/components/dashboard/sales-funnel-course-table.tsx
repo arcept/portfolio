@@ -9,6 +9,7 @@ export const SalesFunnelCourseTable = ({ rows, onRowClick }: { rows: SalesFunnel
                     <th className="py-2 pr-4 text-right font-medium">Application</th>
                     <th className="py-2 pr-4 text-right font-medium">Offer</th>
                     <th className="py-2 pr-4 text-right font-medium">Payment</th>
+                    <th className="py-2 pr-4 text-right font-medium">Completed</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,6 +26,9 @@ export const SalesFunnelCourseTable = ({ rows, onRowClick }: { rows: SalesFunnel
                         </td>
                         <td className="py-2.5 pr-4 text-right font-mono text-secondary">
                             {row.payment} <span className="text-tertiary">({row.paymentConversionPct}%)</span>
+                        </td>
+                        <td className="py-2.5 pr-4 text-right font-mono text-secondary">
+                            {row.completed} <span className="text-tertiary">({row.completedConversionPct}%)</span>
                         </td>
                     </tr>
                 ))}

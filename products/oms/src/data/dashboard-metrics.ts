@@ -539,20 +539,22 @@ export function getFunnelCohortsLive(selection: PeriodSelection, persona: Person
 // ---------------------------------------------------------------------------
 
 export type FunnelFlowSubBand = { key: string; label: string; count: number };
-export type FunnelFlowNodeId = "application" | "offer" | "payment";
+export type FunnelFlowNodeId = "application" | "offer" | "payment" | "completed";
 export type FunnelFlowNode = { id: FunnelFlowNodeId; label: string; value: number; subBands: FunnelFlowSubBand[] };
 export type FunnelFlow = {
     cohortSize: number;
-    nodes: [FunnelFlowNode, FunnelFlowNode, FunnelFlowNode];
-    /** Count peeling off at each transition: Application→Offer, then Offer→Payment. A deal that
-     * goes cold mid-payment has nowhere to peel toward (Payment is the last node) — it's folded
-     * into that node's own "Went Cold" sub-band instead of a 3rd dropout edge to nowhere. */
-    dropouts: [number, number];
-    /** Why, for each of the two transitions — same deals as `dropouts`, broken out by status. */
-    dropoutBreakdown: [FunnelFlowSubBand[], FunnelFlowSubBand[]];
-    /** (count continuing forward) / (count entering that stage): Offer/Application, then
-     * Payment/Offer. */
-    conversionPct: [number, number];
+    nodes: [FunnelFlowNode, FunnelFlowNode, FunnelFlowNode, FunnelFlowNode];
+    /** Count peeling off at each transition: Application→Offer, Offer→Payment, then
+     * Payment→Completed. The last one is cancelled enrolments (paid in full, then cancelled on
+     * the backend — doesn't count as Completed, per Manik's call) plus deals that went cold
+     * mid-payment (Global status, stalled before finishing) — still-paying deals (Ongoing/Due/
+     * Overdue) are NOT a dropout here, they just haven't reached Completed yet. */
+    dropouts: [number, number, number];
+    /** Why, for each transition — same deals as `dropouts`, broken out by status. */
+    dropoutBreakdown: [FunnelFlowSubBand[], FunnelFlowSubBand[], FunnelFlowSubBand[]];
+    /** (count continuing forward) / (count entering that stage): Offer/Application,
+     * Payment/Offer, then Completed/Payment. */
+    conversionPct: [number, number, number];
 };
 
 const DROPPED_STATUS_IDS: DealStatusId[] = ["APP_EXPIRED", "OFFER_EXPIRED", "NOT_INTERESTED", "REJECTED", "SAVED"];
@@ -562,6 +564,7 @@ const DROPPED_STATUS_LABELS: Partial<Record<DealStatusId, string>> = {
     NOT_INTERESTED: "Not Interested",
     REJECTED: "Rejected",
     SAVED: "Saved",
+    ENR_CANCELLED: "Cancelled",
 };
 
 function dropoutBreakdownFor(deals: Deal[]): FunnelFlowSubBand[] {
@@ -589,7 +592,7 @@ function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
     const droppedAtOfferDeals = dropped.filter((d) => d.reachedStage === 2);
     const droppedAtApplication = droppedAtApplicationDeals.length;
     const droppedAtOffer = droppedAtOfferDeals.length;
-    const wentColdAtPayment = dropped.filter((d) => d.reachedStage === 3).length;
+    const wentColdAtPaymentDeals = dropped.filter((d) => d.reachedStage === 3);
 
     const applicationPending = cohort.filter((d) => d.status.id === "APP_PENDING").length;
     const applicationFilled = cohort.length - offerCohort.length - droppedAtApplication - applicationPending;
@@ -599,10 +602,17 @@ function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
     const offerAccepted = offerCohort.length - paymentCohort.length - droppedAtOffer - offerPending - offerWithdrawn;
 
     const paymentOngoing = paymentCohort.filter((d) => PAYMENT_STAGE_IDS.has(d.status.id)).length;
-    const paymentCompleted = paymentCohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
-    const paymentCancelled = paymentCohort.filter((d) => d.status.id === "ENR_CANCELLED").length;
+    const completedDeals = paymentCohort.filter((d) => d.status.id === "PAY_COMPLETED");
+    const cancelledDeals = paymentCohort.filter((d) => d.status.id === "ENR_CANCELLED");
 
-    const nodes: [FunnelFlowNode, FunnelFlowNode, FunnelFlowNode] = [
+    // Payment → Completed dropout: cancelled enrolments (paid in full, then cancelled on the
+    // backend — doesn't count as Completed, per Manik's call) plus deals that went cold
+    // mid-payment. Still-paying deals (Ongoing/Due/Overdue) are excluded — they haven't dropped
+    // out, they just haven't reached Completed yet, same as "Offer Pending" isn't a dropout.
+    const droppedAtPaymentDeals = [...cancelledDeals, ...wentColdAtPaymentDeals];
+    const droppedAtPayment = droppedAtPaymentDeals.length;
+
+    const nodes: [FunnelFlowNode, FunnelFlowNode, FunnelFlowNode, FunnelFlowNode] = [
         {
             id: "application",
             label: "Application",
@@ -626,29 +636,46 @@ function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
             id: "payment",
             label: "Payment",
             value: paymentCohort.length,
+            // Cancelled/Went Cold moved out to the Payment→Completed dropout above, now that
+            // there's a real downstream node for them to peel toward — dropouts are exclusive of
+            // a node's own sub-bands, same as Application's "Filled" already excludes its dropouts.
             subBands: [
                 { key: "ongoing", label: "Ongoing", count: paymentOngoing },
-                { key: "completed", label: "Completed", count: paymentCompleted },
-                { key: "cancelled", label: "Cancelled", count: paymentCancelled },
-                { key: "went-cold", label: "Went Cold", count: wentColdAtPayment },
+                { key: "completed", label: "Completed", count: completedDeals.length },
             ],
+        },
+        {
+            id: "completed",
+            label: "Completed",
+            value: completedDeals.length,
+            subBands: [],
         },
     ];
 
     const flow: FunnelFlow = {
         cohortSize: cohort.length,
         nodes,
-        dropouts: [droppedAtApplication, droppedAtOffer],
-        dropoutBreakdown: [dropoutBreakdownFor(droppedAtApplicationDeals), dropoutBreakdownFor(droppedAtOfferDeals)],
+        dropouts: [droppedAtApplication, droppedAtOffer, droppedAtPayment],
+        dropoutBreakdown: [
+            dropoutBreakdownFor(droppedAtApplicationDeals),
+            dropoutBreakdownFor(droppedAtOfferDeals),
+            dropoutBreakdownFor(droppedAtPaymentDeals),
+        ],
         conversionPct: [
             cohort.length === 0 ? 0 : Math.round((offerCohort.length / cohort.length) * 100),
             offerCohort.length === 0 ? 0 : Math.round((paymentCohort.length / offerCohort.length) * 100),
+            paymentCohort.length === 0 ? 0 : Math.round((completedDeals.length / paymentCohort.length) * 100),
         ],
     };
 
     if (import.meta.env.DEV) {
         const stages = buildFunnelStages(cohort);
-        if (flow.nodes[0].value !== stages[0].value || flow.nodes[1].value !== stages[1].value || flow.nodes[2].value !== stages[2].value) {
+        if (
+            flow.nodes[0].value !== stages[0].value ||
+            flow.nodes[1].value !== stages[1].value ||
+            flow.nodes[2].value !== stages[2].value ||
+            flow.nodes[3].value !== stages[3].value
+        ) {
             console.error("[sales-funnel-flow invariant failed] node totals diverge from buildFunnelStages", { flow, stages });
         }
     }
@@ -693,6 +720,8 @@ export type SalesFunnelCourseRow = {
     offerConversionPct: number;
     payment: number;
     paymentConversionPct: number;
+    completed: number;
+    completedConversionPct: number;
 };
 
 export function getSalesFunnelCourseBreakdown(selection: PeriodSelection, persona: Persona, deals: Deal[]): SalesFunnelCourseRow[] {
@@ -704,6 +733,7 @@ export function getSalesFunnelCourseBreakdown(selection: PeriodSelection, person
         const application = courseCohort.length;
         const offer = courseCohort.filter((d) => d.reachedStage >= 2).length;
         const payment = courseCohort.filter((d) => d.reachedStage >= 3).length;
+        const completed = courseCohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
         return {
             courseId: course.id,
             courseLabel: course.short,
@@ -712,6 +742,8 @@ export function getSalesFunnelCourseBreakdown(selection: PeriodSelection, person
             offerConversionPct: application === 0 ? 0 : Math.round((offer / application) * 100),
             payment,
             paymentConversionPct: offer === 0 ? 0 : Math.round((payment / offer) * 100),
+            completed,
+            completedConversionPct: payment === 0 ? 0 : Math.round((completed / payment) * 100),
         };
     });
 }
