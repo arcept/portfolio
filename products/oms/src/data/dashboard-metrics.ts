@@ -425,10 +425,11 @@ export function buildLiveCascade(cohort: Deal[]): DealStageCascade {
 }
 
 const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassName: string; hatched?: boolean; gradient?: boolean; attentionIds?: DealStatusId[]; attentionLabel?: string }[] = [
-    // Application New is the "needs attention" subset — freshly assigned deals whose form
-    // hasn't even been sent yet. APP_FILLED (form submitted, awaiting an offer) moves to the
-    // Offer bucket below since it's no longer really "at" the application step.
-    { label: "Application", ids: ["APP_NEW", "APP_PENDING", "APP_EXPIRED"], colorClassName: "bg-utility-blue-400", attentionIds: ["APP_NEW"], attentionLabel: "New" },
+    // "Needs attention" = New (assigned, form not even sent yet) + Expired (form sent but the
+    // window lapsed with no action) — both are stalled and need a BDR to act, unlike Pending
+    // (form sent, still within its live window). APP_FILLED (form submitted, awaiting an offer)
+    // moves to the Offer bucket below since it's no longer really "at" the application step.
+    { label: "Application", ids: ["APP_NEW", "APP_PENDING", "APP_EXPIRED"], colorClassName: "bg-utility-blue-400", attentionIds: ["APP_NEW", "APP_EXPIRED"], attentionLabel: "need attention" },
     { label: "Drafting Payment Plan", ids: ["PLAN_NOT_STARTED", "PLAN_DRAFT", "PLAN_AWAITING_APPROVAL"], colorClassName: "bg-utility-purple-400", hatched: true },
     { label: "Offer", ids: ["OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_WITHDRAWN", "APP_FILLED"], colorClassName: "bg-fg-warning-secondary" },
     { label: "Payment Overdue", ids: ["PAY_OVERDUE"], colorClassName: "bg-fg-error-secondary" },

@@ -217,12 +217,11 @@ const DealStageBarColumn = ({
                                 className="flex w-full items-center justify-center rounded-full"
                                 style={{
                                     height: `${Math.round(attentionFraction * 100)}%`,
-                                    background: `linear-gradient(to bottom, color-mix(in srgb, ${hue} 45%, black), transparent)`,
+                                    minHeight: 20,
+                                    backgroundColor: `color-mix(in srgb, ${hue} 55%, black)`,
                                 }}
                             >
-                                <span className="font-mono text-sm font-semibold" style={{ color: `color-mix(in srgb, ${hue} 70%, black)` }}>
-                                    {attentionValue}
-                                </span>
+                                <span className="font-mono text-sm font-semibold text-white">{attentionValue}</span>
                             </div>
                         )}
                     </div>
