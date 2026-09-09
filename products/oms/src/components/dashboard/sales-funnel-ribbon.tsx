@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { FunnelFlow, FunnelFlowNodeId, FunnelFlowSubBand } from "@/data/dashboard-metrics";
 import { useCountUp } from "@/hooks/use-count-up";
 
@@ -27,6 +28,12 @@ import { useCountUp } from "@/hooks/use-count-up";
  * height, plus up to 2 dropout hit-areas below. Hover shows a rich tooltip (matching the app's
  * existing ChartTooltipContent styling) and brightens just the hovered zone's own glow (a
  * clipped, boosted-opacity duplicate of that zone's layers) — no dimming elsewhere, no wash.
+ * The tooltip is rendered via a portal to document.body in `position: fixed` viewport coordinates
+ * (not absolutely inside the card) — the card's own `overflow-x-auto` wrapper (needed so the
+ * ribbon can scroll on narrow viewports) implicitly clips overflow-y too per the CSS spec's
+ * mixed-visible/auto coercion rule, which was cropping the tooltip whenever it opened near the
+ * top of the card. Escaping to body sidesteps that entirely; a small clamp/flip keeps it inside
+ * the actual browser viewport too.
  *
  * The Application node's pill is rendered larger and in a solid accent fill ("hero" treatment)
  * since it's the one number meant to read as "this is the scale we started from" — Offer/Payment
@@ -49,6 +56,12 @@ const DROPOUT_GAP = 26; // vertical gap between the main flow's bottom edge and 
 const DROPOUT_MAX_HALF = 22;
 const DROPOUT_FADE_FRACTION = 0.62; // dropout ribbon dissipates to nothing this far into the gap to the next checkpoint
 const REVEAL_DURATION_MS = 900;
+
+// Tooltip viewport clamping: half its max-width (max-w-64 = 256px) plus a small margin, and
+// roughly its tallest plausible height (title + a few lines + hint) plus the 14px gap above the
+// cursor — below this from the top of the viewport there isn't room to show it above the cursor.
+const TOOLTIP_HALF_WIDTH = 140;
+const TOOLTIP_FLIP_THRESHOLD = 170;
 
 // Below this, a junction's conversion % is weak enough that the stage stop past it swaps to the
 // warning color instead of its normal stage hue. Starting default; tune once real data volumes
@@ -113,7 +126,7 @@ export type SalesFunnelRibbonProps = {
 export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFunnelRibbonProps) => {
     const [application, offer, payment] = flow.nodes;
     const maxValue = Math.max(application.value, 1);
-    const [hover, setHover] = useState<{ zone: string; content: TooltipContent; x: number; y: number } | null>(null);
+    const [hover, setHover] = useState<{ zone: string; content: TooltipContent; x: number; y: number; flip: boolean } | null>(null);
 
     const appCount = useCountUp(application.value);
     const offerCount = useCountUp(offer.value);
@@ -214,9 +227,9 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
     });
 
     const showHover = (zone: string, content: TooltipContent, e: React.MouseEvent<SVGRectElement>) => {
-        const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
-        if (!rect) return;
-        setHover({ zone, content, x: e.clientX - rect.left, y: e.clientY - rect.top });
+        const x = Math.min(Math.max(e.clientX, TOOLTIP_HALF_WIDTH), window.innerWidth - TOOLTIP_HALF_WIDTH);
+        const flip = e.clientY < TOOLTIP_FLIP_THRESHOLD;
+        setHover({ zone, content, x, y: e.clientY, flip });
     };
     const moveHover = (zone: string, content: TooltipContent, e: React.MouseEvent<SVGRectElement>) => showHover(zone, content, e);
     const clearHover = () => setHover(null);
@@ -381,20 +394,22 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
                 ))}
             </svg>
 
-            {hover && (
-                <div
-                    className="pointer-events-none absolute z-10 flex w-max max-w-64 flex-col gap-0.5 rounded-lg bg-primary-solid px-3 py-2 shadow-lg"
-                    style={{ left: hover.x, top: hover.y, transform: "translate(-50%, calc(-100% - 14px))" }}
-                >
-                    <p className="text-xs font-semibold text-white">{hover.content.title}</p>
-                    {hover.content.lines.map((line, i) => (
-                        <p key={i} className="text-xs text-tooltip-supporting-text">
-                            {line}
-                        </p>
-                    ))}
-                    {hover.content.hint && <p className="mt-1 text-xs font-medium text-tooltip-supporting-text">{hover.content.hint}</p>}
-                </div>
-            )}
+            {hover &&
+                createPortal(
+                    <div
+                        className="pointer-events-none fixed z-50 flex w-max max-w-64 flex-col gap-0.5 rounded-lg bg-primary-solid px-3 py-2 shadow-lg"
+                        style={{ left: hover.x, top: hover.y, transform: hover.flip ? "translate(-50%, 14px)" : "translate(-50%, calc(-100% - 14px))" }}
+                    >
+                        <p className="text-xs font-semibold text-white">{hover.content.title}</p>
+                        {hover.content.lines.map((line, i) => (
+                            <p key={i} className="text-xs text-tooltip-supporting-text">
+                                {line}
+                            </p>
+                        ))}
+                        {hover.content.hint && <p className="mt-1 text-xs font-medium text-tooltip-supporting-text">{hover.content.hint}</p>}
+                    </div>,
+                    document.body,
+                )}
         </div>
     );
 };
