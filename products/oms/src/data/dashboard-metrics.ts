@@ -220,7 +220,8 @@ function toInr(amount: number, currency: "INR" | "USD"): number {
     return currency === "USD" ? Math.round(amount * USD_TO_INR) : amount;
 }
 
-const inRange = (date: Date | null, bounds: PeriodBounds): date is Date => date !== null && date.getTime() >= bounds.from.getTime() && date.getTime() <= bounds.to.getTime();
+export const inRange = (date: Date | null, bounds: PeriodBounds): date is Date =>
+    date !== null && date.getTime() >= bounds.from.getTime() && date.getTime() <= bounds.to.getTime();
 
 // ---------------------------------------------------------------------------
 // Cohort — the single source of truth Deal Stages, the Funnel, and Lost Deals all read off,

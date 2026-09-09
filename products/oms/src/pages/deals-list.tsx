@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
 import { FilterLines, Link03, Mail01, Pencil01, RefreshCcw01, SearchLg, Send01, Upload02, XClose } from "@untitledui/icons";
 import { motion } from "motion/react";
+import type { DateValue } from "react-aria-components";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { AppShell } from "@/components/application/app-shell";
 import { Breadcrumb } from "@/components/application/breadcrumb";
+import { DateRangePicker } from "@/components/application/date-picker/date-range-picker";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { PaginationPageDefault } from "@/components/application/pagination/pagination";
 import { Table, TableCard } from "@/components/application/table/table";
@@ -21,7 +24,9 @@ import { OfferLetterComposer } from "@/components/deals/offer-letter-composer";
 import { PaymentPlanEditor } from "@/components/deals/payment-plan-editor";
 import { ShareOfferDialog, WithdrawOfferDialog } from "@/components/deals/share-offer-dialog";
 import { ActionNeededBadge, DealStatusBadge } from "@/components/deals/status-badge";
-import { PROTOTYPE_TODAY } from "@/data/dashboard-data";
+import { DATA_WINDOW_END, DATA_WINDOW_START, PROTOTYPE_TODAY, periods } from "@/data/dashboard-data";
+import type { PeriodId, PeriodSelection } from "@/data/dashboard-data";
+import { inRange, resolvePeriodBounds } from "@/data/dashboard-metrics";
 import type { Deal } from "@/data/deals-data";
 import {
     COUNTRY_FLAG,
@@ -37,6 +42,7 @@ import {
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
 import { ROLE_LABELS } from "@/types/role";
+import { cx } from "@/utils/cx";
 
 type Tab = { key: string; label: string; action?: boolean; test: (d: Deal) => boolean };
 
@@ -102,6 +108,17 @@ function buildColumns(containerWidth: number) {
 
 const PAGE_SIZE = 20;
 
+const toCalendarDate = (date: Date) => new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+const REFERENCE_TODAY = toCalendarDate(DATA_WINDOW_END);
+const MIN_VALUE = toCalendarDate(DATA_WINDOW_START);
+const MAX_VALUE = REFERENCE_TODAY;
+
+// "Lifetime" is the default — matches today's behavior (every deal in scope, unfiltered) rather
+// than the Figma mock's "This Month" default, so shipping this redesign doesn't hide deals that
+// were visible before it.
+const DEFAULT_PERIOD: PeriodSelection = { kind: "preset", id: "lifetime" };
+const isPeriodId = (id: string): id is PeriodId => periods.some((p) => p.id === id);
+
 function formatDateShort(d: Date): string {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
@@ -142,6 +159,17 @@ export const DealsList = () => {
         updated: searchParams.get("updated") ?? "",
         bdrId: searchParams.get("bdr") ?? "",
     }));
+    const [period, setPeriod] = useState<PeriodSelection>(() => {
+        const presetParam = searchParams.get("period");
+        if (presetParam && isPeriodId(presetParam)) return { kind: "preset", id: presetParam };
+        const fromParam = searchParams.get("periodFrom");
+        const toParam = searchParams.get("periodTo");
+        if (fromParam && toParam) return { kind: "custom", from: new Date(fromParam), to: new Date(toParam) };
+        return DEFAULT_PERIOD;
+    });
+    const [pickedRange, setPickedRange] = useState<{ start: DateValue; end: DateValue } | null>(() =>
+        period.kind === "custom" ? { start: toCalendarDate(period.from), end: toCalendarDate(period.to) } : null,
+    );
     const [page, setPage] = useState(() => {
         const fromUrl = Number(searchParams.get("page"));
         return Number.isInteger(fromUrl) && fromUrl > 0 ? fromUrl : 1;
@@ -184,17 +212,19 @@ export const DealsList = () => {
         setFilters(EMPTY_FILTERS);
         setTab("all");
         setSearch("");
+        setPeriod(DEFAULT_PERIOD);
+        setPickedRange(null);
         setPage(1);
     }, [personaKey]);
 
     // Same reasoning — must not reset the just-restored page number back to 1 on mount.
-    const prevPageResetDepsRef = useRef({ tab, debouncedSearch, filters });
+    const prevPageResetDepsRef = useRef({ tab, debouncedSearch, filters, period });
     useEffect(() => {
         const prev = prevPageResetDepsRef.current;
-        prevPageResetDepsRef.current = { tab, debouncedSearch, filters };
-        if (prev.tab === tab && prev.debouncedSearch === debouncedSearch && prev.filters === filters) return;
+        prevPageResetDepsRef.current = { tab, debouncedSearch, filters, period };
+        if (prev.tab === tab && prev.debouncedSearch === debouncedSearch && prev.filters === filters && prev.period === period) return;
         setPage(1);
-    }, [tab, debouncedSearch, filters]);
+    }, [tab, debouncedSearch, filters, period]);
 
     // Keep the URL in sync with the list view (replacing, not pushing, so tab/page/search/filter
     // changes don't spam browser history) — this is what lets the browser's own back button, and
@@ -208,15 +238,22 @@ export const DealsList = () => {
         if (filters.currency) params.set("currency", filters.currency);
         if (filters.updated) params.set("updated", filters.updated);
         if (filters.bdrId) params.set("bdr", filters.bdrId);
+        if (period.kind === "preset" && period.id !== "lifetime") params.set("period", period.id);
+        if (period.kind === "custom") {
+            params.set("periodFrom", period.from.toISOString().slice(0, 10));
+            params.set("periodTo", period.to.toISOString().slice(0, 10));
+        }
         if (params.toString() === searchParams.toString()) return;
         setSearchParams(params, { replace: true });
-    }, [tab, page, search, filters, setSearchParams, searchParams]);
+    }, [tab, page, search, filters, period, setSearchParams, searchParams]);
 
     // The single filtered set — tab counts AND the table both read from this, so they can never
     // disagree (the P0-1 fix from the brief: the bug was two separate computations that could
     // drift, not a missing recompute).
     const filteredDeals = useMemo(() => {
+        const periodBounds = resolvePeriodBounds(period);
         return scoped.filter((d) => {
+            if (!inRange(d.createdOn, periodBounds)) return false;
             if (debouncedSearch && !d.name.toLowerCase().includes(debouncedSearch) && !d.email.toLowerCase().includes(debouncedSearch)) return false;
             if (filters.course && d.course.id !== filters.course) return false;
             if (filters.currency && d.currency !== filters.currency) return false;
@@ -228,7 +265,7 @@ export const DealsList = () => {
             }
             return true;
         });
-    }, [scoped, debouncedSearch, filters]);
+    }, [scoped, debouncedSearch, filters, period]);
 
     const tabCounts = useMemo(() => TABS.map((t) => filteredDeals.filter(t.test).length), [filteredDeals]);
     const activeTab = TABS.find((t) => t.key === tab) ?? TABS[0];
@@ -262,6 +299,15 @@ export const DealsList = () => {
         navigator.clipboard?.writeText(applicationFormUrl(deal)).catch(() => {});
         toast(`Application link copied for ${deal.name}`);
     }, []);
+
+    const handlePeriodPresetChange = (id: PeriodId) => {
+        setPickedRange(null);
+        setPeriod({ kind: "preset", id });
+    };
+    const handleApplyCustomRange = () => {
+        if (!pickedRange) return;
+        setPeriod({ kind: "custom", from: pickedRange.start.toDate(getLocalTimeZone()), to: pickedRange.end.toDate(getLocalTimeZone()) });
+    };
 
     // Row actions become stage-conditional (§6 of the offer-separation brief), replacing the
     // single `onOffer` handler — each opens the surface that owns that transition (the same
@@ -311,19 +357,62 @@ export const DealsList = () => {
 
     return (
         <AppShell>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div className="flex flex-col gap-1">
-                    <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals" }]} />
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-xl font-semibold text-primary">Deals</h1>
-                        <Badge type="color" color="indigo" size="sm" className="uppercase">
-                            {roleLabel}
-                        </Badge>
-                    </div>
-                    <p className="text-md text-tertiary">
-                        {scoped.length} deal{scoped.length === 1 ? "" : "s"} in view — scoped to {scopeLabel(roleLabel)}.
-                    </p>
+            <div className="flex flex-col gap-1">
+                <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Deals" }]} />
+                <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-semibold text-primary">Deals</h1>
+                    <Badge type="color" color="indigo" size="sm" className="uppercase">
+                        {roleLabel}
+                    </Badge>
                 </div>
+                <p className="text-md text-tertiary">
+                    {scoped.length} deal{scoped.length === 1 ? "" : "s"} in view — scoped to {scopeLabel(roleLabel)}.
+                </p>
+            </div>
+
+            <div className="flex min-w-0 flex-wrap items-end justify-between gap-x-4 gap-y-3">
+                <div className="flex min-w-0 flex-wrap items-end gap-4">
+                    <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-lg border border-secondary bg-primary p-0">
+                        {periods.map((filter) => {
+                            const isActive = period.kind === "preset" && period.id === filter.id;
+                            return (
+                                <button
+                                    key={filter.id}
+                                    type="button"
+                                    aria-pressed={isActive}
+                                    onClick={() => handlePeriodPresetChange(filter.id)}
+                                    className={cx(
+                                        "cursor-pointer rounded-lg px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition duration-100 ease-linear",
+                                        isActive
+                                            ? "border border-primary bg-secondary text-secondary shadow-xs"
+                                            : "border border-transparent text-quaternary hover:rounded-none hover:bg-secondary_hover hover:text-secondary",
+                                    )}
+                                >
+                                    {filter.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <DateRangePicker
+                        size="sm"
+                        placeholder="Custom Date Range"
+                        showPresets={false}
+                        active={period.kind === "custom"}
+                        referenceToday={REFERENCE_TODAY}
+                        minValue={MIN_VALUE}
+                        maxValue={MAX_VALUE}
+                        value={pickedRange}
+                        onChange={setPickedRange}
+                        onApply={handleApplyCustomRange}
+                        onCancel={() => setPickedRange(period.kind === "custom" ? { start: toCalendarDate(period.from), end: toCalendarDate(period.to) } : null)}
+                    />
+
+                    <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setFiltersOpen((v) => !v)} className="shrink-0">
+                        Filters
+                    </Button>
+                </div>
+
                 <div className="flex items-center gap-2">
                     <Input
                         aria-label="Search name or email"
@@ -341,46 +430,41 @@ export const DealsList = () => {
                 </div>
             </div>
 
-            <div className="-mt-4 flex flex-wrap items-center justify-between gap-2 border-b border-secondary">
-                <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-0.5">
-                    {TABS.map((t, i) => {
-                        const isActive = tab === t.key;
-                        return (
-                            <button
-                                key={t.key}
-                                type="button"
-                                onClick={() => setTab(t.key)}
-                                className={`relative flex shrink-0 items-center gap-2 px-1 py-3 text-sm font-semibold whitespace-nowrap transition-colors duration-100 ease-linear ${
-                                    isActive
-                                        ? "text-brand-secondary"
-                                        : t.action
-                                          ? "text-error-primary hover:text-error-primary"
-                                          : "text-quaternary hover:text-secondary"
-                                }`}
+            <div className="-mt-4 flex flex-wrap items-center gap-2 overflow-x-auto border-b border-secondary pb-0.5">
+                {TABS.map((t, i) => {
+                    const isActive = tab === t.key;
+                    return (
+                        <button
+                            key={t.key}
+                            type="button"
+                            onClick={() => setTab(t.key)}
+                            className={`relative flex shrink-0 items-center gap-2 px-1 py-3 text-sm font-semibold whitespace-nowrap transition-colors duration-100 ease-linear ${
+                                isActive
+                                    ? "text-brand-secondary"
+                                    : t.action
+                                      ? "text-error-primary hover:text-error-primary"
+                                      : "text-quaternary hover:text-secondary"
+                            }`}
+                        >
+                            {t.label}
+                            <span
+                                className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${isActive ? "bg-brand-primary_alt text-brand-secondary" : "bg-secondary text-tertiary"}`}
                             >
-                                {t.label}
-                                <span
-                                    className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${isActive ? "bg-brand-primary_alt text-brand-secondary" : "bg-secondary text-tertiary"}`}
-                                >
-                                    {tabCounts[i]}
-                                </span>
-                                {/* Shared `layoutId` — motion animates this sliding from the
-                                 * previously active tab to this one instead of the underline
-                                 * just jumping straight there. */}
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="deals-tab-indicator"
-                                        className="absolute inset-x-0 -bottom-px h-0.5 bg-fg-brand-primary_alt"
-                                        transition={{ type: "tween", duration: 0.25, ease: "easeInOut" }}
-                                    />
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-                <Button color="secondary" size="sm" iconLeading={FilterLines} onClick={() => setFiltersOpen((v) => !v)} className="mb-2 shrink-0">
-                    Filters
-                </Button>
+                                {tabCounts[i]}
+                            </span>
+                            {/* Shared `layoutId` — motion animates this sliding from the
+                             * previously active tab to this one instead of the underline
+                             * just jumping straight there. */}
+                            {isActive && (
+                                <motion.div
+                                    layoutId="deals-tab-indicator"
+                                    className="absolute inset-x-0 -bottom-px h-0.5 bg-fg-brand-primary_alt"
+                                    transition={{ type: "tween", duration: 0.25, ease: "easeInOut" }}
+                                />
+                            )}
+                        </button>
+                    );
+                })}
             </div>
 
             {filtersOpen && <DealsFilterPanel persona={persona} filters={filters} onChange={setFilters} />}
