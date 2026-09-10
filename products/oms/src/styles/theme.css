@@ -529,6 +529,15 @@
         --color-sf-completed-hue: var(--color-orange-700);
         --color-sf-weak: var(--color-red-500);
         --color-sf-glow: var(--color-orange-400);
+
+        /* Deal Stages bar track (stat-cards.tsx) — bg-primary-solid per Figma, but neutral-100 in
+         * light mode specifically (Manik's call — neutral-950 read too harsh against the light
+         * card). Declared here rather than in the @theme {} block above: adding it there produced
+         * no `.bg-deal-stage-track` utility at all in the compiled CSS — the same silent-drop
+         * failure mode already diagnosed for the --color-sf-* tokens above (never fully isolated,
+         * but confirmed real and reproducible). Consumed as `bg-[var(--color-bg-deal-stage-track)]`
+         * inline instead of a named utility class. */
+        --color-bg-deal-stage-track: var(--color-neutral-100);
     }
 
     /* DARK MODE VARIABLES */
@@ -903,5 +912,7 @@
         --color-sf-completed-hue: var(--color-violet-500);
         --color-sf-weak: var(--color-red-500);
         --color-sf-glow: var(--color-violet-500);
+
+        --color-bg-deal-stage-track: var(--color-bg-primary-solid);
     }
 }

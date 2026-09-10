@@ -205,7 +205,7 @@ const DealStageBarColumn = ({
             placement="top"
         >
             <TooltipTrigger className="flex h-full w-12 shrink-0 flex-col items-center justify-center gap-2">
-                <div className="flex h-full w-full flex-1 items-end justify-center rounded-[40px] bg-quaternary">
+                <div className="flex h-full w-full flex-1 items-end justify-center rounded-[40px] bg-[var(--color-bg-deal-stage-track)]">
                     <div
                         className={cx("relative flex w-full items-start justify-center overflow-hidden rounded-full p-1", !hatched && !gradient && colorClassName)}
                         style={{
