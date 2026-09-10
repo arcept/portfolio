@@ -19,6 +19,7 @@ const SANKEY_MIN_COHORT_SIZE = 8;
 
 const RIBBON_WIDTH = 880;
 const RIBBON_HEIGHT = 300;
+const RIBBON_MAX_HEIGHT = 400;
 
 const HeadlineFigure = ({ label, value, changePct }: { label: string; value: string; changePct: number | null }) => (
     <div className="flex flex-col gap-1">
@@ -58,12 +59,18 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
     // aspect ratio leaving dead space at the bottom when this card sits in a grid row next to a
     // taller sibling (e.g. Booked Revenue) that stretches it. Falls back to the design-time
     // RIBBON_WIDTH/RIBBON_HEIGHT until the first real measurement lands, so it never flashes 0×0.
+    // Capped at RIBBON_MAX_HEIGHT (matching the wrapper's own max-h-[400px] below) — the case
+    // study embeds this card outside the grid context that normally bounds its height (a fixed,
+    // unusually tall iframe viewport with no height-constraining sibling), where an unbounded
+    // flex-1 + ResizeObserver loop was blowing the ribbon up to thousands of pixels tall.
     const ribbonWrapRef = useRef<HTMLDivElement>(null);
     const [ribbonSize, setRibbonSize] = useState({ width: RIBBON_WIDTH, height: RIBBON_HEIGHT });
     useEffect(() => {
         const el = ribbonWrapRef.current;
         if (!el) return;
-        const observer = new ResizeObserver(([entry]) => setRibbonSize({ width: entry.contentRect.width, height: entry.contentRect.height }));
+        const observer = new ResizeObserver(([entry]) =>
+            setRibbonSize({ width: entry.contentRect.width, height: Math.min(entry.contentRect.height, RIBBON_MAX_HEIGHT) }),
+        );
         observer.observe(el);
         return () => observer.disconnect();
     }, []);
@@ -95,7 +102,7 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
                     </EmptyState.Content>
                 </EmptyState>
             ) : (
-                <div ref={ribbonWrapRef} className="min-h-0 min-w-0 flex-1 overflow-x-auto">
+                <div ref={ribbonWrapRef} className="min-h-0 max-h-[400px] min-w-0 flex-1 overflow-x-auto">
                     <SalesFunnelRibbon flow={flow} width={ribbonSize.width} height={ribbonSize.height} onBandClick={(nodeId) => goToDeals(`tab=${TAB_BY_NODE[nodeId]}`)} />
                 </div>
             )}
