@@ -31,7 +31,7 @@ export const DashboardSalesHead = () => {
                 <SalesFunnelSection selection={selection} scope={persona.role === "admin" ? funnelScope : persona} />
             </div>
 
-            <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[0.78fr_1fr_1.26fr]">
+            <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[0.78fr_1fr_auto]">
                 <RealisedAndTicketCards selection={selection} />
                 <ConversionCard selection={selection} onCourseClick={(courseId) => navigate(`/deals?course=${courseId}`)} />
                 <DealStagesCard selection={selection} />

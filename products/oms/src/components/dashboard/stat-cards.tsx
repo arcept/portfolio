@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowDownRight, ArrowUpRight, Copy01, Download01, Edit01, TrendUp02 } from "@untitledui/icons";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { Badge } from "@/components/base/badges/badges";
 import { cx } from "@/utils/cx";
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
-import type { PeriodSelection } from "@/data/dashboard-data";
+import type { DealStageBar, DealStageBarStatus, PeriodSelection } from "@/data/dashboard-data";
 import { formatIndianCompact, formatIndianNumber, getPeriodSelectionKey } from "@/data/dashboard-data";
 import { changeDirectionFromText, getDealStageBars, getPeriodChartDataLive } from "@/data/dashboard-metrics";
 import { BookedChart } from "./booked-chart";
@@ -175,67 +175,104 @@ const DEAL_STAGE_MIN_HEIGHT_PX = 64;
  * hue as the solid fill, without hardcoding a second color per hatched stage. */
 const cssVarFromBgClass = (bgClassName: string) => `var(${bgClassName.replace(/^bg-/, "--color-")})`;
 
-const DealStageBarColumn = ({
-    label,
-    value,
-    colorClassName,
-    hatched,
-    gradient,
-    attentionValue,
-    attentionLabel,
-    fraction,
-}: {
-    label: string;
-    value: number;
-    colorClassName: string;
-    hatched?: boolean;
-    gradient?: boolean;
-    attentionValue?: number;
-    attentionLabel?: string;
-    fraction: number;
-}) => {
+const STATUS_DOT_CLASS: Record<DealStageBarStatus["color"], string> = {
+    blue: "bg-utility-blue-400",
+    amber: "bg-fg-warning-secondary",
+    green: "bg-fg-success-primary",
+    red: "bg-fg-error-primary",
+    gray: "bg-fg-tertiary",
+};
+
+/** Follows the cursor rather than anchoring to the (very tall) bar trigger — a react-aria
+ * `Tooltip` anchors to the trigger's own box, which for a full-height bar column can land the
+ * tooltip far from wherever on the bar the user is actually hovering. Portaled to `document.body`
+ * so it renders relative to the real viewport even though `FadeOnSelection`'s `motion.div`
+ * leaves an inline `transform` on an ancestor (which would otherwise hijack `position: fixed`
+ * into being relative to that ancestor instead of the viewport). */
+const DealStageBarTooltip = ({ x, y, label, value, breakdown, attentionValue, attentionLabel }: { x: number; y: number } & DealStageBar) => {
+    if (typeof document === "undefined") return null;
+
+    return createPortal(
+        <div
+            className="pointer-events-none fixed z-50 flex w-max max-w-64 flex-col gap-1.5 rounded-lg bg-primary-solid px-3 py-2.5 shadow-lg"
+            style={{ left: x + 16, top: y + 16 }}
+        >
+            <div className="flex items-baseline justify-between gap-4">
+                <span className="text-xs font-semibold text-white">{label}</span>
+                <span className="font-mono text-xs font-semibold text-white">{value}</span>
+            </div>
+
+            {breakdown.length > 0 && (
+                <div className="flex flex-col gap-1 border-t border-white/10 pt-1.5">
+                    {breakdown.map((status) => (
+                        <div key={status.label} className="flex items-center justify-between gap-4">
+                            <span className="flex items-center gap-1.5 text-[11px] text-tooltip-supporting-text">
+                                <span className={cx("size-1.5 shrink-0 rounded-full", STATUS_DOT_CLASS[status.color])} />
+                                {status.label}
+                            </span>
+                            <span className="font-mono text-[11px] text-tooltip-supporting-text">{status.count}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {!!attentionValue && (
+                <div className="border-t border-white/10 pt-1.5 text-[11px] font-medium text-fg-warning-secondary">
+                    {attentionValue} {attentionLabel ?? "need attention"}
+                </div>
+            )}
+        </div>,
+        document.body,
+    );
+};
+
+const DealStageBarColumn = ({ fraction, ...bar }: DealStageBar & { fraction: number }) => {
+    const { value, colorClassName, hatched, gradient, attentionValue } = bar;
     const hue = cssVarFromBgClass(colorClassName);
     // At least a third of the bar's own height, so the attention count stays legible even when
     // it's a small slice of a small bar — capped at the bar's full height.
     const attentionFraction = attentionValue && value > 0 ? Math.min(1, Math.max(1 / 3, attentionValue / value)) : 0;
+    const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
 
     return (
-        <Tooltip
-            title={attentionValue ? `${label}: ${value} (${attentionValue} ${attentionLabel ?? "need attention"})` : `${label}: ${value}`}
-            placement="top"
+        <div
+            className="flex h-full w-12 shrink-0 flex-col items-center justify-center gap-2"
+            onMouseEnter={(e) => setCursor({ x: e.clientX, y: e.clientY })}
+            onMouseMove={(e) => setCursor({ x: e.clientX, y: e.clientY })}
+            onMouseLeave={() => setCursor(null)}
         >
-            <TooltipTrigger className="flex h-full w-12 shrink-0 flex-col items-center justify-center gap-2">
-                <div className="flex h-full w-full flex-1 items-end justify-center rounded-[40px] bg-[var(--color-bg-deal-stage-track)]">
-                    <div
-                        className={cx("relative flex w-full items-start justify-center overflow-hidden rounded-full p-1", !hatched && !gradient && colorClassName)}
-                        style={{
-                            height: `${Math.round(fraction * 100)}%`,
-                            minHeight: value > 0 ? 64 : undefined,
-                            ...(gradient && { background: `linear-gradient(to top, var(--color-fg-success-secondary), var(--color-fg-success-primary))` }),
-                            ...(hatched && {
-                                backgroundColor: `color-mix(in srgb, ${hue} 30%, transparent)`,
-                                backgroundImage: `repeating-linear-gradient(45deg, ${hue} 0, ${hue} 2px, transparent 2px, transparent 6px)`,
-                            }),
-                        }}
-                    >
-                        {!!attentionValue && (
-                            <div
-                                className="flex w-full items-center justify-center rounded-full"
-                                style={{
-                                    height: `${Math.round(attentionFraction * 100)}%`,
-                                    minHeight: 40,
-                                    minWidth: 40,
-                                    backgroundColor: `color-mix(in srgb, ${hue} 55%, black)`,
-                                }}
-                            >
-                                <span className="font-mono text-sm font-semibold text-white">{attentionValue}</span>
-                            </div>
-                        )}
-                    </div>
+            <div className="flex h-full w-full flex-1 items-end justify-center rounded-[40px] bg-[var(--color-bg-deal-stage-track)]">
+                <div
+                    className={cx("relative flex w-full items-start justify-center overflow-hidden rounded-full p-1", !hatched && !gradient && colorClassName)}
+                    style={{
+                        height: `${Math.round(fraction * 100)}%`,
+                        minHeight: value > 0 ? 64 : undefined,
+                        ...(gradient && { background: gradient }),
+                        ...(hatched && {
+                            backgroundColor: `color-mix(in srgb, ${hue} 30%, transparent)`,
+                            backgroundImage: `repeating-linear-gradient(45deg, ${hue} 0, ${hue} 2px, transparent 2px, transparent 6px)`,
+                        }),
+                    }}
+                >
+                    {!!attentionValue && (
+                        <div
+                            className="flex w-full items-center justify-center rounded-full"
+                            style={{
+                                height: `${Math.round(attentionFraction * 100)}%`,
+                                minHeight: 40,
+                                minWidth: 40,
+                                backgroundColor: `color-mix(in srgb, ${hue} 55%, black)`,
+                            }}
+                        >
+                            <span className="font-mono text-sm font-semibold text-white">{attentionValue}</span>
+                        </div>
+                    )}
                 </div>
-                <span className="font-mono text-xs font-medium text-secondary">{String(value).padStart(2, "0")}</span>
-            </TooltipTrigger>
-        </Tooltip>
+            </div>
+            <span className="font-mono text-xs font-medium text-secondary">{String(value).padStart(2, "0")}</span>
+
+            {cursor && <DealStageBarTooltip x={cursor.x} y={cursor.y} {...bar} />}
+        </div>
     );
 };
 

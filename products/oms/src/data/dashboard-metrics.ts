@@ -7,7 +7,7 @@
  */
 import type { Persona } from "@/types/role";
 import type { Deal, DealStatusId } from "./deals-data";
-import { COURSES, dealsForPersona } from "./deals-data";
+import { COURSES, dealsForPersona, STATUS } from "./deals-data";
 import type {
     ChartPoint,
     DealStageBar,
@@ -318,6 +318,20 @@ export function changeDirectionFromText(changeText: string): "up" | "down" | "ne
 // Daily chart series
 // ---------------------------------------------------------------------------
 
+// Cosmetic-only: a pure cumulative sum starts at/near 0, which reads as an empty chart for the
+// first few days. Biasing each series to open around 12% of its own peak (Manik's call, "10-15%")
+// and compressing the rest to still land on the same final value keeps the line looking alive
+// from day 1 without touching any real number — `computeBookedRealised` (the stat-card totals)
+// sums straight off `personaDeals`, never off these biased points.
+const CHART_BASELINE_FRACTION = 0.12;
+
+function applyChartBaselineBias(cumulative: number[]): number[] {
+    const peak = cumulative[cumulative.length - 1];
+    if (peak <= 0) return cumulative;
+    const baseline = peak * CHART_BASELINE_FRACTION;
+    return cumulative.map((v) => baseline + (1 - CHART_BASELINE_FRACTION) * v);
+}
+
 function buildDailyChartPoints(personaDeals: Deal[], bounds: PeriodBounds): ChartPoint[] {
     const days = dayCount(bounds.from, bounds.to);
     const bookedByDay = new Map<number, number>();
@@ -342,15 +356,21 @@ function buildDailyChartPoints(personaDeals: Deal[], bounds: PeriodBounds): Char
         }
     }
 
-    const points: ChartPoint[] = [];
-    let bookedCumulative = 0;
-    let realisedCumulative = 0;
+    const bookedCumulative: number[] = [];
+    const realisedCumulative: number[] = [];
+    let bookedRunning = 0;
+    let realisedRunning = 0;
     for (let i = 0; i < days; i++) {
-        bookedCumulative += bookedByDay.get(i) ?? 0;
-        realisedCumulative += realisedByDay.get(i) ?? 0;
-        points.push({ x: i + 1, date: addDays(bounds.from, i), booked: bookedCumulative, realised: realisedCumulative });
+        bookedRunning += bookedByDay.get(i) ?? 0;
+        realisedRunning += realisedByDay.get(i) ?? 0;
+        bookedCumulative.push(bookedRunning);
+        realisedCumulative.push(realisedRunning);
     }
-    return points;
+
+    const biasedBooked = applyChartBaselineBias(bookedCumulative);
+    const biasedRealised = applyChartBaselineBias(realisedCumulative);
+
+    return biasedBooked.map((booked, i) => ({ x: i + 1, date: addDays(bounds.from, i), booked, realised: biasedRealised[i] }));
 }
 
 function buildXAxisMeta(bounds: PeriodBounds, selection: PeriodSelection): { xDomain: [number, number]; xTicks: number[]; xTickFormatter: (x: number) => string } {
@@ -424,7 +444,7 @@ export function buildLiveCascade(cohort: Deal[]): DealStageCascade {
     };
 }
 
-const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassName: string; hatched?: boolean; gradient?: boolean; attentionIds?: DealStatusId[]; attentionLabel?: string }[] = [
+const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassName: string; hatched?: boolean; gradient?: string; attentionIds?: DealStatusId[]; attentionLabel?: string }[] = [
     // "Needs attention" = New (assigned, form not even sent yet) + Expired (form sent but the
     // window lapsed with no action) — both are stalled and need a BDR to act, unlike Pending
     // (form sent, still within its live window).
@@ -462,7 +482,12 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
     },
     // ENR_CANCELLED removed per Manik — not claimed by any bar below, same as APP_FILLED (see
     // the note above "Application"). Flagging rather than guessing a new home for it.
-    { label: "Payment Completed", ids: ["PAY_COMPLETED"], colorClassName: "bg-fg-success-primary", gradient: true },
+    {
+        label: "Payment Completed",
+        ids: ["PAY_COMPLETED"],
+        colorClassName: "bg-fg-success-primary",
+        gradient: "linear-gradient(to top, var(--color-fg-success-secondary), var(--color-fg-success-primary))",
+    },
     // SAVED split out into its own bar below — this is just NOT_INTERESTED now.
     { label: "Not Interested", ids: ["NOT_INTERESTED"], colorClassName: "bg-fg-tertiary" },
     { label: "Saved for Later", ids: ["SAVED"], colorClassName: "bg-utility-brand-700" },
@@ -471,13 +496,46 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
     { label: "Rejected", ids: ["REJECTED"], colorClassName: "bg-fg-error-primary", hatched: true },
 ];
 
+/** "Total Enrolled" (Manik's definition, 2026-09-10): Payment Completed, plus Payment Due deals
+ * that have made at least one payment, plus Payment Overdue — a deliberately *overlapping* rollup
+ * on top of the exhaustive `DEAL_STAGE_BAR_GROUPS` partition above (it double-counts against the
+ * "Payment Overdue" and "Payment Completed" bars by design), not another partition bucket. Payment
+ * Due with zero installments paid is excluded — that learner hasn't actually started paying yet,
+ * so isn't "enrolled". Payment Ongoing is excluded too, per the same literal spec, even though
+ * `PAY_ONGOING` also implies a first payment was made. */
+function buildTotalEnrolledBar(cohort: Deal[]): DealStageBar {
+    const completed = cohort.filter((d) => d.status.id === "PAY_COMPLETED");
+    const dueWithPayment = cohort.filter((d) => d.status.id === "PAY_DUE" && d.installments.some((inst) => inst.paidOn !== null));
+    const overdue = cohort.filter((d) => d.status.id === "PAY_OVERDUE");
+
+    const breakdown = [
+        { label: "Completed", count: completed.length, color: STATUS.PAY_COMPLETED.color },
+        { label: "Due (paid at least 1 installment)", count: dueWithPayment.length, color: STATUS.PAY_DUE.color },
+        { label: "Overdue", count: overdue.length, color: STATUS.PAY_OVERDUE.color },
+    ]
+        .filter((status) => status.count > 0)
+        .sort((a, b) => b.count - a.count);
+
+    return {
+        label: "Total Enrolled",
+        value: completed.length + dueWithPayment.length + overdue.length,
+        colorClassName: "bg-fg-success-primary",
+        // Figma "Gradient/Linear 69" — a one-off decorative gradient for this specific rollup
+        // bar, not part of the semantic token system the other bars draw their colors from.
+        gradient: "linear-gradient(135deg, #F74FAC 0%, #FCB24F 100%)",
+        breakdown,
+    };
+}
+
 /** Deal Stages (Figma node 548:15755) — 8 bars classified directly off each deal's real
  * `status.id`, the same way `buildLiveCascade` classifies its 6, just with finer splits where
  * the status model actually supports them (Payment Ongoing/Due vs Overdue; payment-plan-pending
  * as its own bucket; Not Interested and Rejected surfaced separately instead of folded into one
  * "expired" bucket). Every status *except* `APP_FILLED` and `ENR_CANCELLED` lands in exactly one
  * group — see the notes above the "Application" and "Payment Completed" entries in
- * `DEAL_STAGE_BAR_GROUPS` for why those two are unclaimed.
+ * `DEAL_STAGE_BAR_GROUPS` for why those two are unclaimed. A 9th bar, "Total Enrolled"
+ * (`buildTotalEnrolledBar`), is appended after — it's a rollup, not part of the partition, so it
+ * deliberately breaks the "every status counted once" rule the 8 bars above hold to.
  *
  * Unlike the Sales Funnel (which reads `getCohort`, scoped to deals whose application was
  * actually *sent*), this reads the raw `createdOn`-filtered roster — the same basis the Deals
@@ -487,15 +545,26 @@ export function getDealStageBars(selection: PeriodSelection, persona: Persona, d
     const bounds = resolvePeriodBounds(selection);
     const cohort = dealsForPersona(persona, deals).filter((d) => inRange(d.createdOn, bounds));
 
-    return DEAL_STAGE_BAR_GROUPS.map((group) => ({
-        label: group.label,
-        value: cohort.filter((d) => group.ids.includes(d.status.id)).length,
-        colorClassName: group.colorClassName,
-        hatched: group.hatched,
-        gradient: group.gradient,
-        attentionValue: group.attentionIds ? cohort.filter((d) => group.attentionIds!.includes(d.status.id)).length : undefined,
-        attentionLabel: group.attentionLabel,
-    }));
+    const bars = DEAL_STAGE_BAR_GROUPS.map((group) => {
+        const groupDeals = cohort.filter((d) => group.ids.includes(d.status.id));
+        const breakdown = group.ids
+            .map((id) => ({ label: STATUS[id].label, count: groupDeals.filter((d) => d.status.id === id).length, color: STATUS[id].color }))
+            .filter((status) => status.count > 0)
+            .sort((a, b) => b.count - a.count);
+
+        return {
+            label: group.label,
+            value: groupDeals.length,
+            colorClassName: group.colorClassName,
+            hatched: group.hatched,
+            gradient: group.gradient,
+            attentionValue: group.attentionIds ? groupDeals.filter((d) => group.attentionIds!.includes(d.status.id)).length : undefined,
+            attentionLabel: group.attentionLabel,
+            breakdown,
+        };
+    });
+
+    return [...bars, buildTotalEnrolledBar(cohort)];
 }
 
 // ---------------------------------------------------------------------------
@@ -841,12 +910,17 @@ export function getSalesFunnelCourseBreakdown(selection: PeriodSelection, person
 // Lost Deals
 // ---------------------------------------------------------------------------
 
-export function getLostDealsSummary(cohort: Deal[]): { percent: number; closedCount: number; cohortSize: number } {
-    const cascade = buildLiveCascade(cohort);
-    const cohortSize = cascade.applicationsSent;
-    const lostCount = cascade.currentStage.expired + cascade.currentStage.notInterested;
+// "Confirmed lost" — Not Interested / Rejected / Saved for Later only. Deliberately excludes
+// APP_EXPIRED/OFFER_EXPIRED/ENR_CANCELLED (folded into `buildLiveCascade`'s "expired" bucket) —
+// those are stalled/lapsed, not a deal someone actively walked away from, so they don't belong
+// in a "lost" count per Manik's call.
+const CONFIRMED_LOST_IDS = new Set<DealStatusId>(["NOT_INTERESTED", "REJECTED", "SAVED"]);
+
+export function getLostDealsSummary(cohort: Deal[]): { percent: number; lostCount: number; cohortSize: number } {
+    const cohortSize = cohort.length;
+    const lostCount = cohort.filter((d) => CONFIRMED_LOST_IDS.has(d.status.id)).length;
     const percent = cohortSize === 0 ? 0 : Math.round((lostCount / cohortSize) * 100);
-    return { percent, closedCount: cascade.currentStage.paymentCompleted, cohortSize };
+    return { percent, lostCount, cohortSize };
 }
 
 export function getLostDealsSummaryForSelection(selection: PeriodSelection, persona: Persona, deals: Deal[]) {

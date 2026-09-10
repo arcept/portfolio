@@ -523,12 +523,34 @@
      * Tailwind utility class (only ever `var(--color-sf-*)` inline in sales-funnel-ribbon.tsx's
      * SVG props), so there's no downside to keeping them outside @theme. */
     :root {
+        --color-sf-glow: var(--color-orange-400);
+        /* Light-mode fallback (Manik's call, 2026-09-10): the fixed dark-mode gradient below is
+         * dark-only — light mode keeps the original dynamic, stage-tinted orange scale, one hue
+         * per checkpoint, via sales-funnel-ribbon.tsx's `stopColorFor`/`sf-flow-gradient-light`. */
         --color-sf-application-hue: var(--color-orange-300);
         --color-sf-offer-hue: var(--color-orange-500);
         --color-sf-payment-hue: var(--color-orange-600);
         --color-sf-completed-hue: var(--color-orange-700);
         --color-sf-weak: var(--color-red-500);
-        --color-sf-glow: var(--color-orange-400);
+        /* All 4 ribbon depth layers (outer → core) share that one dynamic gradient in light mode,
+         * at a soft, transparency-graded falloff — only `.dark-mode` below repoints these 4 slots
+         * at 3 separate fixed gradients with a more solid/saturated opacity curve instead. */
+        --sf-depth-0-fill: url(#sf-flow-gradient-light);
+        --sf-depth-0-opacity: 0.14;
+        --sf-depth-1-fill: url(#sf-flow-gradient-light);
+        --sf-depth-1-opacity: 0.32;
+        --sf-depth-2-fill: url(#sf-flow-gradient-light);
+        --sf-depth-2-opacity: 0.6;
+        --sf-depth-3-fill: url(#sf-flow-gradient-light);
+        --sf-depth-3-opacity: 0.95;
+
+        /* Background bloom behind the ribbon (Figma node 548:16742, "Ellipse 1") — a big soft
+         * blurred shape sitting behind everything else, only visible where it peeks out around
+         * the ribbon's own edges (the ribbon layers on top fully cover its center). Light mode
+         * reuses the existing ambient-halo orange at the same modest opacity that halo already
+         * uses; dark mode below gets Manik's exact Figma blue instead. */
+        --sf-bg-glow-fill: var(--color-sf-glow);
+        --sf-bg-glow-opacity: 0.22;
 
         /* Deal Stages bar track (stat-cards.tsx) — bg-primary-solid per Figma, but neutral-100 in
          * light mode specifically (Manik's call — neutral-950 read too harsh against the light
@@ -898,20 +920,25 @@
         --outline-color-brand-solid_hover: var(--color-bg-brand-solid_hover);
         --outline-color-brand_alt: var(--color-border-brand_alt);
 
-        /* SALES FUNNEL RIBBON — dark mode trades the light-mode orange/amber for a multi-hue
-         * green → cyan → blue → violet glow across the 4 stages (per Manik's reference); the
-         * Completed stage now genuinely earns the violet the ambient halo was already borrowing.
-         * Same `--color-sf-<stage>-hue` naming as the light block above (not the @theme-unsafe
-         * `sales-funnel-stage-*` family) — this block isn't inside @theme so the bug that forced
-         * the rename doesn't reach here, but the token names must still match what the component
-         * references, and dark-mode text must actually override the light default, not just
-         * silently inherit it. */
-        --color-sf-application-hue: var(--color-green-400);
-        --color-sf-offer-hue: var(--color-cyan-400);
-        --color-sf-payment-hue: var(--color-blue-500);
-        --color-sf-completed-hue: var(--color-violet-500);
-        --color-sf-weak: var(--color-red-500);
+        /* SALES FUNNEL RIBBON — dark mode points the same 4 depth-layer slots at 3 fixed,
+         * non-dynamic gradients instead (sales-funnel-ribbon.tsx's `sf-layer-*` defs, Manik's
+         * exact Figma hex values) — outer and mid-outer share the indigo/violet halo gradient,
+         * mid-inner and core each get their own — at a more solid/saturated opacity curve than
+         * light mode's soft falloff. Ambient halo also swaps to violet. */
+        --sf-depth-0-fill: url(#sf-layer-halo);
+        --sf-depth-0-opacity: 0.6;
+        --sf-depth-1-fill: url(#sf-layer-halo);
+        --sf-depth-1-opacity: 0.8;
+        --sf-depth-2-fill: url(#sf-layer-mid);
+        --sf-depth-2-opacity: 1;
+        --sf-depth-3-fill: url(#sf-layer-core);
+        --sf-depth-3-opacity: 1;
         --color-sf-glow: var(--color-violet-500);
+        /* Background bloom (Figma node 548:16742) — Manik's exact Figma blue, recovered from its
+         * feColorMatrix recolor (rgb(0.0862745, 0.341961, 0.72549) × 255 = #1657b9) at the
+         * filter's own 0.3 alpha. */
+        --sf-bg-glow-fill: #1657b9;
+        --sf-bg-glow-opacity: 0.3;
 
         --color-bg-deal-stage-track: var(--color-bg-primary-solid);
     }

@@ -484,16 +484,23 @@ export function listAllBdrs(): { id: string; label: string; persona: Persona }[]
     });
 }
 
+export type DealStageBarStatus = { label: string; count: number; color: "blue" | "amber" | "green" | "red" | "gray" };
+
 export type DealStageBar = {
     label: string;
     value: number;
     colorClassName: string;
     hatched?: boolean;
-    gradient?: boolean;
+    /** A raw CSS `background` gradient, overriding `colorClassName`'s solid fill for this bar. */
+    gradient?: string;
     /** Subset of `value` that needs attention (e.g. Application's `APP_NEW` deals — assigned but
      * not yet sent). Rendered as a highlighted cap inside the bar (Figma node 556:17421). */
     attentionValue?: number;
     attentionLabel?: string;
+    /** Every individual `DealStatusId` folded into this bar, with its own count — zero-count
+     * statuses omitted. Powers the hover tooltip's per-status hierarchy (bar total → status
+     * breakdown), since the bar's own `value` is already a sum across several statuses. */
+    breakdown: DealStageBarStatus[];
 };
 
 export type FunnelBreakdownItem = {

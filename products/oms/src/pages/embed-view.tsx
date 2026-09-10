@@ -37,7 +37,7 @@ const EMBED_PERSONAS: Record<EmbedViewKey, Persona> = {
 const StatCardsBundle = () => (
     <div className="flex flex-col gap-4">
         <BookedRevenueCard selection={DEFAULT_SELECTION} />
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[0.78fr_1fr_1.26fr]">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[0.78fr_1fr_auto]">
             <RealisedAndTicketCards selection={DEFAULT_SELECTION} />
             <ConversionCard selection={DEFAULT_SELECTION} />
             <DealStagesCard selection={DEFAULT_SELECTION} />

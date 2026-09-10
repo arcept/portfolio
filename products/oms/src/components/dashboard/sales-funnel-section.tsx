@@ -1,7 +1,7 @@
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
-import { Copy01, Download01, Edit01 } from "@untitledui/icons";
+import { ArrowDown, ArrowUp } from "@untitledui/icons";
 import { useDeals } from "@/providers/deals-provider";
 import { useCountUp } from "@/hooks/use-count-up";
 import { cx } from "@/utils/cx";
@@ -20,34 +20,20 @@ const SANKEY_MIN_COHORT_SIZE = 8;
 const RIBBON_WIDTH = 880;
 const RIBBON_HEIGHT = 300;
 
-const CardActionsMenu = () => (
-    <Dropdown.Root>
-        <Dropdown.DotsButton />
-        <Dropdown.Popover className="w-min">
-            <Dropdown.Menu>
-                <Dropdown.Item icon={Edit01}>
-                    <span className="pr-4">Edit widget</span>
-                </Dropdown.Item>
-                <Dropdown.Item icon={Download01}>
-                    <span className="pr-4">Export</span>
-                </Dropdown.Item>
-                <Dropdown.Item icon={Copy01}>
-                    <span className="pr-4">Copy link</span>
-                </Dropdown.Item>
-            </Dropdown.Menu>
-        </Dropdown.Popover>
-    </Dropdown.Root>
-);
-
-const HeadlineFigure = ({ label, value, changePct, changeSuffix }: { label: string; value: string; changePct: number | null; changeSuffix: string }) => (
+const HeadlineFigure = ({ label, value, changePct }: { label: string; value: string; changePct: number | null }) => (
     <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-secondary">{label}</p>
         <div className="flex items-baseline gap-2">
             <span className="font-mono text-display-md font-semibold tracking-tight text-primary">{value}</span>
             {changePct !== null && (
-                <span className={cx("font-mono text-sm font-medium", changePct >= 0 ? "text-fg-success-secondary" : "text-fg-error-secondary")}>
-                    {changePct >= 0 ? "+" : ""}
-                    {changePct.toFixed(0)}% <span className="font-sans">{changeSuffix}</span>
+                <span
+                    className={cx(
+                        "inline-flex items-center gap-0.5 font-mono text-sm font-medium",
+                        changePct >= 0 ? "text-fg-success-secondary" : "text-fg-error-secondary",
+                    )}
+                >
+                    {changePct >= 0 ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
+                    {Math.abs(changePct).toFixed(0)}%
                 </span>
             )}
         </div>
@@ -68,24 +54,34 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
 
     const goToDeals = (params: string) => navigate(`/deals?${params}`);
 
-    return (
-        <div className="relative flex min-w-0 flex-col gap-6 rounded-xl border border-secondary bg-primary px-8 py-6">
-            <div className="absolute top-6 right-8">
-                <CardActionsMenu />
-            </div>
+    // The ribbon fills whatever vertical space is actually left in the card — no more fixed
+    // aspect ratio leaving dead space at the bottom when this card sits in a grid row next to a
+    // taller sibling (e.g. Booked Revenue) that stretches it. Falls back to the design-time
+    // RIBBON_WIDTH/RIBBON_HEIGHT until the first real measurement lands, so it never flashes 0×0.
+    const ribbonWrapRef = useRef<HTMLDivElement>(null);
+    const [ribbonSize, setRibbonSize] = useState({ width: RIBBON_WIDTH, height: RIBBON_HEIGHT });
+    useEffect(() => {
+        const el = ribbonWrapRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver(([entry]) => setRibbonSize({ width: entry.contentRect.width, height: entry.contentRect.height }));
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
-            <div className="flex flex-wrap items-start justify-between gap-4 pr-8">
-                <div className="flex flex-col gap-1">
+    return (
+        <div className="relative flex min-w-0 flex-col gap-2 rounded-xl border border-secondary bg-primary px-8 py-6">
+            <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-semibold text-secondary">Sales Funnel</h2>
-                        <span className="rounded-md bg-primary_alt px-1.5 py-0.5 text-xs font-medium text-secondary shadow-xs">Showing: {scopeLabel}</span>
+                        <h2 className="shrink-0 text-xl font-semibold whitespace-nowrap text-secondary">Sales Funnel</h2>
+                        <span className="shrink-0 rounded-md bg-primary_alt px-1.5 py-0.5 font-mono text-xs font-medium whitespace-nowrap text-secondary shadow-xs">{scopeLabel}</span>
                     </div>
                     <p className="text-xs text-tertiary">Application → Offer → Payment → Completed, with where deals drop out along the way</p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-8">
-                    <HeadlineFigure label="Applications Sent" value={String(animatedApplicationsSent)} changePct={headline.applicationsSentChangePct} changeSuffix="vs prior period" />
-                    <HeadlineFigure label="Overall Conversion" value={`${animatedConversionPct}%`} changePct={headline.conversionChangePct} changeSuffix="vs prior period" />
+                <div className="flex shrink-0 items-start gap-6">
+                    <HeadlineFigure label="Applications Sent" value={String(animatedApplicationsSent)} changePct={headline.applicationsSentChangePct} />
+                    <HeadlineFigure label="Overall Conversion" value={`${animatedConversionPct}%`} changePct={headline.conversionChangePct} />
                 </div>
             </div>
 
@@ -99,8 +95,8 @@ export const SalesFunnelSection = ({ selection, scope }: { selection: PeriodSele
                     </EmptyState.Content>
                 </EmptyState>
             ) : (
-                <div className="min-w-0 overflow-x-auto">
-                    <SalesFunnelRibbon flow={flow} width={RIBBON_WIDTH} height={RIBBON_HEIGHT} onBandClick={(nodeId) => goToDeals(`tab=${TAB_BY_NODE[nodeId]}`)} />
+                <div ref={ribbonWrapRef} className="min-h-0 min-w-0 flex-1 overflow-x-auto">
+                    <SalesFunnelRibbon flow={flow} width={ribbonSize.width} height={ribbonSize.height} onBandClick={(nodeId) => goToDeals(`tab=${TAB_BY_NODE[nodeId]}`)} />
                 </div>
             )}
         </div>

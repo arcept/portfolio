@@ -81,14 +81,14 @@ export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: {
                 <div className="mt-auto flex items-center gap-3 rounded-lg bg-primary_alt px-4 py-2">
                     <div className="flex flex-1 flex-col">
                         <div className="flex items-baseline gap-2">
-                            <p className="text-md font-medium text-secondary">Lost Deals</p>
-                            <span className="font-mono text-md font-medium text-primary">{lost.percent}%</span>
+                            <p className="text-md font-medium text-error-primary">Lost Deals</p>
+                            <span className="font-mono text-md font-semibold text-fg-error-secondary">{lost.percent}%</span>
                         </div>
-                        <p className="text-sm text-secondary">
-                            You closed <span className="font-mono">{lost.closedCount}</span> out of <span className="font-mono">{lost.cohortSize}</span> deals
+                        <p className="text-sm text-error-primary/60">
+                            You lost <span className="font-mono">{lost.lostCount}</span> out of <span className="font-mono">{lost.cohortSize}</span> deals
                         </p>
                     </div>
-                    <ButtonUtility size="sm" color="tertiary" tooltip="All deals" icon={TrendUp02} onClick={onLostDealsClick} />
+                    <ButtonUtility size="sm" color="tertiary" tooltip="All deals" icon={TrendUp02} onClick={onLostDealsClick} className="text-fg-error-secondary" />
                 </div>
             </FadeOnSelection>
         </Card>
