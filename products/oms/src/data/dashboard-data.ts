@@ -422,8 +422,9 @@ if (import.meta.env.DEV) {
 
 // ---------------------------------------------------------------------------
 // Org drill-down (brief §9, extended by the role-based-data-scoping brief) —
-// Ish Kumar / Dhruv Anand / Raj Kashyap (reconciled to the documented names,
-// §11/§18 of prior OMS research), each split into Team Leads, each split
+// Arjun Khurana (id: ish-kumar) / Dhruv Anand / Raj Kashyap (ids reconciled to the documented
+// names, §11/§18 of prior OMS research — Arjun Khurana is a later rename, Manik's call,
+// 2026-09-11), each split into Team Leads, each split
 // into BDRs. Every level's weights are independently seeded (not identical
 // across siblings — real orgs aren't that even). Revenue/unit numbers for
 // each node are computed live in dashboard-metrics.ts by literally filtering
@@ -436,7 +437,7 @@ export type OrgTeamLead = { id: string; tmId: string; name: string; weight: numb
 export type OrgBdr = { id: string; tlId: string; tmId: string; name: string; weight: number };
 
 const TM_WEIGHTS: OrgTeamManager[] = [
-    { id: "ish-kumar", name: "Ish Kumar", weight: 40 },
+    { id: "ish-kumar", name: "Arjun Khurana", weight: 40 },
     { id: "dhruv-anand", name: "Dhruv Anand", weight: 35 },
     { id: "raj-kashyap", name: "Raj Kashyap", weight: 25 },
 ];
@@ -516,7 +517,7 @@ export function scaleForWeight(total: number, weight: number, totalWeight: numbe
     return splitByWeights(total, [weight, totalWeight - weight], integer)[0];
 }
 
-/** A persona's display name for the sidebar/header ("Ish Kumar", "Tanvi Shah", "Admin"...). */
+/** A persona's display name for the sidebar/header ("Arjun Khurana", "Tanvi Shah", "Admin"...). */
 export function getPersonaLabel(persona: Persona): string {
     if (persona.role === "admin") return "Admin";
     if (persona.role === "tm") return teamManagers.find((t) => t.id === persona.tmId)?.name ?? "Team Manager";
@@ -582,4 +583,33 @@ export type FunnelCohort = {
     id: string;
     name: string;
     stages: [FunnelStage, FunnelStage, FunnelStage, FunnelStage];
+};
+
+/** One condensed funnel panel (Applications/Offers/Payment) on the redesigned per-Team-Manager
+ * Admin Funnel card (Figma node 609:10888) — `breakdown` is the panel's own status list,
+ * `fallout` the Saved/Not-Interested/Rejected deals that dropped out at that panel's stage
+ * boundary specifically (not the whole cohort's fallout, unlike the old `FunnelStage`). */
+export type FunnelPanelData = {
+    count: number;
+    breakdown: FunnelBreakdownItem[];
+    fallout: { saved: number; notInterested: number; rejected: number };
+};
+
+export type DealHealthColor = "green" | "amber" | "blue" | "gray" | "red";
+
+export type TeamManagerFunnelCardData = {
+    id: string;
+    name: string;
+    cohortTags: string[];
+    dealsHealth: DealHealthColor[];
+    unitsAchieved: number;
+    unitTarget: number;
+    unitTargetAttainmentPct: number | null;
+    booked: { amount: number; changePct: number | null };
+    realised: { amount: number; changePct: number | null };
+    avgTicketSize: { amount: number; changePct: number | null };
+    applications: FunnelPanelData;
+    offers: FunnelPanelData;
+    payment: FunnelPanelData;
+    topPerformers: { id: string; name: string; roleTag: string; revenue: number; units: number }[];
 };

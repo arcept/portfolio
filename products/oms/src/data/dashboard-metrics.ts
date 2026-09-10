@@ -8,13 +8,17 @@
 import type { Persona } from "@/types/role";
 import type {
     ChartPoint,
+    DealHealthColor,
     DealStageBar,
     DealStageCascade,
     FunnelCohort,
+    FunnelPanelData,
     FunnelStage,
+    OrgTeamManager,
     PeriodChartData,
     PeriodSelection,
     RealisedBucket,
+    TeamManagerFunnelCardData,
     TeamManagerSummary,
 } from "./dashboard-data";
 import {
@@ -1286,4 +1290,145 @@ export function getTeamManagerSummariesLive(selection: PeriodSelection, deals: D
             ats: unitsAchieved === 0 ? 0 : Math.round(bookedTotal / unitsAchieved),
         };
     });
+}
+
+// ---------------------------------------------------------------------------
+// Admin Funnel — per-Team-Manager card (Figma node 609:10888, "Priya Nair") — a richer per-TM
+// view than `buildFunnelStages`/`getFunnelCohortsLive`'s generic 4-stage cards. Reuses the same
+// cohort/reachedStage thresholds as `buildFunnelStages` throughout so the two never drift, but
+// condenses Offers Shared's 7-way status breakdown down to 4, merges Converted + Payment
+// Clearance into one Payment panel (dropping Cancelled — Manik's call, 2026-09-11: not shown on
+// this card at all), and pulls Saved/Not-Interested/Rejected out into their own per-panel
+// fallout counts instead of one cohort-wide bucket.
+// ---------------------------------------------------------------------------
+
+const GLOBAL_STATUS_IDS: DealStatusId[] = ["SAVED", "NOT_INTERESTED", "REJECTED"];
+
+const DEAL_HEALTH_RANK: Record<DealHealthColor, number> = { green: 0, amber: 1, blue: 2, gray: 3, red: 4 };
+
+function falloutCounts(falloutDeals: Deal[]): FunnelPanelData["fallout"] {
+    return {
+        saved: falloutDeals.filter((d) => d.status.id === "SAVED").length,
+        notInterested: falloutDeals.filter((d) => d.status.id === "NOT_INTERESTED").length,
+        rejected: falloutDeals.filter((d) => d.status.id === "REJECTED").length,
+    };
+}
+
+export function getTeamManagerFunnelCardData(selection: PeriodSelection, tm: OrgTeamManager, deals: Deal[]): TeamManagerFunnelCardData {
+    const bounds = resolvePeriodBounds(selection);
+    const previousBounds = getPreviousEquivalentBounds(selection);
+    const persona: Persona = { role: "tm", tmId: tm.id };
+    const cohort = getCohort(persona, bounds, deals);
+
+    // Deals Health heatmap — one cell per cohort deal, colored by its own status and sorted
+    // healthiest-first so the grid reads as a left-to-right/top-to-bottom gradient, same as the
+    // Figma frame (Manik's call, 2026-09-11: real per-deal data, not a decorative fixed pattern).
+    const dealsHealth = cohort.map((d) => STATUS[d.status.id].color).sort((a, b) => DEAL_HEALTH_RANK[a] - DEAL_HEALTH_RANK[b]);
+
+    const cohortTags = Array.from(new Set(cohort.map((d) => d.course.short))).sort();
+
+    // Applications panel
+    const appNew = cohort.filter((d) => d.status.id === "APP_NEW").length;
+    const appPending = cohort.filter((d) => d.status.id === "APP_PENDING").length;
+    const appExpired = cohort.filter((d) => d.status.id === "APP_EXPIRED").length;
+    const appFallout = cohort.filter((d) => d.reachedStage === 0 && GLOBAL_STATUS_IDS.includes(d.status.id));
+    const appComplete = cohort.length - appNew - appPending - appExpired - appFallout.length;
+
+    const applications: FunnelPanelData = {
+        count: cohort.length,
+        breakdown: [
+            { label: "Complete", count: appComplete, dotClassName: dot.success },
+            { label: "Expired", count: appExpired, dotClassName: dot.error },
+            { label: "New", count: appNew, dotClassName: dot.neutral },
+            { label: "Application Pending", count: appPending, dotClassName: dot.neutral },
+        ],
+        fallout: falloutCounts(appFallout),
+    };
+
+    // Offers panel — `>= 1`, matching `buildFunnelStages`'s own `offersCohort` threshold.
+    const offersCohort = cohort.filter((d) => d.reachedStage >= 1);
+    const offerFallout = offersCohort.filter((d) => (d.reachedStage === 1 || d.reachedStage === 2) && GLOBAL_STATUS_IDS.includes(d.status.id));
+    const offerPending = offersCohort.filter((d) => d.status.id === "OFFER_PENDING").length;
+    const offerExpired = offersCohort.filter((d) => d.status.id === "OFFER_EXPIRED").length;
+    const offerNotShared = offersCohort.filter((d) =>
+        (["PLAN_NOT_STARTED", "PLAN_DRAFT", "PLAN_AWAITING_APPROVAL", "OFFER_WITHDRAWN"] as DealStatusId[]).includes(d.status.id),
+    ).length;
+    // Remainder, same pattern as `buildFunnelStages`'s `accepted2` — naturally folds in every deal
+    // that progressed past Offer (reachedStage >= 3), not just ones still sitting at OFFER_ACCEPTED.
+    const offerAccepted = offersCohort.length - offerFallout.length - offerPending - offerExpired - offerNotShared;
+
+    const offers: FunnelPanelData = {
+        count: offersCohort.length,
+        breakdown: [
+            { label: "Accepted", count: offerAccepted, dotClassName: dot.success },
+            { label: "Expired", count: offerExpired, dotClassName: dot.error },
+            { label: "Offer Not Shared", count: offerNotShared, dotClassName: dot.neutral },
+            { label: "Offer Pending", count: offerPending, dotClassName: dot.neutral },
+        ],
+        fallout: falloutCounts(offerFallout),
+    };
+
+    // Payment panel — `>= 3`, matching `buildFunnelStages`'s own `paidCohort` threshold. Completed
+    // is cohort-wide (same population `buildFunnelStages`'s `completed4` uses) since a fully paid
+    // deal is `reachedStage` 4, not 3, so it wouldn't otherwise show up in `paidCohort` itself.
+    const paidCohort = cohort.filter((d) => d.reachedStage >= 3);
+    const payFallout = paidCohort.filter((d) => GLOBAL_STATUS_IDS.includes(d.status.id));
+    const payCompleted = cohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
+    const payOngoing = paidCohort.filter((d) => d.status.id === "PAY_ONGOING").length;
+    const payDue = paidCohort.filter((d) => d.status.id === "PAY_DUE").length;
+    const payOverdue = paidCohort.filter((d) => d.status.id === "PAY_OVERDUE").length;
+
+    const payment: FunnelPanelData = {
+        count: paidCohort.length,
+        breakdown: [
+            { label: "Completed", count: payCompleted, dotClassName: dot.success },
+            { label: "Ongoing", count: payOngoing, dotClassName: dot.success },
+            { label: "Due", count: payDue, dotClassName: dot.warning },
+            { label: "Overdue", count: payOverdue, dotClassName: dot.error },
+        ],
+        fallout: falloutCounts(payFallout),
+    };
+
+    // Booked / Realised / Avg Ticket Size — same underlying figures the Booked Revenue / Revenue
+    // Realised cards show (`getNodeBookedTotal`/`getPeriodChartDataLive`), just scoped to this TM.
+    const bookedTotal = getNodeBookedTotal("tmId", tm.id, bounds, deals);
+    const previousBookedTotal = previousBounds ? getNodeBookedTotal("tmId", tm.id, previousBounds, deals) : null;
+    const chart = getPeriodChartDataLive(selection, persona, deals);
+    const headline = getSalesFunnelHeadline(selection, persona, deals);
+
+    // Top Performers — top 3 BDRs under this TM by booked revenue this period.
+    const topPerformers = bdrs
+        .filter((bdr) => bdr.tmId === tm.id)
+        .map((bdr) => {
+            const bookedDeals = deals.filter((d) => d.bdrId === bdr.id && inRange(d.booking.bookedOn, bounds));
+            const courseCounts = new Map<string, number>();
+            for (const d of bookedDeals) courseCounts.set(d.course.short, (courseCounts.get(d.course.short) ?? 0) + 1);
+            const topCourse = [...courseCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+            return {
+                id: bdr.id,
+                name: bdr.name,
+                roleTag: topCourse ? `BDR | ${topCourse}` : "BDR",
+                revenue: getNodeBookedTotal("bdrId", bdr.id, bounds, deals),
+                units: bookedDeals.length,
+            };
+        })
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 3);
+
+    return {
+        id: tm.id,
+        name: tm.name,
+        cohortTags,
+        dealsHealth,
+        unitsAchieved: headline.unitsAchieved,
+        unitTarget: headline.unitTarget,
+        unitTargetAttainmentPct: headline.unitTargetAttainmentPct,
+        booked: { amount: bookedTotal, changePct: computeChangePercent(bookedTotal, previousBookedTotal) },
+        realised: { amount: chart.totalRealised, changePct: chart.totalRealisedChangePct },
+        avgTicketSize: { amount: headline.ats, changePct: headline.atsChangePct },
+        applications,
+        offers,
+        payment,
+        topPerformers,
+    };
 }

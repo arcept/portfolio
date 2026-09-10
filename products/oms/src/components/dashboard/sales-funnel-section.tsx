@@ -25,8 +25,10 @@ const RIBBON_MAX_HEIGHT = 400;
 
 /** Unit Sales/Target's badge (Figma node 576:8946) isn't a growth indicator like its siblings —
  * it's a pace-against-goal reading, so its color is a flat 4-band scale off the raw attainment
- * %, not a green/red up-or-down call (Manik's call, 2026-09-10). */
-const unitTargetAttainmentTone = (pct: number) => {
+ * %, not a green/red up-or-down call (Manik's call, 2026-09-10). Exported for reuse by the
+ * Admin Funnel per-Team-Manager card (team-manager-funnel-card.tsx), which reads the same
+ * attainment % off `getSalesFunnelHeadline`. */
+export const unitTargetAttainmentTone = (pct: number) => {
     if (pct < 20) return "text-utility-red-500";
     if (pct < 40) return "text-utility-orange-500";
     if (pct < 60) return "text-utility-amber-500";
