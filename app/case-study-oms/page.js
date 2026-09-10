@@ -219,10 +219,10 @@ export default function CaseStudyOMS() {
             url: 'app.novatr-oms.internal/dashboard · v3.0',
             embedSrc: '/case-studies/oms/rebuild/index.html',
             fullSrc: '/case-studies/oms/rebuild/index.html',
-            // Renders at its real desktop width, then scales down to fit the
-            // frame — so the embed shows the actual desktop layout instead
-            // of the app's own narrower responsive breakpoint.
-            frameWidth: 1536,
+            // Renders at a wide desktop viewport, then scales down to fit the
+            // frame — so the embed reads as a real spacious desktop layout
+            // scaled down, not the app reflowing to a narrower breakpoint.
+            frameWidth: 1850,
           },
           {
             id: 'original',
