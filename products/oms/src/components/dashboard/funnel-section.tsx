@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Badge } from "@/components/base/badges/badges";
+import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Dot } from "@/components/foundations/dot-icon";
-import { cx } from "@/utils/cx";
+import type { FunnelStage, PeriodSelection } from "@/data/dashboard-data";
+import { getPeriodSelectionKey } from "@/data/dashboard-data";
+import { getFunnelCohortsLive } from "@/data/dashboard-metrics";
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
-import type { FunnelStage, PeriodSelection } from "@/data/dashboard-data";
-import { getFunnelCohortsLive } from "@/data/dashboard-metrics";
+import { cx } from "@/utils/cx";
+import { FadeOnSelection } from "./stat-cards";
 
 export const FunnelStageCard = ({ stage }: { stage: FunnelStage }) => (
     <div className="flex flex-1 flex-col gap-5 rounded-xl border border-secondary bg-primary p-4">
@@ -53,6 +55,7 @@ export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => 
     const { deals } = useDeals();
     const cohorts = getFunnelCohortsLive(selection, persona, deals);
     const isAggregateHeading = persona.role === "admin";
+    const selectionKey = getPeriodSelectionKey(selection);
 
     return (
         <section className="flex flex-col gap-6">
@@ -80,11 +83,11 @@ export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => 
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <FadeOnSelection selectionKey={`${cohort.id}-${selectionKey}`} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         {cohort.stages.map((stage) => (
                             <FunnelStageCard key={stage.label} stage={stage} />
                         ))}
-                    </div>
+                    </FadeOnSelection>
                 </div>
             ))}
         </section>
@@ -99,6 +102,7 @@ export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => 
 export const AdminFunnelAggregateRow = ({ selection }: { selection: PeriodSelection }) => {
     const { deals } = useDeals();
     const [aggregate] = getFunnelCohortsLive(selection, { role: "admin" }, deals);
+    const selectionKey = getPeriodSelectionKey(selection);
 
     return (
         <section className="flex flex-col gap-6">
@@ -110,11 +114,11 @@ export const AdminFunnelAggregateRow = ({ selection }: { selection: PeriodSelect
                 <OverviewPerformanceToggle id="admin-funnel" />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <FadeOnSelection selectionKey={selectionKey} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {aggregate.stages.map((stage) => (
                     <FunnelStageCard key={stage.label} stage={stage} />
                 ))}
-            </div>
+            </FadeOnSelection>
         </section>
     );
 };

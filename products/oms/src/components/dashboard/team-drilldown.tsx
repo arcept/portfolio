@@ -1,17 +1,18 @@
 import { useMemo, useState } from "react";
 import { SearchLg, SwitchVertical01, Users01 } from "@untitledui/icons";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { Input } from "@/components/base/input/input";
-import { EmptyState } from "@/components/application/empty-state/empty-state";
-import { cx } from "@/utils/cx";
+import type { OrgBdr, OrgTeamLead, OrgTeamManager, PeriodSelection } from "@/data/dashboard-data";
+import { bdrs, getPeriodSelectionKey, teamLeads, teamManagers } from "@/data/dashboard-data";
+import { getFunnelCohortsLive, getNodeBookedTotal, getNodeChangePercent, resolvePeriodBounds } from "@/data/dashboard-metrics";
 import { useDeals } from "@/providers/deals-provider";
 import { usePersona } from "@/providers/role-provider";
-import { getVisibleSections } from "@/utils/role-visibility";
-import type { OrgBdr, OrgTeamLead, OrgTeamManager, PeriodSelection } from "@/data/dashboard-data";
-import { bdrs, teamLeads, teamManagers } from "@/data/dashboard-data";
-import { getFunnelCohortsLive, getNodeBookedTotal, getNodeChangePercent, resolvePeriodBounds } from "@/data/dashboard-metrics";
 import type { Persona } from "@/types/role";
+import { cx } from "@/utils/cx";
+import { getVisibleSections } from "@/utils/role-visibility";
 import { FunnelStageCard } from "./funnel-section";
+import { FadeOnSelection } from "./stat-cards";
 
 type Row = { id: string; name: string; amount: string; changePercent: string };
 
@@ -22,7 +23,7 @@ type Row = { id: string; name: string; amount: string; changePercent: string };
 const toRow = (node: { id: string; name: string }, absoluteAmount: number, changePercent: string): Row => ({
     id: node.id,
     name: node.name,
-    amount: `₹${(absoluteAmount / 100_000).toFixed(2)} L`,
+    amount: `₹${(absoluteAmount / 100_000).toFixed(2)}L`,
     changePercent,
 });
 
@@ -72,6 +73,7 @@ export const TeamDrilldown = ({ selection, onScopeChange, search: controlledSear
     const { persona } = usePersona();
     const { deals } = useDeals();
     const { drilldownColumns, showBdrSearch } = getVisibleSections(persona);
+    const selectionKey = getPeriodSelectionKey(selection);
 
     const bounds = resolvePeriodBounds(selection);
 
@@ -146,7 +148,7 @@ export const TeamDrilldown = ({ selection, onScopeChange, search: controlledSear
                 )}
             </div>
 
-            <div className={cx("grid grid-cols-1 gap-6", drilldownColumns === 3 ? "md:grid-cols-3" : "md:grid-cols-2")}>
+            <FadeOnSelection selectionKey={selectionKey} className={cx("grid grid-cols-1 gap-6", drilldownColumns === 3 ? "md:grid-cols-3" : "md:grid-cols-2")}>
                 {drilldownColumns === 3 && (
                     <DrilldownColumn title="Team Managers">
                         <div className="flex flex-col gap-1">
@@ -193,7 +195,12 @@ export const TeamDrilldown = ({ selection, onScopeChange, search: controlledSear
                         searchResults.length > 0 ? (
                             <div className="flex flex-col gap-1">
                                 {searchResults.map((bdr) => (
-                                    <RowButton key={bdr.id} row={toRow(bdr, bdrShareOf(bdr), bdrChangeOf(bdr))} isSelected={bdr.id === selectedBdrId} onSelect={() => selectBdr(bdr)} />
+                                    <RowButton
+                                        key={bdr.id}
+                                        row={toRow(bdr, bdrShareOf(bdr), bdrChangeOf(bdr))}
+                                        isSelected={bdr.id === selectedBdrId}
+                                        onSelect={() => selectBdr(bdr)}
+                                    />
                                 ))}
                             </div>
                         ) : (
@@ -202,32 +209,39 @@ export const TeamDrilldown = ({ selection, onScopeChange, search: controlledSear
                     ) : activeTl ? (
                         <div className="flex flex-col gap-1">
                             {bdrSiblings.map((bdr) => (
-                                <RowButton key={bdr.id} row={toRow(bdr, bdrShareOf(bdr), bdrChangeOf(bdr))} isSelected={bdr.id === selectedBdrId} onSelect={() => selectBdr(bdr)} />
+                                <RowButton
+                                    key={bdr.id}
+                                    row={toRow(bdr, bdrShareOf(bdr), bdrChangeOf(bdr))}
+                                    isSelected={bdr.id === selectedBdrId}
+                                    onSelect={() => selectBdr(bdr)}
+                                />
                             ))}
                         </div>
                     ) : (
                         <WaitingForSelection label="Select a Team Lead" />
                     )}
                 </DrilldownColumn>
-            </div>
+            </FadeOnSelection>
 
             <div className="border-t border-secondary pt-6">
-                {detailCohort ? (
-                    <div className="flex flex-col gap-4">
-                        <h4 className="text-sm font-semibold text-primary">{detailCohort.name}</h4>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                            {detailCohort.stages.map((stage) => (
-                                <FunnelStageCard key={stage.label} stage={stage} />
-                            ))}
+                <FadeOnSelection selectionKey={selectionKey}>
+                    {detailCohort ? (
+                        <div className="flex flex-col gap-4">
+                            <h4 className="text-sm font-semibold text-primary">{detailCohort.name}</h4>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                                {detailCohort.stages.map((stage) => (
+                                    <FunnelStageCard key={stage.label} stage={stage} />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <EmptyState size="sm" className="mx-auto max-w-none">
-                        <EmptyState.Content>
-                            <EmptyState.Description>Select a BDR above to view their funnel.</EmptyState.Description>
-                        </EmptyState.Content>
-                    </EmptyState>
-                )}
+                    ) : (
+                        <EmptyState size="sm" className="mx-auto max-w-none">
+                            <EmptyState.Content>
+                                <EmptyState.Description>Select a BDR above to view their funnel.</EmptyState.Description>
+                            </EmptyState.Content>
+                        </EmptyState>
+                    )}
+                </FadeOnSelection>
             </div>
         </div>
     );

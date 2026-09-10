@@ -1,18 +1,19 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "motion/react";
 import { ArrowDownRight, ArrowUpRight, Copy01, Download01, Edit01, TrendUp02 } from "@untitledui/icons";
+import { AnimatePresence, motion } from "motion/react";
+import { Badge } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { Badge } from "@/components/base/badges/badges";
-import { cx } from "@/utils/cx";
-import { useDeals } from "@/providers/deals-provider";
-import { usePersona } from "@/providers/role-provider";
 import type { DealStageBar, DealStageBarStatus, PeriodSelection } from "@/data/dashboard-data";
 import { formatIndianCompact, formatIndianNumber, getPeriodSelectionKey } from "@/data/dashboard-data";
 import { changeDirectionFromText, getDealStageBars, getPeriodChartDataLive } from "@/data/dashboard-metrics";
+import { useDeals } from "@/providers/deals-provider";
+import { usePersona } from "@/providers/role-provider";
+import { cx } from "@/utils/cx";
 import { BookedChart } from "./booked-chart";
+import { RealisedBucketsChart } from "./realised-buckets-chart";
 
 const CardActionsMenu = () => (
     <Dropdown.Root>
@@ -37,12 +38,26 @@ export const Card = ({ className, children }: { className?: string; children: Re
     <div className={cx("relative flex flex-col gap-4 rounded-xl border border-secondary bg-primary px-8 py-6 shadow-xs", className)}>{children}</div>
 );
 
-const HeadingAndNumber = ({ heading, value }: { heading: string; value: string }) => (
-    <div className="flex flex-col gap-1">
-        <p className="text-md font-normal text-secondary">{heading}</p>
-        <div className="flex items-baseline gap-0.5">
-            <span className="text-sm font-medium text-tertiary">INR</span>
-            <span className="font-mono text-xl font-semibold tracking-tight text-primary">{value}</span>
+/** One of the Revenue Realised card's two summary figures — same up/down arrow + %-change
+ * treatment used everywhere else in the dashboard, just at a smaller scale for this compact
+ * card. `changePct` is already signed (computeChangePercent); null when there's nothing to
+ * compare against (e.g. Lifetime has no prior period). */
+const RealisedStat = ({ label, value, changePct }: { label: string; value: string; changePct: number | null }) => (
+    <div className="flex flex-1 flex-col gap-1">
+        <p className="text-sm font-normal text-secondary">{label}</p>
+        <div className="flex items-baseline gap-1">
+            <span className="font-mono text-lg font-semibold whitespace-nowrap text-primary">{value}</span>
+            {changePct !== null && (
+                <span
+                    className={cx(
+                        "inline-flex items-center gap-0.5 font-mono text-xs font-medium",
+                        changePct >= 0 ? "text-fg-success-secondary" : "text-fg-error-secondary",
+                    )}
+                >
+                    {changePct >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+                    {Math.abs(changePct).toFixed(0)}%
+                </span>
+            )}
         </div>
     </div>
 );
@@ -114,47 +129,47 @@ export const BookedRevenueCard = ({ selection }: { selection: PeriodSelection })
     );
 };
 
-/** Row 2, left column — the two short stacked mini-cards (Figma Frame 1000012501), rendered as
- * one flex column so they behave as a single grid item next to the taller Conversion/Deal Stages
- * cards. */
-export const RealisedAndTicketCards = ({ selection }: { selection: PeriodSelection }) => {
+/** Row 2, left column — Revenue Realised (Figma node 576:8167), the sole card in this grid
+ * slot now that Average Ticket Size has been removed (Manik's call, 2026-09-10) — `h-full`
+ * fills the row's full height to match Conversion/Deal Stages beside it, same as before, just
+ * with one card claiming it all instead of splitting it with a second stacked card. A 10-bucket
+ * mini bar chart (see RealisedBucketsChart), each bucket a previous-period/this-period stack,
+ * with the same two totals the old plain-text version showed underneath — "previously booked" is
+ * the backlog-ledger draw, "Total" is that plus the period's own bookings realised, so the two
+ * always sum. */
+export const RealisedRevenueCard = ({ selection }: { selection: PeriodSelection }) => {
     const { persona } = usePersona();
     const { deals } = useDeals();
     const booked = getPeriodChartDataLive(selection, persona, deals);
     const selectionKey = getPeriodSelectionKey(selection);
 
     return (
-        <div className="flex h-full min-w-0 flex-col gap-4">
-            {/* Realised of previously booked + Total Realised — "previously booked" is the
-                backlog-ledger draw, "Total Realised" is that plus the period's own bookings
-                realised (booked.totalRealised), so the two always sum. `flex-1` on both cards
-                (rather than a fixed height) so the pair always fills the row's full height to
-                match Conversion/Deal Stages beside them, whatever that height ends up being. */}
-            <Card className="flex-1">
-                <div className="absolute top-6 right-8">
-                    <CardActionsMenu />
+        <Card className="h-full max-h-[400px] min-w-0">
+            <div className="absolute top-6 right-8">
+                <CardActionsMenu />
+            </div>
+            <FadeOnSelection selectionKey={selectionKey} className="flex h-full flex-col gap-8">
+                <div className="flex items-center gap-2">
+                    <p className="text-md font-normal text-secondary">Revenue Realised</p>
+                    <Badge color="gray" type="color" size="sm">
+                        {booked.badgeLabel}
+                    </Badge>
                 </div>
-                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
-                    <HeadingAndNumber heading="Realised of Previously Booked" value={formatIndianNumber(booked.realisedOfPreviouslyBooked)} />
-                    <HeadingAndNumber heading={`Total Realised - ${booked.periodLabel}`} value={formatIndianNumber(booked.totalRealised)} />
-                </FadeOnSelection>
-            </Card>
 
-            <Card className="flex-1">
-                <div className="absolute top-6 right-8">
-                    <CardActionsMenu />
+                <div className="min-h-0 flex-1">
+                    <RealisedBucketsChart buckets={booked.realisedBuckets} />
                 </div>
-                <FadeOnSelection selectionKey={selectionKey} className="flex flex-col gap-4">
-                    <HeadingAndNumber heading="Average Ticket Size" value={formatIndianNumber(booked.ats)} />
-                    <div className="flex flex-col gap-1">
-                        <p className="text-md font-normal text-secondary">Unit Sales / Target</p>
-                        <span className="font-mono text-xl font-semibold text-primary">
-                            {booked.unitsAchieved} / {booked.unitTarget}
-                        </span>
-                    </div>
-                </FadeOnSelection>
-            </Card>
-        </div>
+
+                <div className="flex gap-4">
+                    <RealisedStat
+                        label="Previous Period"
+                        value={`₹${formatIndianCompact(booked.realisedOfPreviouslyBooked)}`}
+                        changePct={booked.realisedOfPreviouslyBookedChangePct}
+                    />
+                    <RealisedStat label="Total" value={`₹${formatIndianCompact(booked.totalRealised)}`} changePct={booked.totalRealisedChangePct} />
+                </div>
+            </FadeOnSelection>
+        </Card>
     );
 };
 
@@ -315,19 +330,21 @@ export const DealStagesCard = ({ selection }: { selection: PeriodSelection }) =>
     }, []);
 
     return (
-        <Card className="h-full min-w-0">
-            <div className="flex items-center justify-between">
-                <p className="text-md font-normal text-secondary">Deal Stages</p>
-                <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
-            </div>
+        <Card className="h-full max-h-[400px] min-w-0">
+            <FadeOnSelection selectionKey={selectionKey} className="flex h-full flex-col gap-4">
+                <div className="flex items-center justify-between">
+                    <p className="text-md font-normal text-secondary">Deal Stages</p>
+                    <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
+                </div>
 
-            <div ref={trackRef} className="min-w-0 flex-1 overflow-x-auto">
-                <FadeOnSelection selectionKey={selectionKey} className="flex h-full items-stretch gap-3">
-                    {dealStages.map((stage) => (
-                        <DealStageBarColumn key={stage.label} fraction={dealStageFraction(stage.value, values, trackHeightPx)} {...stage} />
-                    ))}
-                </FadeOnSelection>
-            </div>
+                <div ref={trackRef} className="min-w-0 flex-1 overflow-x-auto">
+                    <div className="flex h-full items-stretch gap-3">
+                        {dealStages.map((stage) => (
+                            <DealStageBarColumn key={stage.label} fraction={dealStageFraction(stage.value, values, trackHeightPx)} {...stage} />
+                        ))}
+                    </div>
+                </div>
+            </FadeOnSelection>
         </Card>
     );
 };

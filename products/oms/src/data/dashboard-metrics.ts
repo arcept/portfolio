@@ -6,8 +6,6 @@
  * the Learner Sim Pad now moves every card that reads through here.
  */
 import type { Persona } from "@/types/role";
-import type { Deal, DealStatusId } from "./deals-data";
-import { COURSES, dealsForPersona, STATUS } from "./deals-data";
 import type {
     ChartPoint,
     DealStageBar,
@@ -16,6 +14,7 @@ import type {
     FunnelStage,
     PeriodChartData,
     PeriodSelection,
+    RealisedBucket,
     TeamManagerSummary,
 } from "./dashboard-data";
 import {
@@ -32,6 +31,8 @@ import {
     teamLeads,
     teamManagers,
 } from "./dashboard-data";
+import type { Deal, DealStatusId } from "./deals-data";
+import { COURSES, STATUS, dealsForPersona } from "./deals-data";
 
 // ---------------------------------------------------------------------------
 // Date/period bounds — the live equivalent of dashboard-data.ts's buildMonthPeriod/
@@ -42,20 +43,7 @@ import {
 export type PeriodBounds = { from: Date; to: Date; truncated: boolean };
 
 const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const MONTH_FULL = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
+const MONTH_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const firstDayOfMonth = (year: number, month: number) => new Date(year, month, 1);
@@ -277,6 +265,60 @@ function computeBookedRealised(personaDeals: Deal[], bounds: PeriodBounds) {
     return { bookedTotal, unitsAchieved, totalRealised, realisedOfPreviouslyBooked, ats };
 }
 
+// ---------------------------------------------------------------------------
+// Realised Revenue chart — always exactly 10 buckets regardless of how long the period is
+// (Manik's call, 2026-09-10: "do the maths and combine revenues of 3 days" for a ~30-day month,
+// "~9 days" for a ~90-day quarter — i.e. period length / 10, not a fixed bucket width), each a
+// stacked previous-period/this-period split of the same realised split `computeBookedRealised`
+// already does for the period as a whole.
+// ---------------------------------------------------------------------------
+
+const REALISED_BUCKET_COUNT = 10;
+
+function buildRealisedBuckets(personaDeals: Deal[], bounds: PeriodBounds): RealisedBucket[] {
+    const totalDays = dayCount(bounds.from, bounds.to);
+    const bucketCount = Math.min(REALISED_BUCKET_COUNT, totalDays);
+    // Cumulative boundary math (not a fixed bucket width) so the days partition evenly — sizes
+    // differ by at most 1 day — instead of a short/empty remainder bucket trailing at the end.
+    const boundaries = Array.from({ length: bucketCount + 1 }, (_, i) => Math.floor((i * totalDays) / bucketCount));
+
+    const buckets: RealisedBucket[] = Array.from({ length: bucketCount }, (_, i) => {
+        const from = addDays(bounds.from, boundaries[i]);
+        const to = addDays(bounds.from, boundaries[i + 1] - 1);
+        return {
+            index: i,
+            from,
+            to,
+            label: from.getTime() === to.getTime() ? formatShortDate(from) : `${formatShortDate(from)} – ${formatShortDate(to)}`,
+            previousRealised: 0,
+            thisRealised: 0,
+            total: 0,
+        };
+    });
+
+    const bucketIndexForDay = (dayIdx: number) => {
+        for (let i = boundaries.length - 2; i >= 0; i--) {
+            if (dayIdx >= boundaries[i]) return i;
+        }
+        return 0;
+    };
+
+    for (const d of personaDeals) {
+        const bookedBeforePeriod = d.booking.bookedOn !== null && d.booking.bookedOn.getTime() < bounds.from.getTime();
+        for (const inst of d.installments) {
+            if (!inRange(inst.paidOn, bounds)) continue;
+            const dayIdx = dayCount(bounds.from, inst.paidOn!) - 1;
+            const bucket = buckets[bucketIndexForDay(dayIdx)];
+            const amount = toInr(inst.amount, d.currency);
+            if (bookedBeforePeriod) bucket.previousRealised += amount;
+            else bucket.thisRealised += amount;
+        }
+    }
+
+    for (const b of buckets) b.total = b.previousRealised + b.thisRealised;
+    return buckets;
+}
+
 function computeChangePercent(current: number, previous: number | null): number | null {
     if (previous === null || previous === 0) return null;
     return ((current - previous) / previous) * 100;
@@ -332,6 +374,59 @@ function applyChartBaselineBias(cumulative: number[]): number[] {
     return cumulative.map((v) => baseline + (1 - CHART_BASELINE_FRACTION) * v);
 }
 
+// National holidays the BDR floor doesn't work — booking activity visibly stalls that day, so
+// the Booked Revenue chart shows a flat, stagnant stretch there instead of implying growth
+// continued as usual (Manik's call, 2026-09-10). India's official 2025 gazetted holiday list
+// (Ministry of Personnel, Public Grievances & Pensions circular), filtered to the prototype's
+// actual seeded data window (Jan–Aug 2025, per DATA_WINDOW_START/END) — already ≤3/month
+// without needing to trim anything.
+const NATIONAL_HOLIDAYS: { date: Date; label: string }[] = [
+    { date: new Date(2025, 0, 26), label: "Republic Day" },
+    { date: new Date(2025, 1, 26), label: "Maha Shivratri" },
+    { date: new Date(2025, 2, 14), label: "Holi" },
+    { date: new Date(2025, 2, 31), label: "Id-ul-Fitr" },
+    { date: new Date(2025, 3, 10), label: "Mahavir Jayanti" },
+    { date: new Date(2025, 3, 18), label: "Good Friday" },
+    { date: new Date(2025, 4, 12), label: "Buddha Purnima" },
+    { date: new Date(2025, 5, 7), label: "Bakrid (Id-ul-Zuha)" },
+    { date: new Date(2025, 6, 6), label: "Muharram" },
+    { date: new Date(2025, 7, 15), label: "Independence Day" },
+    { date: new Date(2025, 7, 16), label: "Janmashtami" },
+];
+
+/** Cosmetic-only, same spirit as `applyChartBaselineBias`: zeroes out a holiday's own day-over-
+ * day growth and redistributes it proportionally across every other day's own growth, so the
+ * curve visibly plateaus right at the holiday and the final total (and every other day's
+ * relative shape) is unchanged — `computeBookedRealised` never reads these adjusted points. */
+function applyHolidayStagnation(cumulative: number[], bounds: PeriodBounds): number[] {
+    const holidayIdx = new Set(NATIONAL_HOLIDAYS.map((h) => dayCount(bounds.from, h.date) - 1).filter((idx) => idx >= 0 && idx < cumulative.length));
+    if (holidayIdx.size === 0) return cumulative;
+
+    const increments = cumulative.map((v, i) => v - (i > 0 ? cumulative[i - 1] : 0));
+    let removed = 0;
+    for (const idx of holidayIdx) {
+        removed += increments[idx];
+        increments[idx] = 0;
+    }
+    const remainingTotal = increments.reduce((sum, v) => sum + v, 0);
+    if (removed > 0 && remainingTotal > 0) {
+        for (let i = 0; i < increments.length; i++) {
+            if (holidayIdx.has(i)) continue;
+            increments[i] += removed * (increments[i] / remainingTotal);
+        }
+    }
+
+    let running = 0;
+    return increments.map((inc) => (running += inc));
+}
+
+/** Which of `NATIONAL_HOLIDAYS` actually fall inside this period, with the same `x` (1-indexed
+ * day-of-period) the chart's own points use — so the chart can mark them with a reference line
+ * regardless of which period selection is active. */
+function holidaysInRange(bounds: PeriodBounds): { x: number; label: string }[] {
+    return NATIONAL_HOLIDAYS.filter((h) => inRange(h.date, bounds)).map((h) => ({ x: dayCount(bounds.from, h.date), label: h.label }));
+}
+
 function buildDailyChartPoints(personaDeals: Deal[], bounds: PeriodBounds): ChartPoint[] {
     const days = dayCount(bounds.from, bounds.to);
     const bookedByDay = new Map<number, number>();
@@ -367,13 +462,31 @@ function buildDailyChartPoints(personaDeals: Deal[], bounds: PeriodBounds): Char
         realisedCumulative.push(realisedRunning);
     }
 
-    const biasedBooked = applyChartBaselineBias(bookedCumulative);
-    const biasedRealised = applyChartBaselineBias(realisedCumulative);
+    const stagnantBooked = applyHolidayStagnation(bookedCumulative, bounds);
+    const stagnantRealised = applyHolidayStagnation(realisedCumulative, bounds);
+    // Day-over-day deltas off the stagnation-adjusted (not yet baseline-biased) series — a
+    // holiday's own day reads as ~₹0 here too, matching its flat stretch on the curve, and day 1
+    // isn't inflated by the cosmetic opening bump applied next.
+    const dailyBooked = stagnantBooked.map((v, i) => Math.max(0, v - (i > 0 ? stagnantBooked[i - 1] : 0)));
+    const dailyRealised = stagnantRealised.map((v, i) => Math.max(0, v - (i > 0 ? stagnantRealised[i - 1] : 0)));
 
-    return biasedBooked.map((booked, i) => ({ x: i + 1, date: addDays(bounds.from, i), booked, realised: biasedRealised[i] }));
+    const biasedBooked = applyChartBaselineBias(stagnantBooked);
+    const biasedRealised = applyChartBaselineBias(stagnantRealised);
+
+    return biasedBooked.map((booked, i) => ({
+        x: i + 1,
+        date: addDays(bounds.from, i),
+        booked,
+        realised: biasedRealised[i],
+        dailyBooked: Math.round(dailyBooked[i]),
+        dailyRealised: Math.round(dailyRealised[i]),
+    }));
 }
 
-function buildXAxisMeta(bounds: PeriodBounds, selection: PeriodSelection): { xDomain: [number, number]; xTicks: number[]; xTickFormatter: (x: number) => string } {
+function buildXAxisMeta(
+    bounds: PeriodBounds,
+    selection: PeriodSelection,
+): { xDomain: [number, number]; xTicks: number[]; xTickFormatter: (x: number) => string } {
     const totalDays = dayCount(bounds.from, bounds.to);
 
     if (selection.kind === "preset" && (selection.id === "this-month" || selection.id === "last-month")) {
@@ -444,7 +557,15 @@ export function buildLiveCascade(cohort: Deal[]): DealStageCascade {
     };
 }
 
-const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassName: string; hatched?: boolean; gradient?: string; attentionIds?: DealStatusId[]; attentionLabel?: string }[] = [
+const DEAL_STAGE_BAR_GROUPS: {
+    label: string;
+    ids: DealStatusId[];
+    colorClassName: string;
+    hatched?: boolean;
+    gradient?: string;
+    attentionIds?: DealStatusId[];
+    attentionLabel?: string;
+}[] = [
     // "Needs attention" = New (assigned, form not even sent yet) + Expired (form sent but the
     // window lapsed with no action) — both are stalled and need a BDR to act, unlike Pending
     // (form sent, still within its live window).
@@ -454,7 +575,13 @@ const DEAL_STAGE_BAR_GROUPS: { label: string; ids: DealStatusId[]; colorClassNam
     // OFFER_PENDING/ACCEPTED/EXPIRED/WITHDRAWN per Manik's spec, with nowhere else specified for
     // it. Flagging rather than guessing again: any deal sitting at APP_FILLED currently isn't
     // counted in any Deal Stages bar.
-    { label: "Application", ids: ["APP_NEW", "APP_PENDING", "APP_EXPIRED"], colorClassName: "bg-utility-blue-400", attentionIds: ["APP_NEW", "APP_EXPIRED"], attentionLabel: "need attention" },
+    {
+        label: "Application",
+        ids: ["APP_NEW", "APP_PENDING", "APP_EXPIRED"],
+        colorClassName: "bg-utility-blue-400",
+        attentionIds: ["APP_NEW", "APP_EXPIRED"],
+        attentionLabel: "need attention",
+    },
     { label: "Payment Plan Pending", ids: ["PLAN_NOT_STARTED", "PLAN_AWAITING_APPROVAL"], colorClassName: "bg-utility-purple-400", hatched: true },
     // PLAN_DRAFT (displayed "Plan · Created" — label is literally "Created", see deals-data.ts)
     // is the actual status for "plan created, offer not yet shared" that Manik was originally
@@ -601,11 +728,18 @@ export function buildFunnelStages(cohort: Deal[]): [FunnelStage, FunnelStage, Fu
         ],
     };
 
-    const offersCohort = cohort.filter((d) => d.reachedStage >= 2);
+    // `>= 1`, not `>= 2` — creating the payment plan is part of the Offer stage's own workflow
+    // (Manik's call, 2026-09-11), so a deal in any Plan sub-state already counts as "Offer",
+    // same as `buildSalesFunnelFlow`'s own `offerCohort` above (the dev-time assertion at the
+    // bottom of this file checks the two `.value`s can never drift apart).
+    const offersCohort = cohort.filter((d) => d.reachedStage >= 1);
+    const planNotStarted2 = countIds(offersCohort, ["PLAN_NOT_STARTED"]);
+    const planDraft2 = countIds(offersCohort, ["PLAN_DRAFT"]);
+    const planAwaitingApproval2 = countIds(offersCohort, ["PLAN_AWAITING_APPROVAL"]);
     const pending2 = countIds(offersCohort, ["OFFER_PENDING"]);
     const expired2 = countIds(offersCohort, ["OFFER_EXPIRED"]);
     const withdrawn2 = countIds(offersCohort, ["OFFER_WITHDRAWN"]);
-    const accepted2 = offersCohort.length - pending2 - expired2 - withdrawn2;
+    const accepted2 = offersCohort.length - pending2 - expired2 - withdrawn2 - planNotStarted2 - planDraft2 - planAwaitingApproval2;
 
     const stage2: FunnelStage = {
         label: "Offers Shared",
@@ -614,6 +748,9 @@ export function buildFunnelStages(cohort: Deal[]): [FunnelStage, FunnelStage, Fu
         denominator: filled,
         caption: "of Filled",
         breakdown: [
+            { label: "Plan Not Created", count: planNotStarted2, dotClassName: dot.neutral },
+            { label: "Plan Created", count: planDraft2, dotClassName: dot.success },
+            { label: "Plan Awaiting Approval", count: planAwaitingApproval2, dotClassName: dot.neutral },
             { label: "Pending", count: pending2, dotClassName: dot.neutral },
             { label: "Expired", count: expired2, dotClassName: dot.error },
             { label: "Withdrawn", count: withdrawn2, dotClassName: dot.warning },
@@ -737,27 +874,44 @@ function dropoutBreakdownFor(deals: Deal[]): FunnelFlowSubBand[] {
 }
 
 function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
-    const offerCohort = cohort.filter((d) => d.reachedStage >= 2);
+    // The Offer node's boundary is `reachedStage >= 1`, not `>= 2` — creating the payment plan
+    // is part of the Offer stage's own workflow (Manik's call, 2026-09-11: "Creating a plan is
+    // a part of the Offer stage"), so a deal in any of the three Plan sub-states has already
+    // moved out of Application, same as one that already has an Offer Letter. Must stay in sync
+    // with `buildFunnelStages`'s own `offersCohort` threshold below — the dev-time assertion at
+    // the bottom of this function checks the two never drift apart.
+    const offerCohort = cohort.filter((d) => d.reachedStage >= 1);
     const paymentCohort = cohort.filter((d) => d.reachedStage >= 3);
 
     // Dropout attribution: `APP_EXPIRED`/`OFFER_EXPIRED` always carry a fixed `reachedStage`
     // (0 and 2 respectively, per STAGE_RANK). The three "Global" statuses (Not Interested /
     // Rejected / Saved) are seeded with a random `reachedStage` independent of their label —
     // exactly what "furthest point reached" means, so reading it here to place them is a
-    // legitimate use of the same field, not a new interpretation of it.
+    // legitimate use of the same field, not a new interpretation of it. Boundary matches the
+    // Application/Offer node split above — a Plan-stage drop (`reachedStage === 1`) now counts
+    // as "dropped after Offer", not "dropped after Application".
     const dropped = cohort.filter((d) => DROPPED_STATUS_IDS.includes(d.status.id));
-    const droppedAtApplicationDeals = dropped.filter((d) => d.reachedStage <= 1);
-    const droppedAtOfferDeals = dropped.filter((d) => d.reachedStage === 2);
+    const droppedAtApplicationDeals = dropped.filter((d) => d.reachedStage === 0);
+    const droppedAtOfferDeals = dropped.filter((d) => d.reachedStage === 1 || d.reachedStage === 2);
     const droppedAtApplication = droppedAtApplicationDeals.length;
     const droppedAtOffer = droppedAtOfferDeals.length;
     const wentColdAtPaymentDeals = dropped.filter((d) => d.reachedStage === 3);
 
+    const applicationNew = cohort.filter((d) => d.status.id === "APP_NEW").length;
     const applicationPending = cohort.filter((d) => d.status.id === "APP_PENDING").length;
-    const applicationFilled = cohort.length - offerCohort.length - droppedAtApplication - applicationPending;
+    const applicationFilled = cohort.filter((d) => d.status.id === "APP_FILLED").length;
+
+    // Plan Not Created / Plan Created / Plan Awaiting Approval — read off `offerCohort` now,
+    // not the Application cohort, since they're part of the Offer node's own sub-bands (see the
+    // boundary note above).
+    const planNotStarted = offerCohort.filter((d) => d.status.id === "PLAN_NOT_STARTED").length;
+    const planDraft = offerCohort.filter((d) => d.status.id === "PLAN_DRAFT").length;
+    const planAwaitingApproval = offerCohort.filter((d) => d.status.id === "PLAN_AWAITING_APPROVAL").length;
 
     const offerPending = offerCohort.filter((d) => d.status.id === "OFFER_PENDING").length;
     const offerWithdrawn = offerCohort.filter((d) => d.status.id === "OFFER_WITHDRAWN").length;
-    const offerAccepted = offerCohort.length - paymentCohort.length - droppedAtOffer - offerPending - offerWithdrawn;
+    const offerAccepted =
+        offerCohort.length - paymentCohort.length - droppedAtOffer - offerPending - offerWithdrawn - planNotStarted - planDraft - planAwaitingApproval;
 
     const paymentOngoing = paymentCohort.filter((d) => PAYMENT_STAGE_IDS.has(d.status.id)).length;
     const completedDeals = paymentCohort.filter((d) => d.status.id === "PAY_COMPLETED");
@@ -775,19 +929,38 @@ function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
             id: "application",
             label: "Application",
             value: cohort.length,
+            // "Filled" is only the deals CURRENTLY sitting at that sub-status — it already
+            // excludes both the dropouts (a separate hover target on the ribbon itself) and
+            // whoever has since moved on to Offer, so without a row for the latter, `total` here
+            // (`cohort.length`) wouldn't visibly reconcile against Pending+Filled — a real
+            // confusion Manik ran into (2026-09-11). "Moved to Offer" closes that gap so every
+            // row + the dropout figure always sums back to `total`. "New" (assigned, form not
+            // sent yet) stays at Application and never moves to Offer — it's included in
+            // `cohort`/`total` via `getSalesFunnelFlow`'s own `createdOn`-based union, same date
+            // field the Deal Stages card already uses for the same deals (Manik's call, 2026-09-11).
             subBands: [
+                { key: "new", label: "New", count: applicationNew },
                 { key: "pending", label: "Pending", count: applicationPending },
                 { key: "filled", label: "Filled", count: applicationFilled },
+                { key: "moved-to-offer", label: "Moved to Offer", count: offerCohort.length },
             ],
         },
         {
             id: "offer",
             label: "Offer",
             value: offerCohort.length,
+            // Plan Not Created/Created/Awaiting Approval listed first — chronologically they
+            // happen before the Offer Letter itself (Manik's call, 2026-09-11: plan creation is
+            // part of this stage, not Application's). "Moved to Payment" closes the same
+            // reconciliation gap as Application's "Moved to Offer" above.
             subBands: [
+                { key: "plan-not-started", label: "Plan Not Created", count: planNotStarted },
+                { key: "plan-draft", label: "Plan Created", count: planDraft },
+                { key: "plan-awaiting-approval", label: "Plan Awaiting Approval", count: planAwaitingApproval },
                 { key: "pending", label: "Pending", count: offerPending },
                 { key: "withdrawn", label: "Withdrawn", count: offerWithdrawn },
                 { key: "accepted", label: "Accepted", count: offerAccepted },
+                { key: "moved-to-payment", label: "Moved to Payment", count: paymentCohort.length },
             ],
         },
         {
@@ -843,31 +1016,83 @@ function buildSalesFunnelFlow(cohort: Deal[]): FunnelFlow {
 
 export function getSalesFunnelFlow(selection: PeriodSelection, persona: Persona, deals: Deal[]): FunnelFlow {
     const bounds = resolvePeriodBounds(selection);
-    return buildSalesFunnelFlow(getCohort(persona, bounds, deals));
+    const sentCohort = getCohort(persona, bounds, deals);
+    // `getCohort` is scoped to `application.sentOn`, so a deal still at `APP_NEW` (assigned, form
+    // not sent yet) has no `sentOn` to filter by and is excluded — union it in here by
+    // `createdOn` instead, the same date field the Deal Stages card already reads for exactly
+    // these deals (see `getDealStageBars`'s own comment). They stay at the Application node and
+    // never reach Offer (Manik's call, 2026-09-11), which falls out naturally: `APP_NEW`'s
+    // `reachedStage` is 0, same as Pending/Filled, so it can't qualify for `offerCohort` below.
+    const newCohort = dealsForPersona(persona, deals).filter((d) => d.status.id === "APP_NEW" && inRange(d.createdOn, bounds));
+    return buildSalesFunnelFlow([...sentCohort, ...newCohort]);
 }
 
 export function getSalesFunnelHeadline(
     selection: PeriodSelection,
     persona: Persona,
     deals: Deal[],
-): { applicationsSent: number; applicationsSentChangePct: number | null; conversionPct: number; conversionChangePct: number | null } {
+): {
+    applicationsSent: number;
+    applicationsSentChangePct: number | null;
+    conversionPct: number;
+    /** Percentage-POINT change vs last period (e.g. 35% -> 33% reads as -2), not the relative
+     * `computeChangePercent` swing every other badge here uses — Overall Conversion is already
+     * a %, so "% change of a %" reads as a confusing double-percentage next to it (Manik's call,
+     * 2026-09-11). The badge itself still colors/signs off this number normally (red on a drop). */
+    conversionChangePct: number | null;
+    unitsAchieved: number;
+    unitTarget: number;
+    /** % of `unitTarget` reached so far — NOT a period-over-period change like the other two
+     * badges above (Manik's call, 2026-09-10: this figure is about pace against the goal, not
+     * growth vs the last equivalent period), so it's computed straight off `unitsAchieved`/
+     * `unitTarget` rather than `computeChangePercent` against a previous-period cohort. */
+    unitTargetAttainmentPct: number | null;
+    ats: number;
+    atsChangePct: number | null;
+} {
     const bounds = resolvePeriodBounds(selection);
     const cohort = getCohort(persona, bounds, deals);
-    const completed = cohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
-    const conversionPct = cohort.length === 0 ? 0 : Math.round((completed / cohort.length) * 100);
+    // "Made any kind of payment" = `reachedStage >= 3` (Manik's call, 2026-09-11) — the same
+    // threshold `paymentCohort` uses everywhere else in this file: at least one installment paid
+    // (Ongoing/Due/Overdue), not just deals that finished paying in full (Completed/Cancelled,
+    // reachedStage 4, are `>= 3` too since they necessarily passed through it on the way).
+    const paidAtLeastOnce = cohort.filter((d) => d.reachedStage >= 3).length;
+    const conversionPct = cohort.length === 0 ? 0 : Math.round((paidAtLeastOnce / cohort.length) * 100);
+
+    // Unit Sales/Target (Figma node 576:8946) and Average Ticket Size (Figma node 576:8926) both
+    // read off the same booked-deals population as the Booked Revenue card's own
+    // `unitsAchieved`/`ats` — not the funnel's application-sent cohort above, which is a
+    // different population (a deal counts here once it's booked, not once its application goes out).
+    const personaDeals = dealsForPersona(persona, deals);
+    const { unitsAchieved, ats } = computeBookedRealised(personaDeals, bounds);
+    const unitTarget = resolveUnitTargetForPersona(selection, persona);
+    const unitTargetAttainmentPct = unitTarget === 0 ? null : (unitsAchieved / unitTarget) * 100;
 
     const previousBounds = getPreviousEquivalentBounds(selection);
     let applicationsSentChangePct: number | null = null;
     let conversionChangePct: number | null = null;
+    let atsChangePct: number | null = null;
     if (previousBounds) {
         const previousCohort = getCohort(persona, previousBounds, deals);
         applicationsSentChangePct = computeChangePercent(cohort.length, previousCohort.length);
-        const previousCompleted = previousCohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
-        const previousConversionPct = previousCohort.length === 0 ? 0 : (previousCompleted / previousCohort.length) * 100;
-        conversionChangePct = computeChangePercent(conversionPct, previousConversionPct);
+        const previousPaidAtLeastOnce = previousCohort.filter((d) => d.reachedStage >= 3).length;
+        const previousConversionPct = previousCohort.length === 0 ? 0 : (previousPaidAtLeastOnce / previousCohort.length) * 100;
+        conversionChangePct = conversionPct - previousConversionPct;
+        const previousAts = computeBookedRealised(personaDeals, previousBounds).ats;
+        atsChangePct = computeChangePercent(ats, previousAts);
     }
 
-    return { applicationsSent: cohort.length, applicationsSentChangePct, conversionPct, conversionChangePct };
+    return {
+        applicationsSent: cohort.length,
+        applicationsSentChangePct,
+        conversionPct,
+        conversionChangePct,
+        unitsAchieved,
+        unitTarget,
+        unitTargetAttainmentPct,
+        ats,
+        atsChangePct,
+    };
 }
 
 export type SalesFunnelCourseRow = {
@@ -889,7 +1114,10 @@ export function getSalesFunnelCourseBreakdown(selection: PeriodSelection, person
     return COURSES.map((course) => {
         const courseCohort = cohort.filter((d) => d.course.id === course.id);
         const application = courseCohort.length;
-        const offer = courseCohort.filter((d) => d.reachedStage >= 2).length;
+        // `>= 1`, matching `buildSalesFunnelFlow`/`buildFunnelStages`'s own Offer boundary —
+        // creating the payment plan is part of the Offer stage (Manik's call, 2026-09-11), not
+        // still "Application".
+        const offer = courseCohort.filter((d) => d.reachedStage >= 1).length;
         const payment = courseCohort.filter((d) => d.reachedStage >= 3).length;
         const completed = courseCohort.filter((d) => d.status.id === "PAY_COMPLETED").length;
         return {
@@ -959,7 +1187,7 @@ function periodDescriptionFor(selection: PeriodSelection, bounds: PeriodBounds):
  * repeat the period-pill label ("This Month") already shown above it in the filter row. */
 function periodBadgeLabel(selection: PeriodSelection, bounds: PeriodBounds): string {
     if (selection.kind === "custom") return `${formatShortDate(bounds.from)} – ${formatShortDate(bounds.to)}`;
-    if (selection.id === "lifetime") return "Lifetime";
+    if (selection.id === "lifetime") return "This Year";
     if (selection.id === "this-month" || selection.id === "last-month") return MONTH_FULL[bounds.from.getMonth()];
 
     const quarter = Math.floor(bounds.from.getMonth() / 3) + 1;
@@ -980,8 +1208,11 @@ export function getPeriodChartDataLive(selection: PeriodSelection, persona: Pers
     const { bookedTotal, unitsAchieved, totalRealised, realisedOfPreviouslyBooked, ats } = computeBookedRealised(personaDeals, bounds);
 
     const previousBounds = getPreviousEquivalentBounds(selection);
-    const previousBookedTotal = previousBounds ? computeBookedRealised(personaDeals, previousBounds).bookedTotal : null;
+    const previousComputed = previousBounds ? computeBookedRealised(personaDeals, previousBounds) : null;
+    const previousBookedTotal = previousComputed?.bookedTotal ?? null;
     const changeText = computeChangeText(bookedTotal, previousBookedTotal, selection);
+    const realisedOfPreviouslyBookedChangePct = computeChangePercent(realisedOfPreviouslyBooked, previousComputed?.realisedOfPreviouslyBooked ?? null);
+    const totalRealisedChangePct = computeChangePercent(totalRealised, previousComputed?.totalRealised ?? null);
 
     const realisedTotal = totalRealised - realisedOfPreviouslyBooked;
     const realisedPercent = bookedTotal === 0 ? 0 : (realisedTotal / bookedTotal) * 100;
@@ -1003,9 +1234,13 @@ export function getPeriodChartDataLive(selection: PeriodSelection, persona: Pers
         ats,
         totalRealised,
         realisedOfPreviouslyBooked,
+        realisedOfPreviouslyBookedChangePct,
+        totalRealisedChangePct,
+        realisedBuckets: buildRealisedBuckets(personaDeals, bounds),
         cascade: buildLiveCascade(cohort),
         paymentModes: [], // payment-modes-pie.tsx isn't wired into any page — nothing reads this live
         points: buildDailyChartPoints(personaDeals, bounds),
+        holidays: holidaysInRange(bounds),
         ...buildXAxisMeta(bounds, selection),
     };
 }

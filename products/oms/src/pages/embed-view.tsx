@@ -1,7 +1,7 @@
 import { AdminFunnelAggregateRow, FunnelSection } from "@/components/dashboard/funnel-section";
 import { ConversionCard } from "@/components/dashboard/conversion-card";
 import { SalesFunnelSection } from "@/components/dashboard/sales-funnel-section";
-import { BookedRevenueCard, DealStagesCard, RealisedAndTicketCards } from "@/components/dashboard/stat-cards";
+import { BookedRevenueCard, DealStagesCard, RealisedRevenueCard } from "@/components/dashboard/stat-cards";
 import { TeamDrilldown } from "@/components/dashboard/team-drilldown";
 import type { PeriodSelection } from "@/data/dashboard-data";
 import { DealsProvider } from "@/providers/deals-provider";
@@ -37,8 +37,8 @@ const EMBED_PERSONAS: Record<EmbedViewKey, Persona> = {
 const StatCardsBundle = () => (
     <div className="flex flex-col gap-4">
         <BookedRevenueCard selection={DEFAULT_SELECTION} />
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[0.78fr_1fr_auto]">
-            <RealisedAndTicketCards selection={DEFAULT_SELECTION} />
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] 2xl:grid-cols-[0.78fr_1fr_594px]">
+            <RealisedRevenueCard selection={DEFAULT_SELECTION} />
             <ConversionCard selection={DEFAULT_SELECTION} />
             <DealStagesCard selection={DEFAULT_SELECTION} />
         </div>

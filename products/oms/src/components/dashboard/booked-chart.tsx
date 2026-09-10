@@ -1,9 +1,70 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { ChartTooltipContent } from "@/components/application/charts/charts-base";
-import type { PeriodChartData } from "@/data/dashboard-data";
+import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import type { ChartPoint, PeriodChartData } from "@/data/dashboard-data";
 
 const fadeTransition = { duration: 0.25, ease: "easeOut" as const };
+
+const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+
+/** Custom (not the shared ChartTooltipContent — its single title/payload-list shape can't carry
+ * this tooltip's two-tier hierarchy) — same visual language as the Deal Stages/Sales Funnel
+ * tooltips built earlier: bold title, a divider, a breakdown, another divider, a second
+ * breakdown. Cumulative totals come first (what the curve's own position represents), that
+ * day's own amount after — a holiday's ~₹0 there is exactly where it should read as the reason
+ * the cumulative line above it went flat, not the other way around. */
+const BookedChartTooltip = ({
+    active,
+    payload,
+    holidays,
+}: {
+    active?: boolean;
+    // Recharts doesn't type its own tooltip payload correctly, and types it `readonly`.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    payload?: readonly any[];
+    holidays: { x: number; label: string }[];
+}) => {
+    if (!active || !payload?.length) return null;
+    const point = payload[0].payload as ChartPoint;
+    const holiday = holidays.find((h) => h.x === point.x);
+    const dateLabel = point.date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+    return (
+        <div className="flex w-max flex-col gap-1.5 rounded-lg bg-primary-solid px-3 py-2.5 shadow-lg">
+            <p className="text-xs font-semibold text-white">
+                {dateLabel}
+                {holiday && <span className="text-fg-warning-secondary"> — {holiday.label}</span>}
+            </p>
+
+            <div className="flex flex-col gap-1 border-t border-white/10 pt-1.5">
+                <div className="flex items-center justify-between gap-4 text-[11px] text-tooltip-supporting-text">
+                    <span className="flex items-center gap-1.5">
+                        <span className="size-1.5 shrink-0 rounded-full bg-fg-brand-primary" />
+                        Booked (cumulative)
+                    </span>
+                    <span className="font-mono">{inr(point.booked)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4 text-[11px] text-tooltip-supporting-text">
+                    <span className="flex items-center gap-1.5">
+                        <span className="size-1.5 shrink-0 rounded-full bg-fg-success-primary" />
+                        Realised (cumulative)
+                    </span>
+                    <span className="font-mono">{inr(point.realised)}</span>
+                </div>
+            </div>
+
+            <div className="flex flex-col gap-1 border-t border-white/10 pt-1.5">
+                <div className="flex items-center justify-between gap-4 text-[11px] font-medium text-white">
+                    <span>Booked today</span>
+                    <span className="font-mono">{inr(point.dailyBooked)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4 text-[11px] text-tooltip-supporting-text">
+                    <span>Realised today</span>
+                    <span className="font-mono">{inr(point.dailyRealised)}</span>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export const BookedChart = ({ data, selectionKey }: { data: PeriodChartData; selectionKey: string }) => {
     return (
@@ -44,14 +105,17 @@ export const BookedChart = ({ data, selectionKey }: { data: PeriodChartData; sel
                             />
 
                             <Tooltip
-                                content={<ChartTooltipContent />}
+                                content={({ active, payload }) => <BookedChartTooltip active={active} payload={payload} holidays={data.holidays} />}
                                 cursor={{ stroke: "var(--color-border-secondary)" }}
-                                labelFormatter={(x) => {
-                                    const point = data.points.find((p) => p.x === x);
-                                    return point?.date.toLocaleDateString("en-US", { month: "short", day: "numeric" }) ?? "";
-                                }}
-                                formatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
                             />
+
+                            {/* National holidays (e.g. Independence Day) — the curve itself already shows
+                                a stagnant dip there (see applyHolidayStagnation). No permanent label on
+                                the line itself; the name only surfaces in the tooltip above, on hovering
+                                that exact day. */}
+                            {data.holidays.map((holiday) => (
+                                <ReferenceLine key={holiday.x} x={holiday.x} stroke="var(--color-fg-warning-secondary)" strokeDasharray="4 3" strokeWidth={1} />
+                            ))}
 
                             <Area
                                 type="monotone"

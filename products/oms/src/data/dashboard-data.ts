@@ -13,7 +13,6 @@
  * beyond `unitTarget` — this file's job ends at generating a believable seed, it does not
  * compute what's shown on screen.
  */
-
 import type { Persona } from "@/types/role";
 
 // ---------------------------------------------------------------------------
@@ -43,12 +42,12 @@ export function formatIndianNumber(value: number): string {
     return value < 0 ? `-${formatted}` : formatted;
 }
 
-/** Indian lakh/crore compact form: 422000 -> "4.22 L", 12500000 -> "1.25 Cr". */
+/** Indian lakh/crore compact form: 422000 -> "4.22L", 12500000 -> "1.25Cr". */
 export function formatIndianCompact(value: number): string {
     const abs = Math.abs(value);
     const sign = value < 0 ? "-" : "";
-    if (abs >= 1_00_00_000) return `${sign}${(abs / 1_00_00_000).toFixed(2)} Cr`;
-    if (abs >= 1_00_000) return `${sign}${(abs / 1_00_000).toFixed(2)} L`;
+    if (abs >= 1_00_00_000) return `${sign}${(abs / 1_00_00_000).toFixed(2)}Cr`;
+    if (abs >= 1_00_000) return `${sign}${(abs / 1_00_000).toFixed(2)}L`;
     return `${sign}${formatIndianNumber(abs)}`;
 }
 
@@ -237,14 +236,20 @@ function defineMonth(
 // unitsAchieved × 2.7–2.9 once every stage's random branch ratios compound. `quality` varies
 // deliberately non-monotonically (not a smooth ramp) so conversion swings from a genuinely weak
 // month (March) to a genuinely strong one (May), rather than every month reading about the same.
-const JANUARY = defineMonth(2025, 0, 38, 34, 165_000, 0.195, 98, 0.85);
-const FEBRUARY = defineMonth(2025, 1, 43, 38, 168_000, 0.2, 99, 1.15);
-const MARCH = defineMonth(2025, 2, 36, 32, 170_000, 0.205, 100, 0.75);
-const APRIL = defineMonth(2025, 3, 45, 40, 172_000, 0.21, 101, 1.0);
-const MAY = defineMonth(2025, 4, 40, 36, 175_000, 0.215, 102, 1.3);
-const JUNE = defineMonth(2025, 5, 43, 38, 176_000, 0.22, 103, 0.9);
-const JULY = defineMonth(2025, 6, 44, 39, 178_000, 0.225, 104, 1.1);
-const AUGUST = defineMonth(2025, 7, 41, 37, 180_000, 0.2235, 105, 0.95);
+// unitTarget ramps +10/month starting from a fixed 80 in January (Manik's call, 2026-09-10) —
+// a deliberate goal-setting progression, unrelated to `unitsAchieved`'s own month-to-month
+// variation above.
+// Apr/May/Jun and Jul unitsAchieved bumped up (Manik's call, 2026-09-10) so Unit Sales/Target
+// lands in the Amber band for July and the Green band for Last Quarter (Apr-Jun combined) — see
+// `unitTargetAttainmentTone` in sales-funnel-section.tsx for the exact thresholds.
+const JANUARY = defineMonth(2025, 0, 80, 34, 165_000, 0.195, 98, 0.85);
+const FEBRUARY = defineMonth(2025, 1, 90, 38, 168_000, 0.2, 99, 1.15);
+const MARCH = defineMonth(2025, 2, 100, 32, 170_000, 0.205, 100, 0.75);
+const APRIL = defineMonth(2025, 3, 110, 92, 172_000, 0.21, 101, 1.0);
+const MAY = defineMonth(2025, 4, 120, 82, 175_000, 0.215, 102, 1.3);
+const JUNE = defineMonth(2025, 5, 130, 87, 176_000, 0.22, 103, 0.9);
+const JULY = defineMonth(2025, 6, 140, 75, 178_000, 0.225, 104, 1.1);
+const AUGUST = defineMonth(2025, 7, 150, 37, 180_000, 0.2235, 105, 0.95);
 
 export const MONTHS: MonthGroundTruth[] = [JANUARY, FEBRUARY, MARCH, APRIL, MAY, JUNE, JULY, AUGUST];
 
@@ -277,9 +282,12 @@ export type PaymentModeBreakdown = { mode: string; percent: number; amount: numb
 
 // ---------------------------------------------------------------------------
 // Period model (This Month / Last Month / This Quarter / Last Quarter /
-// Lifetime) — the five pills currently on screen.
+// This Year) — the five pills currently on screen.
 // ---------------------------------------------------------------------------
 
+// `id` stays "lifetime" — the seeded deal roster only ever spans one calendar year, so
+// "lifetime" and "this year" already resolve to the exact same bounds; this is a label-only
+// rename (Manik's call, 2026-09-10), not a new period kind.
 export type PeriodId = "this-month" | "last-month" | "this-quarter" | "last-quarter" | "lifetime";
 
 export const periods: { id: PeriodId; label: string }[] = [
@@ -287,14 +295,38 @@ export const periods: { id: PeriodId; label: string }[] = [
     { id: "last-month", label: "Last Month" },
     { id: "this-quarter", label: "This Quarter" },
     { id: "last-quarter", label: "Last Quarter" },
-    { id: "lifetime", label: "Lifetime" },
+    { id: "lifetime", label: "This Year" },
 ];
 
 function daysInMonth(year: number, monthIndex0: number): number {
     return new Date(year, monthIndex0 + 1, 0).getDate();
 }
 
-export type ChartPoint = { x: number; date: Date; booked: number; realised: number };
+export type ChartPoint = {
+    x: number;
+    date: Date;
+    /** Cumulative running total through this day — what the area/line actually plot. */
+    booked: number;
+    realised: number;
+    /** This day's own amount, not the running total — the Booked Revenue chart's tooltip shows
+     * both so a holiday's near-₹0 daily figure doesn't get lost in an ever-climbing cumulative
+     * number. Derived from the same holiday-stagnation-adjusted series as `booked`/`realised`
+     * (see applyHolidayStagnation) so a holiday reads as ~₹0 here too, not just a flat cumulative
+     * line — but NOT the cosmetic baseline-bias applied on top of that for the curve's opening
+     * shape, which would otherwise inflate day 1's figure with an artificial jump. */
+    dailyBooked: number;
+    dailyRealised: number;
+};
+
+export type RealisedBucket = {
+    index: number;
+    from: Date;
+    to: Date;
+    label: string;
+    previousRealised: number;
+    thisRealised: number;
+    total: number;
+};
 
 export type PeriodChartData = {
     id: PeriodId;
@@ -316,9 +348,19 @@ export type PeriodChartData = {
     ats: number;
     totalRealised: number;
     realisedOfPreviouslyBooked: number;
+    /** vs the previous equivalent period (same shape as Booked Revenue's own change indicator) —
+     * null wherever there's no prior period to compare against (e.g. Lifetime). */
+    realisedOfPreviouslyBookedChangePct: number | null;
+    totalRealisedChangePct: number | null;
+    /** Realised Revenue card's mini bar chart — always 10 buckets spanning the period, each
+     * split into its previous-period vs this-period realised amount (see buildRealisedBuckets). */
+    realisedBuckets: RealisedBucket[];
     cascade: DealStageCascade;
     paymentModes: PaymentModeBreakdown;
     points: ChartPoint[];
+    /** National holidays that fall inside this period, at the same `x` the chart's own points
+     * use — marked on the Booked Revenue chart where the curve also shows a stagnant dip. */
+    holidays: { x: number; label: string }[];
     xDomain: [number, number];
     xTicks: number[];
     xTickFormatter: (x: number) => string;
@@ -428,9 +470,27 @@ const BDR_SPLITS: Record<string, number[]> = {
     "raj-kashyap-tl-b": [32, 26, 23, 19],
 };
 const BDR_NAMES = [
-    "Tanvi Shah", "Karan Malhotra", "Ritu Bhatia", "Sameer Iyer", "Pooja Nair", "Aryan Chawla", "Meera Pillai",
-    "Vivek Saxena", "Ananya Desai", "Rahul Bose", "Divya Chandran", "Nikhil Bhatt", "Shreya Ghosh", "Yash Tandon",
-    "Kavya Reddy", "Arjun Prasad", "Ishita Sinha", "Manav Oberoi", "Riya Kulkarni", "Dev Khanna", "Anika Sharma",
+    "Tanvi Shah",
+    "Karan Malhotra",
+    "Ritu Bhatia",
+    "Sameer Iyer",
+    "Pooja Nair",
+    "Aryan Chawla",
+    "Meera Pillai",
+    "Vivek Saxena",
+    "Ananya Desai",
+    "Rahul Bose",
+    "Divya Chandran",
+    "Nikhil Bhatt",
+    "Shreya Ghosh",
+    "Yash Tandon",
+    "Kavya Reddy",
+    "Arjun Prasad",
+    "Ishita Sinha",
+    "Manav Oberoi",
+    "Riya Kulkarni",
+    "Dev Khanna",
+    "Anika Sharma",
 ];
 
 let bdrNameCursor = 0;
@@ -523,4 +583,3 @@ export type FunnelCohort = {
     name: string;
     stages: [FunnelStage, FunnelStage, FunnelStage, FunnelStage];
 };
-

@@ -154,6 +154,11 @@ export const COURSES: Course[] = [
     { id: "mcd", code: "MCD_C004", name: "Master in Computational Design for Professional Architects and Engineers", short: "MCD" },
 ];
 
+// Unit-sales mix across the seeded roster (Manik's call, 2026-09-10): BIM · Architects ~55%
+// (of a 50-60% range), MCD ~17.5% (of a 15-20% range), BIM · Civil takes the remaining ~27.5% —
+// not an independent target, just whatever's left. Read by `buildBaseDeal`'s course draw.
+const COURSE_MIX_WEIGHT: Record<string, number> = { "bim-arch": 0.55, mcd: 0.175, "bim-civil": 0.275 };
+
 export type OfferTemplate = { id: string; name: string; blurb: string };
 
 export const OFFER_TEMPLATES: OfferTemplate[] = [
@@ -540,6 +545,16 @@ const rand = seededRandom(770101);
 const pick = <T>(arr: T[]): T => arr[Math.floor(rand() * arr.length)];
 const int = (min: number, max: number) => Math.floor(rand() * (max - min + 1)) + min;
 
+function pickWeighted<T>(items: { value: T; weight: number }[]): T {
+    const total = items.reduce((sum, i) => sum + i.weight, 0);
+    let r = rand() * total;
+    for (const item of items) {
+        if (r < item.weight) return item.value;
+        r -= item.weight;
+    }
+    return items[items.length - 1].value;
+}
+
 function hashId(id: string): number {
     let h = 0;
     for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
@@ -586,7 +601,7 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
     const tl = teamLeads.find((t) => t.id === bdr.tlId) ?? null;
     const tm = teamManagers.find((t) => t.id === bdr.tmId) ?? null;
 
-    const course = pick(COURSES);
+    const course = pickWeighted(COURSES.map((c) => ({ value: c, weight: COURSE_MIX_WEIGHT[c.id] })));
     const status = STATUS[statusId];
 
     const totalDays = daysInMonth(month.year, month.month);
@@ -602,7 +617,18 @@ function buildBaseDeal(bdr: OrgBdr, month: MonthGroundTruth, statusId: DealStatu
     // they never disagree (e.g. an "India" deal billed in USD).
     const isGlobal = rand() < 0.15;
     const currency: "INR" | "USD" = isGlobal ? "USD" : "INR";
-    const courseFee = currency === "INR" ? pick([185_000, 210_000, 245_000, 275_000]) : pick([2400, 2800, 3200]);
+    // MCD is fixed at ~₹3,50,000 (Manik's call, 2026-09-10) — the equivalent $4,300 uses the same
+    // ₹83/$ rate computeBookedRealised's toInr already assumes elsewhere, rounded up to the
+    // nearest $100 to land on the same clean-price-point style as the other two courses' pools.
+    // BIM · Architects/Civil still draw from the shared random pool — only MCD's price is fixed.
+    const courseFee =
+        course.id === "mcd"
+            ? currency === "INR"
+                ? 350_000
+                : 4_300
+            : currency === "INR"
+              ? pick([185_000, 210_000, 245_000, 275_000])
+              : pick([2400, 2800, 3200]);
     const discountPct = int(0, 20);
     const discount = Math.round(courseFee * (discountPct / 100));
     const netPayable = courseFee - discount;

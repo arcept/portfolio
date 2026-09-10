@@ -1,10 +1,10 @@
 import { TrendUp02 } from "@untitledui/icons";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
-import { useDeals } from "@/providers/deals-provider";
-import { usePersona } from "@/providers/role-provider";
 import type { PeriodSelection } from "@/data/dashboard-data";
 import { getPeriodSelectionKey } from "@/data/dashboard-data";
-import { getLostDealsSummaryForSelection, getSalesFunnelCourseBreakdown, getSalesFunnelFlow } from "@/data/dashboard-metrics";
+import { getLostDealsSummaryForSelection, getSalesFunnelCourseBreakdown } from "@/data/dashboard-metrics";
+import { useDeals } from "@/providers/deals-provider";
+import { usePersona } from "@/providers/role-provider";
 import { Card, FadeOnSelection } from "./stat-cards";
 
 /** Row 2, middle column — course-by-course conversion table plus the Lost Deals summary folded
@@ -13,30 +13,41 @@ import { Card, FadeOnSelection } from "./stat-cards";
  * (Course/App/Offer/Payment) per the Figma spec — no Completed column, unlike
  * `SalesFunnelCourseTable`, which this replaces as the on-page course breakdown (that table's
  * render was removed from `sales-funnel-section.tsx`). */
-export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: { selection: PeriodSelection; onCourseClick?: (courseId: string) => void; onLostDealsClick?: () => void }) => {
+export const ConversionCard = ({
+    selection,
+    onCourseClick,
+    onLostDealsClick,
+}: {
+    selection: PeriodSelection;
+    onCourseClick?: (courseId: string) => void;
+    onLostDealsClick?: () => void;
+}) => {
     const { persona } = usePersona();
     const { deals } = useDeals();
     const selectionKey = getPeriodSelectionKey(selection);
     const rows = getSalesFunnelCourseBreakdown(selection, persona, deals);
-    const flow = getSalesFunnelFlow(selection, persona, deals);
     const lost = getLostDealsSummaryForSelection(selection, persona, deals);
 
+    // Summed straight off `rows` (not read from `getSalesFunnelFlow`) so "Overall" always
+    // reconciles with the course rows above it — the ribbon's own Application total can now be
+    // wider than this table's (it also counts APP_NEW deals, per Manik's call, 2026-09-11), and
+    // this table's rows never did, so the two totals are legitimately different populations.
     const overall = {
-        application: flow.nodes[0].value,
-        offer: flow.nodes[1].value,
-        offerConversionPct: flow.conversionPct[0],
-        payment: flow.nodes[2].value,
-        paymentConversionPct: flow.conversionPct[1],
+        application: rows.reduce((sum, r) => sum + r.application, 0),
+        offer: rows.reduce((sum, r) => sum + r.offer, 0),
+        payment: rows.reduce((sum, r) => sum + r.payment, 0),
     };
+    const overallOfferConversionPct = overall.application === 0 ? 0 : Math.round((overall.offer / overall.application) * 100);
+    const overallPaymentConversionPct = overall.offer === 0 ? 0 : Math.round((overall.payment / overall.offer) * 100);
 
     return (
-        <Card className="h-full min-w-0">
-            <div className="flex items-center justify-between">
-                <p className="text-md font-normal text-secondary">Conversion</p>
-                <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
-            </div>
+        <Card className="h-full max-h-[400px] min-w-0">
+            <FadeOnSelection selectionKey={selectionKey} className="flex h-full min-w-0 flex-col gap-4">
+                <div className="flex items-center justify-between">
+                    <p className="text-md font-normal text-secondary">Conversion</p>
+                    <ButtonUtility size="sm" color="tertiary" tooltip="View trend" icon={TrendUp02} />
+                </div>
 
-            <FadeOnSelection selectionKey={selectionKey} className="flex min-w-0 flex-1 flex-col gap-4">
                 <div className="min-w-0 overflow-x-auto">
                     <table className="w-full min-w-72 border-collapse">
                         <thead>
@@ -52,26 +63,36 @@ export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: {
                                 <tr
                                     key={row.courseId}
                                     onClick={onCourseClick ? () => onCourseClick(row.courseId) : undefined}
-                                    className={onCourseClick ? "cursor-pointer border-b border-secondary transition duration-100 ease-linear hover:bg-primary_hover" : "border-b border-secondary"}
+                                    className={
+                                        onCourseClick
+                                            ? "cursor-pointer border-b border-secondary transition duration-100 ease-linear hover:bg-primary_hover"
+                                            : "border-b border-secondary"
+                                    }
                                 >
                                     <td className="py-2.5 pr-2 pl-2 text-md font-normal text-primary">{row.courseLabel}</td>
                                     <td className="py-2.5 pr-2 text-right font-mono text-md text-primary">{String(row.application).padStart(2, "0")}</td>
                                     <td className="py-2.5 pr-2 text-right font-mono text-md text-primary">
-                                        {String(row.offer).padStart(2, "0")} <span className="text-[10px] font-normal text-success-primary">{row.offerConversionPct}%</span>
+                                        {String(row.offer).padStart(2, "0")}{" "}
+                                        <span className="text-[10px] font-normal text-success-primary">{row.offerConversionPct}%</span>
                                     </td>
                                     <td className="py-2.5 pr-2 text-right font-mono text-md text-primary">
-                                        {String(row.payment).padStart(2, "0")} <span className="text-[10px] font-normal text-success-primary">{row.paymentConversionPct}%</span>
+                                        {String(row.payment).padStart(2, "0")}{" "}
+                                        <span className="text-[10px] font-normal text-success-primary">{row.paymentConversionPct}%</span>
                                     </td>
                                 </tr>
                             ))}
                             <tr>
                                 <td className="py-2.5 pr-2 pl-2 text-md font-medium text-primary">Overall</td>
-                                <td className="py-2.5 pr-2 text-right font-mono text-md font-semibold text-primary">{String(overall.application).padStart(2, "0")}</td>
                                 <td className="py-2.5 pr-2 text-right font-mono text-md font-semibold text-primary">
-                                    {String(overall.offer).padStart(2, "0")} <span className="text-[10px] font-normal text-success-primary">{overall.offerConversionPct}%</span>
+                                    {String(overall.application).padStart(2, "0")}
                                 </td>
                                 <td className="py-2.5 pr-2 text-right font-mono text-md font-semibold text-primary">
-                                    {String(overall.payment).padStart(2, "0")} <span className="text-[10px] font-normal text-success-primary">{overall.paymentConversionPct}%</span>
+                                    {String(overall.offer).padStart(2, "0")}{" "}
+                                    <span className="text-[10px] font-normal text-success-primary">{overallOfferConversionPct}%</span>
+                                </td>
+                                <td className="py-2.5 pr-2 text-right font-mono text-md font-semibold text-primary">
+                                    {String(overall.payment).padStart(2, "0")}{" "}
+                                    <span className="text-[10px] font-normal text-success-primary">{overallPaymentConversionPct}%</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -88,7 +109,14 @@ export const ConversionCard = ({ selection, onCourseClick, onLostDealsClick }: {
                             You lost <span className="font-mono">{lost.lostCount}</span> out of <span className="font-mono">{lost.cohortSize}</span> deals
                         </p>
                     </div>
-                    <ButtonUtility size="sm" color="tertiary" tooltip="All deals" icon={TrendUp02} onClick={onLostDealsClick} className="text-fg-error-secondary" />
+                    <ButtonUtility
+                        size="sm"
+                        color="tertiary"
+                        tooltip="All deals"
+                        icon={TrendUp02}
+                        onClick={onLostDealsClick}
+                        className="text-fg-error-secondary"
+                    />
                 </div>
             </FadeOnSelection>
         </Card>

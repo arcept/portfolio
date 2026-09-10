@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import type { FunnelFlow, FunnelFlowNodeId, FunnelFlowSubBand } from "@/data/dashboard-metrics";
+import type { FunnelFlow, FunnelFlowNodeId } from "@/data/dashboard-metrics";
 import { useCountUp } from "@/hooks/use-count-up";
 
 /**
@@ -245,9 +245,11 @@ function buildFlowPath(points: Point[]): string {
     return `${d} Z`;
 }
 
-type TooltipContent = { title: string; lines: string[]; hint?: string };
-
-const formatSubBands = (subBands: FunnelFlowSubBand[]) => subBands.filter((b) => b.count > 0).map((b) => `${b.label}: ${b.count}`);
+/** Same hierarchy as the Deal Stages tooltip (stat-cards.tsx): bold title + total up top, a
+ * divider, then a breakdown of rows (label left, count right) — plus a `footer` tier here for
+ * context that isn't part of the breakdown itself (the "X% of previous stage" line), visually
+ * separated the same way Deal Stages sets its "needs attention" line apart from its breakdown. */
+type TooltipContent = { title: string; total: number; rows: { label: string; count: number }[]; footer?: string; hint?: string };
 
 const pillWidth = (text: string, large = false) => (large ? Math.max(52, 26 + text.length * 13) : Math.max(34, 18 + text.length * 9));
 
@@ -384,17 +386,15 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
 
     const nodeTooltip = (i: number): TooltipContent => {
         const node = nodes[i];
-        const lines = formatSubBands(node.subBands);
-        if (i > 0) {
-            const prevValue = nodes[i - 1].value;
-            lines.push(`${flow.conversionPct[i - 1]}% of ${nodes[i - 1].label} (${node.value} of ${prevValue})`);
-        }
-        return { title: `${node.label} — ${node.value}`, lines, hint: `Click to view ${node.label} deals →` };
+        const rows = node.subBands.filter((b) => b.count > 0).map((b) => ({ label: b.label, count: b.count }));
+        const footer = i > 0 ? `${flow.conversionPct[i - 1]}% of ${nodes[i - 1].label} (${node.value} of ${nodes[i - 1].value})` : undefined;
+        return { title: node.label, total: node.value, rows, footer, hint: `Click to view ${node.label} deals →` };
     };
 
     const dropoutTooltip = (r: (typeof dropoutRibbons)[number]): TooltipContent => ({
-        title: `Dropped after ${r.fromLabel} — ${r.count}`,
-        lines: formatSubBands(r.breakdown),
+        title: `Dropped after ${r.fromLabel}`,
+        total: r.count,
+        rows: r.breakdown.filter((b) => b.count > 0).map((b) => ({ label: b.label, count: b.count })),
         hint: `Click to view these deals →`,
     });
 
@@ -655,16 +655,30 @@ export const SalesFunnelRibbon = ({ flow, width, height, onBandClick }: SalesFun
             {hover &&
                 createPortal(
                     <div
-                        className="pointer-events-none fixed z-50 flex w-max max-w-64 flex-col gap-0.5 rounded-lg bg-primary-solid px-3 py-2 shadow-lg"
+                        className="pointer-events-none fixed z-50 flex w-max max-w-64 flex-col gap-1.5 rounded-lg bg-primary-solid px-3 py-2.5 shadow-lg"
                         style={{ left: hover.x, top: hover.y, transform: hover.flip ? "translate(-50%, 14px)" : "translate(-50%, calc(-100% - 14px))" }}
                     >
-                        <p className="text-xs font-semibold text-white">{hover.content.title}</p>
-                        {hover.content.lines.map((line, i) => (
-                            <p key={i} className="text-xs text-tooltip-supporting-text">
-                                {line}
-                            </p>
-                        ))}
-                        {hover.content.hint && <p className="mt-1 text-xs font-medium text-tooltip-supporting-text">{hover.content.hint}</p>}
+                        <div className="flex items-baseline justify-between gap-4">
+                            <span className="text-xs font-semibold text-white">{hover.content.title}</span>
+                            <span className="font-mono text-xs font-semibold text-white">{hover.content.total}</span>
+                        </div>
+
+                        {hover.content.rows.length > 0 && (
+                            <div className="flex flex-col gap-1 border-t border-white/10 pt-1.5">
+                                {hover.content.rows.map((row) => (
+                                    <div key={row.label} className="flex items-center justify-between gap-4 text-[11px] text-tooltip-supporting-text">
+                                        <span>{row.label}</span>
+                                        <span className="font-mono">{row.count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {hover.content.footer && (
+                            <div className="border-t border-white/10 pt-1.5 text-[11px] font-medium text-tooltip-supporting-text">{hover.content.footer}</div>
+                        )}
+
+                        {hover.content.hint && <p className="text-xs font-medium text-tooltip-supporting-text">{hover.content.hint}</p>}
                     </div>,
                     document.body,
                 )}
