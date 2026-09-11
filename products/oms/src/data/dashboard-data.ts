@@ -611,5 +611,11 @@ export type TeamManagerFunnelCardData = {
     applications: FunnelPanelData;
     offers: FunnelPanelData;
     payment: FunnelPanelData;
+    /** Deals whose next step is BDR/TM-owned, not the learner's (Figma node 626:17776's
+     * collapsed-state "Pending Actions" list) — a different cut than `applications`/`offers`/
+     * `payment`'s own totals above, e.g. Applications here is New + Expired only, not the whole
+     * cohort. See `getTeamManagerFunnelCardData` for the exact status sets (Manik's call,
+     * 2026-09-11). */
+    pendingActions: { applications: number; offers: number; payment: number };
     topPerformers: { id: string; name: string; roleTag: string; revenue: number; units: number }[];
 };

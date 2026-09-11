@@ -1396,7 +1396,7 @@ export function getTeamManagerFunnelCardData(selection: PeriodSelection, tm: Org
     const chart = getPeriodChartDataLive(selection, persona, deals);
     const headline = getSalesFunnelHeadline(selection, persona, deals);
 
-    // Top Performers — top 3 BDRs under this TM by booked revenue this period.
+    // Top Performers — top 2 BDRs under this TM by booked revenue this period.
     const topPerformers = bdrs
         .filter((bdr) => bdr.tmId === tm.id)
         .map((bdr) => {
@@ -1413,7 +1413,18 @@ export function getTeamManagerFunnelCardData(selection: PeriodSelection, tm: Org
             };
         })
         .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 3);
+        .slice(0, 2);
+
+    // Pending Actions (Figma node 626:17776's collapsed-state list) — deals whose next step is
+    // BDR/TM-owned, not the learner's (Manik's call, 2026-09-11): Applications is New + Expired
+    // only (Pending is genuinely the learner's turn); Offers is the "Offer Not Shared" work plus
+    // Expired; Payment is Due + Overdue. Reuses the same counts already computed above for the
+    // full panels — deliberately a different population than those panels' own totals.
+    const pendingActions = {
+        applications: appNew + appExpired,
+        offers: offerNotShared + offerExpired,
+        payment: payDue + payOverdue,
+    };
 
     return {
         id: tm.id,
@@ -1429,6 +1440,7 @@ export function getTeamManagerFunnelCardData(selection: PeriodSelection, tm: Org
         applications,
         offers,
         payment,
+        pendingActions,
         topPerformers,
     };
 }

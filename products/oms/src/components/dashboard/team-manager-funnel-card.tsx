@@ -1,6 +1,9 @@
 import type { FC } from "react";
-import { ArrowDown, ArrowUp, Bank, Certificate01, LetterSpacing01 } from "@untitledui/icons";
+import { ArrowDown, ArrowUp, Bank, Certificate01, ChevronDown, LetterSpacing01 } from "@untitledui/icons";
+import { motion } from "motion/react";
 import { Avatar } from "@/components/base/avatar/avatar";
+import { ButtonUtility } from "@/components/base/buttons/button-utility";
+import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { Dot } from "@/components/foundations/dot-icon";
 import type { DealHealthColor, FunnelPanelData, TeamManagerFunnelCardData } from "@/data/dashboard-data";
 import { formatIndianNumber } from "@/data/dashboard-data";
@@ -44,6 +47,32 @@ const UnitTargetSegmentBar = ({ attainmentPct }: { attainmentPct: number | null 
     );
 };
 
+/** Pending Actions (Figma node 626:17776's collapsed-state column) — deals whose next step is
+ * BDR/TM-owned, not the learner's; see `getTeamManagerFunnelCardData` for the exact per-category
+ * status sets. Always visible (both collapsed and expanded), unlike the full panels below. */
+const PendingActionsList = ({ pendingActions }: { pendingActions: TeamManagerFunnelCardData["pendingActions"] }) => (
+    <div className="flex flex-col gap-4 px-2">
+        <div className="flex items-center gap-2">
+            <div className="size-3 shrink-0 rounded-[4px] bg-fg-warning-secondary" />
+            <p className="text-md whitespace-nowrap text-secondary">Pending Actions</p>
+        </div>
+        <div className="flex flex-col gap-2">
+            {[
+                { label: "Applications", count: pendingActions.applications },
+                { label: "Offers", count: pendingActions.offers },
+                { label: "Payment", count: pendingActions.payment },
+            ].map((item) => (
+                <div key={item.label} className="flex h-6 items-center rounded-full bg-secondary_hover">
+                    <div className="flex h-full items-center gap-3 rounded-full bg-quaternary py-1 pr-2 pl-3">
+                        <span className="text-xs font-medium whitespace-nowrap text-primary">{item.label}</span>
+                        <span className="text-md font-semibold whitespace-nowrap text-primary">{String(item.count).padStart(2, "0")}</span>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+);
+
 const HEALTH_COLOR_CLASS: Record<DealHealthColor, string> = {
     green: "bg-fg-success-primary",
     amber: "bg-fg-warning-secondary",
@@ -55,11 +84,13 @@ const HEALTH_COLOR_CLASS: Record<DealHealthColor, string> = {
 /** One 12px square per cohort deal (see `getTeamManagerFunnelCardData`'s `dealsHealth`, already
  * sorted healthiest-first) — a fixed 10-column grid, height following the deal count rather than
  * a hardcoded 6 rows, so it never clips a Team Manager with an unusually large/small cohort.
- * Grayscale by default, full color on hover — keeps the color coding as a deliberate reveal
- * rather than a wall of color competing with the rest of the card at rest. */
-const DealsHealthGrid = ({ colors }: { colors: DealHealthColor[] }) => (
+ * Grayscale while the card is collapsed, full color once expanded (Figma node 626:17776 renders
+ * an explicit grayscale "Filter" overlay only in its `Default` state) — tied to this card's own
+ * expand state, not mouse hover (superseding the hover-reveal this had before this state was
+ * added, Manik's call, 2026-09-11). */
+const DealsHealthGrid = ({ colors, isExpanded }: { colors: DealHealthColor[]; isExpanded: boolean }) => (
     <div
-        className="grid gap-1 grayscale transition-[filter] duration-300 ease-out hover:grayscale-0"
+        className={cx("grid gap-1 transition-[filter] duration-300 ease-out", !isExpanded && "grayscale")}
         style={{ gridTemplateColumns: "repeat(10, 12px)" }}
     >
         {colors.map((color, i) => (
@@ -70,9 +101,9 @@ const DealsHealthGrid = ({ colors }: { colors: DealHealthColor[] }) => (
 
 const StatBlock = ({ label, amount, changePct }: { label: string; amount: number; changePct: number | null }) => (
     <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium whitespace-nowrap text-secondary">{label}</p>
+        <p className="text-sm font-medium whitespace-nowrap text-secondary opacity-80">{label}</p>
         <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-semibold whitespace-nowrap text-primary">₹ {formatIndianNumber(amount)}</span>
+            <span className="font-mono text-[20px] font-semibold whitespace-nowrap text-primary">₹ {formatIndianNumber(amount)}</span>
             {changePct !== null && (
                 <span
                     className={cx(
@@ -92,45 +123,64 @@ const StatBlock = ({ label, amount, changePct }: { label: string; amount: number
  * treatment, not something derived from the counts themselves. */
 const FALLOUT_OPACITY = ["bg-fg-quaternary/50", "bg-fg-quaternary/30", "bg-fg-quaternary/20"];
 
-const FunnelPanel = ({ icon: Icon, label, data }: { icon: FC<{ className?: string }>; label: string; data: FunnelPanelData }) => (
-    <div className="flex flex-1 flex-col gap-3 rounded-xl px-6 py-4">
-        <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-col gap-2">
-                <p className="text-md whitespace-nowrap text-secondary">{label}</p>
-                <p className="text-2xl font-medium text-primary">{data.count}</p>
-            </div>
-            <Icon className="size-6 text-fg-quaternary" />
-        </div>
+/** Saved/Not-Interested/Rejected as individual circles, each only shown when its own count is
+ * above zero — a panel with no fallout at all renders none of them, and a panel where only one
+ * of the three occurred shows just that one. Opacity is assigned per label before filtering, so
+ * "Saved" always reads at the same visual weight regardless of which of its siblings are also
+ * nonzero this period, rather than shifting with whatever ends up adjacent to it. */
+const falloutItems = (fallout: FunnelPanelData["fallout"]) =>
+    [
+        { label: "Saved", count: fallout.saved, opacityClass: FALLOUT_OPACITY[0] },
+        { label: "Not Interested", count: fallout.notInterested, opacityClass: FALLOUT_OPACITY[1] },
+        { label: "Rejected", count: fallout.rejected, opacityClass: FALLOUT_OPACITY[2] },
+    ].filter((f) => f.count > 0);
 
-        <ul className="flex flex-col gap-1">
-            {data.breakdown.map((item) => (
-                <li key={item.label} className="flex h-5 items-center justify-between gap-2 text-sm whitespace-nowrap">
-                    <span className="flex items-center gap-1 text-tertiary">
-                        <Dot size="sm" className={item.dotClassName} />
-                        {item.label}
-                    </span>
-                    <span className="text-tertiary">{String(item.count).padStart(2, "0")}</span>
-                </li>
-            ))}
-        </ul>
+const FunnelPanel = ({ icon: Icon, label, data }: { icon: FC<{ className?: string }>; label: string; data: FunnelPanelData }) => {
+    const fallout = falloutItems(data.fallout);
 
-        <div className="flex gap-2">
-            {[
-                { label: "Saved", count: data.fallout.saved },
-                { label: "Not Interested", count: data.fallout.notInterested },
-                { label: "Rejected", count: data.fallout.rejected },
-            ].map((f, i) => (
-                <div
-                    key={f.label}
-                    title={f.label}
-                    className={cx("flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium text-primary", FALLOUT_OPACITY[i])}
-                >
-                    {String(f.count).padStart(2, "0")}
+    return (
+        <div className="flex flex-1 flex-col gap-3 rounded-xl p-4">
+            <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col gap-2">
+                    <p className="text-md whitespace-nowrap text-secondary">{label}</p>
+                    <p className="text-2xl font-medium text-primary">{data.count}</p>
                 </div>
-            ))}
+                <Icon className="size-6 text-fg-quaternary" />
+            </div>
+
+            <ul className="flex flex-col gap-1">
+                {data.breakdown.map((item) => (
+                    <li key={item.label} className="flex h-5 items-center justify-between gap-2 text-sm whitespace-nowrap">
+                        <span className="flex items-center gap-1 text-tertiary">
+                            <Dot size="sm" className={item.dotClassName} />
+                            {item.label}
+                        </span>
+                        <span className="text-tertiary">{String(item.count).padStart(2, "0")}</span>
+                    </li>
+                ))}
+            </ul>
+
+            {fallout.length > 0 && (
+                <div className="flex gap-2">
+                    {fallout.map((f) => (
+                        <Tooltip key={f.label} title={f.label} delay={150}>
+                            <TooltipTrigger>
+                                <div
+                                    className={cx(
+                                        "flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium text-primary",
+                                        f.opacityClass,
+                                    )}
+                                >
+                                    {String(f.count).padStart(2, "0")}
+                                </div>
+                            </TooltipTrigger>
+                        </Tooltip>
+                    ))}
+                </div>
+            )}
         </div>
-    </div>
-);
+    );
+};
 
 /** Three fixed gradients lifted verbatim from the Figma export's Top Performers avatars — purely
  * decorative per-slot color, no semantic token equivalent, so kept as literal values rather than
@@ -143,11 +193,18 @@ const initialsFromName = (name: string) => {
 };
 
 const TopPerformer = ({ performer, gradientIndex }: { performer: TeamManagerFunnelCardData["topPerformers"][number]; gradientIndex: number }) => (
-    <div className="flex items-start gap-2">
+    <div className="group flex items-start gap-2 opacity-70 transition-opacity duration-300 ease-out hover:opacity-100">
         <Avatar
             size="sm"
             border
-            initials={initialsFromName(performer.name)}
+            // Not the `initials` prop — Avatar hardcodes its initials span to `text-quaternary`
+            // (mid-gray) with no way to override just that color, which reads poorly against a
+            // vivid gradient. `placeholder` renders in the same slot with full control instead.
+            placeholder={<span className="text-sm font-semibold text-white">{initialsFromName(performer.name)}</span>}
+            // `group-hover`, not `hover`, on the avatar itself — hovering anywhere on this
+            // performer's row (name, revenue, units too) reveals the gradient, not just the
+            // avatar circle.
+            className="grayscale transition-[filter] duration-300 ease-out group-hover:grayscale-0"
             contentClassName={AVATAR_GRADIENT_CLASS[gradientIndex % AVATAR_GRADIENT_CLASS.length]}
         />
         <div className="flex flex-col pr-2 whitespace-nowrap">
@@ -161,78 +218,148 @@ const TopPerformer = ({ performer, gradientIndex }: { performer: TeamManagerFunn
     </div>
 );
 
-/** The Admin Funnel's per-Team-Manager card (Figma node 609:10888, "Priya Nair") — sits in place
- * of the generic 4-card `FunnelStageCard` grid for each Team Manager row under the admin
- * persona. Data comes from `getTeamManagerFunnelCardData` (dashboard-metrics.ts), which already
- * condenses/merges the underlying funnel stages the way this card's three panels expect. */
-export const TeamManagerFunnelCard = ({ data }: { data: TeamManagerFunnelCardData }) => (
-    <div className="flex flex-col gap-6 rounded-2xl border border-secondary bg-primary p-6 shadow-xs">
-        <div className="flex flex-col gap-1 px-2">
-            <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-xl font-semibold text-primary">{data.name}</h3>
-                <FunnelTag>Team Manager</FunnelTag>
-                {data.cohortTags.map((tag) => (
-                    <FunnelTag key={tag}>{tag}</FunnelTag>
-                ))}
+/** Row 1's compact Unit Sales/Target (Figma node 626:17776) — percentage is the hero figure here
+ * (achieved/target is the secondary one), the opposite emphasis of a plain stat readout, since
+ * this row exists in both the collapsed and expanded states and needs to read at a glance. */
+const UnitSalesTargetCompact = ({ data }: { data: TeamManagerFunnelCardData }) => (
+    <div className="flex flex-col gap-5 px-2">
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+                <div className="size-3 shrink-0 rounded-[4px] bg-fg-success-primary" />
+                <p className="text-md whitespace-nowrap text-secondary">Unit Sales/Target</p>
             </div>
-            <p className="min-w-full text-xs text-tertiary">Aggregate metrics across all cohorts. Overview & Performance</p>
-        </div>
-
-        <div className="flex flex-wrap items-stretch gap-6">
-            <div className="flex flex-col justify-between gap-6 py-4">
-                <div className="flex flex-wrap gap-6">
-                    <div className="flex flex-col gap-4 px-2">
-                        <p className="text-md whitespace-nowrap text-secondary">Deals Health</p>
-                        <DealsHealthGrid colors={data.dealsHealth} />
-                    </div>
-
-                    <div className="flex flex-col gap-5 px-2">
-                        <div className="flex flex-col gap-2">
-                            <p className="text-md whitespace-nowrap text-secondary">Unit Sales/Target</p>
-                            <div className="flex items-baseline gap-2 whitespace-nowrap">
-                                <div className="flex items-center font-mono text-[32px] text-primary">
-                                    <p>{data.unitsAchieved}</p>
-                                    <p className="opacity-40">/{data.unitTarget}</p>
-                                </div>
-                                {data.unitTargetAttainmentPct !== null && (
-                                    <span className={cx("text-sm font-medium", unitTargetAttainmentTone(data.unitTargetAttainmentPct))}>
-                                        {Math.round(data.unitTargetAttainmentPct)}%
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        <UnitTargetSegmentBar attainmentPct={data.unitTargetAttainmentPct} />
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap gap-4 px-2">
-                    <StatBlock label="Booked" amount={data.booked.amount} changePct={data.booked.changePct} />
-                    <StatBlock label="Realised" amount={data.realised.amount} changePct={data.realised.changePct} />
-                    <StatBlock label="Avg Ticket Size" amount={data.avgTicketSize.amount} changePct={data.avgTicketSize.changePct} />
+            <div className="flex items-baseline gap-2 whitespace-nowrap">
+                {data.unitTargetAttainmentPct !== null && (
+                    <span className={cx("text-2xl font-medium", unitTargetAttainmentTone(data.unitTargetAttainmentPct))}>
+                        {Math.round(data.unitTargetAttainmentPct)}%
+                    </span>
+                )}
+                <div className="flex items-center font-normal text-[16px] text-primary">
+                    <p>{data.unitsAchieved}</p>
+                    <p className="opacity-40">/{data.unitTarget}</p>
                 </div>
             </div>
-
-            <div className="hidden shrink-0 self-stretch border-l border-secondary lg:block" />
-
-            <div className="flex flex-1 flex-wrap gap-3">
-                <FunnelPanel icon={LetterSpacing01} label="Applications" data={data.applications} />
-                <FunnelPanel icon={Certificate01} label="Offers" data={data.offers} />
-                <FunnelPanel icon={Bank} label="Payment" data={data.payment} />
-            </div>
         </div>
+        <UnitTargetSegmentBar attainmentPct={data.unitTargetAttainmentPct} />
+    </div>
+);
 
-        {data.topPerformers.length > 0 && (
-            <div className="flex flex-col gap-4 px-2">
-                <p className="text-md whitespace-nowrap text-secondary">Top Performers</p>
-                <div className="flex flex-wrap items-center gap-8">
-                    {data.topPerformers.map((performer, i) => (
-                        <div key={performer.id} className="flex items-center gap-8">
-                            {i > 0 && <div className="h-6 shrink-0 border-l border-secondary" />}
-                            <TopPerformer performer={performer} gradientIndex={i} />
-                        </div>
+/** The Admin Funnel's per-Team-Manager card (Figma node 626:17776, states `Default`/`Variant2`)
+ * — sits in place of the generic 4-card `FunnelStageCard` grid for each Team Manager row under
+ * the admin persona. Row 1 (Deals Health, Pending Actions, Unit Sales/Target) and the
+ * Booked/Realised/Avg Ticket Size stats are always visible — the latter moved out of the
+ * expanded-only section per Manik's ask, 2026-09-11, deliberately departing from the Figma
+ * frame's own Default state, which only showed it in `Variant2`. Only the three full funnel
+ * panels and Top Performers stay gated behind `isExpanded`, animated in/out via height rather
+ * than a hard show/hide. Exactly one card across the grid is expanded at a time — enforced by
+ * the parent (`FunnelSection`), which owns `isExpanded`/`onToggleExpand` for every card. */
+export const TeamManagerFunnelCard = ({
+    data,
+    isExpanded,
+    onToggleExpand,
+}: {
+    data: TeamManagerFunnelCardData;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
+}) => (
+    <div
+        className={cx(
+            "flex h-full flex-col gap-6 rounded-2xl border border-secondary bg-primary p-6 shadow-xs transition-opacity duration-300 ease-out",
+            isExpanded ? "opacity-100" : "opacity-80",
+        )}
+    >
+        <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col gap-1 px-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-xl font-semibold text-primary">{data.name}</h3>
+                    <FunnelTag>Team Manager</FunnelTag>
+                    {data.cohortTags.map((tag) => (
+                        <FunnelTag key={tag}>{tag}</FunnelTag>
                     ))}
                 </div>
+                <p className="min-w-full text-xs text-tertiary">Aggregate metrics across all cohorts. Overview & Performance</p>
             </div>
+            <ButtonUtility
+                icon={ChevronDown}
+                tooltip={isExpanded ? "Collapse" : "Expand"}
+                onClick={onToggleExpand}
+                // `!ring-0` overrides `ButtonUtility`'s default `secondary` color, which otherwise
+                // draws its border as a `ring` (box-shadow), not a literal `border` utility —
+                // `!important` since a plain `ring-0` has the same specificity as the base style's
+                // `ring-1` and isn't guaranteed to win by source order alone.
+                className={cx(
+                    "shrink-0 !ring-0 transition-transform duration-300 ease-out",
+                    isExpanded && "rotate-180",
+                )}
+            />
+        </div>
+
+        {/* Collapsed, this (Row 1 + the revenue stats) is the card's only content —
+            `flex-1 justify-center` lets it settle in the vertical middle of whatever height the
+            card ends up at (its own natural height on first paint, or a taller synced height once
+            any card has been expanded — see `FunnelSection`), instead of hugging the top and
+            leaving a dead gap below it. Expanded, it sits naturally above the content that
+            follows, so neither wrapper applies. */}
+        <div className={cx("flex flex-col gap-6", !isExpanded && "flex-1 justify-center")}>
+            <div className="flex flex-wrap items-start gap-6">
+                <div className="flex flex-col gap-4 px-2">
+                    <p className="text-md whitespace-nowrap text-secondary">Deals Health</p>
+                    <DealsHealthGrid colors={data.dealsHealth} isExpanded={isExpanded} />
+                </div>
+
+                <PendingActionsList pendingActions={data.pendingActions} />
+
+                <UnitSalesTargetCompact data={data} />
+            </div>
+
+            <div
+                className={cx(
+                    "flex flex-wrap items-center gap-4 rounded-2xl p-4 transition-colors duration-300 ease-out",
+                    isExpanded ? "bg-primary_alt" : "bg-primary_alt/40",
+                )}
+            >
+                <StatBlock label="Booked" amount={data.booked.amount} changePct={data.booked.changePct} />
+                <StatBlock label="Realised" amount={data.realised.amount} changePct={data.realised.changePct} />
+                <StatBlock label="Avg Ticket Size" amount={data.avgTicketSize.amount} changePct={data.avgTicketSize.changePct} />
+            </div>
+        </div>
+
+        {/* Not an `AnimatePresence` height:auto↔0 block anymore — this content's own height used
+            to drive the *outer* grid cell's height too (via that cell being `auto`-sized to fit
+            its content), so two independent height animations (this one, and the grid cell's own
+            row-track sizing) were fighting for control of the same visible transition, particular
+            -ly on collapse. The grid cell (`FunnelSection`) now owns the height transition
+            entirely on its own, animating between two real known numbers via Framer's `animate`
+            — this block just needs to appear/fade, not separately animate size (Manik's report,
+            2026-09-11: a card visibly moving in two separate steps instead of one smooth motion). */}
+        {isExpanded && (
+            <motion.div
+                key="expanded"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="flex flex-col gap-6 pt-6"
+            >
+                <div className="flex flex-wrap gap-3">
+                    <FunnelPanel icon={LetterSpacing01} label="Applications" data={data.applications} />
+                    <FunnelPanel icon={Certificate01} label="Offers" data={data.offers} />
+                    <FunnelPanel icon={Bank} label="Payment" data={data.payment} />
+                </div>
+
+                {data.topPerformers.length > 0 && (
+                    <div className="flex flex-col gap-4 px-2">
+                        <p className="text-md whitespace-nowrap text-secondary">Top Performers</p>
+                        <div className="flex flex-wrap items-center gap-8">
+                            {data.topPerformers.map((performer, i) => (
+                                <div key={performer.id} className="flex items-center gap-8">
+                                    {i > 0 && <div className="h-6 shrink-0 border-l border-secondary" />}
+                                    <TopPerformer performer={performer} gradientIndex={i} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </motion.div>
         )}
     </div>
 );
