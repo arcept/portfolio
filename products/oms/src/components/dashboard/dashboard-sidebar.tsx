@@ -31,7 +31,7 @@ type SidebarNavItemProps = {
     icon: FC<{ className?: string }>;
     badge?: ReactNode;
     active?: boolean;
-    /** No route exists behind it yet — Payments/Form/Content (Figma node 404:6283). Dimmed,
+    /** No route exists behind it yet — Payments/Emailers & Forms/Content (Figma node 404:6283). Dimmed,
      * non-navigating, and explains why on hover rather than just vanishing or 404ing. */
     disabled?: boolean;
 };
@@ -104,8 +104,8 @@ export const DashboardSidebar = () => {
         { label: "Home", href: "/", icon: Codepen },
         { label: "Deals", href: "/deals", icon: AlignCenter, badge: <SidebarNavBadge>{dealsForPersona(persona, deals).length}</SidebarNavBadge> },
         { label: "Payments", icon: CreditCardCheck, disabled: true },
-        { label: "Form", icon: LetterSpacing01, disabled: true },
-        { label: "Incentives", icon: Gift01, disabled: true },
+        { label: "Emailers & Forms", icon: LetterSpacing01, disabled: true },
+        { label: "Incentives & Targets", icon: Gift01, disabled: true },
         { label: "Content", icon: Heading02, disabled: true },
     ].map((item) => ({ ...item, active: !!item.href && item.href === activeUrl }));
 

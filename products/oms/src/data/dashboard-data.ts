@@ -248,8 +248,14 @@ const MARCH = defineMonth(2025, 2, 100, 32, 170_000, 0.205, 100, 0.75);
 const APRIL = defineMonth(2025, 3, 110, 92, 172_000, 0.21, 101, 1.0);
 const MAY = defineMonth(2025, 4, 120, 82, 175_000, 0.215, 102, 1.3);
 const JUNE = defineMonth(2025, 5, 130, 87, 176_000, 0.22, 103, 0.9);
-const JULY = defineMonth(2025, 6, 140, 75, 178_000, 0.225, 104, 1.1);
-const AUGUST = defineMonth(2025, 7, 150, 37, 180_000, 0.2235, 105, 0.95);
+// July/August `unitsAchieved` bumped ~25% (Manik's ask, 2026-09-12: "20-30% more deals" for
+// these two months) — 75→94 and 37→46. `applicationsSent`/every other cascade-derived figure
+// scales up right along with it (the ~2.7-2.9x multiplier noted above). This does push July's
+// Unit Sales/Target attainment (94/140 ≈ 67%) past the Amber band the comment above says it was
+// originally tuned to land in — a real side effect of the volume increase, not reverted, since
+// the ask here was specifically about deal volume.
+const JULY = defineMonth(2025, 6, 140, 94, 178_000, 0.225, 104, 1.1);
+const AUGUST = defineMonth(2025, 7, 150, 46, 180_000, 0.2235, 105, 0.95);
 
 export const MONTHS: MonthGroundTruth[] = [JANUARY, FEBRUARY, MARCH, APRIL, MAY, JUNE, JULY, AUGUST];
 
@@ -595,7 +601,7 @@ export type FunnelPanelData = {
     fallout: { saved: number; notInterested: number; rejected: number };
 };
 
-export type DealHealthColor = "green" | "amber" | "blue" | "gray" | "red";
+export type DealHealthColor = "green" | "amber" | "blue" | "lightGray" | "darkGray" | "red";
 
 export type TeamManagerFunnelCardData = {
     id: string;

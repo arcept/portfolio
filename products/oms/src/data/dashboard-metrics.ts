@@ -710,6 +710,10 @@ const dot = {
     warning: "text-fg-warning-primary",
     success: "text-fg-success-primary",
     error: "text-fg-error-primary",
+    // "Application Pending"/"Offer Pending"/"Ongoing" — Figma's own dot color for these
+    // (Manik's call, 2026-09-11), distinct from the plain neutral gray the other "nothing to
+    // report yet" statuses use elsewhere in these breakdowns.
+    info: "text-utility-blue-500",
 };
 
 export function buildFunnelStages(cohort: Deal[]): [FunnelStage, FunnelStage, FunnelStage, FunnelStage] {
@@ -1304,7 +1308,42 @@ export function getTeamManagerSummariesLive(selection: PeriodSelection, deals: D
 
 const GLOBAL_STATUS_IDS: DealStatusId[] = ["SAVED", "NOT_INTERESTED", "REJECTED"];
 
-const DEAL_HEALTH_RANK: Record<DealHealthColor, number> = { green: 0, amber: 1, blue: 2, gray: 3, red: 4 };
+// Deals Health's color meaning (Manik's call, 2026-09-11) is "what does this deal need right
+// now", not a 1:1 mirror of `STATUS[id].color` (which reads more like a generic status-family
+// tag — e.g. it puts PAY_DUE/PAY_OVERDUE in the same "green" family as PAY_ONGOING, and OFFER_
+// PENDING/APP_PENDING don't get their own family at all). Exhaustive over every `DealStatusId`
+// so TypeScript catches it if a new status is ever added without a health color:
+// green = booked and on track; amber = needs the BDR's attention; blue = pending from the
+// learner's own side, nothing wrong; lightGray = saved for later; darkGray = not interested;
+// red = rejected outright. `ENR_CANCELLED` isn't one of the six categories Manik named — grouped
+// under red alongside Rejected as the closest fit (both a negative terminal outcome), flagged to
+// Manik rather than assumed silently.
+const DEAL_HEALTH_COLOR: Record<DealStatusId, DealHealthColor> = {
+    PAY_ONGOING: "green",
+    PAY_COMPLETED: "green",
+    APP_NEW: "amber",
+    APP_FILLED: "amber",
+    APP_EXPIRED: "amber",
+    PLAN_NOT_STARTED: "amber",
+    PLAN_DRAFT: "amber",
+    PLAN_AWAITING_APPROVAL: "amber",
+    OFFER_ACCEPTED: "amber",
+    OFFER_WITHDRAWN: "amber",
+    OFFER_EXPIRED: "amber",
+    PAY_DUE: "amber",
+    PAY_OVERDUE: "amber",
+    APP_PENDING: "blue",
+    OFFER_PENDING: "blue",
+    SAVED: "lightGray",
+    NOT_INTERESTED: "darkGray",
+    REJECTED: "red",
+    ENR_CANCELLED: "red",
+};
+
+// Healthiest-first sort order for the heatmap grid — green (booked, on track) reads best; blue
+// (a normal wait on the learner, nothing actually wrong) ranks above amber (something needs the
+// BDR); the two fallout grays sit below that; red is worst.
+const DEAL_HEALTH_RANK: Record<DealHealthColor, number> = { green: 0, blue: 1, amber: 2, lightGray: 3, darkGray: 4, red: 5 };
 
 function falloutCounts(falloutDeals: Deal[]): FunnelPanelData["fallout"] {
     return {
@@ -1323,7 +1362,7 @@ export function getTeamManagerFunnelCardData(selection: PeriodSelection, tm: Org
     // Deals Health heatmap — one cell per cohort deal, colored by its own status and sorted
     // healthiest-first so the grid reads as a left-to-right/top-to-bottom gradient, same as the
     // Figma frame (Manik's call, 2026-09-11: real per-deal data, not a decorative fixed pattern).
-    const dealsHealth = cohort.map((d) => STATUS[d.status.id].color).sort((a, b) => DEAL_HEALTH_RANK[a] - DEAL_HEALTH_RANK[b]);
+    const dealsHealth = cohort.map((d) => DEAL_HEALTH_COLOR[d.status.id]).sort((a, b) => DEAL_HEALTH_RANK[a] - DEAL_HEALTH_RANK[b]);
 
     const cohortTags = Array.from(new Set(cohort.map((d) => d.course.short))).sort();
 
@@ -1340,7 +1379,7 @@ export function getTeamManagerFunnelCardData(selection: PeriodSelection, tm: Org
             { label: "Complete", count: appComplete, dotClassName: dot.success },
             { label: "Expired", count: appExpired, dotClassName: dot.error },
             { label: "New", count: appNew, dotClassName: dot.neutral },
-            { label: "Application Pending", count: appPending, dotClassName: dot.neutral },
+            { label: "Application Pending", count: appPending, dotClassName: dot.info },
         ],
         fallout: falloutCounts(appFallout),
     };
@@ -1363,7 +1402,7 @@ export function getTeamManagerFunnelCardData(selection: PeriodSelection, tm: Org
             { label: "Accepted", count: offerAccepted, dotClassName: dot.success },
             { label: "Expired", count: offerExpired, dotClassName: dot.error },
             { label: "Offer Not Shared", count: offerNotShared, dotClassName: dot.neutral },
-            { label: "Offer Pending", count: offerPending, dotClassName: dot.neutral },
+            { label: "Offer Pending", count: offerPending, dotClassName: dot.info },
         ],
         fallout: falloutCounts(offerFallout),
     };
@@ -1382,7 +1421,7 @@ export function getTeamManagerFunnelCardData(selection: PeriodSelection, tm: Org
         count: paidCohort.length,
         breakdown: [
             { label: "Completed", count: payCompleted, dotClassName: dot.success },
-            { label: "Ongoing", count: payOngoing, dotClassName: dot.success },
+            { label: "Ongoing", count: payOngoing, dotClassName: dot.info },
             { label: "Due", count: payDue, dotClassName: dot.warning },
             { label: "Overdue", count: payOverdue, dotClassName: dot.error },
         ],

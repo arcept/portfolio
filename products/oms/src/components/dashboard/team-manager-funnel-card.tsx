@@ -1,10 +1,9 @@
-import type { FC } from "react";
+import type { FC, MouseEvent } from "react";
 import { ArrowDown, ArrowUp, Bank, Certificate01, ChevronDown, LetterSpacing01 } from "@untitledui/icons";
 import { motion } from "motion/react";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
-import { Dot } from "@/components/foundations/dot-icon";
 import type { DealHealthColor, FunnelPanelData, TeamManagerFunnelCardData } from "@/data/dashboard-data";
 import { formatIndianNumber } from "@/data/dashboard-data";
 import { cx } from "@/utils/cx";
@@ -73,11 +72,17 @@ const PendingActionsList = ({ pendingActions }: { pendingActions: TeamManagerFun
     </div>
 );
 
+// green = booked & on track; amber = needs the BDR's attention; blue = pending from the learner's
+// own side (same blue as the "Application Pending"/"Offer Pending" breakdown dots, `dot.info` in
+// dashboard-metrics.ts — not the brand/purple foreground token used here before, Manik's call,
+// 2026-09-11); lightGray = saved for later; darkGray = not interested; red = rejected/cancelled.
+// See `DEAL_HEALTH_COLOR` in dashboard-metrics.ts for the full per-status mapping this consumes.
 const HEALTH_COLOR_CLASS: Record<DealHealthColor, string> = {
     green: "bg-fg-success-primary",
     amber: "bg-fg-warning-secondary",
-    blue: "bg-fg-brand-secondary",
-    gray: "bg-fg-quaternary",
+    blue: "bg-utility-blue-500",
+    lightGray: "bg-fg-quaternary",
+    darkGray: "bg-fg-tertiary",
     red: "bg-fg-error-primary",
 };
 
@@ -142,7 +147,7 @@ const FunnelPanel = ({ icon: Icon, label, data }: { icon: FC<{ className?: strin
         <div className="flex flex-1 flex-col gap-3 rounded-xl p-4">
             <div className="flex items-start justify-between gap-2">
                 <div className="flex flex-col gap-2">
-                    <p className="text-md whitespace-nowrap text-secondary">{label}</p>
+                    <p className="text-md whitespace-nowrap text-secondary opacity-80">{label}</p>
                     <p className="text-2xl font-medium text-primary">{data.count}</p>
                 </div>
                 <Icon className="size-6 text-fg-quaternary" />
@@ -150,9 +155,20 @@ const FunnelPanel = ({ icon: Icon, label, data }: { icon: FC<{ className?: strin
 
             <ul className="flex flex-col gap-1">
                 {data.breakdown.map((item) => (
-                    <li key={item.label} className="flex h-5 items-center justify-between gap-2 text-sm whitespace-nowrap">
+                    <li
+                        key={item.label}
+                        className={cx(
+                            "flex h-5 items-center justify-between gap-2 text-sm whitespace-nowrap",
+                            // Figma indents "Due"/"Overdue" under "Ongoing" in the Payment panel
+                            // specifically, reading as a nested breakdown of it — the only panel
+                            // with those exact labels, so matching by label is enough without
+                            // threading a per-panel flag through `FunnelPanelData`.
+                            (item.label === "Due" || item.label === "Overdue") && "pl-2",
+                        )}
+                    >
                         <span className="flex items-center gap-1 text-tertiary">
-                            <Dot size="sm" className={item.dotClassName} />
+                            {/* 4px — not the shared `Dot` component, whose smallest size is 8px */}
+                            <span className={cx("size-1 shrink-0 rounded-full bg-current", item.dotClassName)} />
                             {item.label}
                         </span>
                         <span className="text-tertiary">{String(item.count).padStart(2, "0")}</span>
@@ -161,10 +177,15 @@ const FunnelPanel = ({ icon: Icon, label, data }: { icon: FC<{ className?: strin
             </ul>
 
             {fallout.length > 0 && (
-                <div className="flex gap-2">
+                // Figma layers a group-level `opacity-60` on top of each circle's own background
+                // alpha (50/30/20%) — the combined effect (≈30/18/12%) is a lot fainter than just
+                // the per-circle alpha alone, and dims the numbers inside too, not just the fill.
+                <div className="flex gap-2 opacity-60">
                     {fallout.map((f) => (
                         <Tooltip key={f.label} title={f.label} delay={150}>
-                            <TooltipTrigger>
+                            {/* Real focusable buttons nested inside the now click-anywhere-toggles
+                                card — stop the click from also bubbling up and collapsing it. */}
+                            <TooltipTrigger onClick={(e: MouseEvent) => e.stopPropagation()}>
                                 <div
                                     className={cx(
                                         "flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium text-primary",
@@ -263,9 +284,27 @@ export const TeamManagerFunnelCard = ({
     onToggleExpand: () => void;
 }) => (
     <div
+        onClick={onToggleExpand}
+        // Not a `role="button"`/`tabIndex` target — the chevron below stays the fully keyboard-
+        // accessible control (its own focus stop, activates on Enter/Space via its native
+        // `<button>`); this is a mouse-only convenience so the whole card, not just the small
+        // chevron, is clickable (Manik's ask, 2026-09-11). `hover:scale-[1.02]` is a plain CSS
+        // transform, not a Framer one, so it can't fight the outer grid cell's own Framer-driven
+        // `layout`/`animate` transforms in `FunnelSection` — and since `transform` never
+        // participates in layout, it can't push siblings or resize the grid track either.
         className={cx(
-            "flex h-full flex-col gap-6 rounded-2xl border border-secondary bg-primary p-6 shadow-xs transition-opacity duration-300 ease-out",
+            "flex h-full cursor-pointer flex-col gap-6 rounded-2xl border border-secondary bg-primary p-6 shadow-xs transition-[opacity,background-color,border-color,box-shadow,transform] duration-1000 delay-150 ease-in",
             isExpanded ? "opacity-100" : "opacity-80",
+            // Hover effects only apply while collapsed — once expanded, the card is already the
+            // "active"/full-attention one (full opacity, its own richer content), so the same
+            // hover treatment stops applying here (Manik's ask, 2026-09-12). One shared timing for
+            // every hover-transitioning property — opacity, background, border, shadow, and the
+            // scale all move together on the same 1s/150ms-delay clock. `border-primary` is a
+            // lighter gray than the base `border-secondary` in this dark theme (`neutral-700` vs.
+            // `neutral-800`); `hover:bg-black/10`, not a semantic gray token like `bg-primary_hover`
+            // — this app's whole dark-mode hover convention goes *lighter* on hover, which washed
+            // out the contrast between this content-dense card and its own text.
+            !isExpanded && "hover:scale-[1.02] hover:border-primary hover:bg-black/10 hover:opacity-100 hover:shadow-xl",
         )}
     >
         <div className="flex items-start justify-between gap-2">
@@ -282,7 +321,13 @@ export const TeamManagerFunnelCard = ({
             <ButtonUtility
                 icon={ChevronDown}
                 tooltip={isExpanded ? "Collapse" : "Expand"}
-                onClick={onToggleExpand}
+                // The whole card is now also a click target (see the root `onClick` above) — without
+                // `stopPropagation` here, clicking the chevron itself would fire both this and the
+                // card's own handler, toggling twice (net no-op, or worse, a visible double-flicker).
+                onClick={(e: MouseEvent) => {
+                    e.stopPropagation();
+                    onToggleExpand();
+                }}
                 // `!ring-0` overrides `ButtonUtility`'s default `secondary` color, which otherwise
                 // draws its border as a `ring` (box-shadow), not a literal `border` utility —
                 // `!important` since a plain `ring-0` has the same specificity as the base style's
@@ -340,7 +385,7 @@ export const TeamManagerFunnelCard = ({
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="flex flex-col gap-6 pt-6"
             >
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                     <FunnelPanel icon={LetterSpacing01} label="Applications" data={data.applications} />
                     <FunnelPanel icon={Certificate01} label="Offers" data={data.offers} />
                     <FunnelPanel icon={Bank} label="Payment" data={data.payment} />

@@ -65,6 +65,48 @@ const gridLayoutTransition = { type: "tween" as const, duration: 0.3, ease: "eas
 // below and the actual gap can never quietly drift apart.
 const GRID_GAP_PX = 24;
 
+// Explicit placement once a card is expanded, replacing plain CSS auto-placement (Manik's report,
+// 2026-09-11) — dense auto-flow only gets 2 of the 3 possible "who's expanded" cases right: the
+// first roster item expanding correctly keeps it in column 1 with the other two stacking in
+// column 2, and the middle item expanding correctly keeps column 1 as-is with it taking over
+// column 2 — but the *last* item expanding tries to open a 3rd grid row instead of cleanly
+// swapping into column 2, which is exactly what read as "the grid grows" instead of staying a
+// fixed 2-row rectangle. Verified against all three of the Figma usage frame's "Selected=X"
+// examples (node 626:24214): whichever card is expanded keeps the column it would already occupy
+// in the plain 2-per-row baseline if it's the *first* roster item, and takes over column 2
+// otherwise — the other two always end up in the remaining column, stacked in roster order. Only
+// six placements are possible (2 columns × {row 1, row 2, spanning both}), spelled out as full
+// literal class strings — a runtime-built string like `` `lg:[grid-column:${n}]` `` wouldn't work,
+// since Tailwind only generates CSS for class names it finds as literal text in the source (the
+// exact bug already hit once this session with a dynamically-built color class).
+type GridPlacementKey = "1-1" | "1-2" | "1-span" | "2-1" | "2-2" | "2-span";
+
+const GRID_PLACEMENT_CLASS: Record<GridPlacementKey, string> = {
+    "1-1": "lg:[grid-column:1] lg:[grid-row:1]",
+    "1-2": "lg:[grid-column:1] lg:[grid-row:2]",
+    "1-span": "lg:[grid-column:1] lg:[grid-row:1/span_2]",
+    "2-1": "lg:[grid-column:2] lg:[grid-row:1]",
+    "2-2": "lg:[grid-column:2] lg:[grid-row:2]",
+    "2-span": "lg:[grid-column:2] lg:[grid-row:1/span_2]",
+};
+
+/** `null` when nothing's expanded — callers fall back to plain CSS auto-placement (the existing,
+ * already-correct 2-per-row baseline) in that case. */
+function computeGridPlacements(rows: { id: string }[], expandedTmId: string | null): Map<string, GridPlacementKey> | null {
+    if (expandedTmId === null) return null;
+    const expandedIndex = rows.findIndex((r) => r.id === expandedTmId);
+    if (expandedIndex === -1) return null;
+
+    const others = rows.filter((r) => r.id !== expandedTmId);
+    const expandedColumn = expandedIndex === 0 ? 1 : 2;
+    const othersColumn = expandedColumn === 1 ? 2 : 1;
+
+    const placements = new Map<string, GridPlacementKey>();
+    placements.set(expandedTmId, `${expandedColumn}-span` as GridPlacementKey);
+    others.forEach((tm, i) => placements.set(tm.id, `${othersColumn}-${i + 1}` as GridPlacementKey));
+    return placements;
+}
+
 export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => {
     const { persona } = usePersona();
     const { deals } = useDeals();
@@ -140,11 +182,11 @@ export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => 
             )}
 
             {isAggregateHeading ? (
-                // 2-column grid, dense auto-flow — the expanded card's `row-span-2` makes it fill
-                // its whole column, and dense packing reflows the other two into the remaining
-                // column above/below it (Figma node 626:24214, Manik's call 2026-09-11: standard
-                // grid auto-placement, not a hand-pinned per-TM layout). `motion.div layout`
-                // animates each card's position/size as the grid reflows.
+                // 2-column grid — plain CSS auto-flow for the nothing-expanded baseline (2-per-row,
+                // wrapping), explicit per-card placement once something's expanded (see
+                // `computeGridPlacements` above, and Manik's report, 2026-09-11, for why auto-flow
+                // alone doesn't work for all three "who's expanded" cases). `motion.div layout`
+                // animates each card's position/size as the grid reflows either way.
                 // `items-start`, overriding Grid's default `align-items: stretch` — without it, a
                 // cell's rendered box height follows its *row track's* computed height, not just
                 // its own set height. Two cards sharing a row (e.g. the top row before either is
@@ -164,75 +206,91 @@ export const FunnelSection = ({ selection }: { selection: PeriodSelection }) => 
                     className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:grid-flow-row-dense"
                     style={expandedHeight !== null ? { minHeight: expandedHeight } : undefined}
                 >
-                    {rows.map((cohort) => {
-                        const tm = teamManagers.find((t) => t.id === cohort.id);
-                        if (!tm) return null;
-                        const isExpanded = expandedTmId === tm.id;
-                        // "auto" while nothing's been measured yet (first paint, before any card
-                        // has ever been expanded) — same fallback `collapsedHeight` itself already
-                        // has, just spelled out here since `animate` needs a value every render,
-                        // not `undefined`.
-                        const heightTarget = isExpanded ? "auto" : (collapsedHeight ?? "auto");
+                    {(() => {
+                        const placements = computeGridPlacements(rows, expandedTmId);
 
-                        return (
-                            <motion.div
-                                key={cohort.id}
-                                // `layout="position"` for grid-reflow repositioning (a translate, never
-                                // distorts content) — `animate` owns height on its own, directly, via
-                                // Framer's own engine rather than a raw CSS `style`/`transition`. Two
-                                // earlier approaches both broke down here: a `min-height` floor let the
-                                // collapsing card's real (still-shrinking) content keep the shared grid
-                                // row inflated for nearly its whole ~300ms exit before snapping down: and
-                                // a manual two-render "paint the old height, flip to the new one next
-                                // frame" trick fixed that but split the *reflow* into two separate steps
-                                // too, since the row's own height depends on this card's height — which
-                                // is what read as a sibling moving in two distinct motions instead of
-                                // one (Manik's reports, 2026-09-11). Framer's `animate` understands
-                                // `"auto"` natively (the same mechanism already used for this card's own
-                                // inner content) and smoothly interpolates from whatever the box's
-                                // *actual current* height is to the new target in one continuous
-                                // animation, in the same render/commit as the position change — nothing
-                                // left needing a second step.
-                                layout="position"
-                                ref={isExpanded ? expandedCardRef : undefined}
-                                initial={false}
-                                animate={{ height: heightTarget }}
-                                transition={gridLayoutTransition}
-                                className={cx("overflow-hidden", isExpanded && "lg:row-span-2")}
-                            >
-                                <FadeOnSelection selectionKey={`${cohort.id}-${selectionKey}`} className="flex h-full flex-col">
-                                    <TeamManagerFunnelCard
-                                        data={getTeamManagerFunnelCardData(selection, tm, deals)}
-                                        isExpanded={isExpanded}
-                                        onToggleExpand={() => {
-                                            // Disconnect the observer on the *currently* expanded card's box
-                                            // right now, synchronously — not waiting for the effect below to
-                                            // clean it up on the next render. That cleanup runs after this
-                                            // click's DOM changes are already committed, and in that gap the
-                                            // still-attached observer can catch one more resize callback off a
-                                            // box that's already mid-way through losing its expanded layout —
-                                            // a transient, wrong height that then got fed into every other
-                                            // card's synced height, reading as a sibling briefly jumping in
-                                            // size for no reason (Manik's report, 2026-09-11).
-                                            clearTimeout(settleTimeoutRef.current);
-                                            observerRef.current?.disconnect();
-                                            observerRef.current = null;
+                        return rows.map((cohort) => {
+                            const tm = teamManagers.find((t) => t.id === cohort.id);
+                            if (!tm) return null;
+                            const isExpanded = expandedTmId === tm.id;
+                            // "auto" while nothing's been measured yet (first paint, before any card
+                            // has ever been expanded) — same fallback `collapsedHeight` itself already
+                            // has, just spelled out here since `animate` needs a value every render,
+                            // not `undefined`.
+                            const heightTarget = isExpanded ? "auto" : (collapsedHeight ?? "auto");
+                            const placementKey = placements?.get(tm.id);
+                            const placementClass = placementKey ? GRID_PLACEMENT_CLASS[placementKey] : undefined;
 
-                                            const next = expandedTmId === tm.id ? null : tm.id;
-                                            // Only clear the stale measurement when jumping straight from one
-                                            // expanded card to a *different* one — the new card's real height
-                                            // gets re-measured by the effect above anyway, this just stops the
-                                            // old card's leftover height flashing onto it for a frame first.
-                                            // Collapsing to nothing-expanded deliberately does NOT clear it —
-                                            // see the comment on `expandedHeight` above.
-                                            if (next !== null && next !== expandedTmId) setExpandedHeight(null);
-                                            setExpandedTmId(next);
-                                        }}
-                                    />
-                                </FadeOnSelection>
-                            </motion.div>
-                        );
-                    })}
+                            return (
+                                <motion.div
+                                    key={cohort.id}
+                                    // `layout="position"` for grid-reflow repositioning (a translate,
+                                    // never distorts content) — `animate` owns height on its own,
+                                    // directly, via Framer's own engine rather than a raw CSS
+                                    // `style`/`transition`. Two earlier approaches both broke down here:
+                                    // a `min-height` floor let the collapsing card's real (still-
+                                    // shrinking) content keep the shared grid row inflated for nearly
+                                    // its whole ~300ms exit before snapping down; and a manual two-
+                                    // render "paint the old height, flip to the new one next frame"
+                                    // trick fixed that but split the *reflow* into two separate steps
+                                    // too, since the row's own height depends on this card's height —
+                                    // which is what read as a sibling moving in two distinct motions
+                                    // instead of one (Manik's reports, 2026-09-11). Framer's `animate`
+                                    // understands `"auto"` natively (the same mechanism already used for
+                                    // this card's own inner content) and smoothly interpolates from
+                                    // whatever the box's *actual current* height is to the new target in
+                                    // one continuous animation, in the same render/commit as the
+                                    // position change — nothing left needing a second step.
+                                    layout="position"
+                                    ref={isExpanded ? expandedCardRef : undefined}
+                                    initial={false}
+                                    animate={{ height: heightTarget }}
+                                    transition={gridLayoutTransition}
+                                    // `rounded-2xl` matches the card's own corner radius — without it,
+                                    // this wrapper's `overflow-hidden` clips along a sharp rectangle,
+                                    // and the card's rounded corners (poking slightly past this
+                                    // wrapper's bounds on `hover:scale-[1.02]`) get cut off along that
+                                    // straight line instead of the curve, reading as squared-off
+                                    // corners on hover (Manik's report, 2026-09-11).
+                                    className={cx("overflow-hidden rounded-2xl", placementClass)}
+                                >
+                                    <FadeOnSelection selectionKey={`${cohort.id}-${selectionKey}`} className="flex h-full flex-col">
+                                        <TeamManagerFunnelCard
+                                            data={getTeamManagerFunnelCardData(selection, tm, deals)}
+                                            isExpanded={isExpanded}
+                                            onToggleExpand={() => {
+                                                // Disconnect the observer on the *currently* expanded
+                                                // card's box right now, synchronously — not waiting for
+                                                // the effect below to clean it up on the next render.
+                                                // That cleanup runs after this click's DOM changes are
+                                                // already committed, and in that gap the still-attached
+                                                // observer can catch one more resize callback off a box
+                                                // that's already mid-way through losing its expanded
+                                                // layout — a transient, wrong height that then got fed
+                                                // into every other card's synced height, reading as a
+                                                // sibling briefly jumping in size for no reason (Manik's
+                                                // report, 2026-09-11).
+                                                clearTimeout(settleTimeoutRef.current);
+                                                observerRef.current?.disconnect();
+                                                observerRef.current = null;
+
+                                                const next = expandedTmId === tm.id ? null : tm.id;
+                                                // Only clear the stale measurement when jumping straight
+                                                // from one expanded card to a *different* one — the new
+                                                // card's real height gets re-measured by the effect above
+                                                // anyway, this just stops the old card's leftover height
+                                                // flashing onto it for a frame first. Collapsing to
+                                                // nothing-expanded deliberately does NOT clear it — see
+                                                // the comment on `expandedHeight` above.
+                                                if (next !== null && next !== expandedTmId) setExpandedHeight(null);
+                                                setExpandedTmId(next);
+                                            }}
+                                        />
+                                    </FadeOnSelection>
+                                </motion.div>
+                            );
+                        });
+                    })()}
                 </div>
             ) : (
                 rows.map((cohort) => (
