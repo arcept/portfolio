@@ -328,7 +328,7 @@ function computeChangePercent(current: number, previous: number | null): number 
     return ((current - previous) / previous) * 100;
 }
 
-function previousPeriodLabel(selection: PeriodSelection): string {
+export function previousPeriodLabel(selection: PeriodSelection): string {
     if (selection.kind === "custom") return "vs Previous Period";
     switch (selection.id) {
         case "this-month":

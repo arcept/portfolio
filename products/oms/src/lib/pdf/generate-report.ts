@@ -2,13 +2,34 @@ import type { Persona } from "@/types/role";
 import { ROLE_LABELS } from "@/types/role";
 import type { Deal } from "@/data/deals-data";
 import type { PeriodSelection } from "@/data/dashboard-data";
-import { getFunnelCohortsLive, getPeriodChartDataLive, getTeamManagerSummariesLive } from "@/data/dashboard-metrics";
+import {
+    getDealStageBars,
+    getLostDealsSummaryForSelection,
+    getPeriodChartDataLive,
+    getSalesFunnelCourseBreakdown,
+    getSalesFunnelFlow,
+    getSalesFunnelHeadline,
+    getTeamManagerSummariesLive,
+    previousPeriodLabel,
+} from "@/data/dashboard-metrics";
 
 function slugify(text: string): string {
     return text
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
+}
+
+/** Shared shape for every "vs Last Month"-style KPI delta below — pre-formats the text and picks
+ * a tone here (where `selection`, and so the correct comparison label, is in scope) rather than
+ * pushing that decision into the presentational `report-document.tsx`. `null` (no prior period,
+ * e.g. Lifetime) reads as neutral with a "No prior period data" label, matching the dashboard's
+ * own `computeChangeText` convention for the same case. */
+function formatPctDelta(pct: number | null, selection: PeriodSelection, unit: "%" | "pp" = "%"): { text: string; tone: "positive" | "neutral" | "negative" } {
+    if (pct === null) return { text: "No prior period data", tone: "neutral" };
+    const rounded = Math.round(pct);
+    const text = `${rounded >= 0 ? "+" : ""}${rounded}${unit} ${previousPeriodLabel(selection)}`;
+    return { text, tone: rounded === 0 ? "neutral" : rounded > 0 ? "positive" : "negative" };
 }
 
 /**
@@ -23,8 +44,26 @@ export async function generateAndDownloadReport(selection: PeriodSelection, pers
     const generatedAt = new Date();
 
     const data = getPeriodChartDataLive(selection, persona, deals);
-    const funnelStages = getFunnelCohortsLive(selection, persona, deals)[0].stages;
     const teamManagerSummaries = persona.role === "admin" ? getTeamManagerSummariesLive(selection, deals) : null;
+
+    const headlineRaw = getSalesFunnelHeadline(selection, persona, deals);
+    const unitProgressPercent = headlineRaw.unitTarget === 0 ? 0 : Math.round((headlineRaw.unitsAchieved / headlineRaw.unitTarget) * 100);
+    const headline = {
+        applicationsSent: headlineRaw.applicationsSent,
+        applicationsSentDelta: formatPctDelta(headlineRaw.applicationsSentChangePct, selection),
+        conversionPct: headlineRaw.conversionPct,
+        conversionDelta: formatPctDelta(headlineRaw.conversionChangePct, selection, "pp"),
+        unitsAchieved: headlineRaw.unitsAchieved,
+        unitTarget: headlineRaw.unitTarget,
+        unitProgressPercent,
+        ats: headlineRaw.ats,
+        atsDelta: formatPctDelta(headlineRaw.atsChangePct, selection),
+    };
+
+    const flow = getSalesFunnelFlow(selection, persona, deals);
+    const dealStages = getDealStageBars(selection, persona, deals);
+    const courseRows = getSalesFunnelCourseBreakdown(selection, persona, deals);
+    const lostDeals = getLostDealsSummaryForSelection(selection, persona, deals);
 
     const doc = DashboardReportDocument({
         data,
@@ -32,8 +71,12 @@ export async function generateAndDownloadReport(selection: PeriodSelection, pers
         scopeLabel,
         periodLabel: data.periodLabel,
         generatedAt,
-        funnelStages,
         teamManagerSummaries,
+        headline,
+        flow,
+        dealStages,
+        courseRows,
+        lostDeals,
     });
 
     const blob = await pdf(doc).toBlob();
