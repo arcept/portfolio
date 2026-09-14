@@ -622,23 +622,29 @@ button:focus-visible {
   padding: 32px 0;
 }
 
-/* Mobile-only "See more" truncation. Wrapped content stays in the DOM
-   either way (see the SeeMore component) — this only ever hides it
-   visually, and only below the desktop breakpoint. `display: contents`
-   (not `block`) when not collapsed, so the wrapper itself never
-   participates in .cs-article-body's flex layout/gap — its children read
-   as if SeeMore weren't there at all. */
-.cs-article-more {
-  display: contents;
+/* Wraps a section's children one level inside .cs-article-body, purely so
+   the clamp below has a single box to measure and cap — same flex rhythm
+   as .cs-article-body itself so nesting this div changes nothing visually
+   when not clamped. */
+.cs-article-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 
-.cs-article-more[data-collapsed] {
-  display: none;
-}
-
-@media (min-width: 900px) {
-  .cs-article-more[data-collapsed] {
-    display: contents;
+/* Mobile-only "See more" truncation — a natural top-down height clamp
+   (CaseStudySection.js's BODY_CLAMP_PX), not a curated set of blocks: it
+   cuts wherever that many pixels of real content lands, text or embed or
+   mid-image alike, faded rather than a hard edge. Desktop never clamps —
+   [data-clamp] is only ever set once JS has confirmed there's enough
+   content to bother, but the height cap itself only applies below the
+   breakpoint, same pattern as the mobile nav's horizontal fade mask. */
+@media (max-width: 899px) {
+  .cs-article-body-content[data-clamp] {
+    max-height: 820px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 96px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 96px), transparent 100%);
   }
 }
 
@@ -667,12 +673,13 @@ button:focus-visible {
   }
 }
 
-/* .cs-article-body's flex column defaults every child to align-items:
-   stretch — fine for text blocks and slots, but it also stretches CTA
-   buttons to the column's full width even though .btn itself is
-   inline-flex (content-sized). Buttons should size to their own content
-   and sit left-aligned, not stretch. */
-.cs-article-body > .btn {
+/* .cs-article-body-content's flex column (children now nest one level
+   inside .cs-article-body, via that wrapper — see above) defaults every
+   child to align-items: stretch — fine for text blocks and slots, but it
+   also stretches CTA buttons to the column's full width even though .btn
+   itself is inline-flex (content-sized). Buttons should size to their own
+   content and sit left-aligned, not stretch. */
+.cs-article-body-content > .btn {
   align-self: flex-start;
 }
 

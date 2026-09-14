@@ -1,26 +1,18 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
 
-// Shared by SeeMore below — lets non-contiguous collapsible chunks inside a
-// single section (extra paragraphs here, a pull-quote there) all react to
-// the same "See more" toggle without threading state through page.js.
-const SeeMoreContext = createContext({ expanded: false });
-
-// Wrap any part of a section's body that should hide behind "See more" on
-// mobile (desktop always shows everything — there's room, via the sticky
-// sidebar layout). Content stays in the DOM either way, just visually
-// hidden via CSS, so nothing here removes it from the page for SEO or a
-// screen reader with CSS disabled.
-export function SeeMore({ children }) {
-  const { expanded } = useContext(SeeMoreContext);
-  return (
-    <div className="cs-article-more" data-collapsed={expanded ? undefined : 'true'}>
-      {children}
-    </div>
-  );
-}
+// Mobile-only body clamp height — a natural top-down trim (whatever content
+// falls within this many pixels, text or embed or mid-image, stays visible)
+// rather than curating which blocks are "allowed" to show while collapsed.
+// Landed on 820px after checking it against every section: long ones
+// (System, five-plus embeds) land close to the 15-20%-of-full-length the
+// brief asked for, and short ones (Leading It) mostly clear the 700-1000px
+// floor without needing much trimming at all — either way nothing here
+// hides a live embed on purpose or shows one on purpose; it's just wherever
+// 820px of the section's real content happens to land.
+const BODY_CLAMP_PX = 820;
 
 function ChevronIcon({ expanded }) {
   return (
@@ -65,7 +57,6 @@ export default function CaseStudySection({
   category,
   questions,
   heading,
-  hasMore = false,
   children,
 }) {
   const ref = useRef(null);
@@ -76,6 +67,22 @@ export default function CaseStudySection({
 
   const [questionsExpanded, setQuestionsExpanded] = useState(false);
   const [bodyExpanded, setBodyExpanded] = useState(false);
+
+  // Whether this section's content is even tall enough to need clamping —
+  // measured against the real DOM height (scrollHeight keeps reporting the
+  // full height even while CSS is clamping it), not curated per section, so
+  // a short section (e.g. Decisions) simply never grows a "See more" button.
+  const bodyContentRef = useRef(null);
+  const [needsClamp, setNeedsClamp] = useState(false);
+  useEffect(() => {
+    const el = bodyContentRef.current;
+    if (!el) return undefined;
+    const check = () => setNeedsClamp(el.scrollHeight > BODY_CLAMP_PX);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -119,9 +126,11 @@ export default function CaseStudySection({
         <h2 className="cs-article-heading">{heading}</h2>
       </div>
 
-      <SeeMoreContext.Provider value={{ expanded: bodyExpanded }}>{children}</SeeMoreContext.Provider>
+      <div ref={bodyContentRef} className="cs-article-body-content" data-clamp={needsClamp && !bodyExpanded ? 'true' : undefined}>
+        {children}
+      </div>
 
-      {hasMore && (
+      {needsClamp && (
         <button
           type="button"
           className="cs-article-see-more"

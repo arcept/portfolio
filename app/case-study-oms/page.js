@@ -6,7 +6,7 @@ import MetaStrip from '@/components/MetaStrip';
 import PrototypeEmbed from '@/components/PrototypeEmbed';
 import CaseStudyNav from '@/components/CaseStudyNav';
 import { TLDRProvider, TLDRTrigger, TLDRPanel } from '@/components/TLDR';
-import CaseStudySection, { SeeMore } from '@/components/CaseStudySection';
+import CaseStudySection from '@/components/CaseStudySection';
 import DecisionStepper from '@/components/DecisionStepper';
 import VelarisBackground from '@/components/VelarisBackground';
 import OMSComponentEmbed from '@/components/OMSComponentEmbed';
@@ -243,7 +243,6 @@ export default function CaseStudyOMS() {
                 "Whose problem was it, the user's or the business's?",
               ]}
               heading="The tool already existed. The problem was who owned it."
-              hasMore
             >
               <div>
                 <p>
@@ -259,7 +258,6 @@ export default function CaseStudyOMS() {
                 </p>
               </div>
 
-              <SeeMore>
                 <div>
                   <p>
                     OMS v1 was meant to fix all of that. It was built by the engineering team on its
@@ -280,7 +278,6 @@ export default function CaseStudyOMS() {
                   engineering ownership to product ownership, and every design decision below was
                   only available to us because that shift happened first.
                 </p>
-              </SeeMore>
 
               <div className="cs-article-slot">
                 <img
@@ -289,7 +286,6 @@ export default function CaseStudyOMS() {
                   width={1472}
                   height={400}
                 />
-                <SeeMore>
                   <p className="cs-article-caption">
                     The gap, drawn once. Left of the line, four steps converge into one record. Right
                     of it, four steps scatter across three tools and cross over each other, so no tool
@@ -297,7 +293,6 @@ export default function CaseStudyOMS() {
                     day, and it is why nobody could answer a question about the floor without
                     assembling it by hand.
                   </p>
-                </SeeMore>
               </div>
             </CaseStudySection>
 
@@ -313,13 +308,11 @@ export default function CaseStudyOMS() {
                 'What did you personally contribute to the research?',
               ]}
               heading="I didn't sell a redesign. I sold the cost of not knowing."
-              hasMore
             >
               <div>
                 <p>Three arguments, running at the same time, and none of them was &quot;the tool is bad.&quot;</p>
               </div>
 
-              <SeeMore>
                 <div>
                   <p>
                     <strong>I made the cost of slowness visible.</strong> Not a critique of the
@@ -388,7 +381,6 @@ export default function CaseStudyOMS() {
                     </p>
                   </div>
                 </div>
-              </SeeMore>
 
               <div className="cs-article-slot">
                 <img
@@ -397,7 +389,6 @@ export default function CaseStudyOMS() {
                   width={1472}
                   height={1080}
                 />
-                <SeeMore>
                   <div className="cs-article-figure-caption">
                     <p className="cs-article-figure-caption__lead">
                       The same question, asked at four altitudes.
@@ -411,7 +402,6 @@ export default function CaseStudyOMS() {
                       instrumentation.
                     </p>
                   </div>
-                </SeeMore>
               </div>
             </CaseStudySection>
 
@@ -448,7 +438,6 @@ export default function CaseStudyOMS() {
                 'What did you have to learn about the business to design this?',
               ]}
               heading="Five roles, one component. Scope is a parameter, not a screen."
-              hasMore
             >
               <div>
                 <p>
@@ -458,7 +447,6 @@ export default function CaseStudyOMS() {
                 </p>
               </div>
 
-              <SeeMore>
                 <p>
                   What we built instead was one set of components, reused at every altitude, with
                   only the data scope changing behind them. In v2.0 that meant one funnel-card
@@ -470,11 +458,9 @@ export default function CaseStudyOMS() {
                   breakdown you see for one Team Manager&apos;s cohort or one BDR&apos;s own funnel,
                   nested under the same headline shape everyone else sees.
                 </p>
-              </SeeMore>
 
               <div className="cs-article-slot">
                 <OMSComponentEmbed view="sales-funnel" height={400} frameWidth={900} />
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>The whole pipeline, as one shape.</strong> Applications, Offers, Payment and
                     Completed, with the conversion between each stage read directly off the ribbon.
@@ -482,10 +468,8 @@ export default function CaseStudyOMS() {
                     &quot;how is the floor doing right now&quot;, and it doesn&apos;t need a second
                     screen.
                   </p>
-                </SeeMore>
               </div>
 
-              <SeeMore>
                 <div>
                   <p className="cs-article-statement cs-article-statement--display">
                     <span className="cs-article-statement__dim">
@@ -502,11 +486,9 @@ export default function CaseStudyOMS() {
                     Three more cards answer the parts the flow diagram can&apos;t.
                   </p>
                 </div>
-              </SeeMore>
 
               <div className="cs-article-slot">
                 <OMSComponentEmbed view="deal-stages" height={320} frameWidth={610} />
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>Where deals are stuck, named per stage.</strong> Nine stages, each a bar
                     sized by count. The two hatched bars are loss buckets, Payment Plan Pending and
@@ -514,12 +496,10 @@ export default function CaseStudyOMS() {
                     is the direct answer to &quot;where are deals stuck&quot;, and it&apos;s a card,
                     not a report someone has to run.
                   </p>
-                </SeeMore>
               </div>
 
               <div className="cs-article-slot">
                 <OMSComponentEmbed view="realised-conversion" height={400} frameWidth={900} />
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>Payment incoming, and where it&apos;s leaking.</strong> Realised revenue
                     splits into Previous Period and Total, so a Sales Head can see how much of
@@ -528,12 +508,10 @@ export default function CaseStudyOMS() {
                     &quot;how is the floor doing&quot; and &quot;where are we losing people&quot; are
                     one question, not two.
                   </p>
-                </SeeMore>
               </div>
 
               <div className="cs-article-slot">
                 <OMSComponentEmbed view="booked-revenue" height={416} frameWidth={900} />
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>Booked and Realised, drawn as a gap.</strong> Booked and Realised plotted
                     as two lines across the month, rather than a single number — the space between
@@ -543,10 +521,8 @@ export default function CaseStudyOMS() {
                     its own UI slot, which is a more honest state for unfinished work to be in than
                     pretending it isn&apos;t there.
                   </p>
-                </SeeMore>
               </div>
 
-              <SeeMore>
                 <div>
                   <p className="cs-article-statement cs-article-statement--display">
                     Team performance, named per manager
@@ -560,21 +536,17 @@ export default function CaseStudyOMS() {
                     that manager alone, each with its own change badge.
                   </p>
                 </div>
-              </SeeMore>
 
               <div className="cs-article-slot">
                 <OMSComponentEmbed view="team-manager-card" height={368} frameWidth={900} autoHeight />
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>One manager, one card, four questions answered.</strong> The heatmap alone
                     is one deal per square, colour-coded by the same status model as the drill-down
                     below, so a Team Manager sees the shape of their book before reading a single
                     number.
                   </p>
-                </SeeMore>
               </div>
 
-              <SeeMore>
                 <div>
                   <p>
                     The Applications and Payments lists work the same way: same columns, same filters,
@@ -592,24 +564,20 @@ export default function CaseStudyOMS() {
                     leaving the page or exporting anything.
                   </p>
                 </div>
-              </SeeMore>
 
               <div className="cs-article-slot">
                 <OMSComponentEmbed view="team-drilldown" height={401} />
-                <SeeMore>
                   <p className="cs-article-caption">
                     Live, not a screenshot — click a Team Manager to see the Team Leads column filter,
                     the way it would for a real Sales Head. The empty states carry the instruction, so
                     the interaction teaches itself rather than needing a tooltip.
                   </p>
-                </SeeMore>
               </div>
 
               <a href="#prototype" className="btn btn--rainbow-outline">
                 Open full prototype ↗
               </a>
 
-              <SeeMore>
                 <div className="cs-article-warning">
                   <p className="cs-article-warning__label">What I got wrong</p>
                   <p className="cs-article-warning__lead">
@@ -625,7 +593,6 @@ export default function CaseStudyOMS() {
                     chart.
                   </p>
                 </div>
-              </SeeMore>
             </CaseStudySection>
 
           <CaseStudySection
@@ -638,7 +605,6 @@ export default function CaseStudyOMS() {
                 "What's the weakest part of this design?",
               ]}
               heading='Colour answers "whose move is it?", not "what stage is this?"'
-              hasMore
             >
               <p>
                 A deal has a stage and a sub-status. What it needed was a third thing the list could
@@ -688,7 +654,6 @@ export default function CaseStudyOMS() {
                     height={1640}
                   />
                 </div>
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>One glance tells a BDR what needs them.</strong> Application Pending is
                     blue because the learner is holding the form. Offer Expired is amber because the
@@ -696,7 +661,6 @@ export default function CaseStudyOMS() {
                     deal can die at any stage. The globe icon flags an international lead, which
                     changes both the currency and the gateway.
                   </p>
-                </SeeMore>
               </div>
 
               <div className="cs-article-slot">
@@ -706,7 +670,6 @@ export default function CaseStudyOMS() {
                   width={2192}
                   height={88}
                 />
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>The tabs deliberately overlap.</strong> Action Required isn&apos;t a
                     bucket, it&apos;s a filter across every red-badged status in the funnel, which is
@@ -715,14 +678,12 @@ export default function CaseStudyOMS() {
                     at standup. I&apos;d defend the overlap. What I wouldn&apos;t defend is that we
                     never made it legible, so a new BDR has to be told.
                   </p>
-                </SeeMore>
               </div>
 
               <a href="#prototype" className="btn btn--rainbow-outline">
                 Open The Deals List ↗
               </a>
 
-              <SeeMore>
                 <div className="cs-article-warning">
                   <p className="cs-article-warning__label">The bug that shipped</p>
                   <p>
@@ -737,7 +698,6 @@ export default function CaseStudyOMS() {
                     the time and didn&apos;t. It&apos;s the first thing the v3.0 prototype fixes.
                   </p>
                 </div>
-              </SeeMore>
             </CaseStudySection>
 
           <CaseStudySection
@@ -751,7 +711,6 @@ export default function CaseStudyOMS() {
                 'Who did your business rules protect, and who did they annoy?',
               ]}
               heading="Don't make anyone do the math by hand."
-              hasMore
             >
               <div>
                 <p>
@@ -761,7 +720,6 @@ export default function CaseStudyOMS() {
                 </p>
               </div>
 
-              <SeeMore>
                 <div>
                   <p>
                     <strong>Step one is the payment plan.</strong> The BDR picks a payment type,
@@ -783,7 +741,6 @@ export default function CaseStudyOMS() {
                     change, and the counter came out.
                   </p>
                 </div>
-              </SeeMore>
 
               <div className="cs-article-slot">
                 <div className="cs-article-hscroll">
@@ -800,16 +757,13 @@ export default function CaseStudyOMS() {
                     height={640}
                   />
                 </div>
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>Net Payable splits evenly across the tenure,</strong> and the last
                     instalment takes whatever the division didn&apos;t divide cleanly. Nobody has to
                     notice that, let alone fix it.
                   </p>
-                </SeeMore>
               </div>
 
-              <SeeMore>
                 <div>
                   <p>
                     <strong>Step two is the letter.</strong> Three named templates, an acceptance
@@ -818,7 +772,6 @@ export default function CaseStudyOMS() {
                     offer reaching a paying customer with the wrong discount in it.
                   </p>
                 </div>
-              </SeeMore>
 
               <div className="cs-article-slot">
                 <div className="cs-article-hscroll">
@@ -847,17 +800,14 @@ export default function CaseStudyOMS() {
                     height={640}
                   />
                 </div>
-                <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>Two histories, on purpose.</strong> Milestones answer &quot;where is this
                     deal&quot;. The activity log answers &quot;who did what, and why&quot;. Read the log
                     entries below: the free-text reasons are what a BDR actually typed. Nobody asked for
                     that field. It became the most-read thing on the page.
                   </p>
-                </SeeMore>
               </div>
 
-              <SeeMore>
                 <div>
                   <p>
                     <strong>Enrolment, the fourth and final milestone, is a real screen, not just a
@@ -869,7 +819,6 @@ export default function CaseStudyOMS() {
                     before this rebuild.
                   </p>
                 </div>
-              </SeeMore>
             </CaseStudySection>
 
           <CaseStudySection
@@ -883,7 +832,6 @@ export default function CaseStudyOMS() {
                 'What did that way of working cost?',
               ]}
               heading="I did both jobs. That was the strength and the bottleneck."
-              hasMore
             >
               <div>
                 <p>
@@ -894,7 +842,6 @@ export default function CaseStudyOMS() {
                 </p>
               </div>
 
-              <SeeMore>
                 <p className="cs-article-statement cs-article-statement--display">
                   <span>The cost was that I became the bottleneck. </span>
                   <span className="cs-article-statement__dim">
@@ -917,7 +864,6 @@ export default function CaseStudyOMS() {
                     reviewed against the flows and the IA, not against my own taste.
                   </p>
                 </div>
-              </SeeMore>
             </CaseStudySection>
 
           <CaseStudySection
@@ -931,7 +877,6 @@ export default function CaseStudyOMS() {
                 "What's the honest attribution here?",
               ]}
               heading="Four numbers I'll stand behind, and three I won't."
-              hasMore
             >
               <div className="cs-article-stat-grid">
                 <div className="cs-article-stat-grid__cell">
@@ -972,7 +917,6 @@ export default function CaseStudyOMS() {
                 </div>
               </div>
 
-              <SeeMore>
                 <div>
                   <p>
                     The team also recorded 100% adoption, and cited roughly 30% more revenue in a
@@ -1066,7 +1010,6 @@ export default function CaseStudyOMS() {
                   can&apos;t source.
                 </p>
               </div>
-              </SeeMore>
             </CaseStudySection>
 
           <CaseStudySection
@@ -1081,13 +1024,11 @@ export default function CaseStudyOMS() {
                 'How would you build this today?',
               ]}
               heading="I sequenced for the people funding it, not the people using it."
-              hasMore
             >
               <div>
                 <p>Sequencing ran on two axes, and I&apos;d keep one of them.</p>
               </div>
 
-              <SeeMore>
                 <div>
                   <p>
                     <strong>The one I&apos;d keep.</strong> Anything that took days by hand got built
@@ -1141,7 +1082,6 @@ export default function CaseStudyOMS() {
                     engineering team had built it.
                   </p>
                 </div>
-              </SeeMore>
             </CaseStudySection>
         </main>
 
