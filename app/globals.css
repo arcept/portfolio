@@ -562,6 +562,57 @@ button:focus-visible {
   color: var(--mist);
 }
 
+.cs-article-marginalia__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cs-article-marginalia__questions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Mobile-only collapse toggle for the Skills & Questions marginalia (Figma:
+   a 24px +/− circle button). Desktop force-shows the questions panel and
+   hides the button entirely — there's no need to collapse a sidebar that
+   already has room, per Figma's desktop reading of this same component. */
+.cs-article-marginalia__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--graphite);
+  color: var(--mist);
+  background: transparent;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.cs-article-marginalia__toggle:hover,
+.cs-article-marginalia__toggle:focus-visible {
+  border-color: var(--ash);
+  color: var(--paper);
+}
+
+.cs-article-marginalia__questions[data-collapsed] {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .cs-article-marginalia__toggle {
+    display: none;
+  }
+
+  .cs-article-marginalia__questions[data-collapsed] {
+    display: flex;
+  }
+}
+
 .cs-article-body {
   flex: 1;
   min-width: 0;
@@ -569,6 +620,51 @@ button:focus-visible {
   flex-direction: column;
   gap: 40px;
   padding: 32px 0;
+}
+
+/* Mobile-only "See more" truncation. Wrapped content stays in the DOM
+   either way (see the SeeMore component) — this only ever hides it
+   visually, and only below the desktop breakpoint. `display: contents`
+   (not `block`) when not collapsed, so the wrapper itself never
+   participates in .cs-article-body's flex layout/gap — its children read
+   as if SeeMore weren't there at all. */
+.cs-article-more {
+  display: contents;
+}
+
+.cs-article-more[data-collapsed] {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .cs-article-more[data-collapsed] {
+    display: contents;
+  }
+}
+
+.cs-article-see-more {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 8px 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+
+.cs-article-see-more__chevron {
+  transition: transform 0.15s ease;
+}
+
+@media (max-width: 899px) {
+  .cs-article-see-more {
+    display: flex;
+  }
 }
 
 /* .cs-article-body's flex column defaults every child to align-items:
@@ -1661,10 +1757,14 @@ button:focus-visible {
   color: var(--mist);
 }
 
+/* Green (not the sitewide yellow --accent) to match Figma's mobile nav —
+   this rule only ever paints on mobile in practice, since the 900px+
+   override below resets border-color to transparent in favour of the
+   desktop sidebar's own sliding indicator rail (already green). */
 .cs-toc__link.is-active {
   color: var(--paper);
   font-weight: 510;
-  border-color: var(--accent);
+  border-color: var(--article-green);
 }
 
 .cs-toc__link.is-active .cs-toc__index {
