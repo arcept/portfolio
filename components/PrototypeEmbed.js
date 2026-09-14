@@ -121,6 +121,17 @@ export default function PrototypeEmbed({ versions, title, mobileImage, mobileIma
 
   return (
     <section className="proto-section" id="prototype">
+      {/* Mobile-only — renders ahead of the "See the rebuild, live" copy so
+          the dashboard preview sits immediately below the hero, not after
+          a second block of heading/description text. Desktop never shows
+          this (see .proto-preview's own media query); it gets the real
+          interactive frame below instead. */}
+      <div className="wrap wrap--wide">
+        <div className="proto-preview">
+          <img src={mobileImage} alt={mobileImageAlt} width={1280} height={750} />
+        </div>
+      </div>
+
       <div className="wrap wrap--wide">
         <div className="proto-head">
           <div>
@@ -195,10 +206,6 @@ export default function PrototypeEmbed({ versions, title, mobileImage, mobileIma
             </div>
           </div>
         </StarBorder>
-
-        <div className="proto-preview">
-          <img src={mobileImage} alt={mobileImageAlt} width={1280} height={750} />
-        </div>
 
         <div className="proto-actions">
           <p className="proto-note text-caption text-fog">

@@ -1652,6 +1652,18 @@ button:focus-visible {
   position: relative;
   overflow: hidden;
   background: linear-gradient(180deg, #110A4E 0%, #08090A 100%), #08090A;
+  padding-top: 96px;
+  padding-bottom: 48px;
+}
+
+/* Mobile only — the hero's own bottom padding plus .proto-section's top
+   padding stacked into a ~136px gap between the last hero button and the
+   dashboard preview image now sitting right below it (moved up from
+   inside PrototypeEmbed). Trimmed to land around 30% of that. */
+@media (max-width: 899px) {
+  .cs-hero {
+    padding-bottom: 8px;
+  }
 }
 
 .section-eyebrow {
@@ -1702,8 +1714,7 @@ button:focus-visible {
   grid-area: toc;
   display: flex;
   flex-direction: row;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-start;
   overflow-x: auto;
   position: sticky;
   top: var(--site-nav-h);
@@ -1711,7 +1722,9 @@ button:focus-visible {
   background: rgba(8, 9, 10, 0.9);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--graphite);
-  padding: 12px 24px;
+  /* 8px all round, per Figma's "Nav" frame (node 652:15320) — items space
+     themselves via their own px-8/py-12 padding below, not a gap here. */
+  padding: 8px;
   margin: 0 0 32px;
   white-space: nowrap;
   scrollbar-width: none;
@@ -1726,12 +1739,13 @@ button:focus-visible {
    that doesn't stop the link itself from being a block-level box). flex-shrink: 0
    stops .cs-toc (a flex item of nothing at this width, but still worth pinning)
    from ever compressing the row below its content's natural width, which is what
-   should be producing .cs-toc's overflow-x scroll rather than a squeeze. */
+   should be producing .cs-toc's overflow-x scroll rather than a squeeze. No gap —
+   Figma's "Nav" has none at this level either; adjacent items are spaced by their
+   own 8px horizontal padding, so two items land 16px apart, not 20px. */
 .cs-toc__list {
   display: flex;
   flex-direction: row;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-start;
   flex-shrink: 0;
 }
 
@@ -1744,9 +1758,11 @@ button:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--ash);
+  color: var(--article-neutral);
   font-size: 14px;
-  padding-bottom: 4px;
+  /* Figma's "Side Navigation item": py-12 px-8, not a bottom-only offset —
+     the active item's border-bottom sits at the edge of this same box. */
+  padding: 12px 8px;
   border-bottom: 2px solid transparent;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
@@ -1766,7 +1782,8 @@ button:focus-visible {
 
 .cs-toc__index {
   font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  color: var(--ash);
+  /* Inherits .cs-toc__link's color — Figma's inactive index number isn't
+     independently colored, it's the same utility-neutral-400 as the label. */
   transition: color 0.15s ease;
 }
 
@@ -1775,18 +1792,22 @@ button:focus-visible {
   color: var(--mist);
 }
 
-/* Green (not the sitewide yellow --accent) to match Figma's mobile nav —
-   this rule only ever paints on mobile in practice, since the 900px+
-   override below resets border-color to transparent in favour of the
-   desktop sidebar's own sliding indicator rail (already green). */
+/* utility-green-500 (#22c55e) specifically — Figma's mobile nav uses a
+   darker/more saturated green here than the utility-green-400 (--article-
+   green, #4ade80) the rest of this redesign's active/highlight states use.
+   Deliberate, not a typo: matching this one component exactly means not
+   reusing the sitewide token. Only ever paints on mobile in practice, since
+   the 900px+ override below resets border-color to transparent in favour of
+   the desktop sidebar's own sliding indicator rail (which does use
+   --article-green, pinned separately below). */
 .cs-toc__link.is-active {
   color: var(--paper);
-  font-weight: 510;
-  border-color: var(--article-green);
+  font-weight: 500;
+  border-color: #22c55e;
 }
 
 .cs-toc__link.is-active .cs-toc__index {
-  color: var(--article-green);
+  color: #22c55e;
 }
 
 @media (min-width: 900px) {
@@ -1839,16 +1860,32 @@ button:focus-visible {
     transition: transform 0.25s ease, height 0.25s ease;
   }
 
+  /* Pins this rail's own values now that the shared base rules above have
+     been rewritten to match the mobile Figma nav exactly (a different
+     padding model and a one-off green) — without these, the desktop rail
+     would silently inherit mobile's 12px/8px padding and #22c55e green. */
   .cs-toc__link,
   .cs-toc__link--disabled {
     height: 40px;
+    padding-top: 0;
+    padding-right: 0;
     padding-left: 20px;
     padding-bottom: 0;
     border-bottom: none;
+    color: var(--ash);
+  }
+
+  .cs-toc__index {
+    color: var(--ash);
   }
 
   .cs-toc__link.is-active {
     border-color: transparent;
+    font-weight: 510;
+  }
+
+  .cs-toc__link.is-active .cs-toc__index {
+    color: var(--article-green);
   }
 
   .cs-toc__files {
@@ -1990,6 +2027,12 @@ button:focus-visible {
 
 .proto-section {
   padding: 64px 0;
+}
+
+@media (max-width: 899px) {
+  .proto-section {
+    padding-top: 8px;
+  }
 }
 
 /* Wraps only the frame (+ its mobile preview/note) at a wider max-width
@@ -2197,6 +2240,11 @@ button:focus-visible {
     /* bleed past .wrap's right padding so the image crops at the viewport edge
        instead of sitting centered/boxed, per the Linear reference */
     margin-right: -24px;
+    /* Now the first thing in .proto-section (renders ahead of .proto-head,
+       not after it) — needs its own breathing room before the "See the
+       rebuild, live" heading that follows, matching .proto-head's own
+       margin-bottom. */
+    margin-bottom: 32px;
     overflow-x: hidden;
   }
 

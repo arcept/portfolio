@@ -130,7 +130,7 @@ export default function CaseStudyOMS() {
     <>
       <Nav />
 
-      <header className="cs-hero" style={{ paddingTop: '96px', paddingBottom: '48px' }}>
+      <header className="cs-hero">
         <VelarisBackground colors={['#8b5cf6', '#6366f1', '#110A4E', '#08090A']} bg="#08090A" />
         <div
           aria-hidden="true"
@@ -460,7 +460,7 @@ export default function CaseStudyOMS() {
                 </p>
 
               <div className="cs-article-slot">
-                <OMSComponentEmbed view="sales-funnel" height={400} frameWidth={900} />
+                <OMSComponentEmbed view="sales-funnel" height={425} frameWidth={900} />
                   <p className="cs-article-figure-caption__desc">
                     <strong>The whole pipeline, as one shape.</strong> Applications, Offers, Payment and
                     Completed, with the conversion between each stage read directly off the ribbon.
@@ -649,9 +649,9 @@ export default function CaseStudyOMS() {
                 <div className="cs-article-image--crop">
                   <img
                     src="/case-studies/oms/body/status-deals-list.png"
-                    alt="Deals list with color-coded status badges per row: blue for Application Pending, green for Payment Completed, amber for Offer Expired, grey for Global Not Interested and Global Saved."
-                    width={2192}
-                    height={1640}
+                    alt="Deals list with color-coded status badges per row: green for Application New and Plan Created, blue for Application, Plan and Offer Pending stages, red for Action, and amber for Awaiting approval."
+                    width={1440}
+                    height={736}
                   />
                 </div>
                   <p className="cs-article-figure-caption__desc">
@@ -666,9 +666,9 @@ export default function CaseStudyOMS() {
               <div className="cs-article-slot">
                 <img
                   src="/case-studies/oms/body/status-tabs.png"
-                  alt="Filter tab bar: All 157, Action Required 10, Application 31, Offer 34, Payment 56, Cancelled 1, Not Interested 22, Rejected 8, Saved 5."
-                  width={2192}
-                  height={88}
+                  alt="Deals list header and filter tab bar: breadcrumb Home / Deals, '157 Deals across the floor', and tabs reading Action Required 37, New 21, Application 37, Plan 11, Offer 21, Payment 43, Cancelled 1, Not interested 17, Rejected 6, Saved 5."
+                  width={1440}
+                  height={317}
                 />
                   <p className="cs-article-figure-caption__desc">
                     <strong>The tabs deliberately overlap.</strong> Action Required isn&apos;t a

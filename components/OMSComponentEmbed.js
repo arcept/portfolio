@@ -73,6 +73,14 @@ export default function OMSComponentEmbed({ view, height, frameWidth = 1160, aut
         ref={iframeRef}
         src={`/case-studies/oms/rebuild/index.html?embed=${view}`}
         title={`OMS prototype — ${view.replace(/-/g, ' ')}`}
+        // A `height` even a few px short of the embedded view's real content
+        // (sales-funnel was off by 25px) gives the iframe its own internal
+        // scrollbar — invisible since the shortfall is tiny, but it captures
+        // the visitor's scroll/wheel input the moment their cursor is over
+        // it, reading as "stuck" scrolling past the embed. `scrolling="no"`
+        // turns any future height mismatch into visible clipping instead —
+        // easy to catch in review — rather than a silent scroll trap.
+        scrolling="no"
         style={{
           width: frameWidth,
           height: effectiveHeight,
