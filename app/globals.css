@@ -624,12 +624,215 @@ button:focus-visible {
   margin-bottom: 0;
 }
 
-.cs-article-section .cs-article-statement {
+/* `.cs-article-body .cs-article-statement` (not just `.cs-article-section
+   .cs-article-statement`) — the statement is a <p>, so it also matches
+   `.cs-article-body p` above; that rule's trailing type selector gives it
+   (0,2,1) against this one's (0,2,0), winning the tie and silently forcing
+   the statement back to 16px body copy. Using the real `.cs-article-body`
+   ancestor here raises this to (0,3,0), which beats (0,2,1) outright. */
+.cs-article-section .cs-article-body .cs-article-statement {
   margin: 0;
   color: var(--paper);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
+}
+
+/* Section 06 "Offer Flow" — a horizontal scroll strip of Figma-exported panel images,
+   matching Figma's own "Scroll Sideways" widget clusters rather than a live embed. Images
+   share a fixed height so mismatched natural aspect ratios still sit in one even row. */
+.cs-article-hscroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* `.cs-article-slot .cs-article-hscroll img` (not just `.cs-article-hscroll img`) — same
+   specificity-tie problem as the statement rules above: `.cs-article-slot img` (0,2,0) sits
+   later in this file and would otherwise win the tie and force width:100%, stretching every
+   image to the full column width instead of a fixed 320px-tall thumbnail. */
+.cs-article-slot .cs-article-hscroll img {
+  flex: none;
+  height: 320px;
+  width: auto;
+  border-radius: 8px;
+  scroll-snap-align: start;
+}
+
+.cs-article-hscroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.cs-article-hscroll::-webkit-scrollbar-thumb {
+  background: var(--graphite);
+  border-radius: 3px;
+}
+
+/* Larger display-size variant for sections 07/09's pull-quotes (Figma has these at 32px
+   IBM Plex Sans, distinct from the 24px Inter statement above). Same specificity fix as above. */
+.cs-article-section .cs-article-body .cs-article-statement--display {
+  margin: 0;
+  color: var(--paper);
+  font-family: var(--font-ibm-plex-sans), sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 38px;
+}
+
+/* Sections 07/09's quotes split into a bright phrase and a dimmer rest —
+   spans inside one .cs-article-statement--display, not separate elements. */
+.cs-article-statement--display .cs-article-statement__dim {
+  color: var(--article-neutral);
+}
+
+/* Small aside line directly under a display pull-quote (Figma: 14px Inter, well below the
+   32px quote) — e.g. section 04's "Three more cards answer the parts the flow diagram can't." */
+.cs-article-section .cs-article-body .cs-article-annotation {
+  margin: 8px 0 0;
+  color: var(--article-neutral);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Section 08 "Impact" — the four-stat grid and the "What I'd Measure" table,
+   both bespoke case-study content with no live-product equivalent to embed. */
+.cs-article-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--graphite);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cs-article-stat-grid__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px 32px;
+  border-right: 1px solid var(--graphite);
+  border-bottom: 1px solid var(--graphite);
+}
+
+.cs-article-stat-grid__cell:nth-child(2n) {
+  border-right: none;
+}
+
+.cs-article-stat-grid__cell:nth-last-child(-n + 2) {
+  border-bottom: none;
+}
+
+.cs-article-stat-grid__value-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-article-stat-grid__icon {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--article-green);
+}
+
+.cs-article-stat-grid__icon--down {
+  width: auto;
+  height: auto;
+  flex-shrink: 0;
+  border-radius: 0;
+  background: none;
+  color: #ef4444;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.cs-article-stat-grid__value {
+  font-family: var(--font-ibm-plex-sans), sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--paper);
+}
+
+.cs-article-stat-grid__label {
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 16px;
+  letter-spacing: -0.32px;
+  text-transform: uppercase;
+  color: var(--article-placeholder);
+}
+
+.cs-article-stat-grid__desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--article-neutral);
+}
+
+.cs-article-measure-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--graphite);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cs-article-measure-table__row {
+  display: flex;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--graphite);
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--article-neutral);
+}
+
+.cs-article-measure-table__row:last-child {
+  border-bottom: none;
+}
+
+.cs-article-measure-table__row--head {
+  padding: 8px 16px;
+  background: var(--obsidian);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: -0.28px;
+  text-transform: uppercase;
+  color: var(--article-placeholder);
+}
+
+.cs-article-measure-table__what {
+  width: 192px;
+  flex: none;
+}
+
+.cs-article-measure-table__proves {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-article-measure-table__figure {
+  width: 56px;
+  flex: none;
+  opacity: 0.8;
+}
+
+.cs-article-measure-table__row--head .cs-article-measure-table__figure {
+  width: 60px;
+  opacity: 1;
+  color: #eab308;
+}
+
+.cs-article-measure-footnote {
+  margin: 0;
+}
+
+.cs-article-measure-footnote__label {
+  margin: 0 0 4px;
+  color: #eab308;
 }
 
 .cs-article-slot {
@@ -1402,6 +1605,22 @@ button:focus-visible {
   mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
 }
 
+/* The links that actually need to run horizontally live one level down, inside
+   .cs-toc__list — .cs-toc itself being flex-row only put *this* div in a row, and
+   .cs-toc__list, left at its default `display: block`, stacked every .cs-toc__link
+   as its own full-width line (each is internally flex for its icon+label pair, but
+   that doesn't stop the link itself from being a block-level box). flex-shrink: 0
+   stops .cs-toc (a flex item of nothing at this width, but still worth pinning)
+   from ever compressing the row below its content's natural width, which is what
+   should be producing .cs-toc's overflow-x scroll rather than a squeeze. */
+.cs-toc__list {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
 .cs-toc::-webkit-scrollbar {
   display: none;
 }
@@ -1478,6 +1697,7 @@ button:focus-visible {
   }
 
   .cs-toc__list {
+    display: block;
     position: relative;
   }
 

@@ -68,7 +68,14 @@ const BookedChartTooltip = ({
 
 export const BookedChart = ({ data, selectionKey }: { data: PeriodChartData; selectionKey: string }) => {
     return (
-        <div className="relative h-full min-h-0 w-full">
+        // `flex-1` (not `h-full`) — this div's own parent is a single-child flex column now
+        // (stat-cards.tsx's `BookedRevenueCard`), so its height comes directly from flex-grow
+        // rather than a `height: 100%` resolved against that parent. `position: relative` still
+        // needs a genuinely resolved (not further-percentage-dependent) height for the absolutely
+        // positioned `motion.div` below to size itself via `inset-0` — flex-grow provides exactly
+        // that, where the old percentage chain silently collapsed to 0 outside a grid-stretched
+        // layout (see the comment in `BookedRevenueCard`).
+        <div className="relative min-h-0 w-full flex-1">
             <AnimatePresence mode="wait" initial={false}>
                 {/* Keyed by selection so switching periods swaps in a fresh chart with a plain
                     crossfade, rather than Recharts interpolating/morphing the old shape into the

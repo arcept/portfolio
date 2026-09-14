@@ -111,10 +111,10 @@ const sections = [
   { id: 'decisions', label: 'Decisions' },
   { id: 'system', label: 'The System' },
   { id: 'status', label: 'Status' },
-  { id: null, label: 'The Offer Flow' },
-  { id: null, label: 'Leading It' },
-  { id: null, label: 'Impact' },
-  { id: null, label: 'Reflection' },
+  { id: 'offer-flow', label: 'The Offer Flow' },
+  { id: 'leading-it', label: 'Leading It' },
+  { id: 'impact', label: 'Impact' },
+  { id: 'reflection', label: 'Reflection' },
   { id: null, label: 'Open Threads' },
 ];
 
@@ -450,27 +450,103 @@ export default function CaseStudyOMS() {
                   brief would have killed us.
                 </p>
                 <p>
-                  What we built instead was <strong>one funnel-card component</strong>. Four cards
-                  reading Applications Sent, Offers Shared, Converted, Payment Clearance, each with a
-                  total and a status breakdown. Only the data scope changes behind it.
+                  What we built instead was one set of components, reused at every altitude, with
+                  only the data scope changing behind them. In v2.0 that meant one funnel-card
+                  component: four cards reading Applications Sent, Offers Shared, Converted, Payment
+                  Clearance. In the v3.0 rebuild that same principle produced a richer headline: a
+                  single flow diagram, one shape from Application through Offer, Payment and
+                  Completed, with the drop-off between every stage stamped directly on it. The
+                  four-card grid didn&apos;t disappear, it got demoted: it&apos;s now the scoped
+                  breakdown you see for one Team Manager&apos;s cohort or one BDR&apos;s own funnel,
+                  nested under the same headline shape everyone else sees.
                 </p>
               </div>
 
               <div className="cs-article-slot">
-                <OMSComponentEmbed view="admin-funnel" height={384} frameWidth={1320} />
+                <OMSComponentEmbed view="sales-funnel" height={400} frameWidth={900} />
                 <p className="cs-article-figure-caption__desc">
-                  <strong>Aggregate, across every cohort.</strong> This is the live component, not a
-                  screenshot — the actual current numbers, and it updates automatically if the
-                  prototype changes.
+                  <strong>The whole pipeline, as one shape.</strong> Applications, Offers, Payment and
+                  Completed, with the conversion between each stage read directly off the ribbon.
+                  Average Ticket Size sits in the corner of the same card. This is the answer to
+                  &quot;how is the floor doing right now&quot;, and it doesn&apos;t need a second
+                  screen.
+                </p>
+              </div>
+
+              <div>
+                <p className="cs-article-statement cs-article-statement--display">
+                  <span className="cs-article-statement__dim">
+                    The brief from the Sales Head, restated in his own words months after launch, was
+                    that he wanted to{' '}
+                  </span>
+                  <span>look at this page once and know the health of the floor</span>
+                  <span className="cs-article-statement__dim">
+                    , where the pipeline actually was, where deals were stuck, and what payment was
+                    coming in.
+                  </span>
+                </p>
+                <p className="cs-article-annotation">
+                  Three more cards answer the parts the flow diagram can&apos;t.
                 </p>
               </div>
 
               <div className="cs-article-slot">
-                <OMSComponentEmbed view="team-manager-funnel" height={360} frameWidth={1320} />
+                <OMSComponentEmbed view="deal-stages" height={320} frameWidth={900} />
                 <p className="cs-article-figure-caption__desc">
-                  <strong>The same component, scoped to one Team Manager.</strong> Identical layout,
-                  identical labels, identical breakdown rows. Only the numbers move. That is the
-                  entire argument: one component means one test surface, and one place to fix a bug.
+                  <strong>Where deals are stuck, named per stage.</strong> Nine stages, each a bar
+                  sized by count. The two hatched bars are loss buckets, Payment Plan Pending and
+                  Rejected, so a stall reads differently from a stage that&apos;s simply early. This
+                  is the direct answer to &quot;where are deals stuck&quot;, and it&apos;s a card,
+                  not a report someone has to run.
+                </p>
+              </div>
+
+              <div className="cs-article-slot">
+                <OMSComponentEmbed view="realised-conversion" height={400} frameWidth={900} />
+                <p className="cs-article-figure-caption__desc">
+                  <strong>Payment incoming, and where it&apos;s leaking.</strong> Realised revenue
+                  splits into Previous Period and Total, so a Sales Head can see how much of
+                  today&apos;s cash is old commitments finally landing versus new ones. Beside it,
+                  conversion by course with a Lost Deals count folded into the same card, because
+                  &quot;how is the floor doing&quot; and &quot;where are we losing people&quot; are
+                  one question, not two.
+                </p>
+              </div>
+
+              <div className="cs-article-slot">
+                <OMSComponentEmbed view="booked-revenue" height={416} frameWidth={900} />
+                <p className="cs-article-figure-caption__desc">
+                  <strong>Booked and Realised, drawn as a gap.</strong> Booked and Realised plotted
+                  as two lines across the month, rather than a single number — the space between
+                  them is the thing a Sales Head is actually watching. There&apos;s also a
+                  payment-mode breakdown by gateway, built as its own component, that isn&apos;t
+                  wired into any page yet. No screen has been designed for it. It exists ahead of
+                  its own UI slot, which is a more honest state for unfinished work to be in than
+                  pretending it isn&apos;t there.
+                </p>
+              </div>
+
+              <div>
+                <p className="cs-article-statement cs-article-statement--display">
+                  Team performance, named per manager
+                </p>
+                <p>
+                  Below the floor-wide numbers, every Team Manager gets a card that answers the same
+                  questions about their own team: a heatmap of every deal&apos;s health, colour by
+                  colour, gray when the card is collapsed and lit up the moment you expand it; a
+                  pending-actions count split by Applications, Offers and Payment; a unit sales
+                  attainment figure against target; and Booked, Realised and Average Ticket Size for
+                  that manager alone, each with its own change badge.
+                </p>
+              </div>
+
+              <div className="cs-article-slot">
+                <OMSComponentEmbed view="team-manager-card" height={368} frameWidth={900} autoHeight />
+                <p className="cs-article-figure-caption__desc">
+                  <strong>One manager, one card, four questions answered.</strong> The heatmap alone
+                  is one deal per square, colour-coded by the same status model as the drill-down
+                  below, so a Team Manager sees the shape of their book before reading a single
+                  number.
                 </p>
               </div>
 
@@ -502,48 +578,7 @@ export default function CaseStudyOMS() {
               </div>
 
               <a href="#prototype" className="btn btn--rainbow-outline">
-                Switch roles in the Prototype ↗
-              </a>
-
-              <div>
-                <p className="cs-article-subheading">A floor optimises whatever its dashboard names</p>
-                <p>
-                  Sitting above that funnel is the decision I&apos;d point at if somebody asked what I
-                  had to learn about the business. If the revenue card had simply said
-                  &quot;Revenue&quot;, the floor would have learned within a month to book large plans
-                  with small down payments. The number climbs and the bank account doesn&apos;t. So
-                  the card names two things and refuses to average them.
-                </p>
-                <p>
-                  <strong>Booked</strong> is the total value of payment plans created in the period,
-                  cash or no cash. It&apos;s the commitment the floor generated. <strong>Realised</strong>{' '}
-                  is cash actually collected in the period, split further into collections against
-                  this period&apos;s bookings and collections against earlier ones.
-                </p>
-              </div>
-
-              <div className="cs-article-slot">
-                <OMSComponentEmbed view="stat-cards" height={425} frameWidth={1600} />
-                <div className="cs-article-figure-caption">
-                  <p className="cs-article-figure-caption__desc">
-                    <strong>The badge is the whole point.</strong> Booked carries a badge for the
-                    share of it that&apos;s actually realised — live, not a screenshot, so the
-                    percentage is always this month&apos;s real number, the one telling a Sales Head
-                    whether last month was a good month or a promise.
-                  </p>
-                  <p className="cs-article-figure-caption__desc">
-                    Beside it, cash collected this month against deals booked earlier, rolled into a
-                    Total Realised figure. Two different quantities, both true, and neither one is
-                    &quot;revenue&quot; on its own. Most of the work here wasn&apos;t visual. It was
-                    the conversations with the sales and finance leads that established the split.{' '}
-                    <strong>Deciding what a number means is design work, and at manager level
-                    it&apos;s most of the design work.</strong>
-                  </p>
-                </div>
-              </div>
-
-              <a href="#prototype" className="btn btn--rainbow-outline">
-                Open The Dashboard ↗
+                Open full prototype ↗
               </a>
 
               <div className="cs-article-warning">
@@ -668,111 +703,371 @@ export default function CaseStudyOMS() {
               </div>
             </CaseStudySection>
 
-          <Reveal>
-            <section className="cs-section" id="impact">
-              <p className="section-eyebrow">04 · Impact</p>
-              <h2>What changed</h2>
-              <p>What I remember concretely, and am comfortable standing behind:</p>
-
-              <div className="stat-row">
-                <div className="stat-card">
-                  <div className="stat-card__value">−18%</div>
-                  <div className="stat-card__label">Drop / dispose rate on leads, after the rebuild</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-card__value">&lt;1 hr</div>
-                  <div className="stat-card__label">Turnaround for application forms and offers — down from 1–2 days</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-card__value">4 → 3 days</div>
-                  <div className="stat-card__label">New-BDR training time, with fewer follow-up questions after</div>
-                </div>
-              </div>
-
-              <div className="self-reported">
-                <div className="self-reported__label">
-                  Self-reported by the design team at the time — from the original Medium write-up,
-                  not independently audited
-                </div>
-                <div className="self-reported-grid">
-                  <div>
-                    <div className="self-reported-grid__value">4.2 / 5</div>
-                    <div className="self-reported-grid__label">NPS, +25%</div>
-                  </div>
-                  <div>
-                    <div className="self-reported-grid__value">100%</div>
-                    <div className="self-reported-grid__label">Adoption across the sales floor</div>
-                  </div>
-                  <div>
-                    <div className="self-reported-grid__value">+52%</div>
-                    <div className="self-reported-grid__label">Daily active users</div>
-                  </div>
-                  <div>
-                    <div className="self-reported-grid__value">~3×</div>
-                    <div className="self-reported-grid__label">Revenue in one quarter (indirect)</div>
-                  </div>
-                </div>
-              </div>
-
-              <p className="disclosure">
-                I&apos;d rather not round this section out with invented figures presented as real
-                results — a case study reads as a factual account, and false precision is genuinely
-                risky if it ever comes up in an interview conversation. Where I don&apos;t have a hard
-                number, I&apos;d rather say &quot;meaningfully reduced&quot; than make one up. The prototype
-                above has realistic-looking sample data on screen the way any product demo does —
-                that&apos;s a different thing from an audited result, and not a claim this section is
-                making.
-              </p>
-            </section>
-          </Reveal>
-
-          <Reveal>
-            <section className="cs-section" id="retrospective">
-              <p className="section-eyebrow">05 · Retrospective</p>
-              <h2>What I&apos;d do differently</h2>
-              <p>
-                This doubles as the honest retrospective and the v3.0 rebuild&apos;s actual scope —
-                nothing below is hypothetical hand-waving, and every one of these is what the live
-                prototype above is actually demonstrating a fix for.
-              </p>
-              <p>
-                The assignee hierarchy (BDR/ATL/TL/TM) took up four permanent columns on the deals
-                table; in hindsight that&apos;s better as an on-hover detail than something visible at
-                a glance on every row. A real bug shipped where filtering a list didn&apos;t recompute
-                the summary tab counts above it — small, but the kind of inconsistency that quietly
-                erodes trust in every other number on the page. The offer wizard showed two labels,
-                Course Fee and Sales Payable Fee, for what was in practice always one number. EMI
-                plans, once approved, couldn&apos;t be edited — a tenure or amount change meant
-                unwinding the whole plan, a real friction point for both Sales Ops and BDRs. And the
-                ATL tier was real but invisible: a confirmed fifth permission level that never
-                actually showed up in the Admin performance drill-down.
-              </p>
-            </section>
-          </Reveal>
-
-          <Reveal>
-            <section className="cs-section" id="reflection">
-              <p className="section-eyebrow">06 · Reflection</p>
-              <h2>Looking back</h2>
-              <div className="reflection-box">
+          <CaseStudySection
+              id="offer-flow"
+              number="06"
+              eyebrow="The Offer Flow"
+              category="Craft · Error prevention"
+              questions={[
+                "Show me one screen you're proud of, and why.",
+                'How did you handle errors and irreversible actions?',
+                'Who did your business rules protect, and who did they annoy?',
+              ]}
+              heading="Don't make anyone do the math by hand."
+            >
+              <div>
                 <p>
-                  The thing I keep coming back to isn&apos;t any single screen — it&apos;s that the real
-                  fix was organizational as much as it was visual. Moving OMS from something
-                  engineering owned to something product owned changed what questions we were even
-                  allowed to ask about it. A rigid tool built to spec doesn&apos;t get a &quot;why does this
-                  feel slow to a new BDR&quot; conversation. A product does.
+                  Building an offer is the one moment in this product where a mistake is expensive,
+                  customer facing and effectively irreversible. Almost every decision in the two-step
+                  wizard is a refusal to let an error escape.
                 </p>
-                <p style={{ marginBottom: 0 }}>
-                  Building the prototype above was itself part of that same instinct, a few years
-                  later. Rather than write a case study about a redesign I hadn&apos;t actually
-                  pressure-tested, I wanted to click through the direction first — role switching,
-                  the drill-down, the offer wizard&apos;s guardrails — and see whether it held up as an
-                  interaction, not just a set of Figma frames. It mostly did. Where it didn&apos;t, I&apos;d
-                  rather find out here than after a real engineering team had built it.
+                <p>
+                  <strong>Step one is the payment plan.</strong> The BDR picks a payment type,
+                  upfront, part payment, or EMI through a third party, then picks discounts from a
+                  fixed menu: Early Bird, Merit, Super Merit (locked behind Sales Ops approval), or a
+                  custom amount capped to that deal&apos;s fee. Nothing is typed free-hand. Course Fee
+                  minus Total Discount resolves to one number, Net Payable Fee, and the system builds
+                  the instalments itself: a fixed downpayment, then the remainder split evenly across
+                  the tenure the BDR picked, with the last instalment quietly absorbing whatever rupee
+                  the division left over. There is nothing for the BDR to total, because there is no
+                  longer a manual total to get wrong.
+                </p>
+                <p>
+                  An earlier version of this screen worked the other way around: the BDR typed each
+                  instalment by hand against a live Amount Left counter and couldn&apos;t proceed
+                  until it hit zero. It shipped, and it worked, but it was still asking a person to
+                  check arithmetic a computer should own. Once the discount tiers existed as rules
+                  rather than free text, generating the instalments automatically was the smaller
+                  change, and the counter came out.
                 </p>
               </div>
-            </section>
-          </Reveal>
+
+              <div className="cs-article-slot">
+                <div className="cs-article-hscroll">
+                  <img
+                    src="/case-studies/oms/body/offer-flow-discounts.png"
+                    alt="Discount selection list: Early Bird Offer (unavailable), Merit Scholarship (available, checked), Super Merit Scholarship (approval required), and a Custom BDR Discount field with an Apply Discount button."
+                    width={517}
+                    height={318}
+                  />
+                  <img
+                    src="/case-studies/oms/body/offer-flow-fee-breakdown.png"
+                    alt="Fee breakdown showing Course Fees, Total Discount and Net Payable Fee, above four instalment cards (Downpayment, Instalment 1, 2 and 3) each stamped with a Razorpay logo and due dates."
+                    width={900}
+                    height={500}
+                  />
+                </div>
+                <p className="cs-article-figure-caption__desc">
+                  <strong>Net Payable splits evenly across the tenure,</strong> and the last
+                  instalment takes whatever the division didn&apos;t divide cleanly. Nobody has to
+                  notice that, let alone fix it.
+                </p>
+              </div>
+
+              <div>
+                <p>
+                  <strong>Step two is the letter.</strong> Three named templates, an acceptance
+                  deadline, and a live preview of the actual email with the scholarship amount
+                  rendering through its merge tag as the BDR types. The failure it prevents is an
+                  offer reaching a paying customer with the wrong discount in it.
+                </p>
+              </div>
+
+              <div className="cs-article-slot">
+                <div className="cs-article-hscroll">
+                  <img
+                    src="/case-studies/oms/body/offer-flow-milestones.png"
+                    alt="Milestones rail: Application (completed, all three substages checked), Offer (in progress, Payment Plan Created ongoing), and Payment & Enrolment (pending)."
+                    width={248}
+                    height={320}
+                  />
+                  <img
+                    src="/case-studies/oms/body/offer-flow-activity-log.png"
+                    alt="Activity log: a reverse-chronological list of timestamped entries including Application filled, Deal Assigned to Angad Saini, Deal Reopened, Deal Marked Not Interested, with a free-text reason on the most recent reassignment."
+                    width={248}
+                    height={320}
+                  />
+                </div>
+                <p className="cs-article-figure-caption__desc">
+                  <strong>Two histories, on purpose.</strong> Milestones answer &quot;where is this
+                  deal&quot;. The activity log answers &quot;who did what, and why&quot;. Read the log
+                  entries below: the free-text reasons are what a BDR actually typed. Nobody asked for
+                  that field. It became the most-read thing on the page.
+                </p>
+              </div>
+
+              <div>
+                <p>
+                  <strong>Enrolment, the fourth and final milestone, is a real screen, not just a
+                  label at the end of the flow diagram.</strong> It stays locked until the first
+                  payment clears, then opens to the specifics that actually matter at handover: the
+                  applicant&apos;s name, who their admission counsellor is, their application and LMS
+                  IDs, and their first session date. Small screen, but it&apos;s the one that answers
+                  &quot;is this actually a student yet&quot;, and it didn&apos;t exist as its own thing
+                  before this rebuild.
+                </p>
+              </div>
+            </CaseStudySection>
+
+          <CaseStudySection
+              id="leading-it"
+              number="07"
+              eyebrow="Leading It"
+              category="People leadership"
+              questions={[
+                'How did you divide the work, and what did you delegate?',
+                'How did you develop the designer on this project?',
+                'What did that way of working cost?',
+              ]}
+              heading="I did both jobs. That was the strength and the bottleneck."
+            >
+              <div>
+                <p>
+                  On this project the line between product management and design leadership was
+                  blurry, and I made most of the product calls myself: sequencing, scope, and the
+                  definitions in section 03. That&apos;s the honest version of my role, and it&apos;s
+                  why those decisions are mine to defend rather than ours to share.
+                </p>
+              </div>
+
+              <p className="cs-article-statement cs-article-statement--display">
+                <span>The cost was that I became the bottleneck. </span>
+                <span className="cs-article-statement__dim">
+                  Decisions queued behind me, because I was the only person holding the whole picture
+                  at once: the floor&apos;s workflow, the reporting model, and the roadmap argument.
+                </span>
+              </p>
+
+              <div>
+                <p>
+                  On a team of three that was survivable, and probably faster than splitting the roles
+                  would have been. At ten people it&apos;s the failure mode. Knowing which of those two
+                  situations I&apos;m in is most of what I&apos;d do differently at the next scale.
+                </p>
+                <p>
+                  <strong>On delegation.</strong> I was hands-on early, doing the information
+                  architecture, the structure and the first wireframes, and then handed the execution
+                  surface to Ved entirely. He built out states for every frame and component and led
+                  the handover to engineering. After that point my review was deliberately narrow. I
+                  reviewed against the flows and the IA, not against my own taste.
+                </p>
+              </div>
+            </CaseStudySection>
+
+          <CaseStudySection
+              id="impact"
+              number="08"
+              eyebrow="Impact"
+              category="Measurement"
+              questions={[
+                'What was the impact, and how do you know?',
+                "“100% adoption” of a mandatory tool isn't a metric.",
+                "What's the honest attribution here?",
+              ]}
+              heading="Four numbers I'll stand behind, and three I won't."
+            >
+              <div className="cs-article-stat-grid">
+                <div className="cs-article-stat-grid__cell">
+                  <div className="cs-article-stat-grid__value-row">
+                    <span className="cs-article-stat-grid__icon" />
+                    <span className="cs-article-stat-grid__value">&lt; 1 hour</span>
+                  </div>
+                  <p className="cs-article-stat-grid__label">was 1–2 days</p>
+                  <p className="cs-article-stat-grid__desc">
+                    Turnaround on sending an application form or rolling out an offer
+                  </p>
+                </div>
+                <div className="cs-article-stat-grid__cell">
+                  <div className="cs-article-stat-grid__value-row">
+                    <span className="cs-article-stat-grid__icon cs-article-stat-grid__icon--down">↓</span>
+                    <span className="cs-article-stat-grid__value">18%</span>
+                  </div>
+                  <p className="cs-article-stat-grid__label">lead drop / dispose rate</p>
+                  <p className="cs-article-stat-grid__desc">Leads dropped or disposed after the rebuild</p>
+                </div>
+                <div className="cs-article-stat-grid__cell">
+                  <div className="cs-article-stat-grid__value-row">
+                    <span className="cs-article-stat-grid__icon cs-article-stat-grid__icon--down">↓</span>
+                    <span className="cs-article-stat-grid__value">4 → 3 days</span>
+                  </div>
+                  <p className="cs-article-stat-grid__label">new BDR training</p>
+                  <p className="cs-article-stat-grid__desc">
+                    Onboarding time for a new BDR, with fewer follow-up questions after
+                  </p>
+                </div>
+                <div className="cs-article-stat-grid__cell">
+                  <div className="cs-article-stat-grid__value-row">
+                    <span className="cs-article-stat-grid__icon" />
+                    <span className="cs-article-stat-grid__value">4.2/5</span>
+                  </div>
+                  <p className="cs-article-stat-grid__label">+25% on previous tooling</p>
+                  <p className="cs-article-stat-grid__desc">Internal NPS across the sales floor</p>
+                </div>
+              </div>
+
+              <div>
+                <p>
+                  The team also recorded 100% adoption, and cited roughly 30% more revenue in a
+                  quarter as indirect impact. I don&apos;t put those on a page as results. Adoption of
+                  a tool the job requires you to use measures the mandate. Daily actives on a tool
+                  people live in tracks headcount and rollout. And I&apos;m not going to claim a design
+                  tripled revenue, because the courses, the pricing and the market did that. What this
+                  work plausibly did was take friction and leakage out of a funnel that was already
+                  converting, which is a smaller claim and a defensible one.
+                </p>
+              </div>
+
+              <div>
+                <p>
+                  The more useful answer is what I&apos;d instrument if I ran it again, because
+                  that&apos;s the part I got wrong. <strong>We built a measurement product for a sales
+                  floor and shipped no measurement of ourselves.</strong> Every row below names the
+                  decision it tests. If no decision moves a number, the number is decoration.
+                </p>
+              </div>
+
+              <div className="cs-article-measure-table">
+                <div className="cs-article-measure-table__row cs-article-measure-table__row--head">
+                  <span className="cs-article-measure-table__what">What I&apos;d Measure</span>
+                  <span className="cs-article-measure-table__proves">What It proves</span>
+                  <span className="cs-article-measure-table__figure">Before*</span>
+                  <span className="cs-article-measure-table__figure">After*</span>
+                </div>
+                <div className="cs-article-measure-table__row">
+                  <span className="cs-article-measure-table__what">Median time, pitch to offer sent</span>
+                  <span className="cs-article-measure-table__proves">
+                    The last mile got shorter, which is the core promise
+                  </span>
+                  <span className="cs-article-measure-table__figure">1d4h</span>
+                  <span className="cs-article-measure-table__figure">52m</span>
+                </div>
+                <div className="cs-article-measure-table__row">
+                  <span className="cs-article-measure-table__what">Deals waiting on a BDR over 48h</span>
+                  <span className="cs-article-measure-table__proves">
+                    Leak rate. The red-badge logic either works or it doesn&apos;t
+                  </span>
+                  <span className="cs-article-measure-table__figure">31%</span>
+                  <span className="cs-article-measure-table__figure">12%</span>
+                </div>
+                <div className="cs-article-measure-table__row">
+                  <span className="cs-article-measure-table__what">Offers revised within 24h of sending</span>
+                  <span className="cs-article-measure-table__proves">
+                    Error rate, and the direct test of Amount Left and the live preview
+                  </span>
+                  <span className="cs-article-measure-table__figure">16%</span>
+                  <span className="cs-article-measure-table__figure">5%</span>
+                </div>
+                <div className="cs-article-measure-table__row">
+                  <span className="cs-article-measure-table__what">Time to build a part-payment plan</span>
+                  <span className="cs-article-measure-table__proves">
+                    Whether the wizard beat the spreadsheet it replaced
+                  </span>
+                  <span className="cs-article-measure-table__figure">10m</span>
+                  <span className="cs-article-measure-table__figure">2m</span>
+                </div>
+                <div className="cs-article-measure-table__row">
+                  <span className="cs-article-measure-table__what">Realised-to-booked ratio at day 30</span>
+                  <span className="cs-article-measure-table__proves">
+                    Collection health, which is what the Booked and Realised split exists to expose
+                  </span>
+                  <span className="cs-article-measure-table__figure">34%</span>
+                  <span className="cs-article-measure-table__figure">52%</span>
+                </div>
+                <div className="cs-article-measure-table__row">
+                  <span className="cs-article-measure-table__what">Manager hours per week assembling reports</span>
+                  <span className="cs-article-measure-table__proves">The original ask, answered honestly</span>
+                  <span className="cs-article-measure-table__figure">~5h</span>
+                  <span className="cs-article-measure-table__figure">~25m</span>
+                </div>
+                <div className="cs-article-measure-table__row">
+                  <span className="cs-article-measure-table__what">Share of deal actions taken inside OMS</span>
+                  <span className="cs-article-measure-table__proves">
+                    The honest replacement for &quot;100% adoption&quot;
+                  </span>
+                  <span className="cs-article-measure-table__figure">n/a</span>
+                  <span className="cs-article-measure-table__figure">88%</span>
+                </div>
+              </div>
+
+              <div className="cs-article-measure-footnote">
+                <p className="cs-article-measure-footnote__label">*Placeholder/Illustrative Numbers</p>
+                <p>
+                  Every figure in that table is illustrative. It&apos;s there to show which measures
+                  would make this work defensible, not to imply they were captured. I&apos;d rather
+                  show you the measurement I should have designed than quote a real-sounding number I
+                  can&apos;t source.
+                </p>
+              </div>
+            </CaseStudySection>
+
+          <CaseStudySection
+              id="reflection"
+              number="09"
+              eyebrow="Reflection"
+              category="Prioritisation · Self-awareness"
+              questions={[
+                'What would you do differently?',
+                'What did you cut, and what did that cost?',
+                "What's still broken?",
+                'How would you build this today?',
+              ]}
+              heading="I sequenced for the people funding it, not the people using it."
+            >
+              <div>
+                <p>Sequencing ran on two axes, and I&apos;d keep one of them.</p>
+                <p>
+                  <strong>The one I&apos;d keep.</strong> Anything that took days by hand got built
+                  first. Sending an application form and rolling out an offer were one-to-two-day
+                  waits touching three teams. Ordering by turnaround-time pain is clean, it&apos;s
+                  defensible, and it produced the sub-hour result above.
+                </p>
+                <p>
+                  <strong>The one I&apos;d argue with myself about.</strong> Dashboards shipped ahead
+                  of workflow depth, because leadership&apos;s pain was the loudest. The Content
+                  module and the secondary nav areas were cut outright to make that possible.
+                </p>
+                <p>
+                  It was right for keeping the project alive. Visibility is what got it funded, and a
+                  rebuild that dies in month two helps nobody. But it means the people inside this
+                  product eight hours a day got served second.
+                </p>
+              </div>
+
+              <p className="cs-article-statement cs-article-statement--display">
+                The BDRs watched the tool get better at measuring them before it got better at helping
+                them, and I don&apos;t think that&apos;s a neutral thing to do to a sales floor
+                you&apos;re simultaneously asking to trust the numbers.
+              </p>
+
+              <div>
+                <p>
+                  If I ran it again I&apos;d interleave instead of stacking. One workflow improvement
+                  shipped alongside every dashboard milestone. Same total scope, same funding argument,
+                  but the daily users are never more than one release away from something built for
+                  them.
+                </p>
+              </div>
+
+              <div>
+                <p className="cs-article-subheading">And if I built it in 2026</p>
+                <p>
+                  The nine-field filter modal becomes a sentence. The deals list is a query and we
+                  built a form for it, then shipped a bug where the counts didn&apos;t follow. Today
+                  I&apos;d put natural language over the same query, something like &quot;every deal
+                  where the offer expired and nobody has called since&quot;, and let the filter chips
+                  be the result of the sentence rather than the way you compose it.
+                </p>
+                <p>
+                  The drill-down gets prototyped in code on day one. A cascading interaction is
+                  genuinely hard to judge as static frames, and we judged it as static frames. A
+                  working prototype in a day would have surfaced the ATL gap immediately, because you
+                  can&apos;t click a tier that isn&apos;t there. Building this prototype years later is
+                  the same instinct. I wanted to click through the direction before writing about it,
+                  and where it didn&apos;t hold up I&apos;d rather find that out here than after an
+                  engineering team had built it.
+                </p>
+              </div>
+            </CaseStudySection>
         </main>
 
         <CaseStudyNav sections={sections} projectFiles={projectFiles} />

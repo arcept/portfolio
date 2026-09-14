@@ -122,7 +122,14 @@ export const BookedRevenueCard = ({ selection }: { selection: PeriodSelection })
                 </div>
             </FadeOnSelection>
 
-            <div className="min-h-0 flex-1">
+            {/* `flex flex-col` (not a plain block div) so `BookedChart`'s own `flex-1` wrapper
+             * gets its height from flex-grow rather than a `height: 100%` percentage resolution —
+             * the latter only resolves against an ancestor with an explicitly-specified height,
+             * and this div's own height already comes from *this* flex-grow, one level up. That
+             * chain of percentage-through-a-flex-grown-block silently collapsed to 0 wherever the
+             * card was rendered without a grid row stretching it (any standalone embed), leaving
+             * the chart blank while the number/text above it rendered fine. */}
+            <div className="flex min-h-0 flex-1 flex-col">
                 <BookedChart data={booked} selectionKey={selectionKey} />
             </div>
         </Card>

@@ -20,7 +20,19 @@ import "@/styles/globals.css";
 // hard refresh on a deep route (e.g. /deals/DL-2216) requested the literal nested path and
 // 500'd wherever the host couldn't resolve a file with that name. Since the fragment after
 // `#` never reaches the server, every refresh just re-requests index.html itself.
-const EMBED_VIEW_KEYS: EmbedViewKey[] = ["admin-funnel", "team-manager-funnel", "team-drilldown", "stat-cards", "sales-funnel"];
+const EMBED_VIEW_KEYS: EmbedViewKey[] = [
+    "admin-funnel",
+    "team-manager-funnel",
+    "team-drilldown",
+    "stat-cards",
+    "sales-funnel",
+    "team-manager-card",
+    "offer-payment-plan",
+    "offer-milestones",
+    "deal-stages",
+    "realised-conversion",
+    "booked-revenue",
+];
 
 // A plain query param, not a route: the host page requests this exact same
 // index.html on a static file server (no server-side rewrites available

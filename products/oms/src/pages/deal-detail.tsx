@@ -61,7 +61,9 @@ function formatMoney(amount: number, currency: "INR" | "USD"): string {
     const symbol = currency === "INR" ? "₹" : "$";
     return `${symbol}${amount.toLocaleString(currency === "INR" ? "en-IN" : "en-US")}`;
 }
-function formatDate(d: Date): string {
+// Exported (only) for the case-study embed's own milestones/activity-log view — see
+// embed-view.tsx — which needs the same date formatting the real page uses.
+export function formatDate(d: Date): string {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 function formatDateTime(d: Date): string {
@@ -241,7 +243,9 @@ const MilestoneStageBadge = ({ status }: { status: MilestoneGroupStatus }) => (
     </span>
 );
 
-const MilestoneTimeline = ({ deal }: { deal: Deal }) => {
+// Exported (only) so the case-study embed can show the same live component — see
+// embed-view.tsx's "offer-milestones" view.
+export const MilestoneTimeline = ({ deal }: { deal: Deal }) => {
     const groups = getMilestoneGroups(deal);
     return (
         <div className="relative flex flex-col gap-5 pl-7">
