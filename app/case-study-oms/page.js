@@ -200,7 +200,7 @@ export default function CaseStudyOMS() {
             </Reveal>
 
             <Reveal delay={0.08}>
-              <div className="image-slot" style={{ height: '100%', minHeight: '349px' }}>
+              <div className="image-slot cs-hero-cover" style={{ height: '100%', minHeight: '349px' }}>
                 Cover art pending
               </div>
             </Reveal>
@@ -227,7 +227,7 @@ export default function CaseStudyOMS() {
         ]}
         title="OMS v3.0 interactive prototype"
         mobileImage="/case-studies/oms/dashboard-preview.png"
-        mobileImageAlt="OMS v3.0 dashboard showing the funnel cards, revenue split, and deals list"
+        mobileImageAlt="OMS v3.0 rebuild dashboard showing Booked Revenue, the Sales Funnel ribbon, Revenue Realised, Conversion by course, and Deal Stages"
       />
 
       <div className="cs-article-grid wrap wrap--wide">
@@ -505,7 +505,7 @@ export default function CaseStudyOMS() {
               </SeeMore>
 
               <div className="cs-article-slot">
-                <OMSComponentEmbed view="deal-stages" height={320} frameWidth={900} />
+                <OMSComponentEmbed view="deal-stages" height={320} frameWidth={610} />
                 <SeeMore>
                   <p className="cs-article-figure-caption__desc">
                     <strong>Where deals are stuck, named per stage.</strong> Nine stages, each a bar
@@ -790,14 +790,14 @@ export default function CaseStudyOMS() {
                   <img
                     src="/case-studies/oms/body/offer-flow-discounts.png"
                     alt="Discount selection list: Early Bird Offer (unavailable), Merit Scholarship (available, checked), Super Merit Scholarship (approval required), and a Custom BDR Discount field with an Apply Discount button."
-                    width={517}
-                    height={318}
+                    width={1034}
+                    height={637}
                   />
                   <img
                     src="/case-studies/oms/body/offer-flow-fee-breakdown.png"
-                    alt="Fee breakdown showing Course Fees, Total Discount and Net Payable Fee, above four instalment cards (Downpayment, Instalment 1, 2 and 3) each stamped with a Razorpay logo and due dates."
-                    width={900}
-                    height={500}
+                    alt="Fee breakdown showing Course Fees, Total Discount and Net Payable Fee, above four instalment cards (Downpayment, 1st, 2nd and 3rd Instalment) each stamped with a Razorpay logo and due dates."
+                    width={652}
+                    height={640}
                   />
                 </div>
                 <SeeMore>
@@ -825,14 +825,26 @@ export default function CaseStudyOMS() {
                   <img
                     src="/case-studies/oms/body/offer-flow-milestones.png"
                     alt="Milestones rail: Application (completed, all three substages checked), Offer (in progress, Payment Plan Created ongoing), and Payment & Enrolment (pending)."
-                    width={248}
-                    height={320}
+                    width={496}
+                    height={640}
                   />
                   <img
                     src="/case-studies/oms/body/offer-flow-activity-log.png"
                     alt="Activity log: a reverse-chronological list of timestamped entries including Application filled, Deal Assigned to Angad Saini, Deal Reopened, Deal Marked Not Interested, with a free-text reason on the most recent reassignment."
-                    width={248}
-                    height={320}
+                    width={496}
+                    height={640}
+                  />
+                  <img
+                    src="/case-studies/oms/body/offer-flow-form.png"
+                    alt="Candidate application form: Basic Information (name Dhruv Bhatt, phone, email, city, state, country) and Professional Details (current role, experience, English proficiency, income band, tools: AutoCAD, Revit, Rhinoceros 3D)."
+                    width={754}
+                    height={640}
+                  />
+                  <img
+                    src="/case-studies/oms/body/offer-flow-deal-detail.png"
+                    alt="Deal detail panel: View On HubSpot and Chat On WhatsApp buttons, a Global Status row (Not Interested, Mark Reject, Save for Later), and an Assignment list naming the LC, TL and TM."
+                    width={602}
+                    height={640}
                   />
                 </div>
                 <SeeMore>

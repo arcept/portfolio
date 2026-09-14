@@ -1382,9 +1382,20 @@ button:focus-visible {
   align-items: start;
 }
 
+/* Cover art is still just a "pending" placeholder box — on mobile it's pure
+   scroll length with nothing to show for it, so it only renders once the
+   two-column desktop layout actually has a second column to put it in. */
+.cs-hero-cover {
+  display: none;
+}
+
 @media (min-width: 900px) {
   .cs-header-grid {
     grid-template-columns: 55% 45%;
+  }
+
+  .cs-hero-cover {
+    display: flex;
   }
 }
 
