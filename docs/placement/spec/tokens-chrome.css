@@ -1,0 +1,29 @@
+/* Chrome tokens — the frame, controls, chips and Designer's notes AROUND the product.
+   Identical to the case-study page (specification / drawing-sheet identity). Never use inside the product UI. */
+:root{
+  --ground:#F1F2EF; --sheet:#FAFBF8; --sunk:#E8EAE5;
+  --ink:#161A17; --ink-2:#434941; --ink-3:#6F766E;
+  --rule:#D2D6CE; --rule-2:#BFC4BA;
+  --amber:#8A6008; --amber-mark:#C8901A;
+  --oxide:#9A3820; --moss:#3F6B4A;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#111312; --sheet:#181B18; --sunk:#202420;
+    --ink:#E8EBE6; --ink-2:#B0B7AE; --ink-3:#858C84;
+    --rule:#2C312C; --rule-2:#3C423C;
+    --amber:#E0AE45; --amber-mark:#E0AE45;
+    --oxide:#D3775A; --moss:#7FB08C;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#111312; --sheet:#181B18; --sunk:#202420;
+  --ink:#E8EBE6; --ink-2:#B0B7AE; --ink-3:#858C84;
+  --rule:#2C312C; --rule-2:#3C423C;
+  --amber:#E0AE45; --amber-mark:#E0AE45;
+  --oxide:#D3775A; --moss:#7FB08C;
+}
+/* The product UI stays light in both themes — it is a device showing a real 2024 screen. */

@@ -1,0 +1,19 @@
+{
+  "id": "gate",
+  "tier": "short",
+  "title": "Same graduation, three doors",
+  "proves": ["Eligibility is a computed condition, not a message"],
+  "initialState": { "stage": "evaluation_day", "eligibility": "not_assessed", "profile": "incomplete", "interest": "interested", "standing": "active" },
+  "branches": [
+    { "label": "Eligible · profile incomplete", "steps": [
+      { "n": 1, "screen": "lh-graduate-popup", "set": { "stage": "graduated", "eligibility": "eligible" }, "action": "Go to Placement Hub", "note": "" },
+      { "n": 2, "screen": "hub-eligible-incomplete", "action": "Open a job", "note": "Access granted, with a completion prompt." },
+      { "n": 3, "screen": "jd-profile-incomplete", "action": "My Profile ↗", "note": "Browse freely; apply is gated. Same attribute is a hard gate for eligibility and a soft one here — flagged inconsistency." }
+    ]},
+    { "label": "Not eligible", "steps": [
+      { "n": 1, "screen": "hub-not-eligible", "set": { "stage": "graduated", "eligibility": "not_eligible", "profile": "complete" }, "action": "Share your job news", "note": "Reason, support route, and a self-placement path — never a dead end." },
+      { "n": 2, "screen": "selfplaced-form", "action": "end", "note": "" }
+    ]}
+  ],
+  "phase2Hint": "This scenario becomes the state-switcher's demo: toggle eligibility and profile, watch the same screen recompose."
+}

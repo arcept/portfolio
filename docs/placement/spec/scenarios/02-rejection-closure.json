@@ -1,0 +1,110 @@
+{
+  "id": "rejection-closure",
+  "tier": "hero",
+  "title": "Rejected, supported, closed out",
+  "proves": [
+    "Rejection with reasoning (shipped, post-application)",
+    "Irrelevant jobs explain themselves",
+    "Closure for non-placed learners"
+  ],
+  "initialState": {
+    "stage": "graduated",
+    "eligibility": "eligible",
+    "profile": "complete",
+    "interest": "interested",
+    "standing": "active",
+    "applications": [
+      {
+        "jobId": "aecom-bim",
+        "status": "interview",
+        "history": [
+          "applied",
+          "profile_shared",
+          "shortlisted",
+          "interview"
+        ]
+      }
+    ],
+    "windowClosingSoon": false
+  },
+  "steps": [
+    {
+      "n": 1,
+      "screen": "apps-list",
+      "action": "Open AECOM application",
+      "note": "Mid-process learner.",
+      "chapter": "Outcome"
+    },
+    {
+      "n": 2,
+      "screen": "jd-t-interview",
+      "action": "time passes →",
+      "note": "",
+      "chapter": "Outcome"
+    },
+    {
+      "n": 3,
+      "screen": "jd-t-rej-interview",
+      "set": {
+        "applications[0].status": "rejected_interview",
+        "applications[0].reason": "from Figma copy"
+      },
+      "action": "Back to Home",
+      "note": "A rejection says which stage and why — the reasoning shipped after applying. (The pre-apply skills-match panel was cut.)",
+      "chapter": "Outcome",
+      "timeChip": "Day 4 · partner feedback relayed by ops"
+    },
+    {
+      "n": 4,
+      "screen": "home-updates-expanded",
+      "action": "Jobs tab",
+      "note": "The update feed records it; the learner isn't left to discover it.",
+      "chapter": "Outcome"
+    },
+    {
+      "n": 5,
+      "screen": "jobs-all",
+      "action": "Open a Not a Match job",
+      "note": "",
+      "chapter": "Support"
+    },
+    {
+      "n": 6,
+      "screen": "jd-irrelevant",
+      "action": "Share concern",
+      "note": "Not a match? The JD says so, and offers a route instead of a dead end.",
+      "chapter": "Support"
+    },
+    {
+      "n": 7,
+      "screen": "popup-query-form",
+      "action": "Submit",
+      "note": "",
+      "chapter": "Support"
+    },
+    {
+      "n": 8,
+      "screen": "popup-query-ack",
+      "action": "advance",
+      "note": "Promised '24 hrs' — a generic promise over a human process.",
+      "chapter": "Support"
+    },
+    {
+      "n": 9,
+      "screen": "home-closure",
+      "set": {
+        "standing": "non_placed_closed",
+        "stage": "hub_closed"
+      },
+      "action": "end",
+      "note": "'Closing Your Job Search Journey' — aimed at the NPS −18 segment. The hub cannot close while anything is in flight.",
+      "chapter": "Closure",
+      "timeChip": "3 months after graduation · window closes"
+    }
+  ],
+  "chapters": [
+    "Outcome",
+    "Support",
+    "Closure"
+  ]
+}

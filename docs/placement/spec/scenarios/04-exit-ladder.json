@@ -1,0 +1,95 @@
+{
+  "id": "exit-ladder",
+  "tier": "short",
+  "title": "Two ways out, two different rules",
+  "proves": [
+    "Exits are state too",
+    "Structural flag #9: progressive vs immediate ladders"
+  ],
+  "initialState": {
+    "stage": "graduated",
+    "eligibility": "eligible",
+    "profile": "complete",
+    "standing": "offer_received",
+    "applications": [
+      {
+        "jobId": "aecom-bim",
+        "status": "offer_received",
+        "history": [
+          "applied",
+          "profile_shared",
+          "shortlisted",
+          "interview",
+          "offer_received"
+        ]
+      }
+    ]
+  },
+  "branches": [
+    {
+      "label": "Declined, invalid reason — immediate",
+      "steps": [
+        {
+          "n": 1,
+          "screen": "jd-t-offer",
+          "action": "Having some issue with the offer?",
+          "note": ""
+        },
+        {
+          "n": 2,
+          "screen": "popup-offer-concern",
+          "action": "Submit",
+          "note": "Decline goes through the offer-concern form; ops judges validity in Retool."
+        },
+        {
+          "n": 3,
+          "screen": "popup-offer-concern-ack",
+          "set": {
+            "applications[0].status": "declined",
+            "standing": "declined_invalid"
+          },
+          "action": "advance",
+          "note": "",
+          "timeChip": "Day 2 · ops judged the reason invalid"
+        },
+        {
+          "n": 4,
+          "screen": "home-access-restricted",
+          "action": "end",
+          "note": "Immediate and total."
+        }
+      ]
+    },
+    {
+      "label": "Disqualified — progressive",
+      "steps": [
+        {
+          "n": 1,
+          "screen": "apps-list",
+          "set": {
+            "standing": "disqualified_once",
+            "applications[0].status": "disqualified"
+          },
+          "action": "Open application",
+          "note": "First disqualification shows only as a status badge + tracker message. No warning screen was designed."
+        },
+        {
+          "n": 2,
+          "screen": "jd-t-disqualified-message",
+          "action": "advance",
+          "note": "",
+          "timeChip": "Week 3 · second disqualification recorded"
+        },
+        {
+          "n": 3,
+          "screen": "home-disqualified",
+          "set": {
+            "standing": "disqualified_twice"
+          },
+          "action": "end",
+          "note": "Lockout. The learner couldn't know in advance which regime they were under."
+        }
+      ]
+    }
+  ]
+}
