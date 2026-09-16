@@ -54,6 +54,27 @@ export const APPLICATION_STATUS_CONFIG: Partial<Record<ApplicationStatus, Status
         messageClassName: "bg-utility-blue-600 text-white",
         trackerLabel: "Offer Accepted",
     },
+    rejected_interview: {
+        badgeLabel: "Rejected",
+        badgeClassName: "bg-utility-indigo-50 text-utility-indigo-700",
+        message: "Unfortunately, your interview did not lead to the next round. Keep applying for more opportunities!",
+        messageClassName: "bg-utility-indigo-50 text-utility-indigo-700",
+        trackerLabel: "Rejected",
+    },
+    declined: {
+        badgeLabel: "Offer Declined",
+        badgeClassName: "bg-utility-red-50 text-utility-red-700",
+        message: "We understand if you've chosen not to accept the placement. We appreciate your participation and wish you the best in your future endeavors.",
+        messageClassName: "bg-utility-red-50 text-utility-red-700",
+        trackerLabel: "Offer Declined",
+    },
+    disqualified: {
+        badgeLabel: "Disqualified",
+        badgeClassName: "bg-error-solid text-white",
+        message: "You have been disqualified for not showing up to AECOM's interview. This is your first disqualification.",
+        messageClassName: "bg-error-solid text-white",
+        trackerLabel: "Disqualified",
+    },
 };
 
 export const TRACKER_STAGE_ORDER: ApplicationStatus[] = ["applied", "profile_shared", "shortlisted", "interview", "offer_received", "accepted"];

@@ -1,12 +1,20 @@
 import { useParams } from "react-router";
 import { AppsList } from "@/screens/apps-list";
+import { HomeAccessRestricted } from "@/screens/home-access-restricted";
+import { HomeClosure } from "@/screens/home-closure";
+import { HomeDisqualified } from "@/screens/home-disqualified";
 import { HomeJobsNotApplied } from "@/screens/home";
 import { HomePlaced } from "@/screens/home-placed";
+import { HomeUpdates } from "@/screens/home-updates";
 import { HubEligibleComplete } from "@/screens/hub-eligible-complete";
+import { HubEligibleIncomplete } from "@/screens/hub-eligible-incomplete";
+import { HubNotEligible } from "@/screens/hub-not-eligible";
 import { JobDescription } from "@/screens/job-description";
 import { JobsAll } from "@/screens/jobs-all";
 import { PopupApplyConfirm, PopupApplyLocationMismatch, PopupApplyPolicyReminder, PopupApplySuccess } from "@/screens/popups/apply-flow";
 import { PopupAcceptConfirm, PopupOfferAccepted1, PopupOfferAccepted2, PopupOfferAccepted3, PopupOfferAccepted4 } from "@/screens/popups/accept-offer-flow";
+import { ConcernAck, ConcernForm } from "@/screens/popups/concern-flow";
+import { SelfplacedForm } from "@/screens/selfplaced-form";
 import { APPLICATION_FIXTURES } from "@/state/fixtures/applications";
 import { AECOM_BIM_JOB, ALL_JOBS } from "@/state/fixtures/jobs";
 import type { Application } from "@/state/learner-state";
@@ -84,6 +92,48 @@ const SCREENS: Record<string, () => React.ReactElement> = {
         </>
     ),
     "home-placed": () => <HomePlaced job={AECOM_BIM_JOB} />,
+
+    // Scenario 02 — rejection + closure
+    "jd-t-rej-interview": () => <JobDescription job={AECOM_BIM_JOB} application={appWithStatus("rejected_interview", ["applied", "profile_shared", "shortlisted", "interview", "rejected_interview"])} />,
+    "home-updates-expanded": () => <HomeUpdates />,
+    "jobs-relevant": () => <JobsAll />,
+    "jd-irrelevant": () => <JobDescription job={AECOM_BIM_JOB} variant="irrelevant" />,
+    "popup-query-form": () => (
+        <>
+            <JobDescription job={AECOM_BIM_JOB} variant="irrelevant" />
+            <ConcernForm heading="Share your concerns regarding job relevancy here." />
+        </>
+    ),
+    "popup-query-ack": () => (
+        <>
+            <JobDescription job={AECOM_BIM_JOB} variant="irrelevant" />
+            <ConcernAck heading="We have noted your concern successfully!" body="The team will get back to you within 24 hrs. Keep track of your email for the team's response." />
+        </>
+    ),
+    "home-closure": () => <HomeClosure />,
+
+    // Scenario 03 — gate
+    "hub-eligible-incomplete": () => <HubEligibleIncomplete />,
+    "jd-profile-incomplete": () => <JobDescription job={AECOM_BIM_JOB} variant="profile_incomplete" />,
+    "hub-not-eligible": () => <HubNotEligible />,
+    "selfplaced-form": () => <SelfplacedForm />,
+
+    // Scenario 04 — exit ladder
+    "popup-offer-concern": () => (
+        <>
+            <JobDescription job={AECOM_BIM_JOB} application={appWithStatus("offer_received", ["applied", "profile_shared", "shortlisted", "interview", "offer_received"])} />
+            <ConcernForm heading="Share your concerns regarding this job offer here." />
+        </>
+    ),
+    "popup-offer-concern-ack": () => (
+        <>
+            <JobDescription job={AECOM_BIM_JOB} application={appWithStatus("offer_received", ["applied", "profile_shared", "shortlisted", "interview", "offer_received"])} />
+            <ConcernAck heading="Thanks for sharing your concern!" body="We have received your message. Our support team will reach out to you within the next 24-48 hours." />
+        </>
+    ),
+    "home-access-restricted": () => <HomeAccessRestricted />,
+    "jd-t-disqualified-message": () => <JobDescription job={AECOM_BIM_JOB} application={appWithStatus("disqualified", ["applied", "profile_shared", "shortlisted", "interview", "disqualified"])} />,
+    "home-disqualified": () => <HomeDisqualified />,
 };
 
 export const Preview = () => {

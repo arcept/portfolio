@@ -33,7 +33,7 @@ export const HubEligibleComplete = () => {
                 <div className="flex h-24 w-28 shrink-0 items-center justify-center rounded-xl bg-white/60 text-xs text-success-primary">[illustration]</div>
             </div>
 
-            <EligibilityCriteriaPanel profileComplete />
+            <EligibilityCriteriaPanel variant="eligible_complete" />
         </PlacementHubLayout>
     );
 };
