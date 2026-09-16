@@ -149,6 +149,14 @@
     --color-utility-brand-300: var(--color-brand-300);
     --color-utility-brand-600: var(--color-brand-600);
     --color-utility-brand-700: var(--color-brand-700);
+    --color-utility-blue-50: rgb(239 248 255);
+    --color-utility-blue-100: rgb(209 233 255);
+    --color-utility-blue-600: rgb(21 112 239);
+    --color-utility-blue-700: rgb(23 92 211);
+    --color-utility-indigo-50: rgb(238 244 255);
+    --color-utility-indigo-100: rgb(224 234 255);
+    --color-utility-indigo-600: rgb(68 76 231);
+    --color-utility-indigo-700: rgb(53 56 205);
     --color-utility-gray-50: var(--color-neutral-50);
     --color-utility-gray-100: var(--color-neutral-100);
     --color-utility-gray-200: var(--color-neutral-200);

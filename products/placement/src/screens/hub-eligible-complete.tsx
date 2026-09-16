@@ -1,13 +1,14 @@
 import { EligibilityCriteriaPanel } from "@/components/product/eligibility-criteria";
 import { NOVATR_BLUE } from "@/components/product/navbar";
 import { PlacementHubLayout } from "@/components/product/placement-hub-layout";
+import { HomeSidebar } from "@/components/product/sidebars";
 
 // hub-eligible-complete — shown once, right after Placement Hub unlocks (eligible + profile
 // complete), before the learner moves on to the general Home dashboard (see screens/home.tsx).
 // Reference: docs/placement/spec/screens/hub-eligible-complete.png
 export const HubEligibleComplete = () => {
     return (
-        <PlacementHubLayout activeTab="home" userName="Manik" jobsHasUpdate>
+        <PlacementHubLayout activeTab="home" userName="Manik" jobsHasUpdate sidebar={<HomeSidebar />}>
             <div className="flex items-center justify-between gap-6 rounded-2xl border border-secondary bg-primary p-6">
                 <div>
                     <p className="text-lg text-primary">Hi Manik!</p>
