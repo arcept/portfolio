@@ -3,6 +3,25 @@ import { Button } from "@/components/base/buttons/button";
 import { Modal } from "@/components/product/modal";
 import type { Job } from "@/state/learner-state";
 
+// react-aria's Button always renders a real, focusable, role="button" element regardless of
+// tabIndex/aria-hidden overrides (it manages both internally via its own filterDOMProps, which
+// silently drops what it doesn't recognize) — confirmed by inspecting the rendered DOM after those
+// overrides had no effect. These 3 modal buttons happen to read "Next"/"Back"/"Cancel"/"Confirm
+// Apply", which — for "Next" and "Back" specifically — is the exact same accessible name as the
+// walkthrough chrome's real Back/Next controls (components/chrome/step-controls.tsx), so a plain
+// span keeps the reference's visual without a real second interactive element to collide with.
+const DecorativeButton = ({ variant, children }: { variant: "secondary" | "brand"; children: React.ReactNode }) => (
+    <span
+        className={
+            variant === "brand"
+                ? "rounded-lg bg-brand-solid px-3.5 py-2.5 text-sm font-semibold text-white"
+                : "rounded-lg bg-primary px-3.5 py-2.5 text-sm font-semibold text-secondary shadow-xs ring-1 ring-primary ring-inset"
+        }
+    >
+        {children}
+    </span>
+);
+
 const ProgressDots = ({ step }: { step: 1 | 2 | 3 }) => (
     <div className="flex gap-1.5">
         {[1, 2, 3].map((i) => (
@@ -41,13 +60,9 @@ export const PopupApplyConfirm = ({ job }: { job: Job }) => (
             <ConfirmRow label={`Location`} value={`${job.location}, ${job.workType}`} />
         </div>
         <div className="mt-5 flex items-center justify-between">
-            <Button color="secondary" size="md">
-                Cancel
-            </Button>
+            <DecorativeButton variant="secondary">Cancel</DecorativeButton>
             <ProgressDots step={1} />
-            <Button color="brand" size="md">
-                Next
-            </Button>
+            <DecorativeButton variant="brand">Next</DecorativeButton>
         </div>
     </Modal>
 );
@@ -79,13 +94,9 @@ export const PopupApplyLocationMismatch = ({ job, preferredLocation }: { job: Jo
             </div>
         </div>
         <div className="mt-5 flex items-center justify-between">
-            <Button color="secondary" size="md">
-                Cancel
-            </Button>
+            <DecorativeButton variant="secondary">Cancel</DecorativeButton>
             <ProgressDots step={1} />
-            <Button color="brand" size="md">
-                Next
-            </Button>
+            <DecorativeButton variant="brand">Next</DecorativeButton>
         </div>
     </Modal>
 );
@@ -106,13 +117,9 @@ export const PopupApplyPolicyReminder = ({ job }: { job: Job }) => (
             </ul>
         </div>
         <div className="mt-5 flex items-center justify-between">
-            <Button color="secondary" size="md">
-                Back
-            </Button>
+            <DecorativeButton variant="secondary">Back</DecorativeButton>
             <ProgressDots step={2} />
-            <Button color="brand" size="md">
-                Confirm Apply
-            </Button>
+            <DecorativeButton variant="brand">Confirm Apply</DecorativeButton>
         </div>
     </Modal>
 );

@@ -13,7 +13,15 @@ export const Modal = ({ children, width = 480 }: ModalProps) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 p-6">
             <div className="relative rounded-2xl bg-primary p-6 shadow-xl" style={{ width }}>
-                <button type="button" className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full text-quaternary hover:bg-secondary_hover" aria-label="Close">
+                {/* Decorative — matches the reference screens' close affordance, but this scripted walkthrough has no
+                    "stay on this step, dismiss the popup" state to return to, so it isn't wired to anything. Esc
+                    exits to the scenario picker instead (see pages/walkthrough.tsx). */}
+                <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full text-quaternary hover:bg-secondary_hover"
+                >
                     <X className="size-4" />
                 </button>
                 {children}
