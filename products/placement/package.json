@@ -1,0 +1,41 @@
+{
+    "name": "placement-hub-prototype",
+    "version": "0.0.0",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc -b && vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@fontsource-variable/archivo": "^5.2.5",
+        "@fontsource-variable/figtree": "^5.2.5",
+        "@fontsource-variable/newsreader": "^5.2.5",
+        "@fontsource/ibm-plex-mono": "^5.2.5",
+        "@react-aria/utils": "3.33.1",
+        "@tailwindcss/vite": "^4.2.2",
+        "@untitledui/icons": "^0.0.22",
+        "motion": "^12.38.0",
+        "react": "^19.2.4",
+        "react-aria": "^3.47.0",
+        "react-aria-components": "^1.16.0",
+        "react-dom": "^19.2.4",
+        "react-router": "^7.13.0",
+        "react-stately": "3.45.0",
+        "tailwind-merge": "^3.5.0",
+        "tailwindcss": "^4.2.2",
+        "tailwindcss-react-aria-components": "^2.0.1"
+    },
+    "devDependencies": {
+        "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+        "@types/node": "^25.5.0",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.0.1",
+        "prettier": "^3.8.1",
+        "prettier-plugin-tailwindcss": "^0.7.2",
+        "typescript": "^5.9.3",
+        "vite": "^8.0.2"
+    }
+}

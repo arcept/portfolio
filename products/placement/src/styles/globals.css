@@ -1,0 +1,39 @@
+@import "tailwindcss";
+@import "./theme.css";
+@import "./chrome.css";
+
+@plugin "tailwindcss-react-aria-components";
+
+@custom-variant label (& [data-label]);
+@custom-variant focus-input-within (&:has(input:focus));
+
+html,
+body {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* The product stays light in both chrome themes — it's a device showing a real 2024 screen. */
+:root {
+    color-scheme: light;
+}
+
+button:not(:disabled):not([aria-disabled="true"]),
+[role="button"]:not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-secondary);
+    background-clip: content-box;
+    border: 2px solid transparent;
+    border-radius: 8px;
+}
