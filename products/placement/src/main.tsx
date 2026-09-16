@@ -4,6 +4,7 @@ import { HashRouter, Route, Routes } from "react-router";
 import type { EmbedViewKey } from "@/pages/embed-view";
 import { EmbedView } from "@/pages/embed-view";
 import { NotFound } from "@/pages/not-found";
+import { Preview } from "@/pages/preview";
 import { Walkthrough } from "@/pages/walkthrough";
 import { RouteProvider } from "@/providers/router-provider";
 import "@/styles/globals.css";
@@ -24,6 +25,7 @@ createRoot(document.getElementById("root")!).render(
                 <RouteProvider>
                     <Routes>
                         <Route path="/" element={<Walkthrough />} />
+                        <Route path="/preview/:slug" element={<Preview />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </RouteProvider>
