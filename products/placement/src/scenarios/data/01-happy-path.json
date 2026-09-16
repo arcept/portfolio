@@ -1,0 +1,190 @@
+{
+  "id": "happy-path",
+  "tier": "hero",
+  "title": "From graduation to placed",
+  "proves": [
+    "State is always visible",
+    "The four moments: first entry, browsing, applying, outcome",
+    "Status lives on the JD itself"
+  ],
+  "initialState": {
+    "stage": "evaluation_day",
+    "eligibility": "not_assessed",
+    "profile": "complete",
+    "interest": "interested",
+    "standing": "active",
+    "preferredLocation": "Gurugram, India",
+    "applications": [],
+    "windowClosingSoon": false
+  },
+  "steps": [
+    {
+      "n": 1,
+      "screen": "lh-graduate-popup",
+      "set": {
+        "stage": "graduated",
+        "eligibility": "eligible"
+      },
+      "action": "Go to Placement Hub",
+      "note": "Entry is a banner that changes with state — graduation turns it into the door.",
+      "chapter": "Enter"
+    },
+    {
+      "n": 2,
+      "screen": "hub-eligible-complete",
+      "action": "auto → home",
+      "note": "Eligibility is computed, then disclosed. Complete profile = full access.",
+      "chapter": "Enter"
+    },
+    {
+      "n": 3,
+      "screen": "home-jobs-not-applied",
+      "action": "Jobs tab",
+      "note": "Home is organised by standing × profile × whether anything has happened yet.",
+      "chapter": "Browse"
+    },
+    {
+      "n": 4,
+      "screen": "jobs-all",
+      "action": "Open AECOM · BIM Architect",
+      "note": "One list, three kinds of card: relevant, not a match, expired — each explains itself.",
+      "chapter": "Browse"
+    },
+    {
+      "n": 5,
+      "screen": "jd-apply-48h",
+      "action": "Apply Now",
+      "note": "The CTA bar carries the condition: 48-hour close.",
+      "chapter": "Apply"
+    },
+    {
+      "n": 6,
+      "screen": "popup-apply-location-mismatch",
+      "action": "Apply anyway",
+      "note": "Hyderabad ≠ preferred Gurugram → a warning, not a block.",
+      "chapter": "Apply"
+    },
+    {
+      "n": 7,
+      "screen": "popup-apply-success",
+      "set": {
+        "applications": [
+          {
+            "jobId": "aecom-bim",
+            "status": "applied",
+            "history": [
+              "applied"
+            ]
+          }
+        ]
+      },
+      "action": "Track under My Applications",
+      "note": "Every action tells you where to find it next.",
+      "chapter": "Apply"
+    },
+    {
+      "n": 8,
+      "screen": "apps-list",
+      "action": "Open application",
+      "note": "",
+      "chapter": "Apply"
+    },
+    {
+      "n": 9,
+      "screen": "jd-t-shared",
+      "set": {
+        "applications[0].status": "profile_shared"
+      },
+      "action": "advance",
+      "note": "Every step on this ladder is written by ops in Retool after a partner emails. The UI is real-time; the process isn't.",
+      "chapter": "Outcome",
+      "timeChip": "Day 3 · ops updated Retool"
+    },
+    {
+      "n": 10,
+      "screen": "jd-t-shortlisted",
+      "set": {
+        "applications[0].status": "shortlisted"
+      },
+      "action": "advance",
+      "note": "",
+      "chapter": "Outcome",
+      "timeChip": "Day 6 · partner replied by email"
+    },
+    {
+      "n": 11,
+      "screen": "jd-t-interview",
+      "set": {
+        "applications[0].status": "interview"
+      },
+      "action": "advance",
+      "note": "",
+      "chapter": "Outcome",
+      "timeChip": "Day 9 · interview scheduled via ops"
+    },
+    {
+      "n": 12,
+      "screen": "jd-t-offer",
+      "set": {
+        "applications[0].status": "offer_received",
+        "standing": "offer_received"
+      },
+      "action": "advance",
+      "note": "An offer changes the learner, not just the application — apply is now disabled everywhere.",
+      "chapter": "Outcome",
+      "timeChip": "Day 16 · offer relayed by ops"
+    },
+    {
+      "n": 13,
+      "screen": "popup-accept-confirm",
+      "action": "Confirm",
+      "note": "Confirmation restates company, role, degree, specialisation, location.",
+      "chapter": "Outcome"
+    },
+    {
+      "n": 14,
+      "screen": "popup-offer-accepted-1",
+      "set": {
+        "applications[0].status": "accepted",
+        "standing": "placed"
+      },
+      "action": "Rate experience",
+      "note": "The celebration and the rating ask are the same moment now, not two separate screens.",
+      "chapter": "Outcome"
+    },
+    {
+      "n": 15,
+      "screen": "popup-offer-accepted-2",
+      "action": "Submit",
+      "note": "",
+      "chapter": "Outcome"
+    },
+    {
+      "n": 16,
+      "screen": "popup-offer-accepted-3",
+      "action": "advance",
+      "note": "",
+      "chapter": "Outcome"
+    },
+    {
+      "n": 17,
+      "screen": "popup-offer-accepted-4",
+      "action": "auto 10s → home",
+      "note": "",
+      "chapter": "Outcome"
+    },
+    {
+      "n": 18,
+      "screen": "home-placed",
+      "action": "end",
+      "note": "Focus mode: other pages restricted. Closure is designed, not an absence. End of path.",
+      "chapter": "Outcome"
+    }
+  ],
+  "chapters": [
+    "Enter",
+    "Browse",
+    "Apply",
+    "Outcome"
+  ]
+}
