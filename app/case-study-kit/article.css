@@ -485,6 +485,11 @@ ol.lx-list li {
   border-radius: 18px;
 }
 
+.lx-table-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .lx-table {
   width: 100%;
   border-collapse: collapse;

@@ -9,7 +9,7 @@ unchanged (it still describes the standalone layout, and the API-based renderers
 |---|---|
 | Script (source of truth for the words) | `docs/narration/script.md` (you edit this); `script.json` is generated from it |
 | Served audio | `public/case-studies/placement-hub/narration/narration.mp3` (kept only there; `out/narration.mp3` from a re-render goes here) |
-| Served timeline | `public/case-studies/placement-hub/narration/narration.json` (same content as `out/narration.json`) |
+| Served timeline | `public/case-studies/placement-hub/narration/narration.json` (the published copy of what `narrate.py align` writes to the git-ignored `out/`) |
 | Player core (no UI) | `components/narration/`: `timeline.mjs`, `validate.mjs`, `controller.mjs`, `lyric.mjs`, `NarrationProvider.js` |
 | Player UI | `NarrationPlayer.js` (+ `NarrationPlayerShell.js`, `NarrationTranscript.js`), `NarrationUI.js` (open state, "Listen" trigger, per-section button), `NarrationDock.js` (slide-over / sheet and mini bar), `ListenToSection.js`, `narration.css` |
 | Mounted on | `app/case-study-placement/page.js` (providers, trigger in the hero, panel and mini bar) and `sections.js` (a "Listen to this part" button per section) |

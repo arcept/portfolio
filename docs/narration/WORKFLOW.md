@@ -114,7 +114,7 @@ button has no chapter). New audio gets a new version in the URL, so nobody is se
 - Open the page, press "Listen to the short version", and listen to a few places, especially wherever the
   report pointed. Try `/case-study-placement?listen=1&t=62` too.
 - `npm run validate:narration` and `node scripts/verify-narration.mjs` (needs `playwright-core`; see the README).
-- Commit `docs/narration/script.md`, `script.json`, `out/narration.json`, and the two files under `public/`.
+- Commit `docs/narration/script.md`, `script.json` and the two files under `public/`. (`out/` is only a local work area and git ignores it; the copies under `public/` are the ones that ship.)
 
 ## If the structure changes
 

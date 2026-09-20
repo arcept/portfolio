@@ -24,10 +24,8 @@ export default function Num({ to, prefix = '', suffix = '', decimals = 0, durati
 
   const final = `${prefix}${to.toFixed(decimals)}${suffix}`;
   return (
-    <span ref={ref} className="px-num" aria-label={final}>
-      <span className="px-num__final" aria-hidden="true">
-        {final}
-      </span>
+    <span ref={ref} className="px-num">
+      <span className="px-num__final">{final}</span>
       <span className="px-num__live" aria-hidden="true">
         {prefix}
         {value.toFixed(decimals)}

@@ -163,7 +163,7 @@ for (const scheme of ['dark', 'light']) {
   if (await has(page, '.px-num')) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await toSection(page, '.px-num', -200); await page.waitForTimeout(2600);
-    const live = await page.locator('.px-num__live').first().innerText(), label = await page.locator('.px-num').first().getAttribute('aria-label');
+    const live = await page.locator('.px-num__live').first().innerText(), label = await page.locator('.px-num__final').first().textContent();
     ok('inline figure (Num) counts up to its value', live === label, `${live} vs ${label}`);
   } else skipped('inline figures', 'no .px-num');
   await ctx.close();

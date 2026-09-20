@@ -1,6 +1,6 @@
 'use client';
 
-import { Children, isValidElement, useId, useRef, useState } from 'react';
+import { Children, isValidElement, useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react';
 import { Count, EASE, MaskText, Reveal, useReduce } from './Motion';
 
@@ -151,9 +151,23 @@ function Cell({ value }) {
 // Rows stagger in, plain numbers count up, and `bars` draws a bar behind one numeric column.
 export function Table({ columns, rows, minWidth, bars }) {
   const reduce = useReduce();
+  // A table wider than its column scrolls sideways; then it has to be reachable with the keyboard.
+  const wrapRef = useRef(null);
+  const [scrolls, setScrolls] = useState(false);
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return undefined;
+    const measure = () => setScrolls(wrap.scrollWidth > wrap.clientWidth + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(wrap);
+    return () => observer.disconnect();
+  }, []);
   return (
     <motion.div
+      ref={wrapRef}
       className="lx-table-wrap"
+      {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': `Table: ${columns.map((c) => c.label).join(', ')} (scrolls sideways)` } : null)}
       initial={reduce ? false : { opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '0px 0px -10% 0px' }}

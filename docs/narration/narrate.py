@@ -235,7 +235,7 @@ def cmd_publish(args):
     where = dest.relative_to(REPO) if REPO in dest.parents else dest
     print(f"\nPublished to {where}/  ({narration['engine']}, {narration['voice'] or 'voice not named'}, {narration['duration']}s)")
     print("Now: look at it on the page (open the panel, or /case-study-placement?listen=1), run `npm run validate:narration`,")
-    print("and commit docs/narration/script.md, script.json, out/narration.json and the two files under public/.")
+    print("and commit docs/narration/script.md, script.json and the two files under public/.")
 
 
 # ----------------------------------------------------------------------------- main

@@ -22,7 +22,7 @@
 }
 
 .px-num__final {
-  visibility: hidden;
+  opacity: 0; /* keeps the width and stays readable to screen readers, unlike visibility: hidden */
 }
 
 .px-num__live {
