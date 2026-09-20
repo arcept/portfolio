@@ -4,14 +4,18 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useNarration, useNarrationState } from './NarrationProvider';
 import { approxDuration } from './timeline.mjs';
 
-// The narration's chrome around the player: whether the slide-over is open, the "Listen" trigger in the hero,
-// and the per-section "Listen to this part" buttons. The audio itself lives in NarrationProvider, so opening
-// and closing the panel never touches playback.
+// The narration's chrome around the player: the floating card (a small player by default, expandable to the
+// full transcript), the "Listen" trigger in the hero, and the per-section "Listen to this part" buttons. The
+// audio itself lives in NarrationProvider, so changing the card's size never touches playback.
+//
+//   mode 'closed'    nothing on screen
+//   mode 'mini'      the small player: play/pause, what is being said, a way to expand, a way to close
+//   mode 'expanded'  the full card: controls, scrubber, chapter dots and the transcript
 //
 //   <NarrationProvider …>
 //     <NarrationUIProvider>
 //       … <NarrationTrigger duration={247.4} /> … <ListenButton index={1} … /> …
-//       <NarrationPanel>…player…</NarrationPanel> <NarrationMiniBar />
+//       <NarrationPanel>…player…</NarrationPanel>
 //     </NarrationUIProvider>
 //   </NarrationProvider>
 
@@ -31,37 +35,30 @@ export function useNarrationUI() {
 export function NarrationUIProvider({ children }) {
   const { deepLink, clearDeepLink, ensure } = useNarration();
   const state = useNarrationState();
-  const [open, setOpen] = useState(false);
-  const [miniDismissed, setMiniDismissed] = useState(false);
-  const openerRef = useRef(null); // what to give focus back to when the panel closes
+  const [mode, setMode] = useState('closed');
 
-  const openPanel = useCallback((opener) => {
-    if (opener instanceof HTMLElement) openerRef.current = opener;
-    setOpen(true);
-  }, []);
-  const closePanel = useCallback(() => setOpen(false), []);
-  const togglePanel = useCallback((opener) => {
-    if (opener instanceof HTMLElement) openerRef.current = opener;
-    setOpen((v) => !v);
-  }, []);
+  const showMini = useCallback(() => setMode((m) => (m === 'closed' ? 'mini' : m)), []);
+  const expand = useCallback(() => setMode('expanded'), []);
+  const collapse = useCallback(() => setMode('mini'), []);
+  const dismiss = useCallback(() => setMode('closed'), []);
 
-  // ?listen=1&t=62 opens the panel and parks the audio at that moment. It never starts playing by itself.
+  // ?listen=1&t=62 opens the full card and parks the audio at that moment. It never starts playing by itself.
   useEffect(() => {
     if (!deepLink) return;
-    setOpen(true);
+    setMode('expanded');
     if (deepLink.t > 0) ensure().then((controller) => controller.seek(deepLink.t)).catch(() => {});
     clearDeepLink();
   }, [deepLink, clearDeepLink, ensure]);
 
-  // The mini bar can be closed; it comes back the next time the voice starts.
+  // However the voice starts (the hero button, a section's button, the lock screen), the small player appears,
+  // so it never plays with no controls in sight. Closing it stops the audio first, so this doesn't undo that.
   useEffect(() => {
-    if (state.playing) setMiniDismissed(false);
-  }, [state.playing]);
-  const dismissMini = useCallback(() => setMiniDismissed(true), []);
+    if (state.playing) showMini();
+  }, [state.playing, showMini]);
 
   const value = useMemo(
-    () => ({ open, openPanel, closePanel, togglePanel, openerRef, miniDismissed, dismissMini }),
-    [open, openPanel, closePanel, togglePanel, miniDismissed, dismissMini]
+    () => ({ mode, open: mode === 'expanded', showMini, expand, collapse, dismiss }),
+    [mode, showMini, expand, collapse, dismiss]
   );
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
 }
@@ -77,34 +74,39 @@ function WaveIcon() {
   );
 }
 
-/** The button in the hero that opens the panel. Starts loading the narration as soon as it is approached. */
+/**
+ * The button in the hero. One press shows the small player and starts the voice (a press is what allows sound to
+ * start); pressed again it pauses. It starts loading the narration as soon as it is approached.
+ */
 export function NarrationTrigger({ duration, className = '' }) {
-  const { open, togglePanel } = useNarrationUI();
+  const { showMini } = useNarrationUI();
   const { ensure } = useNarration();
   const state = useNarrationState();
   const warm = () => ensure().catch(() => {});
+  const label = state.playing ? 'Pause the short version' : 'Listen to the short version';
   return (
     <button
       type="button"
       className={`nr-trigger${state.playing ? ' is-playing' : ''} ${className}`.trim()}
-      aria-expanded={open}
-      aria-controls="nr-dock"
-      aria-label={`Listen to the short version, about ${Math.round(duration / 60)} minutes`}
+      aria-label={state.playing ? label : `${label}, about ${Math.round(duration / 60)} minutes`}
       onPointerEnter={warm}
       onFocus={warm}
       onTouchStart={warm}
-      onClick={(event) => togglePanel(event.currentTarget)}
+      onClick={() => {
+        showMini();
+        ensure().then((controller) => controller.toggle()).catch(() => {});
+      }}
     >
       <WaveIcon />
-      <span className="nr-trigger__label">Listen to the short version</span>
+      <span className="nr-trigger__label">{label}</span>
       <span className="nr-trigger__time">{approxDuration(duration)}</span>
     </button>
   );
 }
 
 /**
- * "Listen to this part": plays from the start of one chapter, without opening the panel — the mini bar takes
- * over, so the reader can keep reading the page while listening. `index` is the chapter's position in the
+ * "Listen to this part": plays from the start of one chapter, and the small player takes over, so the reader
+ * can keep reading the page while listening. `index` is the chapter's position in the
  * narration; the label is rendered on the server so it shows before anything loads.
  */
 export function ListenButton({ index, label, length }) {

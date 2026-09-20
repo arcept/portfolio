@@ -49,11 +49,14 @@ async function open(opts = {}, url = PAGE) {
   return { ctx, page, errors, requests };
 }
 const dock = (page) => page.locator('#nr-dock');
-// Wait for the slide to finish (transform back to none) rather than guessing a delay.
-const settled = (page) => page.waitForFunction(() => { const d = document.getElementById('nr-dock'); return d.classList.contains('is-open') && getComputedStyle(d).transform === 'none'; }, null, { timeout: 5000 });
-const isOpen = (page) => page.evaluate(() => document.getElementById('nr-dock').classList.contains('is-open'));
-const trigger = (page) => page.getByRole('button', { name: /^Listen to the short version, about 4 minutes$/ });
+const modeOf = (page) => page.evaluate(() => document.getElementById('nr-dock').dataset.mode);
+// Wait for the card to be in `mode` with its size transition finished, rather than guessing a delay.
+const settled = (page, mode) => page.waitForFunction((m) => { const d = document.getElementById('nr-dock'); return d.dataset.mode === m && d.getAnimations({ subtree: true }).length === 0; }, mode, { timeout: 5000 });
+const trigger = (page) => page.getByRole('button', { name: /^(Listen to the short version, about 4 minutes|Pause the short version)$/ });
+const miniButton = (page, name) => dock(page).locator('.nr-dock__mini').getByRole('button', { name });
 const clockOf = (page) => page.locator('.nr-meta span').first().innerText();
+const box = (page) => page.evaluate(() => { const r = document.getElementById('nr-dock').getBoundingClientRect(); return { top: Math.round(r.top), left: Math.round(r.left), right: Math.round(innerWidth - r.right), bottom: Math.round(innerHeight - r.bottom), width: Math.round(r.width), height: Math.round(r.height) }; });
+const isInert = async (page, sel) => (await page.locator(sel).getAttribute('inert')) !== null;
 // Ignores a `?v=<version>` cache-busting query on the audio and data URLs.
 const seen = (r, tail) => r.some((u) => u.split('?')[0].endsWith(tail));
 
@@ -62,71 +65,126 @@ const seen = (r, tail) => r.some((u) => u.split('?')[0].endsWith(tail));
   const { ctx, page, errors, requests } = await open();
   ok('the hero trigger reads "Listen to the short version" with a loose length, and a sound-wave icon', (await trigger(page).count()) === 1 && (await trigger(page).innerText()).includes('~4 min') && !(await trigger(page).innerText()).includes('4:07') && (await trigger(page).locator('svg.nr-wave').count()) === 1);
   ok('nothing narration-related is fetched at load', !seen(requests, 'narration.json') && !seen(requests, 'narration.mp3'));
-  ok('the panel is closed and inert at rest', !(await isOpen(page)) && (await dock(page).getAttribute('inert')) !== null);
+  ok('at rest the card is closed and inert', (await modeOf(page)) === 'closed' && (await isInert(page, '#nr-dock')));
 
   await trigger(page).hover();
   await page.waitForTimeout(700);
   ok('approaching the trigger loads narration.json (not the audio)', seen(requests, 'narration.json') && !seen(requests, 'narration.mp3'));
 
+  const articleBefore = await page.evaluate(() => Math.round(document.getElementById('problem').getBoundingClientRect().width));
+
+  // ---- the default: the small player
   await trigger(page).click();
-  await settled(page);
-  ok('clicking the trigger opens the panel', (await isOpen(page)) && (await trigger(page).getAttribute('aria-expanded')) === 'true');
-  ok('focus moves into the panel', await page.evaluate(() => document.getElementById('nr-dock').contains(document.activeElement)));
-  const geo = await page.evaluate(() => { const r = document.getElementById('nr-dock').getBoundingClientRect(); return { top: Math.round(r.top), right: Math.round(innerWidth - r.right), width: Math.round(r.width), bottom: Math.round(innerHeight - r.bottom) }; });
-  ok('desktop: docked right, under the site nav, 460px wide', geo.right === 0 && geo.top === 56 && geo.width === 460 && geo.bottom === 0, JSON.stringify(geo));
-  ok('the panel is not inert once open', (await dock(page).getAttribute('inert')) === null);
-  ok('the panel has one title (no duplicate heading)', (await dock(page).locator('.nr-dock__label').innerText()) === 'Listen to the short version');
+  await settled(page, 'mini');
+  // wait for the voice to actually start (a slow first request should not fail the check)
+  await page.waitForFunction(() => (document.querySelector('.nr-mini__now span')?.textContent.length ?? 0) > 10, null, { timeout: 10000 });
+  ok('pressing the trigger shows the small player and starts the voice', (await modeOf(page)) === 'mini' && seen(requests, 'narration.mp3') && (await miniButton(page, 'Pause narration').count()) === 1);
+  ok('…and the trigger now offers to pause', (await trigger(page).innerText()).includes('Pause the short version'));
+  const mini = await box(page);
+  ok('desktop: the small player floats 20px in from the right and bottom, 510px wide', mini.right === 20 && mini.bottom === 20 && mini.width === 510 && mini.height === 96, JSON.stringify(mini));
+  const nowLine = await page.evaluate(() => ({ chapter: document.querySelector('.nr-mini__now b').textContent, line: document.querySelector('.nr-mini__now span').textContent.length }));
+  ok('the small player names the chapter and shows the current sentence', nowLine.chapter.length > 0 && nowLine.line > 10, JSON.stringify(nowLine));
+  ok('the full player is inert and hidden while it is small', (await isInert(page, '.nr-dock__full')) && !(await isInert(page, '.nr-dock__miniwrap')) && !(await page.locator('.nr-dock__full').isVisible()));
+  const t1 = sec(await page.locator('.nr-mini__clock').first().innerText());
+  await page.waitForTimeout(2200);
+  const t2 = sec(await page.locator('.nr-mini__clock').first().innerText());
+  ok('the time keeps advancing', t2 > t1, `${t1}s → ${t2}s`);
+
+  // ---- seeking and skipping in the small player
+  const seekBox = await page.locator('.nr-mini__seek').boundingBox();
+  await page.mouse.click(seekBox.x + seekBox.width * 0.5, seekBox.y + seekBox.height / 2);
+  await page.waitForTimeout(500);
+  const mid = sec(await page.locator('.nr-mini__clock').first().innerText());
+  ok('clicking the middle of the small player\'s bar seeks to the middle', mid >= 110 && mid <= 130, `${mid}s of 239s`);
+  await miniButton(page, 'Forward 10 seconds').click();
+  await page.waitForTimeout(300);
+  const fwd = sec(await page.locator('.nr-mini__clock').first().innerText());
+  await miniButton(page, 'Back 10 seconds').click();
+  await miniButton(page, 'Back 10 seconds').click();
+  await page.waitForTimeout(300);
+  const back = sec(await page.locator('.nr-mini__clock').first().innerText());
+  ok('the small player has ±10 s buttons', fwd >= mid + 9 && back <= fwd - 19, `${mid}s → +10 → ${fwd}s → −20 → ${back}s`);
+  const sizes = await page.evaluate(() => { const d = document.querySelector('.nr-mini__play'); const b = getComputedStyle(d, '::before'); return { box: Math.round(d.getBoundingClientRect().height), disc: Math.round(parseFloat(getComputedStyle(d).height) - 2 * parseFloat(b.top)) }; });
+  ok('the small player\'s play button is a 36px disc in a 44px target', sizes.box === 44 && sizes.disc === 36, JSON.stringify(sizes));
+  await shot(page, 'desktop-dark-mini');
+  const panelSizeMini = await page.evaluate(() => document.querySelector('.nr-panel').offsetHeight);
+
+  await trigger(page).click();
+  await page.waitForTimeout(300);
+  ok('pressing the trigger again pauses', (await miniButton(page, 'Play narration').count()) === 1 && (await trigger(page).innerText()).includes('Listen to the short version'));
+  await miniButton(page, 'Play narration').click();
+  await page.waitForTimeout(400);
+  ok('the small player has its own play/pause', (await miniButton(page, 'Pause narration').count()) === 1);
+
+  // ---- expanding
+  await miniButton(page, /^Expand narration transcript/).click();
+  await settled(page, 'expanded');
+  const full = await box(page);
+  ok('expanding grows the card upward: still 20px from the right and bottom, the same 510px width as the small player, under the nav', full.right === 20 && full.bottom === 20 && full.width === mini.width && full.top === 76 && full.height === 900 - 76 - 20, JSON.stringify(full));
+  ok('it floats: rounded corners and clear of every edge', (await dock(page).evaluate((el) => parseFloat(getComputedStyle(el).borderTopLeftRadius))) >= 16 && full.top > 56 && full.right > 0 && full.bottom > 0);
+  const articleAfter = await page.evaluate(() => Math.round(document.getElementById('problem').getBoundingClientRect().width));
+  ok('the case study does not reflow when the card opens', articleBefore === articleAfter, `${articleBefore}px → ${articleAfter}px`);
+  ok('the transcript keeps the same size while the card is small and expanded (no reflow)', (await page.evaluate(() => document.querySelector('.nr-panel').offsetHeight)) === panelSizeMini);
+  const look = await dock(page).evaluate((el) => { const cs = getComputedStyle(el); const bar = getComputedStyle(el.querySelector('.nr-dock__bar')); return { border: cs.borderTopColor, shadow: cs.boxShadow !== 'none', barPad: parseFloat(bar.paddingLeft), play: Math.round(el.querySelector('.nr-play').getBoundingClientRect().height) }; });
+  ok('the expanded card has a visible border, a shadow and roomy padding, and a smaller play button', /^(rgba?|color)\(/.test(look.border) && look.shadow && look.barPad >= 28 && look.play === 46, JSON.stringify(look));
+  ok('focus moves into the card', await page.evaluate(() => document.getElementById('nr-dock').contains(document.activeElement)));
+  // ---- the highlight must never change the layout: no word may move to another line while the voice plays
+  const reflow = await page.evaluate(async () => {
+    const words = [...document.querySelectorAll('.nr-panel [data-w]')];
+    const tops = () => words.map((w) => w.offsetTop);
+    let prev = tops();
+    let moves = 0;
+    const start = performance.now();
+    await new Promise((resolve) => {
+      const tick = () => {
+        const now = tops();
+        if (now.some((t, i) => t !== prev[i])) moves++;
+        prev = now;
+        if (performance.now() - start < 9000) requestAnimationFrame(tick); else resolve();
+      };
+      requestAnimationFrame(tick);
+    });
+    return { moves, weights: [...new Set(words.map((w) => getComputedStyle(w).fontWeight))] };
+  });
+  ok('the highlight never reflows the text: no word changes line in 9 s of playback, and every word keeps one weight', reflow.moves === 0 && reflow.weights.length === 1, JSON.stringify(reflow));
+  ok('the full player is live and the small player is inert', !(await isInert(page, '.nr-dock__full')) && (await isInert(page, '.nr-dock__miniwrap')));
+  ok('expanding does not interrupt the audio', (await dock(page).locator('.nr-dock__full').getByRole('button', { name: 'Pause narration' }).count()) === 1);
+  ok('the card has one title (no duplicate heading)', (await dock(page).locator('.nr-dock__label').innerText()) === 'Listen to the short version');
   ok('skip buttons are icons (circular arrows), not "-10s / +10s" text', (await dock(page).getByRole('button', { name: 'Back 10 seconds' }).count()) === 1 && (await dock(page).getByRole('button', { name: 'Forward 10 seconds' }).count()) === 1 && !(await dock(page).innerText()).includes('10s'));
-  ok('the chapter pills are gone; chapters are small dots on the scrubber', (await dock(page).locator('.nr-chip').count()) === 0 && (await dock(page).locator('.nr-mark').count()) === 7);
+  ok('chapters are small dots on the scrubber', (await dock(page).locator('.nr-chip').count()) === 0 && (await dock(page).locator('.nr-mark').count()) === 7);
   await shot(page, 'desktop-dark-open');
 
   const y0 = await page.evaluate(() => scrollY);
   await page.mouse.move(400, 500);
   await page.mouse.wheel(0, 600);
   await page.waitForTimeout(500);
-  ok('non-modal: the page still scrolls beside the open panel (no scroll lock)', (await page.evaluate(() => scrollY)) > y0 + 200 && (await page.evaluate(() => document.body.style.overflow)) !== 'hidden');
+  ok('non-modal: the page still scrolls beside the card (no scroll lock)', (await page.evaluate(() => scrollY)) > y0 + 200 && (await page.evaluate(() => document.body.style.overflow)) !== 'hidden');
 
-  // the theme switch stays reachable above the panel
   await page.locator('.cs-switch').click();
   await page.waitForTimeout(300);
-  ok('the site nav and theme switch stay usable while the panel is open', (await page.evaluate(() => document.documentElement.dataset.csTheme)) === 'light');
+  ok('the site nav and theme switch stay usable while the card is open', (await page.evaluate(() => document.documentElement.dataset.csTheme)) === 'light');
   const lightBg = await page.evaluate(() => getComputedStyle(document.querySelector('.nr')).backgroundColor);
   await shot(page, 'desktop-light-open');
   await page.locator('.cs-switch').click();
   await page.waitForTimeout(300);
-  ok('the panel follows the theme', lightBg !== (await page.evaluate(() => getComputedStyle(document.querySelector('.nr')).backgroundColor)));
+  ok('the card follows the theme', lightBg !== (await page.evaluate(() => getComputedStyle(document.querySelector('.nr')).backgroundColor)));
 
-  // play, then close: audio must keep going, with the mini bar
-  await page.getByRole('button', { name: 'Play narration' }).first().click();
-  await page.waitForTimeout(2500);
-  ok('the audio is requested only after play', seen(requests, 'narration.mp3'));
-  ok('the mini bar is hidden while the panel is open', (await page.locator('.nr-mini').count()) === 0);
+  await dock(page).locator('.nr-speed').focus(); // Escape acts while focus is inside the card
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(700);
-  ok('Escape closes the panel', !(await isOpen(page)));
-  ok('focus returns to the trigger', await page.evaluate(() => document.activeElement?.textContent?.includes('Listen') && document.activeElement.getAttribute('aria-controls') === 'nr-dock'));
-  ok('the closed panel is inert again', (await dock(page).getAttribute('inert')) !== null);
-  ok('closing the panel does not interrupt the audio', (await page.locator('.nr-mini').getByRole('button', { name: 'Pause narration' }).count()) === 1);
-  const t1 = sec(await page.locator('.nr-mini__time').innerText().then((s) => s.split(' / ')[0]));
-  await page.waitForTimeout(2200);
-  const t2 = sec(await page.locator('.nr-mini__time').innerText().then((s) => s.split(' / ')[0]));
-  ok('…and the time keeps advancing', t2 > t1, `${t1}s → ${t2}s`);
-  const mini = await page.evaluate(() => { const m = document.querySelector('.nr-mini'); return { chapter: m.querySelector('b').textContent, line: m.querySelector('.nr-mini__now span').textContent.length, bottom: Math.round(innerHeight - m.getBoundingClientRect().bottom) }; });
-  ok('the mini bar names the chapter and shows the current sentence', mini.chapter.length > 0 && mini.line > 10, JSON.stringify(mini));
-  await shot(page, 'desktop-dark-mini');
+  await settled(page, 'mini');
+  ok('Escape shrinks the card back to the small player', (await modeOf(page)) === 'mini');
+  ok('focus returns to the button that expanded it', await page.evaluate(() => document.activeElement?.getAttribute('aria-label')?.startsWith('Expand narration transcript')));
+  ok('the full player is inert again', await isInert(page, '.nr-dock__full'));
+  ok('shrinking does not interrupt the audio', (await miniButton(page, 'Pause narration').count()) === 1);
 
-  ok('the mini bar has a close button', (await page.locator('.nr-mini').getByRole('button', { name: 'Close narration player' }).count()) === 1);
-  await page.locator('.nr-mini').getByRole('button', { name: 'Pause narration' }).click();
+  await miniButton(page, 'Pause narration').click();
   await page.waitForTimeout(300);
-  ok('the mini bar pauses the audio', (await page.locator('.nr-mini').getByRole('button', { name: 'Play narration' }).count()) === 1);
+  ok('the small player pauses the audio', (await miniButton(page, 'Play narration').count()) === 1);
   await page.locator('.nr-mini__now').click();
-  await page.waitForTimeout(700);
-  ok('the mini bar text reopens the panel, and the mini bar goes away', (await isOpen(page)) && (await page.locator('.nr-mini').count()) === 0);
+  await settled(page, 'expanded');
+  ok('clicking its words expands it too', (await modeOf(page)) === 'expanded');
 
   // ---- following: once the reader scrolls away the panel stays put, and "Follow along" is a proper pill
-  await page.locator('.nr-mini__now').click().catch(() => {});
-  if (!(await isOpen(page))) await trigger(page).click();
-  await settled(page);
   await page.getByRole('button', { name: 'Jump to Evidence' }).click();
   await page.waitForTimeout(2200);
   const panelBox = await page.locator('.nr-panel').boundingBox();
@@ -158,40 +216,39 @@ const seen = (r, tail) => r.some((u) => u.split('?')[0].endsWith(tail));
   ok('clicking a word also resumes following', (await follow.count()) === 0);
   ok('the chapter line uses the page\'s section numbers', /^(\d\d )?[A-Z]/.test(await page.locator('.nr-meta__chapter').innerText()));
 
-  // "Go to section" jumps the page while the panel stays open
+  // "Go to section" jumps the page while the card stays open
   await page.getByRole('button', { name: 'Jump to The product' }).click();
   await page.waitForTimeout(600);
   await dock(page).getByRole('link', { name: /Go to section The product/ }).click();
   await page.waitForTimeout(900);
   const top = await page.evaluate(() => Math.round(document.getElementById('product').getBoundingClientRect().top));
-  ok('"Go to section" scrolls the page to that section, panel still open', (await isOpen(page)) && top < 400 && top > -200, `section top ${top}px`);
+  ok('"Go to section" scrolls the page to that section, card still open', (await modeOf(page)) === 'expanded' && top < 400 && top > -200, `section top ${top}px`);
 
-  // close with the button
-  await dock(page).getByRole('button', { name: 'Close narration' }).click();
-  await page.waitForTimeout(600);
-  ok('the close button closes it', !(await isOpen(page)));
+  await dock(page).getByRole('button', { name: 'Shrink to the small player' }).click();
+  await settled(page, 'mini');
+  ok('the shrink button returns to the small player', (await modeOf(page)) === 'mini');
 
-  // per-section listen, panel closed
+  // per-section listen, with the small player showing
   await page.evaluate(() => document.getElementById('leadership').scrollIntoView());
   await page.waitForTimeout(1200);
   await page.locator('#leadership').getByRole('button', { name: /Listen to this part/ }).click();
   await page.waitForTimeout(2500);
-  const lead = await page.evaluate(() => document.querySelector('.nr-mini b')?.textContent);
-  ok('"Listen to this part" plays from that chapter without opening the panel', lead === 'Leadership' && !(await isOpen(page)), `mini bar says "${lead}"`);
+  const lead = await page.evaluate(() => document.querySelector('.nr-mini__now b')?.textContent);
+  ok('"Listen to this part" plays from that chapter in the small player', lead === 'Leadership' && (await modeOf(page)) === 'mini', `small player says "${lead}"`);
   ok('while it plays the button offers Pause', (await page.locator('#leadership').getByRole('button', { name: 'Pause narration' }).count()) === 1);
   await page.locator('#leadership').getByRole('button', { name: 'Pause narration' }).click();
   await page.waitForTimeout(300);
-  ok('and pauses it', (await page.locator('.nr-mini').getByRole('button', { name: 'Play narration' }).count()) === 1);
+  ok('and pauses it', (await miniButton(page, 'Play narration').count()) === 1);
 
-  // closing the mini bar: it pauses the voice and goes away, and returns when the voice starts again
+  // closing the small player: it pauses the voice and goes away, and returns when the voice starts again
   await page.locator('#leadership').getByRole('button', { name: /Listen to this part/ }).click();
   await page.waitForTimeout(1200);
-  await page.locator('.nr-mini').getByRole('button', { name: 'Close narration player' }).click();
-  await page.waitForTimeout(400);
-  ok('closing the mini bar removes it and pauses the narration', (await page.locator('.nr-mini').count()) === 0 && (await page.locator('#leadership').getByRole('button', { name: /Listen to this part/ }).count()) === 1);
+  await miniButton(page, 'Close narration player').click();
+  await settled(page, 'closed');
+  ok('closing the small player removes it, and pauses the narration', (await modeOf(page)) === 'closed' && (await isInert(page, '#nr-dock')) && (await page.locator('#leadership').getByRole('button', { name: /Listen to this part/ }).count()) === 1);
   await page.locator('#leadership').getByRole('button', { name: /Listen to this part/ }).click();
   await page.waitForTimeout(1200);
-  ok('…and it comes back the next time the voice starts', (await page.locator('.nr-mini').count()) === 1);
+  ok('…and it comes back the next time the voice starts', (await modeOf(page)) === 'mini');
   await shot(page, 'mini-with-close');
 
   ok('no console errors, page errors or failed requests', errors.length === 0, JSON.stringify(errors));
@@ -203,15 +260,15 @@ const seen = (r, tail) => r.some((u) => u.split('?')[0].endsWith(tail));
 {
   const { ctx, page } = await open();
   await trigger(page).click();
-  await page.waitForTimeout(800);
+  await settled(page, 'mini');
+  await miniButton(page, /^Expand narration transcript/).click();
+  await settled(page, 'expanded');
   await page.getByRole('button', { name: 'Jump to Handover' }).click();
   await page.waitForTimeout(800);
   await page.getByRole('button', { name: 'Pause narration' }).first().click();
   const before = sec(await clockOf(page));
-  await page.reload({ waitUntil: 'load' });
+  await page.goto(`${PAGE}?listen=1`, { waitUntil: 'load' });
   await page.waitForTimeout(1500);
-  await trigger(page).click();
-  await page.waitForTimeout(1200);
   const after = sec(await clockOf(page));
   ok('the position is remembered across a reload (this visit only)', Math.abs(after - before) <= 2 && after > 100, `${before}s → ${after}s`);
   ok('…and nothing autoplays', (await page.getByRole('button', { name: 'Play narration' }).count()) >= 1 && (await page.getByRole('button', { name: 'Pause narration' }).count()) === 0);
@@ -222,7 +279,7 @@ const seen = (r, tail) => r.some((u) => u.split('?')[0].endsWith(tail));
 {
   const { ctx, page, requests } = await open({}, `${PAGE}?listen=1&t=62`);
   await page.waitForTimeout(800);
-  ok('?listen=1&t=62 opens the panel', await isOpen(page));
+  ok('?listen=1&t=62 opens the full card', (await modeOf(page)) === 'expanded');
   const clock = await clockOf(page);
   ok('…parked at 1:02', clock === '1:02', clock);
   ok('…and does not start playing', (await page.getByRole('button', { name: 'Pause narration' }).count()) === 0 && !seen(requests, 'narration.mp3'));
@@ -238,24 +295,26 @@ const seen = (r, tail) => r.some((u) => u.split('?')[0].endsWith(tail));
 {
   const { ctx, page, errors } = await open({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   await trigger(page).tap();
-  await page.waitForFunction(() => { const d = document.getElementById('nr-dock'); return d.classList.contains('is-open') && getComputedStyle(d).transform === 'none'; }, null, { timeout: 5000 });
+  await settled(page, 'mini');
+  await page.waitForTimeout(1500);
+  const mm = await box(page);
+  ok('phone: the small player is a bar 12px in from the sides and bottom', mm.left === 12 && mm.right === 12 && mm.bottom === 12 && mm.height === 96, JSON.stringify(mm));
+  ok('phone: it is playing, and its controls are 44px', (await miniButton(page, 'Pause narration').count()) === 1 && (await page.evaluate(() => [...document.querySelectorAll('.nr-dock__mini button, .nr-mini__seek')].every((b) => b.getBoundingClientRect().height >= 43.5))));
+  await shot(page, 'phone-mini');
+  await miniButton(page, /^Expand narration transcript/).tap();
+  await settled(page, 'expanded');
   const m = await page.evaluate(() => {
     const r = document.getElementById('nr-dock').getBoundingClientRect();
-    const close = document.querySelector('.nr-close').getBoundingClientRect();
-    return { left: Math.round(r.left), width: Math.round(r.width), top: Math.round(r.top), bottom: Math.round(innerHeight - r.bottom), closeH: Math.round(close.height), closeW: Math.round(close.width), over: document.documentElement.scrollWidth - innerWidth };
+    const btn = document.querySelector('.nr-collapse').getBoundingClientRect();
+    return { left: Math.round(r.left), width: Math.round(r.width), top: Math.round(r.top), bottom: Math.round(innerHeight - r.bottom), btnH: Math.round(btn.height), btnW: Math.round(btn.width), over: document.documentElement.scrollWidth - innerWidth };
   });
-  ok('phone: the panel is a full-width sheet under the nav', m.left === 0 && m.width === 390 && m.top === 56 && m.bottom === 0, JSON.stringify(m));
-  ok('phone: a clear 44px close button', m.closeH >= 44 && m.closeW >= 44);
+  ok('phone: the full player is a full-width sheet under the nav', m.left === 0 && m.width === 390 && m.top === 56 && m.bottom === 0, JSON.stringify(m));
+  ok('phone: a clear 44px shrink button', m.btnH >= 44 && m.btnW >= 44);
   ok('phone: no horizontal overflow', m.over <= 0);
   await shot(page, 'phone-sheet');
-  await page.getByRole('button', { name: 'Play narration' }).first().tap();
-  await page.waitForTimeout(2200);
-  await page.getByRole('button', { name: 'Close narration' }).tap();
-  await page.waitForTimeout(700);
-  const mm = await page.evaluate(() => { const r = document.querySelector('.nr-mini').getBoundingClientRect(); return { left: Math.round(r.left), right: Math.round(innerWidth - r.right), h: Math.round(r.height) }; });
-  ok('phone: closing the sheet leaves playback going, with a mini bar that fits', (await page.locator('.nr-mini').getByRole('button', { name: 'Pause narration' }).count()) === 1 && mm.left >= 8 && mm.right >= 8, JSON.stringify(mm));
-  ok('phone: the mini bar controls are 44px', await page.evaluate(() => [...document.querySelectorAll('.nr-mini button')].every((b) => b.getBoundingClientRect().height >= 43.5)));
-  await shot(page, 'phone-mini');
+  await page.getByRole('button', { name: 'Shrink to the small player' }).tap();
+  await settled(page, 'mini');
+  ok('phone: shrinking leaves playback going', (await miniButton(page, 'Pause narration').count()) === 1);
   ok('phone: no errors', errors.length === 0, JSON.stringify(errors));
   await ctx.close();
 }
@@ -263,7 +322,7 @@ const seen = (r, tail) => r.some((u) => u.split('?')[0].endsWith(tail));
 // ------------------------------------------------------------------ reduced motion
 {
   const { ctx, page } = await open({ reducedMotion: 'reduce' });
-  ok('reduced motion: the panel does not animate', (await page.evaluate(() => getComputedStyle(document.getElementById('nr-dock')).transitionDuration)) === '0s');
+  ok('reduced motion: the card does not animate', (await page.evaluate(() => getComputedStyle(document.getElementById('nr-dock')).transitionDuration)) === '0s');
   await ctx.close();
 }
 

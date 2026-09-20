@@ -11,8 +11,8 @@ unchanged (it still describes the standalone layout, and the API-based renderers
 | Served audio | `public/case-studies/placement-hub/narration/narration.mp3` (kept only there; `out/narration.mp3` from a re-render goes here) |
 | Served timeline | `public/case-studies/placement-hub/narration/narration.json` (the published copy of what `narrate.py align` writes to the git-ignored `out/`) |
 | Player core (no UI) | `components/narration/`: `timeline.mjs`, `validate.mjs`, `controller.mjs`, `lyric.mjs`, `NarrationProvider.js` |
-| Player UI | `NarrationPlayer.js` (+ `NarrationPlayerShell.js`, `NarrationTranscript.js`), `NarrationUI.js` (open state, "Listen" trigger, per-section button), `NarrationDock.js` (slide-over / sheet and mini bar), `ListenToSection.js`, `narration.css` |
-| Mounted on | `app/case-study-placement/page.js` (providers, trigger in the hero, panel and mini bar) and `sections.js` (a "Listen to this part" button per section) |
+| Player UI | `NarrationPlayer.js` (+ `NarrationPlayerShell.js`, `NarrationTranscript.js`), `NarrationUI.js` (card state, "Listen" trigger, per-section button), `NarrationDock.js` (the floating card: a small player that expands to the full player, a sheet on phones), `NarrationIcons.js`, `ListenToSection.js`, `narration.css` |
+| Mounted on | `app/case-study-placement/page.js` (providers, trigger in the hero, the floating card) and `sections.js` (a "Listen to this part" button per section) |
 | Reference prototype and screenshots | `docs/narration/reference/` and `player/` — a behavioural spec, not code to paste |
 | Original brief | `claude-code-brief_narration-player.md` |
 
@@ -20,7 +20,7 @@ unchanged (it still describes the standalone layout, and the API-based renderers
 - `npm run test:narration` — unit tests for the timeline, validator, controller and highlight (Node's built-in runner).
 - `npm run test:narration:tools` — tests for the script/alignment tooling (Python).
 - `npm run narration:script`, `narration:align -- <mp3>`, `narration:publish` — the script → audio → page workflow (see WORKFLOW.md).
-- `node scripts/verify-narration.mjs` — a real-browser check of the whole flow on the running page (open/close, focus, mini bar,
+- `node scripts/verify-narration.mjs` — a real-browser check of the whole flow on the running page (small player and expanding, focus, seeking,
   per-section buttons, deep link, remembered position, phone, reduced motion, JavaScript off). It needs `playwright-core` in
   the folder you run it from (`npm i playwright-core` in a scratch dir); Playwright is not a repo dependency.
 - `npm run validate:narration` — checks the served `narration.json` against the script, the page's section ids and the mp3's

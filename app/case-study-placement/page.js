@@ -13,7 +13,7 @@ import ScrollRise from '@/components/case-study-kit/ScrollRise';
 import PlacementStory from './PlacementStory';
 import NarrationProvider from '@/components/narration/NarrationProvider';
 import { NarrationTrigger, NarrationUIProvider } from '@/components/narration/NarrationUI';
-import { NarrationMiniBar, NarrationPanel } from '@/components/narration/NarrationDock';
+import { NarrationPanel } from '@/components/narration/NarrationDock';
 import NarrationPlayer from '@/components/narration/NarrationPlayer';
 import '../../components/narration/narration.css';
 import narration from '../../public/case-studies/placement-hub/narration/narration.json';
@@ -198,11 +198,10 @@ export default function CaseStudyPlacement() {
       <Footer />
     </div>
 
-    {/* The narration: a slide-over (sheet on phones) and, once playback has started and it is closed, a mini bar. */}
+    {/* The narration: a floating card that is a small player by default and expands to the full player (a sheet on phones). */}
     <NarrationPanel>
       <NarrationPlayer narration={narration} fontClass={serif.variable} />
     </NarrationPanel>
-    <NarrationMiniBar />
     </NarrationUIProvider>
     </NarrationProvider>
   );

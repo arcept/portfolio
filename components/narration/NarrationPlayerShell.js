@@ -6,6 +6,7 @@ import { useNarrationUIOptional } from './NarrationUI';
 import { SKIP_SECONDS } from './controller.mjs';
 import { createLyricSync } from './lyric.mjs';
 import { formatTime } from './timeline.mjs';
+import { ForwardIcon, PauseIcon, PlayIcon, RewindIcon } from './NarrationIcons';
 
 // The interactive part of the player, kept deliberately quiet: rewind / play / forward, a speed button, one thin
 // scrubber with a small dot at each chapter, and a line naming the chapter you are in. The transcript below it is
@@ -17,36 +18,6 @@ import { formatTime } from './timeline.mjs';
 const REDUCED = '(prefers-reduced-motion: reduce)';
 const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.(REDUCED).matches;
 
-const Icon = ({ children, ...props }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-    {children}
-  </svg>
-);
-
-const PlayIcon = () => (
-  <Icon className="nr-i-fill">
-    <path d="M8 5.5v13a.75.75 0 0 0 1.14.64l10.4-6.5a.75.75 0 0 0 0-1.28L9.14 4.86A.75.75 0 0 0 8 5.5Z" />
-  </Icon>
-);
-const PauseIcon = () => (
-  <Icon className="nr-i-fill">
-    <rect x="6.5" y="5" width="4" height="14" rx="1" />
-    <rect x="13.5" y="5" width="4" height="14" rx="1" />
-  </Icon>
-);
-// Circular arrows, like the skip buttons in a music or podcast app: back turns anticlockwise, forward clockwise.
-const RewindIcon = () => (
-  <Icon className="nr-i-line">
-    <path d="M4.6 12.2a7.4 7.4 0 1 0 2.3-5.3" />
-    <path d="M4.4 4.6v4h4" />
-  </Icon>
-);
-const ForwardIcon = () => (
-  <Icon className="nr-i-line">
-    <path d="M19.4 12.2a7.4 7.4 0 1 1-2.3-5.3" />
-    <path d="M19.6 4.6v4h-4" />
-  </Icon>
-);
 const ArrowIcon = ({ up }) => (
   <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={up ? { transform: 'rotate(180deg)' } : undefined}>
     <path d="M8 3v9M4 8.5l4 4 4-4" />
@@ -60,7 +31,7 @@ const ArrowIcon = ({ up }) => (
  */
 export default function NarrationPlayerShell({ meta, className = '', children }) {
   const { status, controller, ensure } = useNarration();
-  // Whether the player is on screen: the panel's state when there is a panel, otherwise always.
+  // Whether the player is on screen: the card's state when there is a card, otherwise always.
   const ui = useNarrationUIOptional();
   const open = ui ? ui.open : true;
   const state = useNarrationState();

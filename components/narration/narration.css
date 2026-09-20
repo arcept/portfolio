@@ -1,27 +1,39 @@
-/* Narration player — controls, chapter chips, scrubber and the lyric transcript.
+/* Narration player — controls, scrubber and the lyric transcript, and the floating card that holds them.
 
    It reads the SITE tokens (--carbon, --paper, --mist, --fog, --graphite, --article-green), which the case
    study's theme switch remaps on <html>, so it follows dark and light with no palette of its own and works
-   in a panel outside the article. Nothing here sizes the player: it fills the box its container gives it
-   (the panel), and the transcript scrolls inside.
+   in a card outside the article. Nothing here sizes the player: it fills the box its container gives it
+   (the card), and the transcript scrolls inside.
 
    Visual states of the transcript (see lyric.mjs):
-     future sentences   --fog        (muted)
-     sentences read     --mist       (secondary)
+     future sentences   --nr-ink-3   (muted)
+     sentences read     --nr-ink-2   (secondary)
      current sentence   --paper      (full), its spoken words in the accent
-     active word        accent, weight 500, a 2px underline filling left to right via --f            */
+     active word        accent, a hairline stroke (same width as the plain word), a 2px underline filling left to right via --f            */
 
-.nr {
-  --nr-bg: var(--carbon);
+.nr,
+.nr-dock {
+  /* The card sits a step lighter than the page so it reads as a surface, and its secondary text is a step brighter. */
+  --nr-bg: color-mix(in srgb, var(--paper) 5%, var(--carbon));
   --nr-ink: var(--paper);
-  --nr-ink-2: var(--mist);
-  --nr-ink-3: var(--fog);
-  --nr-rule: var(--graphite);
-  --nr-rule-2: color-mix(in srgb, var(--fog) 40%, var(--graphite));
+  --nr-ink-2: color-mix(in srgb, var(--paper) 30%, var(--mist));
+  --nr-ink-3: color-mix(in srgb, var(--mist) 50%, var(--fog));
+  --nr-rule: color-mix(in srgb, var(--paper) 14%, var(--graphite));
+  --nr-rule-2: color-mix(in srgb, var(--fog) 55%, var(--graphite));
   --nr-accent: var(--article-green);
   --nr-serif: var(--font-serif), Georgia, 'Times New Roman', serif;
   --nr-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --nr-pad: 28px; /* the player's side padding */
+}
 
+/* On the light theme the card stays the page's own white: a darker surface would cost the accent its contrast, and
+   the border and shadow carry the separation. */
+[data-cs-theme='light'] .nr,
+[data-cs-theme='light'] .nr-dock {
+  --nr-bg: var(--carbon);
+}
+
+.nr {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -57,6 +69,7 @@
 .nr button:focus-visible,
 .nr a:focus-visible,
 .nr-range:focus-visible,
+.nr-mini__seek:focus-visible,
 .nr-panel:focus-visible {
   outline: 2px solid var(--nr-accent);
   outline-offset: 2px;
@@ -86,14 +99,14 @@
   align-items: center;
   justify-content: center;
   gap: 18px;
-  padding: 22px 20px 6px;
+  padding: 26px var(--nr-pad) 8px;
 }
 
 .nr .nr-play {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--nr-ink);
   color: var(--nr-bg);
@@ -110,8 +123,8 @@
 }
 
 .nr-play svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .nr .nr-skip {
@@ -148,7 +161,7 @@
 
 .nr .nr-speed {
   position: absolute;
-  right: 16px;
+  right: calc(var(--nr-pad) - 12px);
   top: 50%;
   margin-top: -8px;
   min-width: 44px;
@@ -172,10 +185,11 @@
 
 .nr-scrub {
   position: relative;
-  padding: 10px 20px 0;
+  padding: 12px var(--nr-pad) 0;
 }
 
-.nr-range {
+.nr-range,
+.nr-mini__seek {
   --p: 0%;
   -webkit-appearance: none;
   appearance: none;
@@ -187,25 +201,29 @@
   cursor: pointer;
 }
 
-.nr-range::-webkit-slider-runnable-track {
+.nr-range::-webkit-slider-runnable-track,
+.nr-mini__seek::-webkit-slider-runnable-track {
   height: 3px;
   border-radius: 3px;
   background: linear-gradient(to right, var(--nr-accent) var(--p), var(--nr-rule-2) var(--p));
 }
 
-.nr-range::-moz-range-track {
+.nr-range::-moz-range-track,
+.nr-mini__seek::-moz-range-track {
   height: 3px;
   border-radius: 3px;
   background: var(--nr-rule-2);
 }
 
-.nr-range::-moz-range-progress {
+.nr-range::-moz-range-progress,
+.nr-mini__seek::-moz-range-progress {
   height: 3px;
   border-radius: 3px;
   background: var(--nr-accent);
 }
 
-.nr-range::-webkit-slider-thumb {
+.nr-range::-webkit-slider-thumb,
+.nr-mini__seek::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
@@ -217,7 +235,8 @@
   transition: transform 0.15s ease;
 }
 
-.nr-range::-moz-range-thumb {
+.nr-range::-moz-range-thumb,
+.nr-mini__seek::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border: 0;
@@ -229,21 +248,27 @@
 
 .nr-scrub:hover .nr-range::-webkit-slider-thumb,
 .nr-range:focus-visible::-webkit-slider-thumb,
-.nr-range:active::-webkit-slider-thumb {
+.nr-range:active::-webkit-slider-thumb,
+.nr-mini__bottom:hover .nr-mini__seek::-webkit-slider-thumb,
+.nr-mini__seek:focus-visible::-webkit-slider-thumb,
+.nr-mini__seek:active::-webkit-slider-thumb {
   transform: scale(1);
 }
 
 .nr-scrub:hover .nr-range::-moz-range-thumb,
 .nr-range:focus-visible::-moz-range-thumb,
-.nr-range:active::-moz-range-thumb {
+.nr-range:active::-moz-range-thumb,
+.nr-mini__bottom:hover .nr-mini__seek::-moz-range-thumb,
+.nr-mini__seek:focus-visible::-moz-range-thumb,
+.nr-mini__seek:active::-moz-range-thumb {
   transform: scale(1);
 }
 
 .nr-marks {
   position: absolute;
-  left: 20px;
-  right: 20px;
-  top: 10px;
+  left: var(--nr-pad);
+  right: var(--nr-pad);
+  top: 12px;
   height: 24px;
   pointer-events: none;
 }
@@ -287,7 +312,7 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: baseline;
   gap: 12px;
-  padding: 2px 20px 16px;
+  padding: 2px var(--nr-pad) 20px;
   font-family: var(--nr-mono);
   font-size: 0.6875rem;
   color: var(--nr-ink-3);
@@ -311,7 +336,7 @@
 }
 
 .nr-status {
-  margin: 0 20px 12px !important;
+  margin: 0 var(--nr-pad) 12px !important;
   font-family: var(--nr-mono);
   font-size: 0.6875rem;
   line-height: 1.5;
@@ -332,7 +357,7 @@
   position: absolute;
   inset: 0;
   overflow-y: auto;
-  padding: 26px 24px 30px;
+  padding: 30px var(--nr-pad) 34px;
   scrollbar-width: thin;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 calc(100% - 34px), transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 calc(100% - 34px), transparent 100%);
@@ -420,7 +445,9 @@
 
 .nr-w.is-on {
   color: var(--nr-accent);
-  font-weight: 500;
+  /* Never change the weight, size or spacing here: a word that gets wider pushes its neighbours onto the next line
+     and back again as the highlight moves on. A hairline stroke gives the emphasis without changing the width. */
+  -webkit-text-stroke: 0.35px currentColor;
   background: linear-gradient(var(--nr-accent), var(--nr-accent)) 0 100% / calc(var(--f, 0) * 1%) 2px no-repeat;
 }
 
@@ -460,7 +487,7 @@
 }
 
 .nr-foot {
-  padding: 11px 20px calc(11px + env(safe-area-inset-bottom, 0px));
+  padding: 13px var(--nr-pad) calc(13px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--nr-rule);
   font-family: var(--nr-mono);
   font-size: 0.625rem;
@@ -471,30 +498,19 @@
 /* ------------------------------------------------------------- small screens */
 
 @media (max-width: 560px) {
+  .nr,
+  .nr-dock {
+    --nr-pad: 20px;
+  }
+
   .nr-controls {
-    padding: 20px 16px 4px;
+    padding-top: 20px;
     gap: 14px;
   }
 
-  .nr-scrub,
-  .nr-meta,
-  .nr-foot {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .nr-marks {
-    left: 16px;
-    right: 16px;
-  }
-
-  .nr-status {
-    margin-left: 16px !important;
-    margin-right: 16px !important;
-  }
-
   .nr-panel {
-    padding: 24px 16px 28px;
+    padding-top: 24px;
+    padding-bottom: 28px;
   }
 }
 
@@ -506,11 +522,12 @@
   }
 
   .nr .nr-play {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
   }
 
-  .nr-range {
+  .nr-range,
+  .nr-mini__seek {
     height: 44px;
   }
 
@@ -523,11 +540,13 @@
     height: 44px;
   }
 
-  .nr-range::-webkit-slider-thumb {
+  .nr-range::-webkit-slider-thumb,
+  .nr-mini__seek::-webkit-slider-thumb {
     transform: scale(1);
   }
 
-  .nr-range::-moz-range-thumb {
+  .nr-range::-moz-range-thumb,
+  .nr-mini__seek::-moz-range-thumb {
     transform: scale(1);
   }
 }
@@ -548,33 +567,87 @@
   }
 }
 
-/* ============================================================== containers */
+/* ============================================================== the card */
 
-/* The slide-over (desktop) / full-height sheet (phones). It sits under the site nav so the theme switch stays
-   reachable, above the contents nav (z-index 5) and below the story overlay (1000). Closed, it is off-screen and
-   invisible; the page also marks it inert then (see NarrationDock.js). */
+/* One floating card, 20px in from the right and bottom, sitting under the site nav so the theme switch stays
+   reachable, above the contents nav (z-index 5) and below the story overlay (1000). Its data-mode says what it
+   is: closed (off-screen and invisible; the page also marks it inert then, see NarrationDock.js), mini (a small
+   player) or expanded (the full player, as tall as the space under the nav), both 510px wide. Going between
+   them animates its height, so it grows upward out of the small player. */
 .nr-dock {
   --nr-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nr-inset: 20px;
+  --nr-card-w: 510px; /* the small player and the full player are the same width */
+  --nr-mini-h: 96px;
+  --nr-shadow: 0.85; /* strength of the shadow: lighter on the light theme */
+  /* The size of the expanded card. The full player is always laid out at this size and the card's edge clips it
+     while it grows, so the transcript never re-flows or loses its scroll position between sizes. */
+  --nr-full-h: calc(100vh - var(--site-nav-h, 56px) - 2 * var(--nr-inset));
+  --nr-full-h: calc(100dvh - var(--site-nav-h, 56px) - 2 * var(--nr-inset));
   position: fixed;
-  z-index: 40;
-  top: var(--site-nav-h, 56px);
+  z-index: 50;
+  right: var(--nr-inset);
+  bottom: calc(var(--nr-inset) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  width: var(--nr-card-w);
+  height: var(--nr-mini-h);
+  overflow: hidden;
+  background: var(--nr-bg);
+  border: 1px solid color-mix(in srgb, var(--paper) 26%, transparent);
+  border-radius: 20px;
+  box-shadow: 0 44px 90px -28px rgb(0 0 0 / var(--nr-shadow)), 0 14px 34px -12px rgb(0 0 0 / calc(var(--nr-shadow) * 0.7)), 0 0 0 1px rgb(0 0 0 / 0.25);
+  color: var(--paper);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  transition: width 0.42s var(--nr-ease), height 0.42s var(--nr-ease), left 0.42s var(--nr-ease), right 0.42s var(--nr-ease), bottom 0.42s var(--nr-ease),
+    border-radius 0.42s var(--nr-ease), opacity 0.25s ease, transform 0.42s var(--nr-ease), visibility 0s;
+}
+
+[data-cs-theme='light'] .nr-dock {
+  --nr-shadow: 0.3;
+}
+
+.nr-dock[data-mode='closed'] {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.3s var(--nr-ease), visibility 0s linear 0.3s;
+}
+
+.nr-dock[data-mode='expanded'] {
+  height: var(--nr-full-h);
+}
+
+/* The two halves cross-fade while the card changes size. */
+.nr-dock__miniwrap,
+.nr-dock__full {
+  transition: opacity 0.22s ease, visibility 0s;
+}
+
+.nr-dock__miniwrap {
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--nr-mini-h);
+}
+
+.nr-dock__full {
+  position: absolute;
   right: 0;
   bottom: 0;
   display: flex;
   flex-direction: column;
-  width: min(460px, 100vw);
-  background: var(--carbon);
-  border-left: 1px solid var(--graphite);
-  box-shadow: -28px 0 60px -34px rgb(0 0 0 / 0.55);
-  transform: translateX(100%);
-  visibility: hidden;
-  transition: transform 0.4s var(--nr-ease), visibility 0s linear 0.4s;
+  width: calc(var(--nr-card-w) - 2px); /* less the card's 1px borders */
+  height: calc(var(--nr-full-h) - 2px);
 }
 
-.nr-dock.is-open {
-  transform: none;
-  visibility: visible;
-  transition: transform 0.4s var(--nr-ease), visibility 0s;
+.nr-dock[data-mode='mini'] .nr-dock__full,
+.nr-dock[data-mode='closed'] .nr-dock__full,
+.nr-dock[data-mode='expanded'] .nr-dock__miniwrap {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s;
 }
 
 .nr-dock .nr {
@@ -585,8 +658,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px 6px 20px;
-  border-bottom: 1px solid var(--graphite);
+  padding: 10px calc(var(--nr-pad) - 14px) 10px var(--nr-pad);
+  border-bottom: 1px solid var(--nr-rule);
 }
 
 .nr-dock__label {
@@ -597,7 +670,7 @@
   color: var(--paper);
 }
 
-.nr-close {
+.nr-collapse {
   display: grid;
   place-items: center;
   width: 44px;
@@ -610,64 +683,52 @@
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.nr-close:hover {
+.nr-collapse:hover {
   background: color-mix(in srgb, var(--paper) 8%, transparent);
   color: var(--paper);
 }
 
-.nr-close:focus-visible {
+.nr-collapse:focus-visible {
   outline: 2px solid var(--article-green);
   outline-offset: -2px;
 }
 
-/* Phones: the panel becomes a sheet that rises from the bottom and fills the space under the nav. */
+/* Phones: the small player is a bar along the bottom (12px in), the full player a sheet that fills the space
+   under the nav. */
 @media (max-width: 899px) {
   .nr-dock {
-    left: 0;
+    --nr-inset: 12px;
+    --nr-full-h: calc(100vh - var(--site-nav-h, 56px));
+    --nr-full-h: calc(100dvh - var(--site-nav-h, 56px));
+    left: var(--nr-inset);
     width: auto;
-    border-left: 0;
-    border-top: 1px solid var(--graphite);
-    box-shadow: 0 -20px 50px -30px rgb(0 0 0 / 0.55);
-    transform: translateY(100%);
   }
 
-  .nr-dock__bar {
-    padding-left: 16px;
+  .nr-dock[data-mode='expanded'] {
+    --nr-inset: 0px;
+    width: auto;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
   }
-}
 
-/* ============================================================== mini bar */
-
-.nr-mini {
-  position: fixed;
-  z-index: 50;
-  left: 50%;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  gap: 0 10px;
-  align-items: center;
-  width: min(720px, calc(100% - 24px));
-  padding: 8px 6px 10px 8px;
-  overflow: hidden;
-  background: var(--carbon);
-  border: 1px solid var(--graphite);
-  border-radius: 14px;
-  box-shadow: 0 18px 44px -20px rgb(0 0 0 / 0.55);
-  color: var(--paper);
-  font-family: var(--font-inter), system-ui, sans-serif;
-  animation: nr-mini-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes nr-mini-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 16px);
+  .nr-dock__full {
+    width: 100%;
   }
+
 }
 
-.nr-mini button {
+/* ------------------------------------------------------- the small player */
+
+.nr-dock__mini {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+  padding: 6px 8px 6px 18px;
+}
+
+.nr-dock__mini button {
   font: inherit;
   color: inherit;
   background: none;
@@ -678,45 +739,32 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.nr-mini button:focus-visible {
-  outline: 2px solid var(--article-green);
-  outline-offset: 2px;
+.nr-dock__mini button:focus-visible {
+  outline: 2px solid var(--nr-accent);
+  outline-offset: -2px;
 }
 
-.nr-mini .nr-mini__play {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--paper);
-  color: var(--void);
-  transition: background-color 0.15s ease;
-}
-
-.nr-mini .nr-mini__play:hover {
-  background: var(--article-green);
-}
-
-.nr-mini__play svg {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-}
-
-.nr-mini .nr-mini__now {
-  min-width: 0;
+/* Row one: what is being said, and expand / close. */
+.nr-mini__top {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   min-height: 44px;
-  text-align: left;
+}
+
+.nr-mini__now {
+  flex: 1 1 0;
+  min-width: 0;
+  cursor: pointer;
 }
 
 .nr-mini__now b {
   display: block;
   overflow: hidden;
-  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-family: var(--nr-mono);
   font-size: 0.6875rem;
   font-weight: 500;
-  color: var(--article-green);
+  color: var(--nr-accent);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -724,49 +772,92 @@
 .nr-mini__now span {
   display: block;
   overflow: hidden;
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--nr-serif);
   font-size: 0.9375rem;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.nr-mini .nr-mini__close {
+.nr-dock__mini .nr-mini__btn,
+.nr-dock__mini .nr-mini__skip,
+.nr-dock__mini .nr-mini__play {
+  position: relative;
   display: grid;
+  flex: none;
   place-items: center;
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  color: var(--fog);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.nr-mini .nr-mini__close:hover {
-  background: color-mix(in srgb, var(--paper) 9%, transparent);
-  color: var(--paper);
+.nr-dock__mini .nr-mini__btn,
+.nr-dock__mini .nr-mini__skip {
+  color: var(--nr-ink-2);
 }
 
-.nr-mini__time {
-  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  font-size: 0.6875rem;
-  color: var(--fog);
-  font-variant-numeric: tabular-nums;
+.nr-dock__mini .nr-mini__btn:hover,
+.nr-dock__mini .nr-mini__skip:hover {
+  background: color-mix(in srgb, var(--nr-ink) 9%, transparent);
+  color: var(--nr-ink);
 }
 
-.nr-mini__track {
+.nr-dock__mini button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.nr-mini__skip svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* The play button is a 36px disc inside a 44px target. */
+.nr-dock__mini .nr-mini__play {
+  color: var(--nr-bg);
+}
+
+.nr-mini__play::before {
+  content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  background: var(--graphite);
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--nr-ink);
+  transition: background-color 0.15s ease;
 }
 
-.nr-mini__track i {
-  display: block;
-  width: 0;
-  height: 100%;
-  background: var(--article-green);
+.nr-mini__play:hover::before {
+  background: var(--nr-accent);
+}
+
+.nr-mini__play svg {
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+
+/* Row two: back, play, forward, then the clock either side of a bar you can click or drag. */
+.nr-mini__bottom {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.nr-mini__clock {
+  flex: none;
+  min-width: 2.6em;
+  font-family: var(--nr-mono);
+  font-size: 0.6875rem;
+  color: var(--nr-ink-3);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.nr-mini__seek {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
 }
 
 /* ==================================================== trigger & per-section */
@@ -849,12 +940,9 @@ button.nr-trigger {
 
 @media (prefers-reduced-motion: reduce) {
   .nr-dock,
-  .nr-dock.is-open {
-    transition: none;
-  }
-
-  .nr-mini {
-    animation: none;
+  .nr-dock__miniwrap,
+  .nr-dock__full {
+    transition: none !important;
   }
 
   .nr-trigger.is-playing .nr-wave rect {

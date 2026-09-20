@@ -10,7 +10,7 @@ import './narration.css';
 //   import narration from '…/narration/narration.json';
 //   <NarrationProvider src="…/narration.json"> <NarrationPlayer narration={narration} /> </NarrationProvider>
 //
-// It starts loading the narration data when it comes on screen (the panel opening), so playback can begin
+// It starts loading the narration data when it comes on screen (the card expanding), so playback can begin
 // instantly from the next tap. `fontClass` carries the page's serif font variable, since the player renders
 // outside the article.
 

@@ -5,7 +5,7 @@ import { NarrationController } from './controller.mjs';
 import { resolveAudioUrl } from './timeline.mjs';
 
 // Gives the page one narration: it owns the controller (and so the single <audio> element), so the audio
-// and its state survive the panel opening and closing. Nothing is fetched until something calls
+// and its state survive the card changing size. Nothing is fetched until something calls
 // ensure() — the trigger on first interaction — so the narration costs the page nothing to load.
 //
 //   <NarrationProvider src="/case-studies/placement-hub/narration/narration.json"> …page… </NarrationProvider>
