@@ -196,6 +196,41 @@ class ShapeTests(unittest.TestCase):
             self.assertEqual(t["end"], t["words"][-1][1])
 
 
+class MinimumWordTests(unittest.TestCase):
+    """The highlight jumps to the word that starts latest at or before the current time, so a word with no duration is never lit."""
+
+    def units(self, *sentences):
+        return [{"words": s.split()} for s in sentences]
+
+    def durations(self, shaped):
+        return [e - s for t in shaped for s, e in t["words"]]
+
+    def test_words_the_aligner_gave_no_time_still_last_a_moment(self):
+        units = self.units("The problem was here.", "And then it changed.")
+        # "The" and "And" (sentence-initial) start exactly where the next word does
+        times = [(1.0, 1.0, 0.9), (1.0, 1.4, 0.9), (1.4, 1.8, 0.9), (1.8, 2.2, 0.9), (3.0, 3.0, 0.9), (3.0, 3.3, 0.9), (3.3, 3.6, 0.9), (3.6, 4.0, 0.9)]
+        shaped = L.shape_timings(units, times)
+        self.assertTrue(all(d >= L.MIN_WORD - 1e-9 for d in self.durations(shaped)), self.durations(shaped))
+        self.assertGreaterEqual(shaped[1]["start"], shaped[0]["end"] - 1e-9)
+
+    def test_a_run_of_words_all_starting_together_is_spread_out_in_order(self):
+        units = self.units("a b c d e")
+        times = [(2.0, 2.0, 0.5)] * 5
+        shaped = L.shape_timings(units, times)
+        starts = [s for s, _e in shaped[0]["words"]]
+        self.assertEqual(starts, sorted(set(starts)))
+        self.assertTrue(all(d >= L.MIN_WORD - 1e-9 for d in self.durations(shaped)))
+
+    def test_a_standalone_dash_takes_its_sliver_from_the_pause_not_from_the_word_before_it(self):
+        units = self.units("Hello — thanks for looking.")
+        times = [(0.3, 0.3, 0.9), (0.3, 1.18, 0.9), (1.18, 1.5, 0.9), (1.5, 1.7, 0.9), (1.7, 2.2, 0.9)]
+        (t,) = L.shape_timings(units, times)
+        (hello_s, hello_e), (dash_s, dash_e) = t["words"][0], t["words"][1]
+        self.assertAlmostEqual(dash_e - dash_s, L.MIN_WORD, places=6)
+        self.assertGreater(hello_e - hello_s, 0.5, "Hello keeps the pause it was spoken into")
+        self.assertAlmostEqual(dash_e, 1.18, places=6, msg="the dash sits at the end of the pause, just before the next word")
+
+
 class SpokenTokensTests(unittest.TestCase):
     def test_numbers_become_words(self):
         self.assertEqual(L.spoken_tokens("63"), ["sixty", "three"])

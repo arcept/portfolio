@@ -82,7 +82,7 @@ test('play() starts from a gesture: loads the file, marks started/playing, runs 
 
 test('frames carry the active word as time advances, and do not re-render discrete subscribers per frame', async () => {
   const { c, audio, frames } = make();
-  await c.seek(11.9, {}); // inside chapter 2's first sentence, before any per-frame checks
+  await c.seek(tl(c).chapters[1].start + 0.5, {}); // just inside the second chapter's first sentence, before any per-frame checks
   await c.play();
   let discrete = 0; c.subscribe(() => discrete++);
   const seen = new Set(); let frameCalls = 0;
@@ -96,7 +96,7 @@ test('frames carry the active word as time advances, and do not re-render discre
 test('discrete state follows the sentence and chapter', async () => {
   const { c, audio, frames } = make();
   await c.play();
-  frames.advance(audio, 12); // into "The problem"
+  frames.advance(audio, tl(c).chapters[1].start + 1); // a second into the second chapter
   assert.equal(c.getSnapshot().activeChapter, 1);
   assert.ok(c.getSnapshot().activeSentence >= 0);
 });

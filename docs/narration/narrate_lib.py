@@ -275,23 +275,49 @@ def assign_cues(script_ws, cues):
     return spans
 
 
+MIN_WORD = 0.05  # seconds: the shortest a word is allowed to last, so the highlight never skips one
+
+
+def _is_mark(word):
+    """A token with no letters or digits in it: a standalone dash, say. It can't be heard, only shown."""
+    return not re.search(r"[A-Za-z0-9]", word)
+
+
 def shape_timings(units, times):
     """Per-word (start, end, prob) -> per-sentence {"start","end","words":[(s,e)...],"probs":[...]} that follow
     narration.json's rules. `times` is one entry per script word, in the same order as the units' words.
 
     Word starts are forced to be non-decreasing; inside a sentence each word ends where the next begins; and a
-    sentence never starts before the previous one has ended (an aligner can overlap them by a few ms)."""
+    sentence never starts before the previous one has ended (an aligner can overlap them by a few ms).
+
+    Every word also lasts at least MIN_WORD. An aligner sometimes gives a word no time at all (often the first
+    word of a sentence), which would make the highlight skip it. A word that is too short is started a little
+    earlier, taking the time from the word before it; a standalone mark such as a dash takes its sliver from
+    the pause it sits in, not from a spoken word."""
     out, k, floor = [], 0, 0.0
     for u in units:
         n = len(u["words"])
         chunk = times[k:k + n]
         k += n
         starts = []
-        for s, _e, _p in chunk:
+        for idx, (s, _e, _p) in enumerate(chunk):
             s = max(s, floor)
             starts.append(s)
             floor = s
-        ends = [starts[i + 1] if i + 1 < n else max(chunk[i][1], starts[i]) for i in range(n)]
+        # a mark is heard as nothing: put it at the end of its pause, just before the next word
+        for i in range(n - 2, -1, -1):
+            if _is_mark(u["words"][i]):
+                starts[i] = max(starts[i - 1] if i else starts[i], starts[i + 1] - MIN_WORD)
+        end_last = max(chunk[-1][1], starts[-1] + MIN_WORD)
+        # too short? start earlier (backwards), then make sure nothing moved before the sentence's floor or
+        # crowds the next word (forwards)
+        for i in range(n - 2, -1, -1):
+            starts[i] = min(starts[i], starts[i + 1] - MIN_WORD)
+        prior = out[-1]["end"] if out else 0.0
+        for i in range(n):
+            starts[i] = max(starts[i], prior if i == 0 else starts[i - 1] + MIN_WORD)
+        end_last = max(end_last, starts[-1] + MIN_WORD)
+        ends = [starts[i + 1] if i + 1 < n else end_last for i in range(n)]
         out.append({"start": starts[0], "end": ends[-1], "words": list(zip(starts, ends)), "probs": [p for _s, _e, p in chunk]})
         floor = max(floor, ends[-1])
     return out

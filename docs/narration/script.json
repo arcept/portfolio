@@ -1,17 +1,15 @@
 {
  "title": "Making Placement Visible: the short version",
- "pronounce": {
-  "Novatr": "Novater"
- },
+ "pronounce": {},
  "chapters": [
   {
    "id": "intro",
    "label": "Intro",
    "anchor": "top",
    "paragraphs": [
-    "Hello — thanks for taking a look at Placement Hub.",
-    "This is the short version of a project that started with one question: if placement support is part of a learner’s course experience, why is it so difficult to see?",
-    "At Novatr, learners had placement support. But once they showed interest, the process could become a black box. This is how we made it clearer, more understandable, and more humane."
+    "Hello! — thanks for taking a look at Placement Hub.",
+    "This project began at Novatr, an AEC edtech company helping people build careers in architecture, engineering, and construction through industry-focused courses. For learners, the course promise does not end when the learning does. One of Novatr’s key commitments was placement assistance: support in finding and preparing for their next opportunity after graduation.",
+    "Placement Hub is the product experience we designed to make that support feel more real. It gives learners a clearer view of where they stand, what opportunities are available to them, and what they need to do next. This is the short version of how we built it."
    ]
   },
   {

@@ -113,9 +113,16 @@ test('the disclosure names the engine from one mapping', () => {
 const real = JSON.parse(fs.readFileSync(new URL('../../public/case-studies/placement-hub/narration/narration.json', import.meta.url), 'utf8'));
 const rtl = buildTimeline(real);
 
-test('real data: 590 words in 8 chapters', () => {
-  assert.equal(rtl.words.length, 590);
-  assert.equal(rtl.chapters.length, 8);
+test('real data: the timeline holds every word and chapter in the file', () => {
+  const chapters = real.chapters;
+  const words = chapters.flatMap((c) => c.paragraphs.flatMap((p) => p.sentences.flatMap((s) => s.words)));
+  assert.equal(rtl.words.length, words.length);
+  assert.equal(rtl.chapters.length, chapters.length);
+});
+
+test('real data: every word lasts long enough for the highlight to land on it', () => {
+  const short = rtl.words.filter((w) => w.e - w.s < 0.04).map((w) => `${w.t} @${w.s}`);
+  assert.deepEqual(short, []);
 });
 
 test('real data: seeking to the midpoint of every word makes exactly that word active, in its own sentence and chapter', () => {

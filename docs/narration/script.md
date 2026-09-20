@@ -2,8 +2,6 @@
 title: Making Placement Visible: the short version
 engine: elevenlabs
 voice: ElevenLabs Studio
-pronounce:
-  Novatr: Novater
 ---
 
 <!--
@@ -18,11 +16,11 @@ pronounce:
 
 ## Intro {id=intro anchor=top}
 
-Hello — thanks for taking a look at Placement Hub.
+Hello! — thanks for taking a look at Placement Hub.
 
-This is the short version of a project that started with one question: if placement support is part of a learner’s course experience, why is it so difficult to see?
+This project began at Novatr, an AEC edtech company helping people build careers in architecture, engineering, and construction through industry-focused courses. For learners, the course promise does not end when the learning does. One of Novatr’s key commitments was placement assistance: support in finding and preparing for their next opportunity after graduation.
 
-At Novatr, learners had placement support. But once they showed interest, the process could become a black box. This is how we made it clearer, more understandable, and more humane.
+Placement Hub is the product experience we designed to make that support feel more real. It gives learners a clearer view of where they stand, what opportunities are available to them, and what they need to do next. This is the short version of how we built it.
 
 ## The problem {id=problem}
 
