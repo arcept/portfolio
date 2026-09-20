@@ -1,0 +1,102 @@
+/* Placement Hub case study — the two themes.
+
+   There is one page. Dark is the design and the default; light is the same page with its tokens
+   swapped. The theme is an attribute on <html> (data-cs-theme, set before first paint by the inline
+   script in components/theme/theme.js), so nothing else in the site is touched: the attribute is
+   only ever present while this page is open, and only the rules below key off it.
+
+   Two layers of tokens:
+     1. The SITE tokens (--void, --paper, --fog …) that the nav, hero, buttons, contents nav, prototype
+        frame and footer already read. Light remaps them, which flips all of that chrome at once.
+     2. The ARTICLE tokens on .pcs (--ink, --base, --line …) that article.css reads. Every gray there
+        is a percentage of ink mixed into base, so the two themes differ only in these few values.
+
+   TEXT CONTRAST
+   Dark text is lifted well above the site default: body copy is 80% ink (12:1), the argument 98%
+   (17:1), and even the faintest level (captions, labels) stays near 6:1. Light is 8:1 for body copy
+   and every level clears WCAG AA (4.5:1) — the light version this came from did not at its faintest.                    */
+
+/* ---------------------------------------------------------------- Article: dark */
+
+.pcs {
+  --ink: #f5f6f8;
+  --base: #08090a;
+  --t1-pct: 98%;
+  --t2-pct: 80%;
+  --t3-pct: 64%;
+  --t4-pct: 55%;
+
+  --bg: var(--void);
+  --s2: var(--g6);
+  --sunk: var(--g1);
+  --line: color-mix(in srgb, var(--ink) 12%, var(--base));
+  --line-2: color-mix(in srgb, var(--ink) 22%, var(--base));
+  --accent: var(--article-green);
+  --on-accent: #08090a;
+  --good: #4ade80;
+  --bad: #ff6b6b;
+  --warn: #f5b04c;
+  --shadow-frame: 0 40px 90px -40px rgb(0 0 0 / 0.85), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------- Article: light */
+
+html[data-cs-theme='light'] .pcs {
+  --ink: #111214;
+  --base: #ffffff;
+  --t1-pct: 94%;
+  --t2-pct: 78%;
+  --t3-pct: 68%;
+  --t4-pct: 63%;
+
+  --s2: var(--g1);
+  --sunk: var(--g10);
+  --line: var(--g10);
+  --line-2: var(--g20);
+  --on-accent: #ffffff;
+  --good: #137a3d;
+  --bad: #d12b1f;
+  --warn: #a15c07;
+  --shadow-frame: 0 40px 90px -40px color-mix(in srgb, var(--ink) 45%, transparent), 0 8px 24px -12px color-mix(in srgb, var(--ink) 22%, transparent);
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------ Site chrome: light */
+
+html[data-cs-theme='light'] {
+  color-scheme: light;
+
+  /* Page and surfaces, from the page's own 6% gray (white mixed with 6% ink) downwards. */
+  --void: #f1f1f1;
+  --carbon: #ebebeb;
+  --obsidian: #e4e5e6;
+  --graphite: #d3d4d7;
+
+  /* Text: --paper is the strongest, then --mist, --fog, --ash. */
+  --paper: #111214;
+  --mist: #34363b;
+  --fog: #575a61;
+  --ash: #8b8e94;
+
+  --article-green: #137a3d;
+  --article-neutral: #575a61;
+  --article-placeholder: #8b8e94;
+}
+
+/* "Get in touch" is lime; its label stays dark on either theme. */
+html[data-cs-theme='light'] .btn--primary {
+  color: #111214;
+}
+
+html[data-cs-theme='light'] .cs-hero {
+  background: linear-gradient(180deg, color-mix(in srgb, #7ba0ff 24%, var(--void)) 0%, var(--void) 100%), var(--void);
+}
+
+html[data-cs-theme='light'] .cs-hero-frame {
+  border-color: color-mix(in srgb, var(--paper) 12%, transparent);
+}
+
+html[data-cs-theme='light'] .cs-hero-frame::before {
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--paper) 10%, transparent), transparent 70%);
+}

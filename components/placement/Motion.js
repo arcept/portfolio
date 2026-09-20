@@ -141,19 +141,4 @@ export function Count({ to, decimals = 0, prefix = '', suffix = '', duration = 1
   );
 }
 
-// Drifts its child against the scroll, inside an overflow-hidden frame.
-export function Parallax({ children, className, distance = 36, scale = 1.08 }) {
-  const ref = useRef(null);
-  const reduce = useReduce();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], [-distance, distance]);
-  return (
-    <div ref={ref} className={className}>
-      <motion.div style={reduce ? undefined : { y, scale }} className="lx-parallax__inner">
-        {children}
-      </motion.div>
-    </div>
-  );
-}
-
 export { EASE };

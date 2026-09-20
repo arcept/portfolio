@@ -1,6 +1,6 @@
-// Shared by the two versions of the Placement Hub case study. The theme decides WHICH PAGE you
-// are on: dark is the original design (/case-study-placement), light is the light design
-// (/case-study-placement-light). Both pages carry the same switch, which flips between them.
+// Theme for the Placement Hub case study. There is one page; the theme is an attribute on <html>
+// (data-cs-theme="dark" | "light") and themes.css turns it into colours. Dark is the design; light
+// is the same page with its tokens swapped.
 //
 // Which theme applies, in order:
 //   1. a choice made with the switch during this visit (sessionStorage — so the next visit starts
@@ -11,16 +11,28 @@
 // dark fallback only ever applies to browsers that don't support prefers-color-scheme at all.)
 
 export const THEME_KEY = 'cs-theme';
+export const THEME_ATTR = 'data-cs-theme';
 
-export const DARK_PAGE = '/case-study-placement';
-export const LIGHT_PAGE = '/case-study-placement-light';
+export function systemTheme() {
+  if (typeof window === 'undefined' || !window.matchMedia) return 'dark';
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+  if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+  return 'dark';
+}
 
-// Section ids the two pages have in common — used to land on the same section after switching.
-export const SECTION_IDS = ['problem', 'evidence', 'reframing', 'leadership', 'product', 'handover', 'launch'];
+export function chosenTheme() {
+  try {
+    const value = window.sessionStorage.getItem(THEME_KEY);
+    return value === 'light' || value === 'dark' ? value : null;
+  } catch {
+    return null;
+  }
+}
 
-// Runs as an inline <script> at the very top of each page, so a visitor whose theme belongs to the
-// other page is sent there before anything paints (no flash of the wrong theme). The same logic
-// lives in ThemeSwitch for client-side navigations, where inline scripts don't run.
-export function themeGateScript(page, siblingHref) {
-  return `(function(){try{var s=null;try{s=sessionStorage.getItem('${THEME_KEY}')}catch(e){}var m=window.matchMedia;var t=(s==='light'||s==='dark')?s:(m&&m('(prefers-color-scheme: dark)').matches?'dark':(m&&m('(prefers-color-scheme: light)').matches?'light':'dark'));if(t!=='${page}'){location.replace('${siblingHref}'+location.hash)}}catch(e){}})();`;
+export const resolveTheme = () => chosenTheme() ?? systemTheme();
+
+// Runs as an inline <script> at the very top of the page, so the theme is on <html> before
+// anything paints (no flash of the wrong theme). The same logic lives above for client-side use.
+export function themeGateScript() {
+  return `(function(){try{var s=null;try{s=sessionStorage.getItem('${THEME_KEY}')}catch(e){}var m=window.matchMedia;var t=(s==='light'||s==='dark')?s:(m&&m('(prefers-color-scheme: dark)').matches?'dark':(m&&m('(prefers-color-scheme: light)').matches?'light':'dark'));document.documentElement.setAttribute('${THEME_ATTR}',t)}catch(e){}})();`;
 }

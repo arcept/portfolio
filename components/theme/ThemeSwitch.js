@@ -1,34 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SECTION_IDS, THEME_KEY } from './theme';
-
-function systemTheme() {
-  if (typeof window === 'undefined' || !window.matchMedia) return 'dark';
-  if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-  if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
-  return 'dark';
-}
-
-function chosenTheme() {
-  try {
-    const value = window.sessionStorage.getItem(THEME_KEY);
-    return value === 'light' || value === 'dark' ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-// The section the reader is in, so switching versions doesn't send them back to the top.
-function currentSectionId() {
-  if (window.scrollY < 300) return '';
-  let found = '';
-  for (const id of SECTION_IDS) {
-    const el = document.getElementById(id);
-    if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.4) found = id;
-  }
-  return found;
-}
+import { THEME_ATTR, THEME_KEY, resolveTheme } from './theme';
+import useCsTheme from './useCsTheme';
 
 function Sun() {
   return (
@@ -47,45 +21,48 @@ function Moon() {
   );
 }
 
-// `page` is which version this switch sits on ('dark' or 'light'); `siblingHref` is the other one.
-// `variant` picks the stylesheet prefix ('cs' for the dark site design, 'lx' for the light one).
-export default function ThemeSwitch({ page, siblingHref, variant = 'cs' }) {
-  // Keep the page in step with the theme: covers client-side navigations (where the inline gate
-  // script doesn't run) and follows the operating system live if it changes while the page is open.
-  useEffect(() => {
-    const sync = () => {
-      const wanted = chosenTheme() ?? systemTheme();
-      if (wanted !== page) window.location.replace(siblingHref + window.location.hash);
-    };
-    sync();
-    if (!window.matchMedia) return undefined;
-    const queries = ['(prefers-color-scheme: dark)', '(prefers-color-scheme: light)'].map((q) => window.matchMedia(q));
-    queries.forEach((q) => q.addEventListener('change', sync));
-    return () => queries.forEach((q) => q.removeEventListener('change', sync));
-  }, [page, siblingHref]);
+const apply = (theme) => document.documentElement.setAttribute(THEME_ATTR, theme);
+const current = () => (document.documentElement.getAttribute(THEME_ATTR) === 'light' ? 'light' : 'dark');
 
-  const other = page === 'dark' ? 'light' : 'dark';
+// The theme switch for the Placement Hub case study. It also owns keeping <html> in step with the
+// theme: on client-side navigations the inline gate script doesn't run, and a choice made here must
+// not leak onto other pages, so the attribute is removed when the page unmounts.
+export default function ThemeSwitch() {
+  const theme = useCsTheme();
+  useEffect(() => {
+    apply(resolveTheme());
+    if (!window.matchMedia) return () => document.documentElement.removeAttribute(THEME_ATTR);
+    // Follow the operating system live (unless a choice was made with the switch this visit).
+    const queries = ['(prefers-color-scheme: dark)', '(prefers-color-scheme: light)'].map((q) => window.matchMedia(q));
+    const sync = () => apply(resolveTheme());
+    queries.forEach((q) => q.addEventListener('change', sync));
+    return () => {
+      queries.forEach((q) => q.removeEventListener('change', sync));
+      document.documentElement.removeAttribute(THEME_ATTR);
+    };
+  }, []);
 
   const flip = () => {
+    const next = current() === 'dark' ? 'light' : 'dark';
     try {
-      window.sessionStorage.setItem(THEME_KEY, other);
+      window.sessionStorage.setItem(THEME_KEY, next);
     } catch {
-      /* storage blocked — the switch still moves you, the OS setting wins next load */
+      /* storage blocked — the switch still works, the OS setting wins next load */
     }
-    const id = currentSectionId();
-    window.location.assign(siblingHref + (id ? `#${id}` : ''));
+    apply(next);
   };
 
-  const p = `${variant}-switch`;
+  // The knob and icons are positioned by CSS from <html>'s attribute, so the switch is right on the
+  // first paint; aria-checked is the assistive-technology view of the same thing.
   return (
-    <button type="button" role="switch" aria-checked={page === 'dark'} aria-label="Dark theme" className={p} onClick={flip}>
-      <span className={`${p}__icon ${p}__icon--sun`}>
+    <button type="button" role="switch" aria-checked={theme !== 'light'} aria-label="Dark theme" className="cs-switch" onClick={flip}>
+      <span className="cs-switch__icon cs-switch__icon--sun">
         <Sun />
       </span>
-      <span className={`${p}__icon ${p}__icon--moon`}>
+      <span className="cs-switch__icon cs-switch__icon--moon">
         <Moon />
       </span>
-      <span className={`${p}__knob`} aria-hidden="true" />
+      <span className="cs-switch__knob" aria-hidden="true" />
     </button>
   );
 }

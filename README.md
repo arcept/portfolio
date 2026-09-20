@@ -13,23 +13,33 @@ statically exported and deployed to GitHub Pages behind the custom domain
   six-section long-form write-up, sticky scroll-spy TOC, and the live
   prototype (see below) embedded in an iframe
 - `app/case-study-placement/page.js` — the Novatr Placement Hub case study ("Making Placement
-  Visible"), dark version. The hero, prototype embed and contents nav are the site's own; the seven
-  sections (`sections.js`) are animated cards — they zoom in and settle as they arrive, zoom out and
-  dim as they leave, and carry a faded section numeral in the corner. The cards, their scroll
-  animation and their type hierarchy are the light version's components
-  (`components/light/`) and styles (`../case-study-placement-light/light.css`, imported here)
-  with a dark palette from `dark.css` — so `light.css` has to keep being importable. The prototype
-  is embedded in an iframe (`products/placement-hub`, synced into
-  `public/case-studies/placement-hub/` — see "Rebuilding the Placement Hub prototype" below)
-- `app/case-study-placement-light/page.js` — the light version of the Placement Hub case study:
-  layered gray-token surfaces and scroll-driven motion, fully scoped under `.lx` (`light.css`,
-  `components/light/`). Its section content is generated from the dark page's, so copy edits made
-  to `app/case-study-placement/page.js` need re-applying there by hand.
-  **The dark and light pages are one case study with two themes.** Both carry the same switch
-  (`components/theme/`), which flips between them and keeps you in the same section. Which one you
-  land on follows the operating system (live, if it changes), falling back to dark if the browser
-  doesn't expose a setting; a choice made with the switch lasts for that visit only. An inline
-  script at the top of each page redirects before anything paints, so there is no flash.
+  Visible"). One page, two themes: dark is the design and light is the same page with its tokens
+  swapped. The theme is an attribute on `<html>` (`data-cs-theme`); `themes.css` holds both
+  palettes and remaps the site tokens so the nav, hero, buttons, contents nav and prototype frame
+  flip with the article. It follows the operating system (live, if it changes), falling back to
+  dark if the browser doesn't expose a setting; the switch in the nav overrides that for the
+  current visit only. An inline script at the top of the page (`components/theme/theme.js`) sets the
+  attribute before anything paints, so there is no flash, and the attribute only exists while this
+  page is open. Containers grow to 1600px on wide screens (`hero.css`); the rest of the site stays
+  at 1400px.
+  - **Hero** (`hero.css`): entrance is CSS keyframes; lead facts (role, company, product) show and
+    scope/team/timeline collapse (`HeroFacts`); the moving gradient is the site's shader in dark
+    and a CSS wash in light (`HeroBackdrop`). "Read the 2-minute version" (`Story.js`, content in `storySteps.js`, styles in
+    `story.css`) opens a full-screen, step-by-step story — edit `storySteps.js` when the copy
+    changes.
+  - **Article** (`sections.js`, structure in `article.css`): seven sections animated on scroll
+    (they zoom in and settle, then zoom out and dim), with a faded numeral, no card behind them,
+    and colours from tokens only. Body blocks that exist only here live in `components/placement/`
+    with styles in `blocks.css`: `Shots` (screenshots as same-size tiles that zoom in a lightbox,
+    plus animated sequences), `Peek` (an expandable that fades out below its first lines) and `Num`
+    (a green figure that counts up inside a sentence). `ScrollProgress` draws the reading progress
+    line along the top.
+  - The prototype is embedded in an iframe (`products/placement-hub`, synced into
+    `public/case-studies/placement-hub/` — see "Rebuilding the Placement Hub prototype" below)
+- `.claude/skills/case-study-redesign/` — a Claude Code skill that applies the Placement Hub case study's
+  design (structure, spacing, animation, contrast, hero, 2-minute story, image treatments, dark/light
+  theme, responsive behaviour) to another case study, with a browser verification script. Ask Claude to
+  "apply the case study redesign to <page>"; keep its `references/` in step with the code.
 - `app/case-study-novatr-lms/page.js`, `app/case-study-hapramp/page.js` —
   placeholder case study pages, marked "in progress"
 - `components/` — shared Nav, Footer, Reveal (scroll-in animation),

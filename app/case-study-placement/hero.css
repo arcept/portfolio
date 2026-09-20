@@ -1,0 +1,353 @@
+/* Placement Hub case study — the page frame and the hero.
+
+   Contents: page width · scroll progress · hero layout and hierarchy · entrance animation.
+
+   The hero's entrance is plain CSS keyframes rather than scroll-triggered motion: the hero is on
+   screen the moment the page loads, so its pieces assemble on first paint, in order, with no wait
+   for hydration. Each piece carries a delay in --d (seconds); the headline is split into words that
+   rise out of a mask, the way the section headings do further down.                              */
+
+/* ------------------------------------------------------------------ Page width */
+
+/* The site's containers top out at 1400px. This page lets them grow to 1600px so the article's
+   three columns (margin, text, contents nav) have room; it changes nothing below ~1650px. */
+.ph-page .wrap--wide,
+.ph-page .site-nav__inner {
+  max-width: 1600px;
+}
+
+.ph-page .proto-frame-wrap {
+  max-width: 1720px;
+}
+
+/* The note under the prototype is a full-width caption for the frame, not a narrow column: about
+   70% of the frame, so it reads in two lines. (The site default caps it at 46ch.) */
+.ph-page .proto-note {
+  max-width: 72%;
+}
+
+@media (max-width: 899px) {
+  .ph-page .proto-note {
+    max-width: none;
+  }
+}
+
+/* ------------------------------------------------------------- Scroll progress */
+
+.ph-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 60;
+  height: 2px;
+  background: var(--article-green);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------- Layout */
+
+.ph-hero {
+  --ph-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 900px) {
+  /* The text side gets ~60%: the headline and the facts need the room, the cover image doesn't. */
+  .ph-hero .cs-header-grid {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    gap: 72px;
+  }
+}
+
+.ph-hero__fade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, transparent 60%, var(--void) 100%);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------- Hierarchy
+   Four tiers, each quieter than the last:
+     1. the eyebrow and the headline — what this is;
+     2. the intro and the lead facts (role first) — why it matters and who did it;
+     3. the collapsed detail (scope, team, timeline) — for whoever wants it;
+     4. the actions: one outlined, one plain text.                                          */
+
+.ph-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--article-green);
+}
+
+.ph-eyebrow__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.ph-h1 {
+  margin: 0 0 20px;
+  color: var(--paper);
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 600;
+  line-height: 110%;
+  letter-spacing: -0.42px;
+  /* Three even lines on desktop. The site's default headline is capped at 24ch, which is what used
+     to strand "learners" on a fourth line. */
+  text-wrap: balance;
+}
+
+.ph-lede {
+  max-width: 62ch;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--mist);
+}
+
+.ph-facts {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--graphite);
+}
+
+.ph-facts dl {
+  margin: 0;
+}
+
+.ph-facts dt {
+  margin-bottom: 6px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.ph-facts dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--mist);
+}
+
+.ph-facts__lead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 24px 32px;
+}
+
+.ph-facts__lead .is-strong dd {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--paper);
+}
+
+.ph-facts__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 510;
+  color: var(--fog);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.ph-facts__toggle:hover,
+.ph-facts__toggle.is-open {
+  color: var(--paper);
+}
+
+.ph-facts__toggle:focus-visible {
+  outline: 2px solid var(--article-green);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.ph-facts__icon {
+  position: relative;
+  width: 12px;
+  height: 12px;
+}
+
+.ph-facts__icon i {
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 12px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 0.45s var(--ph-ease);
+}
+
+.ph-facts__icon i:last-child {
+  transform: rotate(90deg);
+}
+
+.ph-facts__toggle.is-open .ph-facts__icon i:last-child {
+  transform: rotate(0deg);
+}
+
+.ph-facts__more {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 24px 32px;
+  padding-top: 24px;
+}
+
+.ph-facts__more dd {
+  font-size: 14px;
+  color: var(--fog);
+}
+
+@media (max-width: 640px) {
+  .ph-facts__lead,
+  .ph-facts__more {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+}
+
+/* The light theme's backdrop: soft blue and green light that drifts slowly (see HeroBackdrop.js). */
+.ph-wash {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.ph-wash::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(42% 52% at 78% 28%, rgb(90 130 255 / 0.34), transparent 70%),
+    radial-gradient(38% 48% at 18% 12%, rgb(40 190 110 / 0.2), transparent 70%),
+    radial-gradient(48% 44% at 52% 92%, rgb(90 130 255 / 0.16), transparent 70%);
+  animation: ph-drift 24s ease-in-out infinite alternate;
+}
+
+@keyframes ph-drift {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(3%, 2%, 0) scale(1.08);
+  }
+}
+
+/* ------------------------------------------------------------------- Entrance */
+
+@keyframes ph-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes ph-word {
+  from {
+    transform: translateY(112%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes ph-cover {
+  from {
+    opacity: 0;
+    transform: translateY(44px) scale(1.04);
+    clip-path: inset(8% 8% 8% 8% round 20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0 round 12px);
+  }
+}
+
+@keyframes ph-glow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ph-hero__bg {
+  animation: ph-glow 1.8s var(--ph-ease) both;
+}
+
+.ph-rise {
+  animation: ph-rise 0.9s var(--ph-ease) both;
+  animation-delay: calc(var(--d, 0) * 1s);
+}
+
+.ph-cover {
+  animation: ph-cover 1.2s var(--ph-ease) both;
+  animation-delay: 0.35s;
+}
+
+/* Headline: every word slides up out of its own mask. */
+.ph-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.ph-word > span {
+  display: inline-block;
+  animation: ph-word 0.85s var(--ph-ease) both;
+  animation-delay: calc(0.15s + var(--i) * 0.045s);
+}
+
+/* The lead facts arrive one after another. */
+.ph-facts__lead > div {
+  animation: ph-rise 0.8s var(--ph-ease) both;
+  animation-delay: 0.7s;
+}
+
+.ph-facts__lead > div:nth-child(2) {
+  animation-delay: 0.78s;
+}
+
+.ph-facts__lead > div:nth-child(3) {
+  animation-delay: 0.86s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-hero__bg,
+  .ph-wash::before,
+  .ph-rise,
+  .ph-cover,
+  .ph-word > span,
+  .ph-facts__lead > div {
+    animation: none;
+  }
+}

@@ -110,7 +110,7 @@ a {
 }
 
 .site-nav.is-scrolled {
-  background: rgba(8, 9, 10, 0.8);
+  background: color-mix(in srgb, var(--void) 80%, transparent);
   backdrop-filter: blur(8px);
   border-bottom-color: var(--graphite);
 }
@@ -1720,7 +1720,7 @@ button:focus-visible {
   position: sticky;
   top: var(--site-nav-h);
   z-index: 5;
-  background: rgba(8, 9, 10, 0.9);
+  background: color-mix(in srgb, var(--void) 90%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--graphite);
   /* 8px all round, per Figma's "Nav" frame (node 652:15320) — items space
@@ -2323,28 +2323,6 @@ footer a:hover {
   }
 }
 
-/* The hero's snapshot has six long-form rows (team, scope) — two columns instead of the
-   auto-fit strip the shorter OMS metadata uses. */
-.meta-strip--stacked {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  row-gap: 20px;
-}
-
-.meta-strip--stacked dd {
-  font-size: 15px;
-  line-height: 22px;
-}
-
-.meta-strip--stacked .is-wide {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 560px) {
-  .meta-strip--stacked {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 /* Homepage card cover that holds a real image rather than the "cover art pending" text. */
 .card__cover--image {
   align-items: flex-start;
@@ -2366,8 +2344,8 @@ footer a:hover {
   object-position: top left;
 }
 
-/* Theme switch on the dark case-study page: flips to the light version. Same anatomy as the
-   light page's .lx-switch (see components/theme/ThemeSwitch.js), styled from the site tokens. */
+/* Theme switch on the Placement Hub case study (see components/theme/ThemeSwitch.js). Its state is
+   read from <html data-cs-theme>, so it is right on the first paint: knob to the right in dark. */
 .cs-switch {
   position: relative;
   flex: none;
@@ -2414,9 +2392,10 @@ footer a:hover {
   height: 22px;
   border-radius: 50%;
   background: var(--paper);
+  transform: translateX(26px);
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.cs-switch[aria-checked='true'] .cs-switch__knob {
-  transform: translateX(26px);
+html[data-cs-theme='light'] .cs-switch__knob {
+  transform: none;
 }

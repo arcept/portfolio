@@ -2,28 +2,26 @@
 
 import { Children, isValidElement, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react';
-import { Count, EASE, MaskText, Reveal, useReduce } from './LxMotion';
+import { Count, EASE, MaskText, Reveal, useReduce } from './Motion';
 
 /* ---------------------------------------------------------------- Section */
 
-// One numbered section, drawn as a raised panel. It rises and settles as it enters (scrubbed to
-// scroll, not timed), then dims slightly as it leaves the top — so the page reads as a stack of
-// layers you move through rather than one long sheet. Every direct child of the body is wrapped
-// in a scroll-in reveal unless it animates itself.
-//
-// The four `enter*` / `exit*` props tune how pronounced that is; the defaults are the light page's.
-export function Section({ id, number, eyebrow, category, questions, artifacts, heading, enterRise = 64, enterScale = 0.972, exitScale = 1, exitOpacity = 0.4, children }) {
+// One numbered section. It rises and settles as it enters (scrubbed to scroll, not timed), then
+// zooms back and dims as it leaves the top — so the page reads as layers you move through rather
+// than one long sheet. Every direct child of the body is wrapped in a scroll-in reveal unless it
+// animates itself.
+export function Section({ id, number, eyebrow, category, questions, artifacts, heading, children }) {
   const ref = useRef(null);
   const reduce = useReduce();
 
   const { scrollYProgress: enter } = useScroll({ target: ref, offset: ['start end', 'start 0.55'] });
   const { scrollYProgress: exit } = useScroll({ target: ref, offset: ['end 0.55', 'end 0.05'] });
-  const rise = useTransform(enter, [0, 1], [enterRise, 0]);
-  const settle = useTransform(enter, [0, 1], [enterScale, 1]);
-  const shrink = useTransform(exit, [0, 1], [1, exitScale]);
+  const rise = useTransform(enter, [0, 1], [96, 0]);
+  const settle = useTransform(enter, [0, 1], [0.94, 1]);
+  const shrink = useTransform(exit, [0, 1], [1, 0.965]);
   const scale = useTransform([settle, shrink], ([a, b]) => a * b);
   const fadeIn = useTransform(enter, [0, 0.7], [0, 1]);
-  const fadeOut = useTransform(exit, [0, 1], [1, exitOpacity]);
+  const fadeOut = useTransform(exit, [0, 1], [1, 0.35]);
   const opacity = useTransform([fadeIn, fadeOut], ([a, b]) => a * b);
 
   const { scrollYProgress: drift } = useScroll({ target: ref, offset: ['start end', 'end start'] });
@@ -42,7 +40,7 @@ export function Section({ id, number, eyebrow, category, questions, artifacts, h
       </div>
       {artifacts && (
         <div className="lx-margin__group">
-          <p className="lx-margin__label">Artifacts</p>
+          <p className="lx-margin__label">Deliverables</p>
           <p className="lx-margin__artifacts">{artifacts}</p>
         </div>
       )}
@@ -72,7 +70,7 @@ export function Section({ id, number, eyebrow, category, questions, artifacts, h
             <MaskText text={heading} className="lx-h2" />
           </header>
 
-          <Disclosure summary="Discipline, questions and artifacts" className="lx-disclosure--mobile-only">
+          <Disclosure summary={`Discipline, questions and deliverables`} className="lx-disclosure--mobile-only">
             {margin}
           </Disclosure>
 
@@ -271,73 +269,5 @@ export function Placeholder({ children }) {
       <span className="lx-ph__tag">Visual placeholder</span>
       <span>{children}</span>
     </div>
-  );
-}
-
-const CLIP_HIDDEN = { opacity: 0, scale: 1.05, clipPath: 'inset(7% 7% 7% 7% round 22px)' };
-const CLIP_SHOWN = { opacity: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0% round 16px)' };
-
-// A real screenshot: the frame opens up to the full image as it scrolls in.
-export function Figure({ src, alt, width, height, caption, narrow = false }) {
-  const reduce = useReduce();
-  return (
-    <figure className={`lx-fig${narrow ? ' lx-fig--narrow' : ''}`}>
-      <motion.img
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        loading="lazy"
-        initial={reduce ? false : CLIP_HIDDEN}
-        whileInView={CLIP_SHOWN}
-        viewport={{ once: true, margin: '0px 0px -12% 0px' }}
-        transition={{ duration: 1, ease: EASE }}
-      />
-      <Reveal delay={0.15} y={10} blur={0}>
-        <figcaption className="lx-fig__caption">{caption}</figcaption>
-      </Reveal>
-    </figure>
-  );
-}
-Figure.lxSelfReveal = true;
-
-export function Tiles({ children }) {
-  const reduce = useReduce();
-  return (
-    <motion.div
-      className="lx-tiles"
-      initial={reduce ? false : 'hidden'}
-      whileInView="show"
-      viewport={{ once: true, margin: '0px 0px -12% 0px' }}
-      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.14 } } }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-Tiles.lxSelfReveal = true;
-
-const TILE = {
-  hidden: { opacity: 0, y: 30, scale: 0.97 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: EASE } },
-};
-
-export function Tile({ src, alt, width, height, caption }) {
-  return (
-    <motion.figure className="lx-tile" variants={TILE}>
-      <img src={src} alt={alt} width={width} height={height} loading="lazy" />
-      <figcaption className="lx-fig__caption">{caption}</figcaption>
-    </motion.figure>
-  );
-}
-
-export function TilePlaceholder({ children }) {
-  return (
-    <motion.div className="lx-tile lx-tile--wide" variants={TILE}>
-      <div className="lx-ph">
-        <span className="lx-ph__tag">Visual placeholder</span>
-        <span>{children}</span>
-      </div>
-    </motion.div>
   );
 }

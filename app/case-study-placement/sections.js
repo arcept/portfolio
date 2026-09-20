@@ -1,9 +1,11 @@
-import { Quote, Statement } from '@/components/light/LxMotion';
-import { BigStat, Disclosure, Figure, Note, Placeholder, Section as BaseSection, Stats, Table, Tile, TilePlaceholder, Tiles } from '@/components/light/LxBlocks';
+import { Quote, Statement } from '@/components/placement/Motion';
+import { BigStat, Note, Placeholder, Section, Stats, Table } from '@/components/placement/Blocks';
+import { Gallery, Sequence } from '@/components/placement/Shots';
+import Num from '@/components/placement/Num';
+import Peek from '@/components/placement/Peek';
 
-// The seven sections of the Placement Hub case study, as animated cards. On this page the cards
-// zoom in and settle harder as they arrive, and zoom back out and dim as they leave.
-const Section = (props) => <BaseSection enterRise={96} enterScale={0.94} exitScale={0.965} exitOpacity={0.35} {...props} />;
+// The seven sections of the Placement Hub case study, animated on scroll: each zooms in and settles as
+// it arrives, and zooms back out and dims as it leaves.
 
 const bad = (v) => ({ v, tone: 'bad' });
 const good = (v) => ({ v, tone: 'good' });
@@ -25,10 +27,10 @@ export default function PlacementSections() {
         <p>
           A learner finishing a Novatr course had already bought placement support. It was part
           of the course promise. What they actually encountered was a Slack channel, an email
-          thread, and a Google Form sent thirty days before graduation.
+          thread, and a Google Form sent <Num to={30} /> days before graduation.
         </p>
         <p>
-          They could express interest. After that, the process disappeared. A learner had no way
+          They could express interest. After that, <strong>the process disappeared.</strong> A learner had no way
           to see:
         </p>
         <ul className="lx-list">
@@ -42,7 +44,7 @@ export default function PlacementSections() {
 
       <div>
         <p>
-          Every one of those is answerable. None of them was being answered. The work of the
+          <strong>Every one of those is answerable. None of them was being answered.</strong> The work of the
           placement team was real and continuous, and almost none of it was legible to the person
           it was being done for.
         </p>
@@ -79,7 +81,7 @@ export default function PlacementSections() {
       <div>
         <p>
           Novatr measured customer satisfaction at every stage of the learner journey. The data
-          made the placement stage an unambiguous priority, while later reflection showed us
+          made the placement stage <strong>an unambiguous priority</strong>, while later reflection showed us
           where quantitative evidence alone was insufficient.
         </p>
       </div>
@@ -99,8 +101,8 @@ export default function PlacementSections() {
 
       <div>
         <p>
-          Net Promoter Score told the same story by segment, and it fell the further a learner
-          travelled.
+          Net Promoter Score told the same story by segment, and it <strong>fell the further a learner
+          travelled.</strong>
         </p>
       </div>
 
@@ -160,14 +162,14 @@ export default function PlacementSections() {
         <p>
           Five learner types came out of discovery, and they turned out to be the system’s real
           structure rather than a presentation device. The one that reframed the brief:{' '}
-          <strong>30% of all placements were self-placed</strong> — learners who found jobs
+          <strong><Num to={30} suffix="%" /> of all placements were self-placed</strong> — learners who found jobs
           themselves, largely invisible to the company and unacknowledged by the product.
         </p>
       </div>
 
       <BigStat value={30} suffix="%" label="of all placements were self-placed — largely invisible to the company and unacknowledged by the product" />
 
-      <Disclosure summary="The five learner types">
+      <Peek label="The five learner types" more="Show all five">
         <ul className="lx-list">
           <li>
             <strong>To-be graduates</strong> — still learning; may or may not become eligible.
@@ -190,7 +192,7 @@ export default function PlacementSections() {
           These five became the placement standings in the shipped system almost unchanged, which
           is why the state model later has the shape it does.
         </p>
-      </Disclosure>
+      </Peek>
 
       <Placeholder>Research synthesis, learner segments, and baseline metrics</Placeholder>
     </Section>
@@ -264,8 +266,8 @@ export default function PlacementSections() {
 
       <div>
         <p>
-          The argument I made was not that the gate should be softer. It was that a gate the
-          learner cannot see is the thing generating the complaint.
+          The argument I made was not that the gate should be softer. It was that <strong>a gate the
+          learner cannot see is the thing generating the complaint.</strong>
         </p>
       </div>
 
@@ -300,7 +302,7 @@ export default function PlacementSections() {
         </p>
       </div>
 
-      <Disclosure summary="What the operations tool could and could not do">
+      <Peek label="What the operations tool could and could not do">
         <p>
           Retool is organised by company and by opening. A learner exists in it only as an
           applicant row beneath a job, which means there was no view answering{' '}
@@ -311,7 +313,7 @@ export default function PlacementSections() {
           That gap is the strongest argument for the internal tool that was always meant to
           follow, and it is the first thing I would put in it.
         </p>
-      </Disclosure>
+      </Peek>
 
       <Placeholder>
         Decision framework or workshop showing learner, business, and operational constraints
@@ -369,8 +371,8 @@ export default function PlacementSections() {
           apply independently in later work.
         </p>
         <p>
-          This was Sanya’s first systems-heavy end-to-end project. By its conclusion, she could
-          model complex product states independently — a capability that stayed with the team
+          This was Sanya’s first systems-heavy end-to-end project. By its conclusion, <strong>she could
+          model complex product states independently</strong> — a capability that stayed with the team
           beyond this release.
         </p>
       </div>
@@ -399,7 +401,7 @@ export default function PlacementSections() {
       </div>
 
       <Placeholder>
-        Design review or critique artifact showing the state-model question applied to real work
+        Design review or critique example showing the state-model question applied to real work
       </Placeholder>
     </Section>
 
@@ -449,7 +451,7 @@ export default function PlacementSections() {
           <strong>3. Relevant opportunities.</strong> Openings grouped by relevance with counts,
           so a learner can see how much of the board is genuinely for them. Location is a{' '}
           <em>soft</em> criterion: a job outside a stated preference is not hidden and not blocked
-          — the learner is told and decides. With fourteen recorded cases of learners accepting
+          — the learner is told and decides. With <Num to={14} /> recorded cases of learners accepting
           offers and then declining over location, hiding those roles would have been the easy
           answer and the wrong one.
         </p>
@@ -460,27 +462,42 @@ export default function PlacementSections() {
         </p>
       </div>
 
-      <Figure
-        src="/case-studies/placement-hub/body/jobs-board.png"
-        alt="The jobs board: tabs for All Jobs, Featured, Relevant with a count, and Expired, then job cards showing company, role, degree and experience checks, location, and time left to apply."
-        width={1504}
-        height={1280}
-        caption="The jobs board. Openings are grouped by relevance with a count, and every card shows the degree and experience checks, the location and how long is left to apply."
-      />
-      <Figure
-        src="/case-studies/placement-hub/body/job-detail.png"
-        alt="A job description: company and role, the learner's degree and experience match, a deadline banner with an Apply Now button, then About the Job and Role Accountabilities."
-        width={1504}
-        height={1280}
-        caption="A job description. The match against the requirements comes first, then one clear next action."
-      />
-      <Figure
-        narrow
-        src="/case-studies/placement-hub/body/application-tracker.png"
-        alt="Application tracker titled Your Journey with AECOM Architects, listing Applied, Profile Shared and Profile Shortlisted as reached, then Selected for interview, Offer Received and Offer Accepted still to come."
-        width={880}
-        height={812}
-        caption="The application tracker. Each stage an application has reached is marked, and what comes next stays visible."
+      <Sequence
+        wide
+        items={[
+          {
+            src: '/case-studies/placement-hub/body/jobs-board.png',
+            alt: 'The jobs board: tabs for All Jobs, Featured, Relevant with a count, and Expired, then job cards showing company, role, degree and experience checks, location, and time left to apply.',
+            width: 1504,
+            height: 1280,
+            label: 'Find an opening',
+            caption: 'Openings are grouped by relevance with a count, and every card shows the degree and experience checks, the location and how long is left to apply.',
+          },
+          {
+            src: '/case-studies/placement-hub/body/job-detail.png',
+            alt: "A job description: company and role, the learner's degree and experience match, a deadline banner with an Apply Now button, then About the Job and Role Accountabilities.",
+            width: 1504,
+            height: 1280,
+            label: 'Check the match, then apply',
+            caption: 'The match against the requirements comes first, then one clear next action.',
+          },
+          {
+            src: '/case-studies/placement-hub/body/application-tracker.png',
+            alt: 'Application tracker titled Your Journey with AECOM Architects, listing Applied, Profile Shared and Profile Shortlisted as reached, then Selected for interview, Offer Received and Offer Accepted still to come.',
+            width: 880,
+            height: 812,
+            label: 'Follow the application',
+            caption: 'Each stage an application has reached is marked, and what comes next stays visible.',
+          },
+          {
+            src: '/case-studies/placement-hub/body/ending-placed.png',
+            alt: "Confirmation after accepting an offer: an illustration, the message 'Congratulations, you've accepted the offer from AECOM Architects', and a five-star Rate Experience control.",
+            width: 1120,
+            height: 856,
+            label: 'Accept the offer',
+            caption: 'Accept, confirm, celebrate, then rate the experience.',
+          },
+        ]}
       />
 
       <div>
@@ -492,7 +509,7 @@ export default function PlacementSections() {
         </p>
         <p>
           <strong>Self-placed.</strong> “Share your job news with us” — company, designation,
-          location. Small, and aimed at the 30% of outcomes that were previously invisible to the
+          location. Small, and aimed at the <Num to={30} suffix="%" /> of outcomes that were previously invisible to the
           company and unacknowledged for the learner.
         </p>
         <p>
@@ -509,23 +526,26 @@ export default function PlacementSections() {
         </p>
       </div>
 
-      <Tiles>
-        <Tile
-          src="/case-studies/placement-hub/body/ending-placed.png"
-          alt="Confirmation after accepting an offer: an illustration, the message 'Congratulations, you've accepted the offer from AECOM Architects', and a five-star Rate Experience control."
-          width={1120}
-          height={856}
-          caption="Placed. Accept, confirm, celebrate, then rate the experience."
-        />
-        <Tile
-          src="/case-studies/placement-hub/body/ending-self-placed.png"
-          alt="A card reading 'Got placed with your own hard work?' with a link, 'Share your triumphs with us', over a celebratory illustration."
-          width={880}
-          height={816}
-          caption="Self-placed. “Got placed with your own hard work?” invites the learner to share their news."
-        />
-        <TilePlaceholder>Not placed — the closing-window page</TilePlaceholder>
-      </Tiles>
+      <Gallery
+        columns={3}
+        items={[
+          {
+            src: '/case-studies/placement-hub/body/ending-placed.png',
+            alt: "Confirmation after accepting an offer: an illustration, the message 'Congratulations, you've accepted the offer from AECOM Architects', and a five-star Rate Experience control.",
+            width: 1120,
+            height: 856,
+            caption: 'Placed. Accept, confirm, celebrate, then rate the experience.',
+          },
+          {
+            src: '/case-studies/placement-hub/body/ending-self-placed.png',
+            alt: "A card reading 'Got placed with your own hard work?' with a link, 'Share your triumphs with us', over a celebratory illustration.",
+            width: 880,
+            height: 816,
+            caption: 'Self-placed. “Got placed with your own hard work?” invites the learner to share their news.',
+          },
+          { placeholder: 'Not placed — the closing-window page', caption: 'Not placed. The search is closing, and the learner is asked what could have been better.' },
+        ]}
+      />
 
       <div>
         <p className="lx-subheading">The system underneath</p>
@@ -536,7 +556,7 @@ export default function PlacementSections() {
         </p>
       </div>
 
-      <Disclosure summary="The state model in full">
+      <Peek label="The state model in full" more="Show all six inputs">
         <p>What a learner should see resolved from six inputs:</p>
         <ul className="lx-list">
           <li>
@@ -566,38 +586,44 @@ export default function PlacementSections() {
           Each was specified as a definition rather than a screen behaviour, so the same
           vocabulary could carry into the operations tool and, later, a partner-facing product.
         </p>
-      </Disclosure>
+      </Peek>
 
-      <Tiles>
-        <Tile
-          src="/case-studies/placement-hub/body/state-relevant.png"
-          alt="Job screen for a relevant opening: degree and experience matched, a green banner counting down the deadline, and an Apply Now button."
-          width={880}
-          height={1120}
-          caption="Relevant, open to apply. Eligibility matched and a deadline counting down."
-        />
-        <Tile
-          src="/case-studies/placement-hub/body/state-not-match.png"
-          alt="Job screen for a role that is not a match: the degree is marked as not matching, and a Share concern button replaces Apply Now."
-          width={880}
-          height={1120}
-          caption="Not a match. The unmet requirement is marked, and the learner can raise a concern."
-        />
-        <Tile
-          src="/case-studies/placement-hub/body/state-expired.png"
-          alt="Job screen for an expired opening: a 'No longer accepting applications' banner and a disabled Apply Now button."
-          width={880}
-          height={1120}
-          caption="Expired. Applications are closed and the action is disabled."
-        />
-        <Tile
-          src="/case-studies/placement-hub/body/state-applied.png"
-          alt="Job screen for an application in process: an In Process status badge and a message saying the application is being reviewed."
-          width={880}
-          height={1120}
-          caption="Applied, in process. The status is stated and the apply action is replaced by what is happening."
-        />
-      </Tiles>
+      <Sequence
+        items={[
+          {
+            src: '/case-studies/placement-hub/body/state-relevant.png',
+            alt: 'Job screen for a relevant opening: degree and experience matched, a green banner counting down the deadline, and an Apply Now button.',
+            width: 880,
+            height: 1120,
+            label: 'Relevant, open to apply',
+            caption: 'Eligibility matched and a deadline counting down.',
+          },
+          {
+            src: '/case-studies/placement-hub/body/state-not-match.png',
+            alt: 'Job screen for a role that is not a match: the degree is marked as not matching, and a Share concern button replaces Apply Now.',
+            width: 880,
+            height: 1120,
+            label: 'Not a match',
+            caption: 'The unmet requirement is marked, and the learner can raise a concern.',
+          },
+          {
+            src: '/case-studies/placement-hub/body/state-expired.png',
+            alt: "Job screen for an expired opening: a 'No longer accepting applications' banner and a disabled Apply Now button.",
+            width: 880,
+            height: 1120,
+            label: 'Expired',
+            caption: 'Applications are closed and the action is disabled.',
+          },
+          {
+            src: '/case-studies/placement-hub/body/state-applied.png',
+            alt: 'Job screen for an application in process: an In Process status badge and a message saying the application is being reviewed.',
+            width: 880,
+            height: 1120,
+            label: 'Applied, in process',
+            caption: 'The status is stated, and the apply action is replaced by what is happening.',
+          },
+        ]}
+      />
 
       <div>
         <p>
@@ -625,9 +651,9 @@ export default function PlacementSections() {
           next product on top of it.
         </p>
         <p>
-          Sixty-three screen states, each annotated with the condition that produces it. Around
-          forty-five components with developer notes. Five journey boards mapping flow to screen
-          from learn mode through to graduation, six state boards covering every surface, and a
+          <Num to={63} /> screen states, each annotated with the condition that produces it. Around{' '}
+          <Num to={45} /> components with developer notes. <Num to={5} /> journey boards mapping flow to screen
+          from learn mode through to graduation, <Num to={6} /> state boards covering every surface, and a
           full parallel mobile set with its own component library — all built on Novatr’s existing
           LMS design system rather than a new one.
         </p>
@@ -648,7 +674,7 @@ export default function PlacementSections() {
         ]}
       />
 
-      <Disclosure summary="What was in the handover">
+      <Peek label="What was in the handover">
         <ul className="lx-list">
           <li>
             <strong>63</strong> annotated screen states
@@ -666,7 +692,7 @@ export default function PlacementSections() {
           <li>Full parallel mobile set and component library</li>
           <li>Extended from the existing LMS design system</li>
         </ul>
-      </Disclosure>
+      </Peek>
 
       <Placeholder>
         Annotated handover board at full zoom-out, and the component library with developer notes
@@ -718,7 +744,7 @@ export default function PlacementSections() {
         </p></Note>
 
       <div>
-        <p>One claim this case study does not make: that the portal increased the number of jobs available.</p>
+        <p>One claim this case study does not make: <strong>that the portal increased the number of jobs available.</strong></p>
       </div>
 
       <Quote>The portal made opportunity supply visible and made gaps measurable; expanding the

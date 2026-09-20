@@ -32,7 +32,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} ${figtree.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} ${figtree.variable}`}>
       <body suppressHydrationWarning>{children}</body>
     </html>
   );

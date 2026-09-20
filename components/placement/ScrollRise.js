@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { useReduce } from '@/components/light/LxMotion';
+import { useReduce } from '@/components/placement/Motion';
 
 // Wraps a whole block (used for the prototype embed) so it rises, zooms in and fades up as it
 // scrolls into view — scrubbed to scroll position, like the section cards below it.

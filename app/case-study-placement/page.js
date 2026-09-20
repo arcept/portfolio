@@ -2,17 +2,21 @@ import localFont from 'next/font/local';
 import { Newsreader } from 'next/font/google';
 import Nav from '@/components/Nav';
 import ThemeSwitch from '@/components/theme/ThemeSwitch';
-import { LIGHT_PAGE, themeGateScript } from '@/components/theme/theme';
+import { themeGateScript } from '@/components/theme/theme';
 import Footer from '@/components/Footer';
-import Reveal from '@/components/Reveal';
-import MetaStrip from '@/components/MetaStrip';
 import PrototypeEmbed from '@/components/PrototypeEmbed';
 import CaseStudyNav from '@/components/CaseStudyNav';
+import HeroBackdrop from '@/components/placement/HeroBackdrop';
+import HeroFacts from '@/components/placement/HeroFacts';
+import ScrollProgress from '@/components/placement/ScrollProgress';
 import ScrollRise from '@/components/placement/ScrollRise';
+import StoryLauncher from '@/components/placement/Story';
 import PlacementSections from './sections';
-import '../case-study-placement-light/light.css';
-import './dark.css';
-import VelarisBackground from '@/components/VelarisBackground';
+import './article.css';
+import './themes.css';
+import './blocks.css';
+import './hero.css';
+import './story.css';
 
 const neueAlteGrotesk = localFont({
   src: '../fonts/NeueAlteGrotesk-SemiBold.ttf',
@@ -37,6 +41,8 @@ export const metadata = {
     'Learners bought placement support but experienced it as a black box. I led the design direction for a learner portal and reusable placement system that made progress, eligibility, opportunities, and next steps visible.',
 };
 
+const HEADLINE = 'Making India’s biggest AEC education platform’s placement process visible to learners';
+
 const sections = [
   { id: 'problem', label: 'The problem' },
   { id: 'evidence', label: 'Evidence' },
@@ -49,84 +55,79 @@ const sections = [
 
 export default function CaseStudyPlacement() {
   return (
-    <>
-      {/* Sends light-theme visitors to the light version before anything paints (see theme.js). */}
-      <script dangerouslySetInnerHTML={{ __html: themeGateScript('dark', LIGHT_PAGE) }} />
-      <Nav actions={<ThemeSwitch page="dark" siblingHref={LIGHT_PAGE} variant="cs" />} />
+    <div className="ph-page">
+      {/* Puts the theme on <html> before anything paints (see theme.js). */}
+      <script dangerouslySetInnerHTML={{ __html: themeGateScript() }} />
+      <ScrollProgress />
+      <Nav actions={<ThemeSwitch />} />
 
-      <header className="cs-hero">
-        <VelarisBackground colors={['#3b82f6', '#2563eb', '#0A1A4F', '#08090A']} bg="#08090A" />
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 1,
-            background: 'linear-gradient(180deg, rgba(10, 26, 79, 0) 60%, #08090A 100%)',
-            pointerEvents: 'none',
-          }}
-        />
+      <header className="cs-hero ph-hero">
+        <div className="ph-hero__bg">
+          <HeroBackdrop />
+        </div>
+        <div className="ph-hero__fade" aria-hidden="true" />
         <div className="wrap wrap--wide" style={{ position: 'relative', zIndex: 2 }}>
-          <div className="breadcrumb" style={{ marginBottom: '32px' }}>
+          <div className="breadcrumb ph-rise" style={{ marginBottom: '32px', '--d': 0.05 }}>
             <a href="/">← Back to all work</a>
           </div>
 
           <div className="cs-header-grid">
-            <Reveal>
-              <p className="text-caption text-fog" style={{ marginBottom: '16px' }}>
+            <div>
+              <p className="ph-eyebrow ph-rise" style={{ '--d': 0.1 }}>
+                <span className="ph-eyebrow__dot" aria-hidden="true" />
                 Case study · Product design leadership
               </p>
-              <h1
-                className={neueAlteGrotesk.className}
-                style={{
-                  color: '#fff',
-                  fontSize: 'clamp(30px, 4.2vw, 42px)',
-                  fontWeight: 600,
-                  lineHeight: '110%',
-                  letterSpacing: '-0.42px',
-                  marginBottom: '16px',
-                  maxWidth: '24ch',
-                }}
-              >
-                Making India’s biggest AEC education platform’s placement process visible to learners
+              <h1 className={`ph-h1 ${neueAlteGrotesk.className}`} aria-label={HEADLINE}>
+                {HEADLINE.split(' ').map((word, i) => (
+                  <span key={i} aria-hidden="true">
+                    <span className="ph-word">
+                      <span style={{ '--i': i }}>{word}</span>
+                    </span>{' '}
+                  </span>
+                ))}
               </h1>
-              <p className="text-body text-mist" style={{ maxWidth: '720px' }}>
+              <p className="ph-lede ph-rise" style={{ '--d': 0.45 }}>
                 Learners bought placement support but experienced it as a black box. I led the design
                 direction for a learner portal and reusable placement system that made progress,
                 eligibility, opportunities, and next steps visible.
               </p>
 
-              <MetaStrip
-                className="meta-strip--stacked"
-                items={[
-                  { label: 'Company', value: 'Novatr, an AEC education company' },
-                  { label: 'Product', value: 'Placement Portal' },
-                  { label: 'Role', value: 'Product Design Manager / Design Lead' },
-                  { label: 'Timeline', value: 'Approximately three months to launch' },
-                  {
-                    label: 'Team',
-                    value:
-                      'Manik Madaan, Product Design Manager · Sanya, Product Designer · Swati, Product Manager · placement operations and engineering',
-                    wide: true,
-                  },
-                  {
-                    label: 'Scope',
-                    value:
-                      'Learner portal, Retool workflow adaptations for operations, and reusable status and data foundations for future internal and hiring-partner products',
-                    wide: true,
-                  },
-                ]}
-              />
+              <div className="ph-rise" style={{ '--d': 0.6 }}>
+                <HeroFacts
+                  moreLabel="Scope, team and timeline"
+                  lead={[
+                    { label: 'Role', value: 'Product Design Manager / Design Lead', strong: true },
+                    { label: 'Company', value: 'Novatr, an AEC education company' },
+                    { label: 'Product', value: 'Placement Portal' },
+                  ]}
+                  more={[
+                    {
+                      label: 'Scope',
+                      value:
+                        'Learner portal, Retool workflow adaptations for operations, and reusable status and data foundations for future internal and hiring-partner products',
+                    },
+                    {
+                      label: 'Team',
+                      value:
+                        'Manik Madaan, Product Design Manager · Sanya, Product Designer · Swati, Product Manager · placement operations and engineering',
+                    },
+                    { label: 'Timeline', value: 'Approximately three months to launch' },
+                  ]}
+                />
+              </div>
 
-              <div className="hero-actions" style={{ marginTop: '24px' }}>
+              <div className="hero-actions ph-rise" style={{ marginTop: '32px', '--d': 0.85 }}>
                 <a href="#prototype" className="btn btn--rainbow-outline">
                   Try the prototype ↓
                 </a>
+                <StoryLauncher className="btn btn--tertiary btn--rainbow-text" fontClass={`${neueAlteGrotesk.variable} ${serif.variable}`}>
+                  Read the 2-minute version
+                </StoryLauncher>
               </div>
-            </Reveal>
+            </div>
 
-            <Reveal delay={0.08}>
-              <div className="cs-hero-cover cs-hero-frame">
+            <div>
+              <div className="cs-hero-cover cs-hero-frame ph-cover">
                 <img
                   src="/case-studies/placement-hub/body/hero-home-updates.png"
                   alt="Placement Hub home with the updates panel open, listing application updates and new opportunities, above the eligibility and interest-form banners."
@@ -134,7 +135,7 @@ export default function CaseStudyPlacement() {
                   height={1000}
                 />
               </div>
-            </Reveal>
+            </div>
           </div>
         </div>
       </header>
@@ -182,6 +183,6 @@ export default function CaseStudyPlacement() {
       </div>
 
       <Footer />
-    </>
+    </div>
   );
 }
