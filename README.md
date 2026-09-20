@@ -9,37 +9,36 @@ statically exported and deployed to GitHub Pages behind the custom domain
 - `app/page.js` — homepage: hero, selected work (5 cards), about
 - `app/case-study-cro/page.js` — the Novatr CRO/data-informed redesign case
   study, with an interactive traffic-vs-conversion chart
-- `app/case-study-oms/page.js` — the Novatr OMS v3.0 rebuild case study:
-  six-section long-form write-up, sticky scroll-spy TOC, and the live
-  prototype (see below) embedded in an iframe
+- `app/case-study-oms/page.js` — the Novatr OMS v3.0 rebuild case study: nine numbered sections
+  (`sections.js`) on the shared case study kit (below), with the live prototype embedded in an iframe,
+  live component embeds inside the article (`OMSComponentEmbed`), and the decision stepper. Its own
+  styles are in `oms.css`; the "2-minute version" is `OmsStory.js`.
 - `app/case-study-placement/page.js` — the Novatr Placement Hub case study ("Making Placement
-  Visible"). One page, two themes: dark is the design and light is the same page with its tokens
-  swapped. The theme is an attribute on `<html>` (`data-cs-theme`); `themes.css` holds both
-  palettes and remaps the site tokens so the nav, hero, buttons, contents nav and prototype frame
-  flip with the article. It follows the operating system (live, if it changes), falling back to
-  dark if the browser doesn't expose a setting; the switch in the nav overrides that for the
-  current visit only. An inline script at the top of the page (`components/theme/theme.js`) sets the
-  attribute before anything paints, so there is no flash, and the attribute only exists while this
-  page is open. Containers grow to 1600px on wide screens (`hero.css`); the rest of the site stays
-  at 1400px.
-  - **Hero** (`hero.css`): entrance is CSS keyframes; lead facts (role, company, product) show and
-    scope/team/timeline collapse (`HeroFacts`); the moving gradient is the site's shader in dark
-    and a CSS wash in light (`HeroBackdrop`). "Read the 2-minute version" (`Story.js`, content in `storySteps.js`, styles in
-    `story.css`) opens a full-screen, step-by-step story — edit `storySteps.js` when the copy
-    changes.
-  - **Article** (`sections.js`, structure in `article.css`): seven sections animated on scroll
-    (they zoom in and settle, then zoom out and dim), with a faded numeral, no card behind them,
-    and colours from tokens only. Body blocks that exist only here live in `components/placement/`
-    with styles in `blocks.css`: `Shots` (screenshots as same-size tiles that zoom in a lightbox,
-    plus animated sequences), `Peek` (an expandable that fades out below its first lines) and `Num`
-    (a green figure that counts up inside a sentence). `ScrollProgress` draws the reading progress
-    line along the top.
-  - The prototype is embedded in an iframe (`products/placement-hub`, synced into
-    `public/case-studies/placement-hub/` — see "Rebuilding the Placement Hub prototype" below)
-- `.claude/skills/case-study-redesign/` — a Claude Code skill that applies the Placement Hub case study's
-  design (structure, spacing, animation, contrast, hero, 2-minute story, image treatments, dark/light
-  theme, responsive behaviour) to another case study, with a browser verification script. Ask Claude to
-  "apply the case study redesign to <page>"; keep its `references/` in step with the code.
+  Visible"): seven sections (`sections.js`), the 2-minute version (`PlacementStory.js`), and the
+  Placement Hub prototype in an iframe (`products/placement-hub`, synced into
+  `public/case-studies/placement-hub/` — see "Rebuilding the Placement Hub prototype" below).
+- **The case study kit** — `app/case-study-kit/` (styles) and `components/case-study-kit/` (components),
+  shared by OMS and Placement Hub; new case studies are moved onto it with the
+  `.claude/skills/case-study-redesign` skill. It gives a page:
+  - **One page, two themes**: dark is the design and light is the same page with its tokens swapped.
+    The theme is an attribute on `<html>` (`data-cs-theme`); `themes.css` holds both palettes and remaps
+    the site tokens so the nav, hero, buttons, contents nav and prototype frame flip with the article.
+    It follows the operating system (live), falling back to dark; the switch in the nav overrides that
+    for the current visit only. An inline script (`components/theme/theme.js`) sets the attribute
+    before anything paints, and the attribute only exists while a kit page is open. Containers grow to
+    1600px on wide screens; the rest of the site stays at 1400px.
+  - **Hero** (`hero.css`): CSS-keyframe entrance, lead facts with the rest collapsed (`HeroFacts`), the
+    site's shader in dark and a CSS wash in light (`HeroBackdrop`, per-page colours set on `.ph-page`),
+    a reading-progress line (`ScrollProgress`), and "Read the 2-minute version" (`Story.js`, a
+    full-screen step-by-step story; each page supplies its steps, `StoryVisuals.js` the shared visuals).
+  - **Article** (`article.css`, `Blocks.js`): numbered sections animated on scroll, faded numerals, no
+    card behind them, colours from tokens only; tables, notes, stats, columns and live embeds. Images
+    are same-size tiles that zoom in a lightbox, or animated sequences (`Shots.js`); `Peek` is an
+    expandable that fades out below its first lines; `Num` is a figure that counts up inside a sentence.
+- `.claude/skills/case-study-redesign/` — a Claude Code skill that moves a case study onto the kit
+  (structure, spacing, animation, contrast, hero, 2-minute story, image treatments, dark/light theme,
+  responsive behaviour), with a browser verification script. Ask Claude to "apply the case study
+  redesign to <page>"; keep its `references/` in step with the kit.
 - `app/case-study-novatr-lms/page.js`, `app/case-study-hapramp/page.js` —
   placeholder case study pages, marked "in progress"
 - `components/` — shared Nav, Footer, Reveal (scroll-in animation),

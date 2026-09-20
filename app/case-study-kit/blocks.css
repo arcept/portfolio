@@ -153,6 +153,20 @@
   transition: transform 0.5s var(--ease), border-color 0.3s ease, box-shadow 0.5s var(--ease);
 }
 
+.px-tile__frame.is-natural {
+  aspect-ratio: auto;
+}
+
+.px-tile__frame.is-contain {
+  background: var(--s2);
+}
+
+.px-tile__frame.is-contain img {
+  object-fit: contain;
+  object-position: center;
+  padding: 10px;
+}
+
 .px-tile__frame img {
   position: absolute;
   inset: 0;
@@ -226,6 +240,18 @@
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.pcs .px-gallery__caption {
+  margin: 18px 0 0;
+  max-width: 68ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--t3);
+}
+
+.pcs .px-gallery__caption strong {
+  color: var(--t1);
 }
 
 .px-tile__caption {

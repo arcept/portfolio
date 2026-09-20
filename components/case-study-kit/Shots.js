@@ -123,7 +123,15 @@ const TILE_STILL = { hidden: TILE.hidden, show: { ...TILE.show, transition: { du
 // Every screenshot is a tile with the same shape — the frame crops to the top of the screen — set
 // side by side in a grid; clicking one opens it full size. An item with `placeholder` in place of
 // `src` holds a tile's place until its image exists.
-export function Gallery({ items, columns = 3 }) {
+//
+// `fit` says how an image sits in its frame:
+//   'cover'   (default) fills the 5:4 frame, cropped to the top — right for full-screen screenshots;
+//   'contain' shows the whole image inside the 5:4 frame — right for cropped UI panels;
+//   'natural' makes the frame the image's own shape — right for wide diagrams and strips, which a 5:4
+//             frame would crop or shrink to a sliver.
+// An item can override the gallery's `fit`. `caption` is one caption under the whole gallery (use it
+// when a set of images is explained together); `maxWidth` keeps a lone image from filling the column.
+export function Gallery({ items, columns = 3, fit = 'cover', caption, maxWidth }) {
   const reduce = useReduce();
   const [open, setOpen] = useState(null);
 
@@ -131,7 +139,7 @@ export function Gallery({ items, columns = 3 }) {
   const zoomIndex = (item) => zoomable.indexOf(item);
 
   return (
-    <div className="px-gallery" style={{ '--cols': columns }}>
+    <div className="px-gallery" style={{ '--cols': columns, ...(maxWidth ? { maxWidth } : {}) }}>
       <motion.div
         className="px-gallery__track"
         initial={reduce ? false : 'hidden'}
@@ -139,25 +147,35 @@ export function Gallery({ items, columns = 3 }) {
         viewport={{ once: true, margin: '0px 0px -12% 0px' }}
         variants={{ hidden: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.12 } } }}
       >
-        {items.map((item) => (
-          <motion.figure key={item.src ?? item.placeholder} className="px-tile" variants={reduce ? TILE_STILL : TILE}>
-            {item.src ? (
-              <button type="button" className="px-tile__frame" onClick={() => setOpen(zoomIndex(item))} aria-label={`Enlarge: ${item.alt}`}>
-                <img src={item.src} alt="" width={item.width} height={item.height} loading="lazy" />
-                <span className="px-tile__zoom">
-                  <ZoomIcon />
-                </span>
-              </button>
-            ) : (
-              <div className="px-tile__frame px-tile__frame--empty">
-                <span className="px-tile__tag">Visual placeholder</span>
-                <span>{item.placeholder}</span>
-              </div>
-            )}
-            {item.caption && <figcaption className="px-tile__caption">{item.caption}</figcaption>}
-          </motion.figure>
-        ))}
+        {items.map((item) => {
+          const mode = item.fit ?? fit;
+          return (
+            <motion.figure key={item.src ?? item.placeholder} className="px-tile" variants={reduce ? TILE_STILL : TILE}>
+              {item.src ? (
+                <button
+                  type="button"
+                  className={`px-tile__frame is-${mode}`}
+                  style={mode === 'natural' ? { aspectRatio: `${item.width} / ${item.height}` } : undefined}
+                  onClick={() => setOpen(zoomIndex(item))}
+                  aria-label={`Enlarge: ${item.alt}`}
+                >
+                  <img src={item.src} alt="" width={item.width} height={item.height} loading="lazy" />
+                  <span className="px-tile__zoom">
+                    <ZoomIcon />
+                  </span>
+                </button>
+              ) : (
+                <div className="px-tile__frame px-tile__frame--empty">
+                  <span className="px-tile__tag">Visual placeholder</span>
+                  <span>{item.placeholder}</span>
+                </div>
+              )}
+              {item.caption && <figcaption className="px-tile__caption">{item.caption}</figcaption>}
+            </motion.figure>
+          );
+        })}
       </motion.div>
+      {caption && <p className="px-gallery__caption">{caption}</p>}
       <Lightbox items={zoomable} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
     </div>
   );

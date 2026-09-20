@@ -130,15 +130,14 @@ export function CycleVisual({ images, width = 880, height = 1120, interval = 220
   );
 }
 
-// A 2×2 grid of counting figures. stats: [{ value, prefix?, suffix?, decimals?, label }]
+// A 2×2 grid of counting figures. stats: [{ value, prefix?, suffix?, decimals?, label }] — or `text`
+// in place of `value` for a figure that isn't a plain number (e.g. "4 → 3 days").
 export function StatsVisual({ stats }) {
   return (
     <motion.div className="st-vis st-stats" variants={list} initial="hidden" animate="show">
-      {stats.map(({ value, prefix, suffix, decimals, label }) => (
+      {stats.map(({ value, text, prefix, suffix, decimals, label }) => (
         <motion.div key={label} variants={item}>
-          <span className="st-stats__num">
-            <Count to={value} prefix={prefix} suffix={suffix} decimals={decimals} duration={1.4} />
-          </span>
+          <span className="st-stats__num">{text ?? <Count to={value} prefix={prefix} suffix={suffix} decimals={decimals} duration={1.4} />}</span>
           <span className="st-stats__label">{label}</span>
         </motion.div>
       ))}

@@ -595,13 +595,19 @@ ol.lx-list li {
 
 .lx-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+  gap: 28px 24px;
 }
 
 @media (max-width: 700px) {
   .lx-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(min(var(--cols, 4), 2), minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .lx-stats {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -625,6 +631,102 @@ ol.lx-list li {
   font-size: 13px;
   line-height: 1.45;
   color: var(--t3);
+}
+
+.lx-stat__trend {
+  margin-right: 0.18em;
+  font-size: 0.6em;
+  color: var(--good);
+}
+
+.lx-body .lx-stat__desc {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--t2);
+}
+
+/* Parallel points, side by side, divided by hairlines (Columns in Blocks.js). */
+.lx-cols {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  border-top: 1px solid var(--line-2);
+}
+
+.lx-col {
+  padding: 20px 28px 4px 0;
+}
+
+.lx-col + .lx-col {
+  padding-left: 28px;
+  border-left: 1px solid var(--line);
+}
+
+.lx-body .lx-col__label {
+  margin: 0 0 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.lx-body .lx-col__title {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--t1);
+}
+
+.lx-body .lx-col__desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--t3);
+}
+
+@media (max-width: 899px) {
+  .lx-cols {
+    grid-template-columns: minmax(0, 1fr);
+    border-top: 0;
+  }
+
+  .lx-col,
+  .lx-col + .lx-col {
+    padding: 20px 0;
+    border-left: 0;
+    border-top: 1px solid var(--line-2);
+  }
+}
+
+/* A live embed with a caption (Embed in Blocks.js). */
+.lx-embed {
+  margin: 0;
+}
+
+.lx-embed__frame {
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  background: var(--s2);
+}
+
+.lx-embed__caption {
+  margin: 12px 0 0;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--t3);
+}
+
+.lx-embed__caption strong {
+  color: var(--t1);
+}
+
+/* A button placed inside prose keeps its own look, not the link underline. */
+.lx-body a.btn {
+  text-decoration: none;
 }
 
 .lx-bigstat {

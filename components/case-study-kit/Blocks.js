@@ -223,29 +223,75 @@ export function Note({ label, tone, children }) {
   );
 }
 
-// items: [{ value, prefix?, suffix?, decimals?, label }]
-export function Stats({ items }) {
+// items: [{ value, prefix?, suffix?, decimals?, label, desc?, trend?, text? }]
+// `value` counts up; `text` shows a figure that isn't a plain number (e.g. "4 → 3 days") as it is;
+// `trend="down"` puts a green arrow before it (down is good); `desc` is a quiet line under the label.
+// `columns` is how many sit across (default 4; use 2 when the figures are long).
+export function Stats({ items, columns = 4 }) {
   const reduce = useReduce();
   return (
     <motion.div
       className="lx-stats"
+      style={{ '--cols': columns }}
       initial={reduce ? false : 'hidden'}
       whileInView="show"
       viewport={{ once: true, margin: '0px 0px -12% 0px' }}
       variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
     >
-      {items.map(({ label, ...count }) => (
+      {items.map(({ label, desc, text, trend, ...count }) => (
         <motion.div key={label} className="lx-stat" variants={{ hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } } }}>
           <p className="lx-stat__value">
-            <Count to={count.value} prefix={count.prefix} suffix={count.suffix} decimals={count.decimals} />
+            {trend === 'down' && (
+              <span className="lx-stat__trend" aria-label="down">
+                ↓
+              </span>
+            )}
+            {text ?? <Count to={count.value} prefix={count.prefix} suffix={count.suffix} decimals={count.decimals} />}
           </p>
           <p className="lx-stat__label">{label}</p>
+          {desc && <p className="lx-stat__desc">{desc}</p>}
         </motion.div>
       ))}
     </motion.div>
   );
 }
 Stats.lxSelfReveal = true;
+
+// A row of short, parallel points — a label, a one-line statement, a sentence of explanation —
+// separated by hairlines, with no boxes. items: [{ label, title, desc }]
+export function Columns({ items }) {
+  const reduce = useReduce();
+  return (
+    <motion.div
+      className="lx-cols"
+      style={{ '--cols': items.length }}
+      initial={reduce ? false : 'hidden'}
+      whileInView="show"
+      viewport={{ once: true, margin: '0px 0px -12% 0px' }}
+      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}
+    >
+      {items.map(({ label, title, desc }) => (
+        <motion.div key={label} className="lx-col" variants={{ hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } } }}>
+          <p className="lx-col__label">{label}</p>
+          <p className="lx-col__title">{title}</p>
+          <p className="lx-col__desc">{desc}</p>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
+Columns.lxSelfReveal = true;
+
+// A live, non-image thing (an iframe of a prototype, a chart) shown with a caption. The frame is
+// only a hairline and a radius so it reads as a device on either theme; the child brings its own size.
+export function Embed({ children, caption }) {
+  return (
+    <figure className="lx-embed">
+      <div className="lx-embed__frame">{children}</div>
+      {caption && <figcaption className="lx-embed__caption">{caption}</figcaption>}
+    </figure>
+  );
+}
 
 export function BigStat({ value, suffix = '%', label }) {
   return (

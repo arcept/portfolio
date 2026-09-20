@@ -90,7 +90,7 @@ html[data-cs-theme='light'] .btn--primary {
 }
 
 html[data-cs-theme='light'] .cs-hero {
-  background: linear-gradient(180deg, color-mix(in srgb, #7ba0ff 24%, var(--void)) 0%, var(--void) 100%), var(--void);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ph-wash-a, #7ba0ff) 24%, var(--void)) 0%, var(--void) 100%), var(--void);
 }
 
 html[data-cs-theme='light'] .cs-hero-frame {

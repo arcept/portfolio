@@ -105,6 +105,14 @@
   text-wrap: balance;
 }
 
+.ph-sub {
+  max-width: 62ch;
+  margin: 0 0 14px;
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--fog);
+}
+
 .ph-lede {
   max-width: 62ch;
   margin: 0;
@@ -236,10 +244,11 @@
   content: '';
   position: absolute;
   inset: -20%;
+  /* --ph-wash-a / --ph-wash-b are set per case study on .ph-page; these are Placement Hub's. */
   background:
-    radial-gradient(42% 52% at 78% 28%, rgb(90 130 255 / 0.34), transparent 70%),
-    radial-gradient(38% 48% at 18% 12%, rgb(40 190 110 / 0.2), transparent 70%),
-    radial-gradient(48% 44% at 52% 92%, rgb(90 130 255 / 0.16), transparent 70%);
+    radial-gradient(42% 52% at 78% 28%, color-mix(in srgb, var(--ph-wash-a, #5a82ff) 34%, transparent), transparent 70%),
+    radial-gradient(38% 48% at 18% 12%, color-mix(in srgb, var(--ph-wash-b, #28be6e) 20%, transparent), transparent 70%),
+    radial-gradient(48% 44% at 52% 92%, color-mix(in srgb, var(--ph-wash-a, #5a82ff) 16%, transparent), transparent 70%);
   animation: ph-drift 24s ease-in-out infinite alternate;
 }
 
