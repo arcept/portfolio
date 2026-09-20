@@ -11,6 +11,12 @@ import HeroFacts from '@/components/case-study-kit/HeroFacts';
 import ScrollProgress from '@/components/case-study-kit/ScrollProgress';
 import ScrollRise from '@/components/case-study-kit/ScrollRise';
 import PlacementStory from './PlacementStory';
+import NarrationProvider from '@/components/narration/NarrationProvider';
+import { NarrationTrigger, NarrationUIProvider } from '@/components/narration/NarrationUI';
+import { NarrationMiniBar, NarrationPanel } from '@/components/narration/NarrationDock';
+import NarrationPlayer from '@/components/narration/NarrationPlayer';
+import '../../components/narration/narration.css';
+import narration from '../../public/case-studies/placement-hub/narration/narration.json';
 import PlacementSections from './sections';
 import '../case-study-kit/article.css';
 import '../case-study-kit/themes.css';
@@ -53,8 +59,14 @@ const sections = [
   { id: 'launch', label: 'Launch and measurement' },
 ];
 
+// `version` is recorded by docs/narration/narrate.py when new audio is aligned: it changes the URLs, so a new
+// render is never served from a cache alongside the old one.
+const NARRATION_SRC = `/case-studies/placement-hub/narration/narration.json${narration.version ? `?v=${narration.version}` : ''}`;
+
 export default function CaseStudyPlacement() {
   return (
+    <NarrationProvider src={NARRATION_SRC}>
+    <NarrationUIProvider>
     <div className="ph-page">
       {/* Puts the theme on <html> before anything paints (see theme.js). */}
       <script dangerouslySetInnerHTML={{ __html: themeGateScript() }} />
@@ -123,6 +135,7 @@ export default function CaseStudyPlacement() {
                 <PlacementStory className="btn btn--tertiary btn--rainbow-text" fontClass={`${neueAlteGrotesk.variable} ${serif.variable}`}>
                   Read the 2-minute version
                 </PlacementStory>
+                <NarrationTrigger className="btn btn--tertiary btn--rainbow-text" duration={narration.duration} />
               </div>
             </div>
 
@@ -184,5 +197,13 @@ export default function CaseStudyPlacement() {
 
       <Footer />
     </div>
+
+    {/* The narration: a slide-over (sheet on phones) and, once playback has started and it is closed, a mini bar. */}
+    <NarrationPanel>
+      <NarrationPlayer narration={narration} fontClass={serif.variable} />
+    </NarrationPanel>
+    <NarrationMiniBar />
+    </NarrationUIProvider>
+    </NarrationProvider>
   );
 }

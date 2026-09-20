@@ -9,8 +9,8 @@ import { Count, EASE, MaskText, Reveal, useReduce } from './Motion';
 // One numbered section. It rises and settles as it enters (scrubbed to scroll, not timed), then
 // zooms back and dims as it leaves the top — so the page reads as layers you move through rather
 // than one long sheet. Every direct child of the body is wrapped in a scroll-in reveal unless it
-// animates itself.
-export function Section({ id, number, eyebrow, category, questions, artifacts, heading, children }) {
+// animates itself. `headerAction` is an optional node shown under the heading (e.g. a "Listen to this part" button).
+export function Section({ id, number, eyebrow, category, questions, artifacts, heading, headerAction, children }) {
   const ref = useRef(null);
   const reduce = useReduce();
 
@@ -68,6 +68,7 @@ export function Section({ id, number, eyebrow, category, questions, artifacts, h
               {eyebrow}
             </p>
             <MaskText text={heading} className="lx-h2" />
+            {headerAction}
           </header>
 
           <Disclosure summary={`Discipline, questions and deliverables`} className="lx-disclosure--mobile-only">

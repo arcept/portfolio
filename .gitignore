@@ -6,3 +6,10 @@ dist
 *.log
 docs/planning/
 docs/Claude outputs/
+
+# Narration tooling: the local Python environment and cached model/alignment output
+docs/narration/.venv/
+docs/narration/incoming/
+docs/narration/.cache/
+docs/narration/for-elevenlabs*.txt
+docs/narration/__pycache__/

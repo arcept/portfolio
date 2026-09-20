@@ -9,7 +9,13 @@
     "build:oms-rebuild": "npm --prefix products/oms run build && node scripts/sync-oms-rebuild.js",
     "build:placement-hub": "npm --prefix products/placement-hub run build && node scripts/sync-placement-hub.js",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:narration": "node --test \"components/narration/*.test.mjs\"",
+    "test:narration:tools": "python3 -m unittest discover -s docs/narration -p \"test_*.py\"",
+    "validate:narration": "node scripts/validate-narration.mjs",
+    "narration:script": "python3 docs/narration/narrate.py script",
+    "narration:align": "docs/narration/.venv/bin/python docs/narration/narrate.py align",
+    "narration:publish": "python3 docs/narration/narrate.py publish"
   },
   "dependencies": {
     "motion": "^13.1.1",

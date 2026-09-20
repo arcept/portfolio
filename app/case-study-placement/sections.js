@@ -3,6 +3,7 @@ import { BigStat, Note, Placeholder, Section, Stats, Table } from '@/components/
 import { Gallery, Sequence } from '@/components/case-study-kit/Shots';
 import Num from '@/components/case-study-kit/Num';
 import Peek from '@/components/case-study-kit/Peek';
+import ListenToSection from '@/components/narration/ListenToSection';
 
 // The seven sections of the Placement Hub case study, animated on scroll: each zooms in and settles as
 // it arrives, and zooms back out and dims as it leaves.
@@ -16,6 +17,7 @@ export default function PlacementSections() {
     {/* ---------- 01 The problem ---------- */}
     <Section
       id="problem"
+      headerAction={<ListenToSection id="problem" />}
       number="01"
       eyebrow="The problem"
       category="Discovery · stakeholder interviews · process mapping"
@@ -68,6 +70,7 @@ export default function PlacementSections() {
     {/* ---------- 02 Evidence ---------- */}
     <Section
       id="evidence"
+      headerAction={<ListenToSection id="evidence" />}
       number="02"
       eyebrow="Evidence"
       category="Quantitative analysis · segmentation · metric definition"
@@ -200,6 +203,7 @@ export default function PlacementSections() {
     {/* ---------- 03 Reframing ---------- */}
     <Section
       id="reframing"
+      headerAction={<ListenToSection id="reframing" />}
       number="03"
       eyebrow="Reframing"
       category="Problem framing · systems design · scope strategy"
@@ -323,6 +327,7 @@ export default function PlacementSections() {
     {/* ---------- 04 Leadership ---------- */}
     <Section
       id="leadership"
+      headerAction={<ListenToSection id="leadership" />}
       number="04"
       eyebrow="Leadership"
       category="Design management · coaching · stakeholder alignment"
@@ -408,6 +413,7 @@ export default function PlacementSections() {
     {/* ---------- 05 The product ---------- */}
     <Section
       id="product"
+      headerAction={<ListenToSection id="product" />}
       number="05"
       eyebrow="The product"
       category="Interaction design · content design · state modelling"
@@ -638,6 +644,7 @@ export default function PlacementSections() {
     {/* ---------- 06 Handover ---------- */}
     <Section
       id="handover"
+      headerAction={<ListenToSection id="handover" />}
       number="06"
       eyebrow="Handover"
       category="Design systems · documentation · engineering handover"
@@ -702,6 +709,7 @@ export default function PlacementSections() {
     {/* ---------- 07 Launch and measurement ---------- */}
     <Section
       id="launch"
+      headerAction={<ListenToSection id="launch" />}
       number="07"
       eyebrow="Launch and measurement"
       category="Measurement design · outcome analysis · retrospective"
