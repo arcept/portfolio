@@ -274,7 +274,10 @@ const seen = (r, tail) => r.some((u) => u.split('?')[0].endsWith(tail));
   await page.goto(PAGE, { waitUntil: 'load' });
   const v = await page.evaluate(() => { const d = document.getElementById('nr-dock'); const r = d.getBoundingClientRect(); const cs = getComputedStyle(d); return { position: cs.position, visible: cs.visibility, w: Math.round(r.width) }; });
   const text = await page.locator('.nr-panel').innerText();
-  ok('JS off: the transcript is laid out as a plain section, readable', v.position === 'static' && v.visible === 'visible' && text.includes('None of them was being answered.'), JSON.stringify(v));
+  // the closing sentence of the narration, read from the published data, so the check survives a new script
+  const data = await (await fetch(`${ORIGIN}/case-studies/placement-hub/narration/narration.json`)).json();
+  const lastParagraph = data.chapters.at(-1).paragraphs.at(-1).sentences.at(-1).words.map((w) => w.t).join(' ');
+  ok('JS off: the transcript is laid out as a plain section, readable', v.position === 'static' && v.visible === 'visible' && text.replace(/\s+/g, ' ').includes(lastParagraph), JSON.stringify(v));
   ok('JS off: "Go to section" links work as ordinary anchors', (await page.locator('.nr-goto').count()) === 7);
   await shot(page, 'js-off');
   await ctx.close();

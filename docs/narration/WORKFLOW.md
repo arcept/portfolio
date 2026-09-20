@@ -76,8 +76,14 @@ Practical notes:
 ## 3. Align, check, publish
 
 ```
-npm run narration:align -- ~/Downloads/your-export.mp3 --voice "Adam"
+npm run narration:align -- ~/Downloads/your-export.mp3 --srt ~/Downloads/your-export.srt --voice "Adam"
 ```
+
+**Also export the subtitles (SRT) from ElevenLabs and pass them with `--srt`.** They tell the aligner roughly where each
+few seconds of speech is, so every short clip is timed on its own and a slip can't carry further than that clip. Without
+them the whole recording is timed in one go, which can put a sentence several seconds out; the report flags that, but
+`--srt` prevents it. (Sentence times differ from the SRT by up to about a second, since ElevenLabs' cue edges are only
+approximate; that is normal.) Skip the AAF export: it is for video editors and carries no word timing.
 
 (Add `--engine elevenlabs` if `script.md` doesn't say; `--compress` shrinks the file to mono 64 kbps, about half the
 size; `--model medium.en` is slower and sharper; `--fast` skips the listening pass.) It takes about a minute and:

@@ -128,6 +128,38 @@ class MappingTests(unittest.TestCase):
         self.assertEqual(times[2][2], 0.0)
 
 
+SRT = """1
+00:00:00,000 --> 00:00:02,972
+Hello — thanks for taking a look at
+Placement Hub.
+
+2
+00:00:03,005 --> 00:00:07,435
+At Novater, <i>learners</i> had support.
+"""
+
+
+class SubtitleTests(unittest.TestCase):
+    def test_parse_srt(self):
+        cues = L.parse_srt(SRT)
+        self.assertEqual(cues[0], (0.0, 2.972, "Hello — thanks for taking a look at Placement Hub."))
+        self.assertEqual(cues[1], (3.005, 7.435, "At Novater, learners had support."))
+
+    def test_parse_webvtt(self):
+        cues = L.parse_srt("WEBVTT\n\n00:00:01.500 --> 00:00:02.000 align:start\nHi there\n")
+        self.assertEqual(cues, [(1.5, 2.0, "Hi there")])
+
+    def test_cues_line_up_with_the_script_word_for_word(self):
+        words = "Hello — thanks for taking a look at Placement Hub. At Novatr, learners had support.".split()
+        spans = L.assign_cues(words, L.parse_srt(SRT))
+        self.assertEqual(spans, [(0, 10), (10, 15)])  # Novatr / Novater is a same-length change
+
+    def test_a_cue_that_is_not_in_the_script_is_skipped_and_ranges_stay_in_order(self):
+        words = "one two three four".split()
+        cues = [(0, 1, "one two"), (1, 2, "extra words here"), (2, 3, "three four")]
+        self.assertEqual(L.assign_cues(words, cues), [(0, 2), None, (2, 4)])
+
+
 class ShapeTests(unittest.TestCase):
     def setUp(self):
         self.script = L.parse_markdown_script(MD)

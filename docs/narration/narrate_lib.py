@@ -224,6 +224,57 @@ def map_words_to_script(script_ws, heard):
     return times
 
 
+def _srt_seconds(stamp):
+    hours, minutes, rest = stamp.strip().split(":")
+    return int(hours) * 3600 + int(minutes) * 60 + float(rest.replace(",", "."))
+
+
+def parse_srt(text):
+    """[(start, end, text)] from a subtitle file (SRT, or the near-identical WebVTT), in seconds. Tags are dropped."""
+    cues = []
+    for block in re.split(r"\r?\n\s*\r?\n", text.strip()):
+        lines = block.splitlines()
+        arrow = next((i for i, line in enumerate(lines) if "-->" in line), None)
+        if arrow is None:
+            continue
+        start, end = lines[arrow].split("-->")
+        body = re.sub(r"<[^>]+>", "", " ".join(line.strip() for line in lines[arrow + 1:] if line.strip()))
+        if body:
+            cues.append((_srt_seconds(start), _srt_seconds(end.split()[0]), body))
+    return cues
+
+
+def assign_cues(script_ws, cues):
+    """Which script words each subtitle cue covers: a list, one entry per cue, of (first, last + 1) or None.
+
+    The subtitles are generated from the same text as the script, so they line up word for word, except where
+    the text was spelled differently for the voice (Novatr / Novater): a same-length change still lines up.
+    The ranges never overlap and always run in order.
+    """
+    cue_words, owner = [], []
+    for ci, (_, _, text) in enumerate(cues):
+        for word in text.split():
+            cue_words.append(word)
+            owner.append(ci)
+    a = [normalise(w) for w in script_ws]
+    b = [normalise(w) for w in cue_words]
+    spans = [None] * len(cues)
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=a, b=b, autojunk=False).get_opcodes():
+        if tag == "equal" or (tag == "replace" and i2 - i1 == j2 - j1):
+            for k in range(i2 - i1):
+                ci = owner[j1 + k]
+                lo, hi = spans[ci] or (i1 + k, i1 + k)
+                spans[ci] = (min(lo, i1 + k), max(hi, i1 + k + 1))
+    floor = 0
+    for ci, span in enumerate(spans):
+        if span is None:
+            continue
+        lo, hi = max(span[0], floor), span[1]
+        spans[ci] = (lo, hi) if hi > lo else None
+        floor = max(floor, hi)
+    return spans
+
+
 def shape_timings(units, times):
     """Per-word (start, end, prob) -> per-sentence {"start","end","words":[(s,e)...],"probs":[...]} that follow
     narration.json's rules. `times` is one entry per script word, in the same order as the units' words.

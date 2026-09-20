@@ -23,6 +23,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -117,6 +118,36 @@ def cmd_script(args):
 
 # ----------------------------------------------------------------------------- align
 
+def align_by_cues(model, audio, words, cues, duration, slack=1.0, context=3):
+    """Time the script one subtitle cue at a time.
+
+    The cues (from ElevenLabs' own subtitle export) say roughly where each few seconds of speech is, so each cue's
+    short clip is aligned on its own. A slip by the aligner then cannot carry further than that clip, which is
+    what happens when a whole recording is aligned in one go. The cues are only approximate at their edges (a
+    word can be spoken a moment before the cue that holds it starts), so each clip has `slack` seconds either
+    side and `context` neighbouring words of script; only the cue's own words are kept.
+    Returns (word, start, end, probability) in order.
+    """
+    spans = L.assign_cues(words, cues)
+    heard = []
+    with tempfile.TemporaryDirectory() as tmp:
+        for ci, (start, end, _) in enumerate(cues):
+            if spans[ci] is None:
+                continue
+            lo, hi = spans[ci]
+            c_lo, c_hi = max(0, lo - context), min(len(words), hi + context)
+            t0, t1 = max(0.0, start - slack), min(duration, end + slack)
+            clip = Path(tmp) / f"cue{ci}.wav"
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t0:.3f}", "-to", f"{t1:.3f}", "-i", str(audio), "-ac", "1", "-ar", "16000", str(clip)], check=True)
+            result = model.align(str(clip), " ".join(words[c_lo:c_hi]), language="en", verbose=None)
+            got = [(w.word.strip(), w.start, w.end, getattr(w, "probability", 1.0) or 0.0) for seg in result.segments for w in seg.words]
+            timed = L.map_words_to_script(words[c_lo:c_hi], got)
+            for k in range(lo - c_lo, hi - c_lo):
+                ws, we, prob = timed[k]
+                heard.append((words[c_lo + k], t0 + ws, t0 + we, prob))
+    return heard
+
+
 def cmd_align(args):
     try:
         import stable_whisper
@@ -153,8 +184,15 @@ def cmd_align(args):
 
     t0 = time.time()
     print("Aligning your script to the audio…")
-    result = model.align(str(final), " ".join(words), language="en", verbose=None)
-    heard_timed = [(w.word.strip(), w.start, w.end, getattr(w, "probability", 1.0) or 0.0) for seg in result.segments for w in seg.words]
+    if args.srt:
+        cues = L.parse_srt(Path(args.srt).expanduser().read_text(encoding="utf-8"))
+        print(f"Using {len(cues)} subtitle cues from {Path(args.srt).name} to place each few seconds of speech…")
+        heard_timed = align_by_cues(model, final, words, cues, duration)
+    else:
+        # One sentence per line, kept as given: if the aligner cannot place one stretch, it fails that sentence
+        # only, instead of pushing a whole passage into the wrong place.
+        result = model.align(str(final), "\n".join(u["text"] for u in units), language="en", original_split=True, verbose=None)
+        heard_timed = [(w.word.strip(), w.start, w.end, getattr(w, "probability", 1.0) or 0.0) for seg in result.segments for w in seg.words]
     print(f"  done in {time.time() - t0:.0f}s: {len(heard_timed)} timed words for {len(words)} script words")
 
     times = L.map_words_to_script(words, heard_timed)
@@ -254,6 +292,7 @@ def main():
     a.add_argument("--engine", help="names the voice engine in the page's disclosure (default: from script.md, else elevenlabs)")
     a.add_argument("--voice", help="the voice's name, for the record")
     a.add_argument("--model", default="small.en", help="Whisper model: base.en (faster), small.en (default, about 45 s for 4 minutes), medium.en (slower, sharper)")
+    a.add_argument("--srt", help="the subtitle file exported from ElevenLabs (SRT or VTT): places each few seconds of speech, so the timing can't drift")
     a.add_argument("--compress", action="store_true", help="re-encode to mono 64 kbps (about half the size) before aligning")
     a.add_argument("--out", default=str(OUT), help="where to write narration.json and narration.mp3 (default: docs/narration/out)")
     a.add_argument("--fast", action="store_true", help="skip the second pass that checks the voice read your words")

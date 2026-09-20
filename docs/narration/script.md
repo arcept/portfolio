@@ -1,12 +1,9 @@
 ---
 title: Making Placement Visible: the short version
-engine: kokoro
-voice: am_michael
+engine: elevenlabs
+voice: ElevenLabs Studio
 pronounce:
-  ECAT: E-C-A-T
-  Novatr: Nova-ter
-  Retool: Ree-tool
-  Sanya: Sahn-ya
+  Novatr: Novater
 ---
 
 <!--
@@ -21,46 +18,70 @@ pronounce:
 
 ## Intro {id=intro anchor=top}
 
-Learners at Novatr bought placement support, and experienced it as a black box. I led the design direction for the portal that opened it up. Here’s the short version.
+Hello — thanks for taking a look at Placement Hub.
+
+This is the short version of a project that started with one question: if placement support is part of a learner’s course experience, why is it so difficult to see?
+
+At Novatr, learners had placement support. But once they showed interest, the process could become a black box. This is how we made it clearer, more understandable, and more humane.
 
 ## The problem {id=problem}
 
-A learner finishing a Novatr course had already paid for placement help. What they met was a Slack channel, an email thread, and a Google Form. After they expressed interest, the process disappeared. They couldn’t see whether a job matched them, where an application stood, or why they were ineligible. Every one of those had an answer. None of them was being answered.
+A learner could move between a Slack channel, an email thread, and a Google Form. They could raise their hand for placement support—but after that, things often went quiet.
+
+They couldn’t see whether a role matched them, whether their profile had been reviewed, where an application stood, or why they were ineligible.
+
+The placement team was doing real work behind the scenes. The problem was that almost none of it was visible to the learner it was meant to support.
 
 ## Evidence {id=evidence}
 
-Novatr measured satisfaction at every stage of the journey. Acquisition, activation and engagement all sat around eighty. Then completion fell to fifty-five, and placements to fifty-one point five.
+The data made the issue hard to ignore.
 
-Net Promoter Score told the same story. Placed graduates scored fourteen. Graduates who weren’t placed scored minus eighteen. And thirty percent of placements were self-placed: invisible to the company, and unacknowledged by the product.
+Satisfaction held through the learning experience, then dropped sharply when placement support mattered most. And graduates who were not placed reported a much weaker experience than those who were.
+
+We also found that nearly a third of placements were self-placed—outcomes that were largely invisible to the company and unacknowledged by the product.
 
 ## Reframing {id=reframing}
 
-The team asked for a placement page. The evidence described a process with no visible state, so I argued for a system. We boiled the learner’s needs down to four: eligibility, communication, access, and tracking. ECAT.
+The original request was for a placement page. But the research showed that a page alone would not solve it. Learners needed to know whether they were eligible, what had changed, which opportunities were open to them, and what to do next. We grouped those needs into eligibility, communication, access, and tracking.
 
-Then we staged the work. Ship the learner portal. Adapt Retool for operations. And deliberately not build a hiring-partner portal, because partners had told us they wouldn’t use one. Applications kept going out by email, while the records behind them were built so a partner product could sit on top later.
+That framework kept a three-month release focused. We built the learner portal, adapted the operations workflow, and deliberately chose not to build a hiring-partner portal for partners who had told us they preferred their existing process.
 
 ## Leadership {id=leadership}
 
-Sanya owned the detailed product design, on her first major project here. The flows, screens and states are hers. My part was framing, decision principles, and reviews.
+The detailed product design was led by Sanya, our product designer. My role was to set the direction, frame decisions, and support the work through reviews.
 
-In every review I asked one question: what must be true about this learner for this screen to appear, and what must they understand or do next? It turned a pile of screens into a bounded set of conditions. By the end, Sanya could model complex states on her own.
+One question became especially useful: what needs to be true about this learner for this screen to appear—and what do they need to understand or do next?
+
+That shifted the work from a collection of screens to a clear model of conditions and outcomes.
 
 ## The product {id=product}
 
-Every surface answers two questions: where do I stand, and what happens next? The portal has no front door. A learner arrives through one banner on their course page, and it changes with where they are.
+The portal answered two questions: where do I stand, and what happens next?
 
-Eligibility shows the criteria, names the learner’s shortfall, and offers a route to close it. Location is a soft criterion: a job outside your preference isn’t hidden. You’re told, and you decide.
+Learners entered through a banner on their course page. Depending on their situation, it could guide them to check eligibility, complete an interest form, wait for placement to unlock, or explore jobs.
 
-And every journey ends properly. Placed learners celebrate. Self-placed learners can share their news. Learners who aren’t placed get a page that acknowledges the difficulty. And one rule, which exists only as a note on the handover board: nobody loses access while they’re mid-process.
+Eligibility was not just enforced; it was explained. Learners could see why they fell short and what they could do about it.
+
+Roles were grouped by relevance. And where a job was outside someone’s preferred location, we did not hide it. We gave them the context and let them decide.
+
+Applications carried their status—and, when needed, their reason for not moving forward. Every journey also had an ending: celebration for placed learners, recognition for self-placed learners, and a considered closing experience for those who were not placed.
+
+One rule mattered deeply to me: nobody should lose access while they are still mid-process.
 
 ## Handover {id=handover}
 
-The handover served two audiences: the engineers building it, and whoever built next. Sixty-three annotated screen states, about forty-five components, and a full mobile set. But the lasting part was the vocabulary. Status, relevance and eligibility were handed over as system definitions, so future products could adopt them instead of inventing competing versions.
+The handover was built for the engineers shipping the portal, and for whoever built on it later.
+
+It included annotated states, components, mobile designs, and journey maps. But the lasting outcome was the shared vocabulary underneath it all: eligibility, relevance, application status, and placement standing as system concepts—not just labels on screens.
 
 ## Launch, and what I’d change {id=launch}
 
-The portal launched to graduating cohorts after about three months. One claim I won’t make: that it created more jobs. It made supply visible, and the gaps measurable.
+The portal launched to graduating cohorts after roughly three months.
 
-What would I change? Split job evaluation from application tracking. Reconcile the two disqualification rules into one consequence model. Put a rubric behind human decisions that affect access to a paid service. And interview non-placed graduates at the start, because they answered surveys at half the rate of current learners. We heard least from the people we most needed to.
+I would not claim that it created more jobs. What it did was make opportunity supply visible, make gaps measurable, and give learners a clearer sense of where they stood.
 
-The most important outcome was a shared language for a process that used to exist as disconnected human actions.
+Looking back, I would split job evaluation from application tracking, make decision rules more consistent, and involve non-placed graduates earlier.
+
+The biggest lesson I took from Placement Hub is that a system is not just the screens people can see. It is also the rules and human work underneath them.
+
+When those things are invisible, people fill the gaps with uncertainty. When they are clear, people can make better decisions—even when the outcome is not the one they hoped for.
