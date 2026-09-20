@@ -95,8 +95,38 @@ export default function Home() {
             </Card>
           </Reveal>
 
+          <Reveal delay={0.16}>
+            <Card href="/case-study-placement" className="card--featured">
+              <div className="card__cover card__cover--image">
+                <img
+                  src="/case-studies/placement-hub/body/hero-home-updates.png"
+                  alt="Placement Hub home with the updates panel open, above the eligibility and interest-form banners."
+                  width={1440}
+                  height={1000}
+                  loading="lazy"
+                />
+              </div>
+              <StatCounter value={30} suffix="%" label="of placements were self-placed, and invisible to the company" />
+              <div className="card__tags">
+                <span className="tag">Product Design Leadership</span>
+                <span className="tag">Systems Design</span>
+                <span className="tag">Interactive Prototype</span>
+              </div>
+              <h3 className="card__title font-semibold">
+                Making Placement Visible: Designing Novatr&apos;s Placement Hub
+              </h3>
+              <p className="text-body text-fog">
+                Learners bought placement support but experienced it as a black box. I led the design
+                direction for a learner portal and a reusable placement system that made progress,
+                eligibility and next steps visible — with a live, click-through prototype you can try
+                yourself.
+              </p>
+              <span className="card__cta">Read the case study →</span>
+            </Card>
+          </Reveal>
+
           <div className="work-support-grid">
-            <Reveal delay={0.16}>
+            <Reveal delay={0.24}>
               <Card href="/case-study-novatr-lms">
                 <div className="card__cover">Cover art pending</div>
                 <div className="card__tags">
@@ -116,7 +146,7 @@ export default function Home() {
               </Card>
             </Reveal>
 
-            <Reveal delay={0.24}>
+            <Reveal delay={0.32}>
               <Card href="/case-study-novatr-team">
                 <div className="card__cover">Cover art pending</div>
                 <div className="card__tags">

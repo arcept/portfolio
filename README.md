@@ -6,12 +6,30 @@ statically exported and deployed to GitHub Pages behind the custom domain
 
 ## What's here
 
-- `app/page.js` — homepage: hero, selected work (4 cards), about
+- `app/page.js` — homepage: hero, selected work (5 cards), about
 - `app/case-study-cro/page.js` — the Novatr CRO/data-informed redesign case
   study, with an interactive traffic-vs-conversion chart
 - `app/case-study-oms/page.js` — the Novatr OMS v3.0 rebuild case study:
   six-section long-form write-up, sticky scroll-spy TOC, and the live
   prototype (see below) embedded in an iframe
+- `app/case-study-placement/page.js` — the Novatr Placement Hub case study ("Making Placement
+  Visible"), dark version. The hero, prototype embed and contents nav are the site's own; the seven
+  sections (`sections.js`) are animated cards — they zoom in and settle as they arrive, zoom out and
+  dim as they leave, and carry a faded section numeral in the corner. The cards, their scroll
+  animation and their type hierarchy are the light version's components
+  (`components/light/`) and styles (`../case-study-placement-light/light.css`, imported here)
+  with a dark palette from `dark.css` — so `light.css` has to keep being importable. The prototype
+  is embedded in an iframe (`products/placement-hub`, synced into
+  `public/case-studies/placement-hub/` — see "Rebuilding the Placement Hub prototype" below)
+- `app/case-study-placement-light/page.js` — the light version of the Placement Hub case study:
+  layered gray-token surfaces and scroll-driven motion, fully scoped under `.lx` (`light.css`,
+  `components/light/`). Its section content is generated from the dark page's, so copy edits made
+  to `app/case-study-placement/page.js` need re-applying there by hand.
+  **The dark and light pages are one case study with two themes.** Both carry the same switch
+  (`components/theme/`), which flips between them and keeps you in the same section. Which one you
+  land on follows the operating system (live, if it changes), falling back to dark if the browser
+  doesn't expose a setting; a choice made with the switch lasts for that visit only. An inline
+  script at the top of each page redirects before anything paints, so there is no flash.
 - `app/case-study-novatr-lms/page.js`, `app/case-study-hapramp/page.js` —
   placeholder case study pages, marked "in progress"
 - `components/` — shared Nav, Footer, Reveal (scroll-in animation),
@@ -64,6 +82,23 @@ This writes straight to `public/case-studies/oms/dist.html` and
 `embed.html`. It's a manual step (not wired into `npm run build`) since
 the prototype doesn't change every deploy — run it, check the result,
 then commit the regenerated files alongside your source edit.
+
+### Rebuilding the Placement Hub prototype
+
+The prototype embedded in the Placement Hub case study is a separate Vite
+app in `products/placement-hub/`. After editing it, regenerate the served
+copy with:
+
+```
+npm run build:placement-hub
+```
+
+This builds it (with its production `base` of
+`/case-studies/placement-hub/prototype/`) and copies the output into
+`public/case-studies/placement-hub/prototype/`. Like the OMS one it's a manual
+step, not part of `npm run build`. `public/case-studies/placement-hub/preview.png`
+is the static screenshot phones see instead of the interactive frame; retake it
+if the Home screen changes noticeably.
 
 ## Deploy
 

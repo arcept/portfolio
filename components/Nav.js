@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export default function Nav() {
+export default function Nav({ actions }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -22,6 +22,7 @@ export default function Nav() {
           <a href="/#work">Work</a>
           <a href="/#about">About</a>
           <a href="mailto:manikdesigns@yahoo.com">Contact</a>
+          {actions}
         </div>
       </div>
     </nav>

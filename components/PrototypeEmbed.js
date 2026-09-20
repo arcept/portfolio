@@ -7,7 +7,18 @@ import StarBorder from './StarBorder/StarBorder';
 // since the scale math below needs it as a number, not a CSS value.
 const FRAME_HEIGHT = 800;
 
-export default function PrototypeEmbed({ versions, title, mobileImage, mobileImageAlt }) {
+const DEFAULT_HEADING = 'See the rebuild, live';
+const DEFAULT_NOTE =
+  "Sample data throughout is synthetic. Scroll and click inside the frame — it's the full app, just boxed in.";
+
+export default function PrototypeEmbed({
+  versions,
+  title,
+  mobileImage,
+  mobileImageAlt,
+  heading = DEFAULT_HEADING,
+  note = DEFAULT_NOTE,
+}) {
   const [activeId, setActiveId] = useState(versions[0].id);
   const [status, setStatus] = useState('loading');
   const [scale, setScale] = useState(1);
@@ -136,7 +147,7 @@ export default function PrototypeEmbed({ versions, title, mobileImage, mobileIma
         <div className="proto-head">
           <div>
             <p className="text-caption" style={{ color: 'var(--chart-2)', marginBottom: '12px' }}>{active.eyebrow}</p>
-            <h2 style={{ marginTop: 0 }}>See the rebuild, live</h2>
+            <h2 style={{ marginTop: 0 }}>{heading}</h2>
             <p className="text-body text-fog">{active.description}</p>
           </div>
 
@@ -172,7 +183,7 @@ export default function PrototypeEmbed({ versions, title, mobileImage, mobileIma
               <div className="proto-frame-dots"><span /><span /><span /></div>
               <div className="proto-frame-url">{active.url}</div>
             </div>
-            <div className="proto-frame-body" ref={bodyRef} style={{ background: frameIsDark ? 'var(--carbon)' : '#f9fafb' }}>
+            <div className="proto-frame-body" ref={bodyRef} style={{ background: active.frameBackground ?? (frameIsDark ? 'var(--carbon)' : '#f9fafb') }}>
               {status !== 'loaded' && (
                 <div className="proto-frame-status">
                   {status === 'loading'
@@ -208,10 +219,7 @@ export default function PrototypeEmbed({ versions, title, mobileImage, mobileIma
         </StarBorder>
 
         <div className="proto-actions">
-          <p className="proto-note text-caption text-fog">
-            Sample data throughout is synthetic. Scroll and click inside the frame — it&apos;s the
-            full app, just boxed in.
-          </p>
+          <p className="proto-note text-caption text-fog">{note}</p>
         </div>
       </div>
     </section>

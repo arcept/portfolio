@@ -1,0 +1,63 @@
+/* Placement Hub case study — the dark page's article cards.
+
+   The cards, their animation and their type hierarchy come from the light version's component
+   styles (../case-study-placement-light/light.css: every rule there is scoped under .lx and reads
+   its colours from tokens). This file only supplies the DARK palette for those tokens and fits the
+   cards into this page's existing wide container.
+
+   The palette is the same "percent gray" model as the light version — a percentage of ink mixed
+   into one base — and over this site's near-black it lands almost exactly on the site's own
+   surfaces:
+     base (page)      #08090a  = --void
+     3%  (card)       ≈ --carbon
+     6%  (raised)     ≈ --obsidian
+     10% (hairlines)  ≈ --graphite                                                                  */
+
+.lx.pcs {
+  --ink: #f1f2f4;
+  --base: #08090a;
+
+  --bg: var(--base);
+  --s1: var(--g3);
+  --s2: var(--g6);
+  --sunk: var(--g1);
+  --line: var(--g10);
+  --line-2: var(--g20);
+  --accent: #7ba0ff;
+  --good: #4ade80;
+  --bad: #f87171;
+  --warn: #f5b04c;
+  --shadow-panel: 0 1px 0 color-mix(in srgb, var(--ink) 5%, transparent) inset, 0 34px 70px -44px rgb(0 0 0 / 0.9);
+  --shadow-frame: 0 40px 90px -40px rgb(0 0 0 / 0.85), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+
+  /* Sits in the body column of .cs-article-grid, beside the sticky contents nav. */
+  grid-area: body;
+  min-width: 0;
+  min-height: 0;
+  background: transparent;
+}
+
+.pcs .lx-section {
+  scroll-margin-top: calc(var(--site-nav-h) + 16px);
+}
+
+.pcs .lx-panel {
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 48px;
+  padding: 44px 44px 52px;
+  border-radius: 24px;
+}
+
+.pcs .lx-margin {
+  top: calc(var(--site-nav-h) + 32px);
+}
+
+@media (max-width: 899px) {
+  .pcs .lx-panel {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 24px 20px 32px;
+    border-radius: 20px;
+  }
+}
