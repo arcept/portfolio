@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { animate, useInView } from 'motion/react';
-import { EASE, useReduce } from '@/components/placement/Motion';
+import { EASE, useReduce } from '@/components/case-study-kit/Motion';
 
 // A figure inside a sentence: green, and it counts up once it scrolls into view. The final value
 // is laid out (invisibly) from the start, so the line doesn't reflow while the digits are running.

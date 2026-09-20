@@ -1,8 +1,8 @@
-import { Quote, Statement } from '@/components/placement/Motion';
-import { BigStat, Note, Placeholder, Section, Stats, Table } from '@/components/placement/Blocks';
-import { Gallery, Sequence } from '@/components/placement/Shots';
-import Num from '@/components/placement/Num';
-import Peek from '@/components/placement/Peek';
+import { Quote, Statement } from '@/components/case-study-kit/Motion';
+import { BigStat, Note, Placeholder, Section, Stats, Table } from '@/components/case-study-kit/Blocks';
+import { Gallery, Sequence } from '@/components/case-study-kit/Shots';
+import Num from '@/components/case-study-kit/Num';
+import Peek from '@/components/case-study-kit/Peek';
 
 // The seven sections of the Placement Hub case study, animated on scroll: each zooms in and settles as
 // it arrives, and zooms back out and dims as it leaves.

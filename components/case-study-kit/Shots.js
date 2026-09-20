@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useInView } from 'motion/react';
-import { EASE, useReduce } from '@/components/placement/Motion';
+import { EASE, useReduce } from '@/components/case-study-kit/Motion';
 
 /* ------------------------------------------------------------- Lightbox */
 

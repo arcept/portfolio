@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { EASE, useReduce } from '@/components/placement/Motion';
+import { EASE, useReduce } from '@/components/case-study-kit/Motion';
 
 const PEEK = 128;
 

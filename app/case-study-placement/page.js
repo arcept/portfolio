@@ -6,17 +6,17 @@ import { themeGateScript } from '@/components/theme/theme';
 import Footer from '@/components/Footer';
 import PrototypeEmbed from '@/components/PrototypeEmbed';
 import CaseStudyNav from '@/components/CaseStudyNav';
-import HeroBackdrop from '@/components/placement/HeroBackdrop';
-import HeroFacts from '@/components/placement/HeroFacts';
-import ScrollProgress from '@/components/placement/ScrollProgress';
-import ScrollRise from '@/components/placement/ScrollRise';
-import StoryLauncher from '@/components/placement/Story';
+import HeroBackdrop from '@/components/case-study-kit/HeroBackdrop';
+import HeroFacts from '@/components/case-study-kit/HeroFacts';
+import ScrollProgress from '@/components/case-study-kit/ScrollProgress';
+import ScrollRise from '@/components/case-study-kit/ScrollRise';
+import PlacementStory from './PlacementStory';
 import PlacementSections from './sections';
-import './article.css';
-import './themes.css';
-import './blocks.css';
-import './hero.css';
-import './story.css';
+import '../case-study-kit/article.css';
+import '../case-study-kit/themes.css';
+import '../case-study-kit/blocks.css';
+import '../case-study-kit/hero.css';
+import '../case-study-kit/story.css';
 
 const neueAlteGrotesk = localFont({
   src: '../fonts/NeueAlteGrotesk-SemiBold.ttf',
@@ -120,9 +120,9 @@ export default function CaseStudyPlacement() {
                 <a href="#prototype" className="btn btn--rainbow-outline">
                   Try the prototype ↓
                 </a>
-                <StoryLauncher className="btn btn--tertiary btn--rainbow-text" fontClass={`${neueAlteGrotesk.variable} ${serif.variable}`}>
+                <PlacementStory className="btn btn--tertiary btn--rainbow-text" fontClass={`${neueAlteGrotesk.variable} ${serif.variable}`}>
                   Read the 2-minute version
-                </StoryLauncher>
+                </PlacementStory>
               </div>
             </div>
 

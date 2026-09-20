@@ -3,10 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { EASE, useReduce } from '@/components/placement/Motion';
-import { STEPS } from './storySteps';
-
-const LAST = STEPS.length; // the closing card sits after the last step
+import { EASE, useReduce } from '@/components/case-study-kit/Motion';
 
 function jumpTo(id) {
   window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }), 60);
@@ -31,7 +28,12 @@ function Words({ text, className }) {
 
 // "Read the 2-minute version": the trigger button, and the full-screen story it opens — one idea
 // per step, animated, with the arrow keys / swipe / buttons to move and Esc to leave.
-export default function StoryLauncher({ className, fontClass = '', children }) {
+//
+// steps: [{ id, kicker, title, body, visual }] — `id` is the section the step summarises (its link
+// jumps there), `visual` is a node (see StoryVisuals.js). Steps hold JSX, so they are defined in the
+// case study's own client module, which renders this launcher.
+export default function StoryLauncher({ steps, className, fontClass = '', children }) {
+  const LAST = steps.length; // the closing card sits after the last step
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
@@ -77,7 +79,7 @@ export default function StoryLauncher({ className, fontClass = '', children }) {
     setOpen(true);
   };
 
-  const current = step < LAST ? STEPS[step] : null;
+  const current = step < LAST ? steps[step] : null;
 
   const overlay = (
     <AnimatePresence>
@@ -98,7 +100,7 @@ export default function StoryLauncher({ className, fontClass = '', children }) {
 
           <header className="st__top">
             <div className="st__progress" role="presentation">
-              {[...STEPS, null].map((s, i) => (
+              {[...steps, null].map((s, i) => (
                 <button key={i} type="button" className={`st__seg${i < step ? ' is-done' : ''}${i === step ? ' is-now' : ''}`} onClick={() => go(i)} aria-label={s ? `Go to: ${s.kicker}` : 'Go to the end'}>
                   <i />
                 </button>
