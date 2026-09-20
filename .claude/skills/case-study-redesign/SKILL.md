@@ -5,9 +5,9 @@ description: Transform an existing case study page in this portfolio (OMS, CRO, 
 
 # Case study redesign
 
-Moves a case study onto the kit built for **Placement Hub** (`app/case-study-placement/`,
-`components/placement/`, `components/theme/`). That page is the reference implementation: when this document
-and the code disagree, the code wins — read it.
+Moves a case study onto the shared kit (`app/case-study-kit/`, `components/case-study-kit/`,
+`components/theme/`). **Placement Hub** is the reference implementation and **OMS** the first port: when this
+document and the code disagree, the code wins — read them.
 
 The kit is the product of a long design conversation, so the numbers in `references/` are decisions the
 user already approved, not suggestions. Reuse them; deviate only when a page's content forces it, and say so.
@@ -15,7 +15,7 @@ user already approved, not suggestions. Reuse them; deviate only when a page's c
 ## Read first (in this order, only what you need)
 - `references/design-rules.md` — structure, width, spacing, hero hierarchy, contrast, motion, content and
   image rules, the 2-minute story, responsive behaviour. **Read fully before designing anything.**
-- `references/kit.md` — which files are reusable, the block APIs, and the one-time hoisting step.
+- `references/kit.md` — the shared kit's files, the block APIs, per-page knobs and the story module.
 - `references/theming.md` — the single-page dark/light mechanism and what needs its own light treatment.
 - `references/gotchas.md` — bugs already hit and fixed. Skim before writing code; grep it when something
   looks wrong.
@@ -30,7 +30,8 @@ user already approved, not suggestions. Reuse them; deviate only when a page's c
 3. Make sure a dev server is running (`npm run dev`, port 3000) and Playwright is available in a scratch
    directory (`npm i playwright-core`; the script uses the installed Chrome).
 4. **Audit before touching anything**: from the scratch dir run
-   `node <skill>/scripts/verify.mjs --url http://localhost:3000/<page> --others /,/case-study-oms`.
+   `node <skill>/scripts/verify.mjs --url http://localhost:3000/<page> --others /,/case-study-cro`.
+   `--others` are pages that are *not* on the kit (they must stay theme-free) — never list a ported page.
    Every SKIP/FAIL is a piece still to build — this is your to-do list and your "before" evidence.
 
 ### 1. Read the page and write a mapping
@@ -47,23 +48,25 @@ which 3 facts lead (Role → Company → Product unless the page's story says ot
 story step gets, which image groups become a grid vs a sequence. Ask (briefly, with a recommendation) only
 for: how live embeds should look in light theme, or when the content genuinely has two reasonable shapes.
 
-### 2. Hoist the kit (first port only)
-If `components/case-study-kit/` (or equivalent shared location) doesn't exist yet, do the move described in
-`references/kit.md → Hoisting`, in its own commit, and prove Placement Hub is unchanged with `verify.mjs`.
-If it already exists, skip.
+### 2. The kit is shared — import it, don't copy it
+The kit was hoisted when OMS became the second consumer. If you need something it lacks, add it to the kit
+and re-run the Placement Hub and OMS through `verify.mjs`; a page's own widgets go in its own `<name>.css`.
+Before you start, note what in the page has **no kit equivalent** and how it will look in both themes.
 
 ### 3. Port
-Follow the reference page's structure closely; copy, don't paraphrase.
+Follow the reference pages' structure closely; copy, don't paraphrase.
 1. **Theme scaffold**: `suppressHydrationWarning` on `<html>` (once), page wrapper `.ph-page`, gate script as
    its first child, `<ThemeSwitch />` in `Nav`'s `actions`, import the five kit stylesheets.
 2. **Hero**: eyebrow, headline (words wrapped for the mask entrance, no ch cap), intro, `HeroFacts`
    (lead 3 / collapsed rest), actions (primary outlined + `StoryLauncher`), cover, `HeroBackdrop`,
    `ScrollProgress`. Keep the page's own hero art/cover if it has one.
 3. **Article**: wrap in `cs-article-grid wrap wrap--wide` with `<main className="lx pcs …fontVars">` and
-   `CaseStudyNav`. Convert each existing section to `<Section>` with number, eyebrow (= the nav label),
+   `CaseStudyNav`. Move any page-specific CSS that hung off the old section wrapper (e.g. `.cs-article-section …`)
+   into `<name>.css` under `.pcs`, on tokens — the old ancestor no longer exists, so those selectors silently stop
+   matching. Convert each existing section to `<Section>` with number, eyebrow (= the nav label),
    `category` (2–3 disciplines), `questions`, `artifacts` (**shown as "Deliverables"**), heading.
-   Sections that have no natural "question/deliverables" get a short honest one written from the content —
-   or ask the user if it would be inventing a claim.
+   `artifacts` is optional: if the page has no real deliverables to list, **omit it** rather than invent claims
+   (OMS has none, so its margin shows only the category and questions).
 4. **Blocks**: apply the mapping. Add `Num` for key figures and `<strong>` for key phrases (the "Emphasis"
    rules in design-rules.md). Convert images per the image rules — pick grid vs sequence by what the images
    *are*, aim for at least one sequence if there's a flow.
@@ -86,22 +89,32 @@ make it additive/token-neutral and confirm other pages render identically. Don't
 
 ### 5. Clean up and hand over
 - Delete whatever the port orphaned (unused CSS rules, props, components, README lines) — grep before you
-  finish. The user has asked for this explicitly and repeatedly.
+  finish. The user has asked for this explicitly and repeatedly. For shared `globals.css`, prune by
+  selector family with a script, then prove it: compare selector sets before/after (nothing added, only the
+  intended families removed) **and pixel-diff full-page screenshots of every other page** with the old and the
+  new stylesheet (reduced-motion, 1440 and 390). OMS's port removed ~900 lines this way with 0.000% difference.
+- **Report content bugs you noticed, don't silently fix them** — copy the author wrote that looks wrong
+  (OMS: decision 03 repeats decision 01's heading and description). Fix only what is plainly an error in
+  something you produce (e.g. alt text that contradicts its image — OMS's chart said 38%, the image says 30%).
 - Update the README's case study entry (what the page uses, how to edit its story/sections).
 - Report: what changed, what was verified (with counts), what you did *not* check (say it plainly — e.g.
   "light mode on a real phone"), decisions you made that the user may want to reverse, and anything that
   needs their input. Open with who it's written for if it's a document. Keep it short and specific.
 - Offer to commit/push; do not do it unasked.
 
-## Per-page notes (as of this writing — re-read the page, they may have changed)
-- **OMS** (`app/case-study-oms/page.js`, ~1100 lines): 9 sections + an unnumbered "Open Threads" via
-  `CaseStudySection`, a `TLDRProvider`/`TLDRPanel` 60-second expander (replace with `StoryLauncher`),
-  `cs-article-*` blocks (statements, cards, warnings, annotations, captions), **live `OMSComponentEmbed`
-  iframes**, `DecisionStepper`, status badges, and `projectFiles` on the contents nav. Keep the embeds,
-  stepper, badges and project files; convert the prose scaffolding. `CaseStudySection` has its own mobile
-  clamp/"see more" behaviour — `Section` + `Peek` replace it, so remove what becomes unused.
+## Per-page notes (re-read the page; they may have changed)
+- **OMS — ported** (`app/case-study-oms/`). What it taught: kept the live `OMSComponentEmbed` iframes (in
+  `Embed`, staying dark in both themes), `DecisionStepper` (restyled under `.pcs` in `oms.css`, check icon
+  inverted in light) and the status badges (light variants); 60-second `TLDR` expander → story with three
+  page-specific visuals; cards → `Columns`; stat grid → `Stats` (with `desc`, `text`, `trend`); measure table →
+  `Table`; "What I got wrong"/"The bug that shipped" → `Note tone="flag"`; wide diagrams → `Gallery
+  fit="natural"`; UI panels → `Gallery fit="contain"`. Hero facts: Role/Company/Product lead, Scope/Team collapsed (Timeline still to be supplied by the author), no `Peek`, no
+  sequence (no image flow) — the SKIPs in `verify.mjs` for those are legitimate. Image frames are turned off for this page in `oms.css` (`.oms-page`) because its embeds and screenshots are already cards. Removed `CaseStudySection`,
+  `TLDR`'s context variant and ~900 lines of orphaned CSS. Hero "Sample tertiary link" and the hidden primary
+  button were placeholders: replaced by "Try the prototype" + the story button. Cover art is still a placeholder.
 - **CRO**: seven plain `<h2>` blocks in `.cs-body`, a `CROChart`, and `<TLDR>`. Needs section metadata written
-  (numbers, eyebrows, categories, questions) and a contents nav added (`CaseStudyNav`); keep `CROChart`.
+  (numbers, eyebrows, categories, questions) and a contents nav added (`CaseStudyNav`); keep `CROChart`. It still
+  uses `TLDR` and `.cs-body` styles — don't prune those from `globals.css` until it is ported.
 - **Novatr team / LMS**: "case study in progress" stubs. Don't port until they have real content.
 
 ## When something in the design should change

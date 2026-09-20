@@ -1,58 +1,52 @@
 # The kit: what exists, what's reusable, how to use it
 
-Canonical implementation: the Placement Hub case study. Read these files rather than trusting memory —
-they are the source of truth and this document only maps them.
+Canonical implementations: the Placement Hub case study (the original) and OMS (the first port). Read
+their files rather than trusting memory — they are the source of truth and this document only maps them.
 
 ```
-app/case-study-placement/
-  page.js        PAGE-SPECIFIC  wrapper, hero, prototype embed, article grid, footer
-  sections.js    PAGE-SPECIFIC  the seven sections' content, written with the blocks below
-  article.css    KIT            section/panel layout, prose, tables, notes, stats — tokens only
-  themes.css     KIT            dark + light tokens; remaps the site tokens for light chrome
-  blocks.css     KIT            .px-num .px-peek .px-gallery/.px-tile .px-seq .px-lb
-  hero.css       KIT            page width, progress bar, hero layout/hierarchy/entrance
-  story.css      KIT            .st (the 2-minute story) — themed by --st-* vars
-components/placement/
-  Motion.js      KIT  Reveal, MaskText, Statement, Quote, Count, useReduce, EASE
-  Blocks.js      KIT  Section, Table, Note, Stats, BigStat, Placeholder (+ mobile-only Disclosure)
-  Shots.js       KIT  Gallery, Sequence (+ Lightbox)
-  Peek.js        KIT  expandable with a fade
-  Num.js         KIT  inline counting figure
-  HeroFacts.js   KIT  lead facts + collapsed rest
-  HeroBackdrop.js KIT theme-aware hero background
-  ScrollProgress.js KIT  reading-progress line
-  ScrollRise.js  KIT  scroll-linked lift/scale wrapper for the prototype embed
-  Story.js       KIT* the 2-minute story engine   (*imports ./storySteps — see "Hoisting")
-  storySteps.js  PAGE-SPECIFIC  STEPS = [{ id, kicker, title, body, visual }]
+app/case-study-kit/                 SHARED KIT — styles (all selectors scoped; see gotchas.md)
+  article.css   section/panel layout, prose, tables, notes, stats, columns, embeds — tokens only
+  themes.css    dark + light tokens; remaps the site tokens for light chrome
+  blocks.css    .px-num .px-peek .px-gallery/.px-tile .px-seq .px-lb
+  hero.css      page width, progress bar, hero layout/hierarchy/entrance, light wash
+  story.css     .st (the 2-minute story) — themed by --st-* vars
+components/case-study-kit/          SHARED KIT — components
+  Motion.js     Reveal, MaskText, Statement, Quote, Count, useReduce, EASE
+  Blocks.js     Section, Table, Note, Stats, BigStat, Columns, Embed, Placeholder (+ mobile-only Disclosure)
+  Shots.js      Gallery, Sequence (+ Lightbox)
+  Peek.js       expandable with a fade
+  Num.js        inline counting figure
+  HeroFacts.js  lead facts (+ optional collapsed rest)
+  HeroBackdrop.js  theme-aware hero background (takes the case study's shader colours)
+  ScrollProgress.js  reading-progress line
+  ScrollRise.js scroll-linked lift/scale wrapper for the prototype embed
+  Story.js      the 2-minute story engine: <StoryLauncher steps={…}>
+  StoryVisuals.js  generic step visuals: List, Bars, BigStat, Quote, Cycle, Stats, BeforeAfter (+ storyMotion)
 components/theme/
-  theme.js       KIT  THEME_KEY/ATTR, resolveTheme, themeGateScript()
-  useCsTheme.js  KIT  hook: 'dark' | 'light' | null (null until mounted)
-  ThemeSwitch.js KIT  the switch; owns attaching/removing the attribute
+  theme.js  useCsTheme.js  ThemeSwitch.js   the single-page dark/light mechanism (see theming.md)
+
+app/case-study-<name>/              PER CASE STUDY — the only things a port writes
+  page.js       wrapper, hero, prototype embed, article grid, footer
+  sections.js   the sections' content (server component), written with the kit's blocks
+  <Name>Story.js  client module: the steps (with the page's own visuals) → <StoryLauncher steps={STEPS}>
+  <name>.css    only what is this page's own (custom widgets + their light overrides). Optional.
 ```
 
-Site components the page reuses unchanged: `Nav` (its `actions` slot takes the switch), `Footer`,
-`CaseStudyNav` (contents nav), `PrototypeEmbed` (props: `versions[{frameWidth,…}]`, `heading`, `note`,
-`frameBackground`, `mobileImage`, `mobileImageAlt`), `VelarisBackground`.
+Site components a page reuses unchanged: `Nav` (its `actions` slot takes the switch), `Footer`,
+`CaseStudyNav` (contents nav; supports `projectFiles`), `PrototypeEmbed` (props: `versions[{frameWidth,…}]`,
+`heading`, `note`, `frameBackground`, `mobileImage`, `mobileImageAlt`), `VelarisBackground`.
 
-## Hoisting (do this the first time a second page adopts the kit)
+## Per-page knobs (set on the page, not in the kit)
+- **Colour**: `<div className="ph-page" style={{'--ph-wash-a':'#8b5cf6','--ph-wash-b':'#6366f1'}}>` — the
+  light theme's hero wash and tint. `<HeroBackdrop colors={[bright, mid, dark, bg]} />` — the dark shader.
+  Pick the case study's existing hero colours (OMS: violet, Placement Hub: blue).
+- **Fonts**: `localFont` with `variable: '--font-display'` and `Newsreader` with `variable: '--font-serif'`;
+  put both variable classes on `<main className="lx pcs …">` and pass them to the story as `fontClass`.
 
-Today the kit lives under `case-study-placement` and `components/placement`. The class names (`.ph-*`,
-`.pcs`, `.px-*`, `.lx-*`, `.st-*`) are page-agnostic on purpose, so hoisting is a move, not a rewrite:
-
-1. Move the five KIT stylesheets to a shared folder (e.g. `app/case-study-kit/`) and the KIT components to
-   `components/case-study-kit/`; fix imports (`@/components/placement/…`). Leave `sections.js`,
-   `storySteps.js`, `page.js` with their case study.
-2. Make the story generic: `Story.js` must not import `./storySteps`. Change `StoryLauncher` to take a
-   `steps` prop, and give each case study a tiny client module that imports its own steps and renders
-   `<StoryLauncher steps={STEPS} …>`. (Steps hold JSX visuals, so they must be defined in a client module —
-   a server component can't pass them as props.)
-3. Every selector is already scoped (`.ph-page`, `.pcs`, `.st`, `.px-*`, `html[data-cs-theme=…] …`), so
-   importing the CSS from two pages is safe. Keep it that way — a bare element selector would leak into
-   the other case studies, because Next serves imported CSS globally.
-4. Re-run the Placement Hub through `scripts/verify.mjs` before touching the next page: the move must be a
-   no-op for it.
-
-Do the hoist in its own commit, separate from the first port.
+## Hoisting
+Done (commit "Hoist the case study kit into shared folders"). A case study never copies kit files; it
+imports them. If you need something the kit lacks, add it to the kit (with a Placement Hub regression run),
+not to the page — unless it is genuinely this page's own widget, in which case it goes in `<name>.css`.
 
 ## Block API (use these when writing a page's sections)
 
@@ -69,18 +63,41 @@ Do the hoist in its own commit, separate from the first port.
          rows={[['Acquisition','82'],['Completion',{v:'55.5',tone:'bad'}]]} />   // numbers count up
   <Note label="On attribution" tone="flag">…</Note>                    // quiet aside; flag = amber caveat
   <BigStat value={30} suffix="%" label="of all placements…" />
-  <Stats items={[{value:63,label:'…'},{value:45,prefix:'~',label:'…'}]} />
+  <Stats columns={2} items={[{value:63,label:'…'},{prefix:'< ',value:1,suffix:' hour',label:'was 1–2 days',desc:'…'},
+                            {trend:'down',value:18,suffix:'%',label:'…'},{text:'4 → 3 days',label:'…'}]} />
+  <Columns items={[{label:'The Interview Ladder',title:'One-line statement',desc:'A sentence of explanation.'}]} />   // "cards", without boxes
+  <Embed caption={<><strong>Lead.</strong> Explanation.</>}><LiveIframeComponent /></Embed>  // a live embed, framed
   <Peek label="The five learner types" more="Show all five">…</Peek>   // long secondary detail
-  <Gallery columns={3} items={[{src,alt,width,height,caption},{placeholder:'…',caption:'…'}]} />
+  <Gallery columns={3} fit="cover|contain|natural" caption? maxWidth?
+           items={[{src,alt,width,height,caption,fit?},{placeholder:'…',caption:'…'}]} />
   <Sequence wide? items={[{src,alt,width,height,label,caption}]} />       // auto-cycling walk-through
   <Placeholder>Visual still to come</Placeholder>
   <p className="lx-credit"><b>Project · Company</b><br/>Design leadership: …</p>
 </Section>
 ```
 
+Choosing `fit`: `cover` (default, 5:4 frame cropped to the top) for full-screen screenshots; `contain` (whole
+image inside a 5:4 frame on the theme surface) for cropped UI panels; `natural` (frame takes the image's own
+shape) for wide diagrams and strips, which 5:4 would crop or shrink to a sliver — pair it with `columns={1}`
+and a `maxWidth` (e.g. `720px`) so a lone tall chart doesn't fill the column. `caption` (on the Gallery)
+explains a set of images together; per-item `caption` is shown under the tile and in the lightbox.
+
 Inline inside paragraphs: `<Num to={30} suffix="%" />` (green, counts up, no layout shift) and
 `<strong>…</strong>` (brighter + heavier) for the phrases a skimming reader should catch.
 
-Hero, in `page.js`: `HeroFacts` (`lead` = the 3 facts a reader needs first, `more` = the rest, `moreLabel`),
+Hero, in `page.js`: `HeroFacts` (`lead` = the facts a reader needs first, `more` = the rest and `moreLabel` —
+both optional; with three or fewer facts show them all and pass no `more`),
 `StoryLauncher` beside the primary button, `HeroBackdrop`, `ScrollProgress` above the `Nav`,
 `<ThemeSwitch />` passed as `Nav`'s `actions`. Copy the structure of `app/case-study-placement/page.js`.
+
+## The story module (`<Name>Story.js`)
+```jsx
+'use client';
+import StoryLauncher from '@/components/case-study-kit/Story';
+import { BarsVisual, ListVisual, QuoteVisual, StatsVisual, BigStatVisual, CycleVisual, BeforeAfterVisual,
+         storyMotion } from '@/components/case-study-kit/StoryVisuals';
+const STEPS = [{ id: 'section-id', kicker: 'Nav label', title: '…', body: '…', visual: <ListVisual … /> }];
+export default function XStory(props) { return <StoryLauncher steps={STEPS} {...props} />; }
+```
+When no generic visual fits, write one in this module using `storyMotion.list/item` and style it from the
+`--st-*` variables in `<name>.css` (OMS: struck-through rejected options, status badges, offer arithmetic).

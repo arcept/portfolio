@@ -4,6 +4,9 @@
 //   cd <folder that has playwright-core installed>   # e.g. a scratch dir: npm i playwright-core
 //   node <skill>/scripts/verify.mjs --url http://localhost:3000/case-study-oms [--others /,/case-study-cro] [--shots ./shots]
 //
+// --others lists pages that are NOT on the kit (the homepage, case studies not yet ported): each must be
+// left without a theme attribute. Don't list a page that has been ported — it legitimately has one.
+//
 // Uses your installed Chrome (set CHROME=/path/to/chrome if it isn't the macOS default). A check whose
 // element isn't on the page reports SKIP, not FAIL, so the script also works as a "before" audit of a
 // page that hasn't been ported yet: every SKIP is something still to build. Exit code 1 if any FAIL.
@@ -107,8 +110,8 @@ for (const scheme of ['dark', 'light']) {
     if (await has(page, '.ph-facts__toggle')) {
       const collapsed = (await has(page, '.ph-facts__more')) === false;
       await page.locator('.ph-facts__toggle').click(); await page.waitForTimeout(700);
-      const same = await page.evaluate(() => { const L = (s) => [...document.querySelectorAll(s)].map((e) => Math.round(e.getBoundingClientRect().left)).join(); return L('.ph-facts__lead > div') === L('.ph-facts__more > div'); });
-      ok('hero facts start collapsed, and expand into the same three columns', collapsed && same);
+      const same = await page.evaluate(() => { const L = (s) => [...document.querySelectorAll(s)].map((e) => Math.round(e.getBoundingClientRect().left)); const lead = L('.ph-facts__lead > div'), more = L('.ph-facts__more > div'); return more.length > 0 && more.every((x, i) => x === lead[i]); });
+      ok('hero facts start collapsed, and each expands under its lead column', collapsed && same);
     } else skipped('hero facts', 'no .ph-facts__toggle');
     if (await has(page, '.ph-progress')) {
       const sc = () => page.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector('.ph-progress')).transform).a);
@@ -190,8 +193,9 @@ for (const scheme of ['dark', 'light']) {
     const visible = await page.evaluate(() => [...document.querySelectorAll('.ph-rise, .ph-cover, .ph-word > span')].every((e) => getComputedStyle(e).opacity === '1' && ['none', 'matrix(1, 0, 0, 1, 0, 0)'].includes(getComputedStyle(e).transform)));
     ok('reduced motion: hero is fully shown at once', visible);
     if (await has(page, '.px-tile')) {
+      // Only the gallery scrolled into view: tiles further down legitimately wait until they arrive.
       await toSection(page, '.px-gallery'); await page.waitForTimeout(700);
-      ok('reduced motion: gallery tiles are shown, not stuck hidden', await page.locator('.px-tile').evaluateAll((t) => t.every((e) => getComputedStyle(e).opacity === '1')));
+      ok('reduced motion: gallery tiles are shown, not stuck hidden', await page.locator('.px-gallery').first().locator('.px-tile').evaluateAll((t) => t.every((e) => getComputedStyle(e).opacity === '1')));
     }
   } else skipped('reduced motion', 'no .ph-hero');
   await ctx.close();

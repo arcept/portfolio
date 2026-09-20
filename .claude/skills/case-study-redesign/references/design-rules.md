@@ -34,6 +34,8 @@ Seven-ish numbered sections, each: sticky **margin** (category, question, delive
 - **Ordering facts for a portfolio reader**: Role → Company → Product show; Scope → Team → Timeline
   collapse. Timeline is the least important. Expanded details keep the *same three columns* as the lead row
   (same `grid-template-columns`), never three stacked rows.
+- A quiet subtitle line (`ph-sub`) fits between headline and intro when the page has one (OMS: "Rebuilding OMS: a
+  v3.0 retrospective").
 - Actions: `btn btn--rainbow-outline` (primary) + tertiary "Read the 2-minute version" (`btn btn--tertiary
   btn--rainbow-text`).
 - The prototype note under the embed: `max-width: 72%` of the frame (site default 46ch made it 4 lines) → two
@@ -87,6 +89,8 @@ that voice change is what tells a reader "this sentence is the argument"; mono (
 - Aim for at least one animated sequence per case study that has a flow. Don't reuse the same image in two
   treatments unless it genuinely belongs in both.
 - The lightbox stays dark in both themes (image viewer convention).
+- `fit` per image type: `cover` full-screen screenshots · `contain` cropped UI panels · `natural` wide
+  diagrams/strips (one column, `maxWidth` ~720–760px). Keep the author's captions (per tile or one shared).
 
 ## The 2-minute story (`StoryLauncher`)
 Replaces a "TL;DR" expander. Full-screen, one idea per step, animated; 6–8 steps plus a closing card.
