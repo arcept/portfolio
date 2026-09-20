@@ -1,0 +1,137 @@
+import { COMPANY_LOGOS } from "@/data/company-logos";
+import type { Company } from "@/types/company";
+
+// Keyed by company name and shared across every job listing from that company — dummy content,
+// same caveat as the rest of the jobs data list.
+export const COMPANIES: Record<string, Company> = {
+    "AECOM Architects": {
+        name: "AECOM Architects",
+        logoSrc: COMPANY_LOGOS["AECOM Architects"],
+        logoTreatment: "dark-tile",
+        description:
+            "AECOM is a global infrastructure consulting firm delivering design, engineering, construction management and advisory services for transport, buildings, water and environmental projects. Its India teams, based in Gurugram and Noida, support projects across South Asia and the Middle East.",
+        website: "https://www.aecomarchitects.com",
+        industry: "Infrastructure Consulting",
+        companySize: "10,001+ Employees",
+        headquarters: "Dallas, United States",
+        type: "Public Company",
+        specialties: "Transport, buildings and places, water, environment, digital delivery",
+    },
+    "United Network Studio": {
+        name: "United Network Studio",
+        logoSrc: COMPANY_LOGOS["United Network Studio"],
+        logoTreatment: "dark-tile",
+        description:
+            "United Network Studio is a BIM-first architecture practice building digital-twin workflows for large-scale infrastructure projects across South Asia. The studio pairs traditional design craft with a fully parametric delivery pipeline. Studios in Hyderabad, Pune and Bengaluru work as one connected delivery team.",
+        website: "https://www.unstudio.example.com",
+        industry: "Architecture & Planning",
+        companySize: "501-1,000 Employees",
+        headquarters: "Hyderabad, India",
+        type: "Private Company",
+        specialties: "BIM modelling, infrastructure design, digital twins",
+    },
+    "Zaha Hadid Architects": {
+        name: "Zaha Hadid Architects",
+        logoSrc: COMPANY_LOGOS["Zaha Hadid Architects"],
+        logoTreatment: "dark-tile",
+        description:
+            "Zaha Hadid Architects is an international studio known for pushing the boundaries of parametric and computational design across cultural, civic and residential typologies. Its New Delhi and Mumbai teams work alongside the London studio on projects across South Asia.",
+        website: "https://www.zaha-hadid.example.com",
+        industry: "Architecture & Planning",
+        companySize: "501-1,000 Employees",
+        headquarters: "London, United Kingdom",
+        type: "Private Company",
+        specialties: "Parametric design, cultural buildings, computational geometry",
+    },
+    Gensler: {
+        name: "Gensler",
+        logoSrc: COMPANY_LOGOS["Gensler"],
+        logoTreatment: "light-circle",
+        description:
+            "Gensler is a global design and architecture firm delivering workplace, hospitality and mixed-use projects for clients across every major industry. Its Indian studios in Bengaluru, Mumbai and Gurugram serve clients across the country.",
+        website: "https://www.gensler.example.com",
+        industry: "Architecture & Planning",
+        companySize: "5,001-10,000 Employees",
+        headquarters: "San Francisco, United States",
+        type: "Private Company",
+        specialties: "Workplace design, hospitality, mixed-use masterplanning",
+    },
+    "Diller Scofidio + Renfro": {
+        name: "Diller Scofidio + Renfro",
+        logoSrc: COMPANY_LOGOS["Diller Scofidio + Renfro"],
+        logoTreatment: "dark-tile",
+        description:
+            "Diller Scofidio + Renfro is an interdisciplinary design studio working across architecture, urban design and the visual arts, best known for adaptive-reuse and public-space projects. Teams in Mumbai and Kolkata support its South Asian commissions.",
+        website: "https://www.dsrny.example.com",
+        industry: "Architecture & Planning",
+        companySize: "201-500 Employees",
+        headquarters: "New York, United States",
+        type: "Private Company",
+        specialties: "Adaptive reuse, public space, installation design",
+    },
+    "Foster + Partners": {
+        name: "Foster + Partners",
+        logoSrc: COMPANY_LOGOS["Foster + Partners"],
+        logoTreatment: "dark-tile",
+        description:
+            "Foster + Partners is a global studio for architecture, engineering and integrated design, delivering large-scale civic, transport and landscape projects. Its Chennai and Ahmedabad teams support projects across India.",
+        website: "https://www.fosterandpartners.example.com",
+        industry: "Architecture & Planning",
+        companySize: "1,001-5,000 Employees",
+        headquarters: "London, United Kingdom",
+        type: "Private Company",
+        specialties: "Civic architecture, transport infrastructure, landscape design",
+    },
+    "Snohetta Architects": {
+        name: "Snohetta Architects",
+        logoSrc: COMPANY_LOGOS["Snohetta Architects"],
+        logoTreatment: "light-circle",
+        description:
+            "Snohetta is an integrated design practice working across architecture, landscape and interiors, with a portfolio spanning cultural institutions and civic landmarks worldwide. Its Mumbai studio works with the Oslo team on projects across South Asia.",
+        website: "https://www.snohetta.example.com",
+        industry: "Architecture & Planning",
+        companySize: "201-500 Employees",
+        headquarters: "Oslo, Norway",
+        type: "Private Company",
+        specialties: "Cultural institutions, landscape architecture, interior design",
+    },
+    Atkins: {
+        name: "Atkins",
+        logoSrc: COMPANY_LOGOS.Atkins,
+        logoTreatment: "dark-tile",
+        description:
+            "Atkins is a design, engineering and project management consultancy working on some of the world's most complex infrastructure, from transport corridors and cities to energy and water systems. Its digital teams run BIM-led delivery from concept design through to handover. Its Bengaluru design centre works hand in hand with UK and Middle East project teams.",
+        website: "https://www.atkins.example.com",
+        industry: "Engineering & Infrastructure Consulting",
+        companySize: "10,001+ Employees",
+        headquarters: "London, United Kingdom",
+        type: "Public Company",
+        specialties: "Transport infrastructure, BIM delivery, urban regeneration, energy and water",
+    },
+    COWI: {
+        name: "COWI",
+        logoSrc: COMPANY_LOGOS.COWI,
+        logoTreatment: "dark-tile",
+        description:
+            "COWI is a leading Nordic engineering, environmental science and economics consultancy, best known for long-span bridges, tunnels and sustainable urban development. Its BIM and digital-twin teams support projects across Europe, the Middle East and Asia. Its Mumbai office supports buildings and urban development projects across India.",
+        website: "https://www.cowi.example.com",
+        industry: "Engineering & Environmental Consulting",
+        companySize: "5,001-10,000 Employees",
+        headquarters: "Kongens Lyngby, Denmark",
+        type: "Private Company",
+        specialties: "Bridges and tunnels, BIM and digital twins, sustainable cities, marine and offshore",
+    },
+    Jacobs: {
+        name: "Jacobs",
+        logoSrc: COMPANY_LOGOS.Jacobs,
+        logoTreatment: "dark-tile",
+        description:
+            "Jacobs is a technology-forward professional services firm delivering solutions across infrastructure, advanced facilities, buildings and water. Its digital delivery teams standardise BIM workflows so large, multi-discipline projects stay coordinated from design through construction. Its Pune centre delivers digital and BIM services to project teams worldwide.",
+        website: "https://www.jacobs.example.com",
+        industry: "Professional Services",
+        companySize: "10,001+ Employees",
+        headquarters: "Dallas, United States",
+        type: "Public Company",
+        specialties: "Digital delivery, infrastructure, advanced facilities, water and environment",
+    },
+};

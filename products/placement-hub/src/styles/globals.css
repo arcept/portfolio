@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import "./theme.css";
+@import "@fontsource-variable/figtree";
+
+html,
+body {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--color-gray-25);
+}
+
+/* Safety net for tablets and phones: if any single element ever pokes past the viewport, clip it
+   instead of letting the whole page scroll sideways. Desktop is untouched. `clip` (not `hidden`)
+   so position: sticky keeps working. */
+@media (max-width: 1023px) {
+    html,
+    body {
+        overflow-x: clip;
+    }
+}
+
+button:not(:disabled):not([aria-disabled="true"]),
+[role="button"]:not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+}

@@ -1,0 +1,99 @@
+/* Color tokens named to match the Figma dev-handoff variables exactly (e.g. var(--blue-dark/700))
+   so components read directly against the design instead of through an abstracted semantic layer —
+   this is a pixel-accurate build of one specific frame, not a reusable design system. */
+@theme {
+    --font-body: "Figtree Variable", "Figtree", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-display: "Figtree Variable", "Figtree", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+    --color-gray-25: #fcfcfd;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f2f4f7;
+    --color-gray-200: #eaecf0;
+    --color-gray-300: #d0d5dd;
+    --color-gray-400: #98a2b3;
+    --color-gray-500: #667085;
+    --color-gray-600: #475467;
+    --color-gray-700: #344054;
+    --color-gray-800: #1d2939;
+    --color-gray-900: #101828;
+
+    --color-gray-cool-50: #f9f9fb;
+    --color-gray-cool-100: #eff1f5;
+    --color-gray-cool-200: #dcdfea;
+    --color-gray-cool-600: #4a5578;
+    --color-gray-cool-800: #30374f;
+    --color-gray-cool-900: #111322;
+
+    --color-gray-true-200: #e5e5e5;
+    --color-gray-true-700: #424242;
+
+    --color-blue-50: #eff8ff;
+    --color-blue-100: #d1e9ff;
+    --color-blue-600: #1570ef;
+    --color-blue-800: #1849a9;
+
+    --color-blue-dark-50: #eff4ff;
+    --color-blue-dark-200: #b2ccff;
+    --color-blue-dark-500: #2970ff;
+    --color-blue-dark-600: #155eef;
+    --color-blue-dark-700: #004eeb;
+    --color-blue-dark-800: #0040c1;
+
+    --color-indigo-50: #eef4ff;
+    --color-indigo-100: #e0eaff;
+    --color-indigo-300: #a4bcfd;
+    --color-indigo-600: #444ce7;
+    --color-indigo-700: #3538cd;
+    --color-indigo-800: #2d31a6;
+
+    --color-blue-700: #175cd3;
+
+    --color-blue-gray-200: #d5d9eb;
+    --color-blue-gray-700: #363f72;
+
+    --color-green-50: #edfcf2;
+    --color-green-400: #3ccb7f;
+    --color-green-800: #095c37;
+
+    --color-success-100: #d1fadf;
+    --color-success-500: #12b76a;
+    --color-success-600: #039855;
+    --color-success-900: #054f31;
+
+    --color-purple-25: #fafaff;
+    --color-purple-50: #f4f3ff;
+    --color-purple-100: #ebe9fe;
+    --color-purple-200: #d9d6fe;
+    --color-purple-300: #bdb4fe;
+    --color-purple-500: #7a5af8;
+    --color-purple-600: #6938ef;
+    --color-purple-700: #5925dc;
+    --color-purple-800: #4a1fb8;
+
+    --color-orange-50: #fef6ee;
+    --color-orange-dark-50: #fff4ed;
+    --color-orange-dark-100: #ffe6d5;
+    --color-orange-dark-500: #ff4405;
+    --color-orange-dark-700: #bc1b06;
+
+    --color-warning-400: #fdb022;
+    --color-warning-600: #dc6803;
+
+    --color-error-25: #fffbfa;
+    --color-error-50: #fef3f2;
+    --color-error-100: #fee4e2;
+    --color-error-600: #d92d20;
+    --color-error-700: #b42318;
+
+    --color-yellow-200: #feee95;
+    --color-yellow-400: #fac515;
+    --color-yellow-500: #eaaa08;
+
+    --radius-lg: 20px;
+    --radius-md: 16px;
+    --radius-xs: 8px;
+
+    --shadow-card: 0px 6px 2px 0px rgba(0, 0, 0, 0.02), 0px 3px 1.5px 0px rgba(0, 0, 0, 0.03), 0px 1px 1px 0px rgba(0, 0, 0, 0.03);
+    --shadow-card-lg: 0px 16px 10px 0px rgba(0, 0, 0, 0.02), 0px 7px 7px 0px rgba(0, 0, 0, 0.03), 0px 2px 4px 0px rgba(0, 0, 0, 0.03);
+    --shadow-banner: 0px 16px 5px 0px rgba(0, 0, 0, 0.02), 0px 7px 3.5px 0px rgba(0, 0, 0, 0.03), 0px 2px 2px 0px rgba(0, 0, 0, 0.03);
+}
