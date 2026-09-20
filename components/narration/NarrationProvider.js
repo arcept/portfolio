@@ -3,12 +3,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NarrationController } from './controller.mjs';
 import { resolveAudioUrl } from './timeline.mjs';
+import { useLang } from '@/components/i18n/LangProvider';
 
 // Gives the page one narration: it owns the controller (and so the single <audio> element), so the audio
 // and its state survive the card changing size. Nothing is fetched until something calls
 // ensure() — the trigger on first interaction — so the narration costs the page nothing to load.
 //
 //   <NarrationProvider src="/case-studies/placement-hub/narration/narration.json"> …page… </NarrationProvider>
+//
+// `src` can also be a map from language to narration.json ({ en: '…', de: '…' }): the narration in the page's
+// language is used, or the English one when a language has none. Changing language replaces the narration (and
+// stops the old one). Each language keeps its own remembered position.
 //
 // Hooks for the parts of the UI:
 //   useNarration()        → { status, narration, controller, ensure, deepLink, clearDeepLink }
@@ -34,13 +39,29 @@ function parseDeepLink(search) {
   return { t };
 }
 
-export default function NarrationProvider({ src, storageKey = 'placement-hub-narration', children }) {
+export default function NarrationProvider({ src: sources, storageKey: baseKey = 'placement-hub-narration', children }) {
+  const { lang } = useLang();
+  const src = typeof sources === 'string' ? sources : (sources[lang] ?? sources.en);
+  const storageKey = typeof sources === 'string' || !sources[lang] || lang === 'en' ? baseKey : `${baseKey}-${lang}`;
   const [status, setStatus] = useState('idle'); // idle → loading → ready | error
   const [narration, setNarration] = useState(null);
   const [controller, setController] = useState(null);
   const [deepLink, setDeepLink] = useState(null);
   const controllerRef = useRef(null);
   const loadingRef = useRef(null);
+  const loadedSrc = useRef(null);
+
+  // A different narration is wanted (the language changed): let go of the one that is loaded.
+  useEffect(() => {
+    if (!controllerRef.current || loadedSrc.current === src) return;
+    controllerRef.current.destroy();
+    controllerRef.current = null;
+    loadingRef.current = null;
+    loadedSrc.current = null;
+    setController(null);
+    setNarration(null);
+    setStatus('idle');
+  }, [src]);
 
   useEffect(() => {
     setDeepLink(parseDeepLink(window.location.search));
@@ -69,6 +90,7 @@ export default function NarrationProvider({ src, storageKey = 'placement-hub-nar
         const audioUrl = resolveAudioUrl(src, data.audio, data.version, window.location.href);
         const created = new NarrationController(data, { audioUrl, storageKey });
         controllerRef.current = created;
+        loadedSrc.current = src;
         setNarration(data);
         setController(created);
         setStatus('ready');

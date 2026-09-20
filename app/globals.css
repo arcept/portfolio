@@ -1444,6 +1444,181 @@ footer a:hover {
   object-position: top left;
 }
 
+/* Language menu, beside the theme switch (see components/i18n/LangSwitch.js): a small "DE ▾" button that opens a short
+   list right below it, in the site's own style. */
+.cs-lang {
+  position: relative;
+  flex: none;
+}
+
+.cs-lang__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px 0 9px;
+  border-radius: 9999px;
+  border: 1px solid var(--graphite);
+  background: var(--obsidian);
+  color: var(--fog);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.cs-lang__button:hover,
+.cs-lang__button[aria-expanded='true'] {
+  border-color: var(--ash);
+  color: var(--paper);
+}
+
+.cs-lang__button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.cs-lang__caret {
+  opacity: 0.7;
+  transition: transform 0.2s ease;
+}
+
+.cs-lang__button[aria-expanded='true'] .cs-lang__caret {
+  transform: rotate(180deg);
+}
+
+.cs-lang__flag {
+  flex: none;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18);
+}
+
+html[data-cs-theme='light'] .cs-lang__flag {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.18);
+}
+
+/* The list: opens below the button, its right edge on the button's, so it never reaches over the theme switch. */
+.cs-lang__menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 180px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--carbon);
+  border: 1px solid color-mix(in srgb, var(--paper) 22%, transparent);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.6), 0 8px 24px -12px rgb(0 0 0 / 0.4);
+  outline: none;
+  animation: cs-lang-in 0.14s ease-out both;
+}
+
+html[data-cs-theme='light'] .cs-lang__menu {
+  box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.25), 0 8px 24px -12px rgb(0 0 0 / 0.18);
+}
+
+@keyframes cs-lang-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.cs-lang__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 12px 0 10px;
+  border-radius: 9px;
+  color: var(--mist);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.cs-lang__item .cs-lang__globe {
+  flex: none;
+  width: 18px;
+  color: var(--fog);
+}
+
+.cs-lang__item.is-active {
+  background: color-mix(in srgb, var(--paper) 9%, transparent);
+  color: var(--paper);
+}
+
+.cs-lang__item[aria-selected='true'] {
+  color: var(--paper);
+}
+
+.cs-lang__check {
+  flex: none;
+  margin-left: auto;
+  color: var(--article-green, var(--accent));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-lang__menu {
+    animation: none;
+  }
+
+  .cs-lang__caret {
+    transition: none;
+  }
+}
+
+/* On phones the nav has no room for "DE ▾": the button shrinks to just the flag or globe (the list is unchanged). */
+@media (max-width: 480px) {
+  .cs-lang__button {
+    justify-content: center;
+    width: 28px;
+    padding: 0;
+  }
+
+  .cs-lang__code,
+  .cs-lang__caret {
+    display: none;
+  }
+
+  .site-nav__name {
+    white-space: nowrap;
+  }
+
+  /* Only on a page that has the language control, so no other page's nav changes. */
+  .site-nav__inner:has(.cs-lang) {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .site-nav__links:has(.cs-lang) {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .site-nav__inner:has(.cs-lang) .site-nav__name {
+    font-size: 15px;
+  }
+
+  .site-nav__links:has(.cs-lang) {
+    gap: 6px;
+  }
+
+  .site-nav__links:has(.cs-lang) a {
+    font-size: 13px;
+  }
+}
+
+/* The narrowest phones (iPhone 5 / SE 1st gen, 320px): there is room for the brand, two links and the two switches. */
+@media (max-width: 340px) {
+  .site-nav__links:has(.cs-lang) a[href='/#about'] {
+    display: none;
+  }
+}
+
 /* Theme switch on the Placement Hub case study (see components/theme/ThemeSwitch.js). Its state is
    read from <html data-cs-theme>, so it is right on the first paint: knob to the right in dark. */
 .cs-switch {
@@ -1488,14 +1663,38 @@ footer a:hover {
   position: absolute;
   top: 2px;
   left: 2px;
+  display: grid;
+  place-items: center;
   width: 22px;
   height: 22px;
   border-radius: 50%;
   background: var(--paper);
+  color: var(--void); /* the opposite of the knob, on either theme, so the icon on it always shows */
   transform: translateX(26px);
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html[data-cs-theme='light'] .cs-switch__knob {
   transform: none;
+}
+
+/* The icon for the current mode is on the knob; the track shows only the mode you would switch to. */
+.cs-switch__glyph {
+  grid-area: 1 / 1;
+  display: flex;
+}
+
+.cs-switch__glyph--sun,
+html[data-cs-theme='light'] .cs-switch__glyph--moon,
+.cs-switch__icon--moon {
+  display: none;
+}
+
+html[data-cs-theme='light'] .cs-switch__glyph--sun,
+html[data-cs-theme='light'] .cs-switch__icon--moon {
+  display: flex;
+}
+
+html[data-cs-theme='light'] .cs-switch__icon--sun {
+  display: none;
 }

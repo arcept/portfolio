@@ -3,6 +3,7 @@
 import { Children, isValidElement, useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react';
 import { Count, EASE, MaskText, Reveal, useReduce } from './Motion';
+import { useT } from '@/components/i18n/LangProvider';
 
 /* ---------------------------------------------------------------- Section */
 
@@ -13,6 +14,7 @@ import { Count, EASE, MaskText, Reveal, useReduce } from './Motion';
 export function Section({ id, number, eyebrow, category, questions, artifacts, heading, headerAction, children }) {
   const ref = useRef(null);
   const reduce = useReduce();
+  const t = useT();
 
   const { scrollYProgress: enter } = useScroll({ target: ref, offset: ['start end', 'start 0.55'] });
   const { scrollYProgress: exit } = useScroll({ target: ref, offset: ['end 0.55', 'end 0.05'] });
@@ -31,7 +33,7 @@ export function Section({ id, number, eyebrow, category, questions, artifacts, h
     <>
       <p className="lx-margin__category">{category}</p>
       <div className="lx-margin__group">
-        <p className="lx-margin__label">Questions</p>
+        <p className="lx-margin__label">{t('ui.questions', 'Questions')}</p>
         {questions.map((q) => (
           <p key={q} className="lx-margin__question">
             {q}
@@ -40,7 +42,7 @@ export function Section({ id, number, eyebrow, category, questions, artifacts, h
       </div>
       {artifacts && (
         <div className="lx-margin__group">
-          <p className="lx-margin__label">Deliverables</p>
+          <p className="lx-margin__label">{t('ui.deliverables', 'Deliverables')}</p>
           <p className="lx-margin__artifacts">{artifacts}</p>
         </div>
       )}
@@ -54,7 +56,7 @@ export function Section({ id, number, eyebrow, category, questions, artifacts, h
   return (
     <section id={id} className="lx-section" data-lx-section>
       <motion.div className="lx-panel" ref={ref} style={reduce ? undefined : { y: rise, scale, opacity }}>
-        <aside className="lx-margin" aria-label={`About the ${eyebrow} section`}>
+        <aside className="lx-margin" aria-label={t('ui.aboutSection', 'About the {name} section', { name: eyebrow })}>
           {margin}
         </aside>
 
@@ -71,7 +73,7 @@ export function Section({ id, number, eyebrow, category, questions, artifacts, h
             {headerAction}
           </header>
 
-          <Disclosure summary={`Discipline, questions and deliverables`} className="lx-disclosure--mobile-only">
+          <Disclosure summary={t('ui.marginSummary', 'Discipline, questions and deliverables')} className="lx-disclosure--mobile-only">
             {margin}
           </Disclosure>
 
@@ -151,6 +153,7 @@ function Cell({ value }) {
 // Rows stagger in, plain numbers count up, and `bars` draws a bar behind one numeric column.
 export function Table({ columns, rows, minWidth, bars }) {
   const reduce = useReduce();
+  const t = useT();
   // A table wider than its column scrolls sideways; then it has to be reachable with the keyboard.
   const wrapRef = useRef(null);
   const [scrolls, setScrolls] = useState(false);
@@ -167,7 +170,7 @@ export function Table({ columns, rows, minWidth, bars }) {
     <motion.div
       ref={wrapRef}
       className="lx-table-wrap"
-      {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': `Table: ${columns.map((c) => c.label).join(', ')} (scrolls sideways)` } : null)}
+      {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': t('ui.tableLabel', 'Table: {columns} (scrolls sideways)', { columns: columns.map((c) => c.label).join(', ') }) } : null)}
       initial={reduce ? false : { opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '0px 0px -10% 0px' }}
@@ -243,6 +246,7 @@ export function Note({ label, tone, children }) {
 // `trend="down"` puts a green arrow before it (down is good); `desc` is a quiet line under the label.
 // `columns` is how many sit across (default 4; use 2 when the figures are long).
 export function Stats({ items, columns = 4 }) {
+  const t = useT();
   const reduce = useReduce();
   return (
     <motion.div
@@ -257,7 +261,7 @@ export function Stats({ items, columns = 4 }) {
         <motion.div key={label} className="lx-stat" variants={{ hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } } }}>
           <p className="lx-stat__value">
             {trend === 'down' && (
-              <span className="lx-stat__trend" aria-label="down">
+              <span className="lx-stat__trend" aria-label={t('ui.down', 'down')}>
                 ↓
               </span>
             )}
@@ -325,9 +329,10 @@ BigStat.lxSelfReveal = true;
 /* ---------------------------------------------------------------- Images */
 
 export function Placeholder({ children }) {
+  const t = useT();
   return (
     <div className="lx-ph">
-      <span className="lx-ph__tag">Visual placeholder</span>
+      <span className="lx-ph__tag">{t('ui.visualPlaceholder', 'Visual placeholder')}</span>
       <span>{children}</span>
     </div>
   );

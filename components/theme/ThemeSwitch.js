@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { THEME_ATTR, THEME_KEY, resolveTheme } from './theme';
 import useCsTheme from './useCsTheme';
+import { useT } from '@/components/i18n/LangProvider';
 
 function Sun() {
   return (
@@ -29,6 +30,7 @@ const current = () => (document.documentElement.getAttribute(THEME_ATTR) === 'li
 // not leak onto other pages, so the attribute is removed when the page unmounts.
 export default function ThemeSwitch() {
   const theme = useCsTheme();
+  const t = useT();
   useEffect(() => {
     apply(resolveTheme());
     if (!window.matchMedia) return () => document.documentElement.removeAttribute(THEME_ATTR);
@@ -55,14 +57,22 @@ export default function ThemeSwitch() {
   // The knob and icons are positioned by CSS from <html>'s attribute, so the switch is right on the
   // first paint; aria-checked is the assistive-technology view of the same thing.
   return (
-    <button type="button" role="switch" aria-checked={theme !== 'light'} aria-label="Dark theme" className="cs-switch" onClick={flip}>
+    <button type="button" role="switch" aria-checked={theme !== 'light'} aria-label={t('ui.darkTheme', 'Dark theme')} className="cs-switch" onClick={flip}>
       <span className="cs-switch__icon cs-switch__icon--sun">
         <Sun />
       </span>
       <span className="cs-switch__icon cs-switch__icon--moon">
         <Moon />
       </span>
-      <span className="cs-switch__knob" aria-hidden="true" />
+      {/* The icon for the mode you are in rides on the knob, so it is never hidden under it. */}
+      <span className="cs-switch__knob" aria-hidden="true">
+        <span className="cs-switch__glyph cs-switch__glyph--moon">
+          <Moon />
+        </span>
+        <span className="cs-switch__glyph cs-switch__glyph--sun">
+          <Sun />
+        </span>
+      </span>
     </button>
   );
 }

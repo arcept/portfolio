@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { EASE, useReduce } from '@/components/case-study-kit/Motion';
+import { useT } from '@/components/i18n/LangProvider';
 
 function jumpTo(id) {
   window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }), 60);
@@ -33,6 +34,7 @@ function Words({ text, className }) {
 // jumps there), `visual` is a node (see StoryVisuals.js). Steps hold JSX, so they are defined in the
 // case study's own client module, which renders this launcher.
 export default function StoryLauncher({ steps, className, fontClass = '', children }) {
+  const t = useT();
   const LAST = steps.length; // the closing card sits after the last step
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -89,7 +91,7 @@ export default function StoryLauncher({ steps, className, fontClass = '', childr
           className={`st ${fontClass}`.trim()}
           role="dialog"
           aria-modal="true"
-          aria-label="The 2-minute version"
+          aria-label={t('ui.storyTitle', 'The 2-minute version')}
           tabIndex={-1}
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -101,7 +103,7 @@ export default function StoryLauncher({ steps, className, fontClass = '', childr
           <header className="st__top">
             <div className="st__progress" role="presentation">
               {[...steps, null].map((s, i) => (
-                <button key={i} type="button" className={`st__seg${i < step ? ' is-done' : ''}${i === step ? ' is-now' : ''}`} onClick={() => go(i)} aria-label={s ? `Go to: ${s.kicker}` : 'Go to the end'}>
+                <button key={i} type="button" className={`st__seg${i < step ? ' is-done' : ''}${i === step ? ' is-now' : ''}`} onClick={() => go(i)} aria-label={s ? t('ui.storyGoTo', 'Go to: {kicker}', { kicker: s.kicker }) : t('ui.storyGoEnd', 'Go to the end')}>
                   <i />
                 </button>
               ))}
@@ -113,11 +115,11 @@ export default function StoryLauncher({ steps, className, fontClass = '', childr
                     <b>{String(step + 1).padStart(2, '0')}</b> {current.kicker}
                   </>
                 ) : (
-                  'The 2-minute version'
+                  t('ui.storyTitle', 'The 2-minute version')
                 )}
               </span>
-              <button type="button" className="st__close" onClick={close} aria-label="Close the 2-minute version">
-                <span>Esc</span>
+              <button type="button" className="st__close" onClick={close} aria-label={t('ui.storyClose', 'Close the 2-minute version')}>
+                <span>{t('ui.esc', 'Esc')}</span>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="m3 3 10 10M13 3 3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                 </svg>
@@ -173,18 +175,18 @@ export default function StoryLauncher({ steps, className, fontClass = '', childr
                           jumpTo(current.id);
                         }}
                       >
-                        Read this section in full <span aria-hidden="true">↗</span>
+                        {t('ui.storyReadSection', 'Read this section in full')} <span aria-hidden="true">↗</span>
                       </motion.button>
                     </div>
                     <div className="st__visual">{current.visual}</div>
                   </>
                 ) : (
                   <div className="st__end">
-                    <p className="st__kicker">That’s the short version</p>
-                    <Words text="The rest is in the detail." className="st__title st__title--end" />
+                    <p className="st__kicker">{t('ui.storyShort', 'That’s the short version')}</p>
+                    <Words text={t('ui.storyRest', 'The rest is in the detail.')} className="st__title st__title--end" />
                     <motion.div className="st__actions" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.5 }}>
                       <button type="button" className="st__btn st__btn--primary" onClick={close}>
-                        Read the full case study
+                        {t('ui.storyReadAll', 'Read the full case study')}
                       </button>
                       <button
                         type="button"
@@ -194,10 +196,10 @@ export default function StoryLauncher({ steps, className, fontClass = '', childr
                           jumpTo('prototype');
                         }}
                       >
-                        Try the prototype ↓
+                        {t('ui.tryPrototype', 'Try the prototype')} ↓
                       </button>
                       <button type="button" className="st__btn st__btn--quiet" onClick={() => go(0)}>
-                        Watch again
+                        {t('ui.storyAgain', 'Watch again')}
                       </button>
                     </motion.div>
                   </div>
@@ -208,12 +210,12 @@ export default function StoryLauncher({ steps, className, fontClass = '', childr
 
           <footer className="st__nav">
             <button type="button" className="st__btn st__btn--quiet" onClick={() => go(step - 1)} disabled={step === 0}>
-              ← Back
+              ← {t('ui.back', 'Back')}
             </button>
-            <span className="st__hint">← → to move · Esc to close</span>
+            <span className="st__hint">{t('ui.storyHint', '← → to move · Esc to close')}</span>
             {step < LAST ? (
               <button type="button" className="st__btn st__btn--primary" onClick={() => go(step + 1)}>
-                {step === LAST - 1 ? 'Finish' : 'Next'} →
+                {step === LAST - 1 ? t('ui.finish', 'Finish') : t('ui.next', 'Next')} →
               </button>
             ) : (
               <span />

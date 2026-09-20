@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import StarBorder from './StarBorder/StarBorder';
+import { useT } from '@/components/i18n/LangProvider';
 
 // Fixed height of .proto-frame-body in globals.css — kept in sync manually
 // since the scale math below needs it as a number, not a CSS value.
@@ -19,6 +20,7 @@ export default function PrototypeEmbed({
   heading = DEFAULT_HEADING,
   note = DEFAULT_NOTE,
 }) {
+  const t = useT();
   const [activeId, setActiveId] = useState(versions[0].id);
   const [status, setStatus] = useState('loading');
   const [scale, setScale] = useState(1);
@@ -153,7 +155,7 @@ export default function PrototypeEmbed({
 
           <div className="proto-head-actions">
             {versions.length > 1 && (
-              <div className="proto-version-switch" role="tablist" aria-label="Prototype version">
+              <div className="proto-version-switch" role="tablist" aria-label={t('ui.protoVersion', 'Prototype version')}>
                 {versions.map((version) => (
                   <button
                     key={version.id}
@@ -170,7 +172,7 @@ export default function PrototypeEmbed({
             )}
 
             <StarBorder as="a" href={active.fullSrc} target="_blank" rel="noopener" color="cyan" speed="5s">
-              Open full prototype ↗
+              {t('ui.protoOpen', 'Open full prototype')} ↗
             </StarBorder>
           </div>
         </div>
@@ -187,8 +189,8 @@ export default function PrototypeEmbed({
               {status !== 'loaded' && (
                 <div className="proto-frame-status">
                   {status === 'loading'
-                    ? 'Loading prototype…'
-                    : 'Prototype failed to load — use "Open full prototype" below.'}
+                    ? t('ui.protoLoading', 'Loading prototype…')
+                    : t('ui.protoFailed', 'Prototype failed to load — use "Open full prototype" below.')}
                 </div>
               )}
               {status !== 'error' && (

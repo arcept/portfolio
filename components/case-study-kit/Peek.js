@@ -3,12 +3,14 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { EASE, useReduce } from '@/components/case-study-kit/Motion';
+import { useT } from '@/components/i18n/LangProvider';
 
 const PEEK = 128;
 
 // Expandable content that shows its first few lines and fades out below them, so it is obvious
 // there is more behind the fade. `label` names it; the button under it opens the rest.
-export default function Peek({ label, more = 'Show the rest', less = 'Show less', children }) {
+export default function Peek({ label, more, less, children }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [full, setFull] = useState(null);
   const inner = useRef(null);
@@ -48,7 +50,7 @@ export default function Peek({ label, more = 'Show the rest', less = 'Show less'
       </motion.div>
       {!fits && (
         <button type="button" className="px-peek__btn" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)}>
-          <span>{open ? less : more}</span>
+          <span>{open ? (less ?? t('ui.peekLess', 'Show less')) : (more ?? t('ui.peekMore', 'Show the rest'))}</span>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
             <path d="M2 4.25 6 8l4-3.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

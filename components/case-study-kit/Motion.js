@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import { useLang } from '@/components/i18n/LangProvider';
+import { formatNumber, localSuffix } from '@/components/i18n/format';
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -117,6 +119,7 @@ export function MaskText({ text, as: Tag = 'h2', className, delay = 0, immediate
 
 // Counts up to a number once it scrolls into view.
 export function Count({ to, decimals = 0, prefix = '', suffix = '', duration = 1.5 }) {
+  const { lang } = useLang();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -8% 0px' });
   const reduce = useReduce();
@@ -135,8 +138,8 @@ export function Count({ to, decimals = 0, prefix = '', suffix = '', duration = 1
   return (
     <span ref={ref} className="lx-count">
       {prefix}
-      {value.toFixed(decimals)}
-      {suffix}
+      {formatNumber(value, decimals, lang)}
+      {localSuffix(suffix, lang)}
     </span>
   );
 }

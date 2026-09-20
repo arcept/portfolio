@@ -13,6 +13,7 @@
     "test:narration": "node --test \"components/narration/*.test.mjs\"",
     "test:narration:tools": "python3 -m unittest discover -s docs/narration -p \"test_*.py\"",
     "validate:narration": "node scripts/validate-narration.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "narration:script": "python3 docs/narration/narrate.py script",
     "narration:align": "docs/narration/.venv/bin/python docs/narration/narrate.py align",
     "narration:publish": "python3 docs/narration/narrate.py publish"

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useInView } from 'motion/react';
 import { EASE, useReduce } from '@/components/case-study-kit/Motion';
+import { useT } from '@/components/i18n/LangProvider';
 
 /* ------------------------------------------------------------- Lightbox */
 
@@ -11,6 +12,7 @@ import { EASE, useReduce } from '@/components/case-study-kit/Motion';
 // transformed (scroll animation), which would otherwise trap a fixed-position overlay.
 function Lightbox({ items, index, onIndex, onClose }) {
   const reduce = useReduce();
+  const t = useT();
   const item = index === null ? null : items[index];
   const closeRef = useRef(null);
   const [mounted, setMounted] = useState(false);
@@ -49,14 +51,14 @@ function Lightbox({ items, index, onIndex, onClose }) {
           className="px-lb"
           role="dialog"
           aria-modal="true"
-          aria-label="Screenshot"
+          aria-label={t('ui.screenshot', 'Screenshot')}
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={reduce ? undefined : { opacity: 0 }}
           transition={{ duration: 0.25 }}
           onClick={onClose}
         >
-          <button ref={closeRef} type="button" className="px-lb__close" aria-label="Close" onClick={onClose}>
+          <button ref={closeRef} type="button" className="px-lb__close" aria-label={t('ui.close', 'Close')} onClick={onClose}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="m3 3 10 10M13 3 3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
@@ -64,10 +66,10 @@ function Lightbox({ items, index, onIndex, onClose }) {
 
           {items.length > 1 && (
             <>
-              <button type="button" className="px-lb__nav px-lb__nav--prev" aria-label="Previous screenshot" onClick={(e) => { e.stopPropagation(); step(-1); }}>
+              <button type="button" className="px-lb__nav px-lb__nav--prev" aria-label={t('ui.prevShot', 'Previous screenshot')} onClick={(e) => { e.stopPropagation(); step(-1); }}>
                 ←
               </button>
-              <button type="button" className="px-lb__nav px-lb__nav--next" aria-label="Next screenshot" onClick={(e) => { e.stopPropagation(); step(1); }}>
+              <button type="button" className="px-lb__nav px-lb__nav--next" aria-label={t('ui.nextShot', 'Next screenshot')} onClick={(e) => { e.stopPropagation(); step(1); }}>
                 →
               </button>
             </>
@@ -133,6 +135,7 @@ const TILE_STILL = { hidden: TILE.hidden, show: { ...TILE.show, transition: { du
 // when a set of images is explained together); `maxWidth` keeps a lone image from filling the column.
 export function Gallery({ items, columns = 3, fit = 'cover', caption, maxWidth }) {
   const reduce = useReduce();
+  const t = useT();
   const [open, setOpen] = useState(null);
 
   const zoomable = items.filter((item) => item.src);
@@ -157,7 +160,7 @@ export function Gallery({ items, columns = 3, fit = 'cover', caption, maxWidth }
                   className={`px-tile__frame is-${mode}`}
                   style={mode === 'natural' ? { aspectRatio: `${item.width} / ${item.height}` } : undefined}
                   onClick={() => setOpen(zoomIndex(item))}
-                  aria-label={`Enlarge: ${item.alt}`}
+                  aria-label={t('ui.enlarge', 'Enlarge: {alt}', { alt: item.alt })}
                 >
                   <img src={item.src} alt="" width={item.width} height={item.height} loading="lazy" />
                   <span className="px-tile__zoom">
@@ -166,7 +169,7 @@ export function Gallery({ items, columns = 3, fit = 'cover', caption, maxWidth }
                 </button>
               ) : (
                 <div className="px-tile__frame px-tile__frame--empty">
-                  <span className="px-tile__tag">Visual placeholder</span>
+                  <span className="px-tile__tag">{t('ui.visualPlaceholder', 'Visual placeholder')}</span>
                   <span>{item.placeholder}</span>
                 </div>
               )}
@@ -191,6 +194,7 @@ Gallery.lxSelfReveal = true;
 // items: [{ src, alt, width, height, label, caption }]
 export function Sequence({ items, interval = 3600, wide = false }) {
   const reduce = useReduce();
+  const t = useT();
   const ref = useRef(null);
   const inView = useInView(ref, { margin: '-15% 0px -15% 0px' });
   const [active, setActive] = useState(0);
@@ -223,7 +227,7 @@ export function Sequence({ items, interval = 3600, wide = false }) {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <button type="button" className="px-seq__stage" onClick={() => setZoom(active)} aria-label={`Enlarge: ${current.alt}`}>
+      <button type="button" className="px-seq__stage" onClick={() => setZoom(active)} aria-label={t('ui.enlarge', 'Enlarge: {alt}', { alt: current.alt })}>
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.img
             key={current.src}

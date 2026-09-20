@@ -662,6 +662,12 @@
   border-bottom: 1px solid var(--nr-rule);
 }
 
+.nr-dock__note {
+  margin: 2px 0 0;
+  font-size: 0.6875rem;
+  color: var(--nr-ink-3);
+}
+
 .nr-dock__label {
   margin: 0;
   font-size: 0.9375rem;

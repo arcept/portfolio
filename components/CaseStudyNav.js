@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
+import { useT } from '@/components/i18n/LangProvider';
 
 export default function CaseStudyNav({ sections, projectFiles }) {
+  const t = useT();
   const [activeId, setActiveId] = useState(sections.find((s) => s.id)?.id);
   const [indicator, setIndicator] = useState(null);
   const shouldReduceMotion = useReducedMotion();
@@ -52,7 +54,7 @@ export default function CaseStudyNav({ sections, projectFiles }) {
   }
 
   return (
-    <nav className="cs-toc" aria-label="Case study sections">
+    <nav className="cs-toc" aria-label={t('ui.caseStudySections', 'Case study sections')}>
       <div className="cs-toc__list" ref={listRef}>
         <div className="cs-toc__track" aria-hidden="true" />
         {indicator && (

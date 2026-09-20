@@ -6,6 +6,7 @@ import { useNarrationUI } from './NarrationUI';
 import { ForwardIcon, PauseIcon, PlayIcon, RewindIcon } from './NarrationIcons';
 import { SKIP_SECONDS } from './controller.mjs';
 import { formatTime } from './timeline.mjs';
+import { useT } from '@/components/i18n/LangProvider';
 
 // The floating card. It is ONE element that is a small player by default and grows, up and to the left, into the
 // full player (controls, scrubber, chapters, transcript); on phones the small player is a bar along the bottom and
@@ -39,6 +40,7 @@ const Svg = ({ children }) => (
  * close) above, and the transport (back, play, forward, and a bar you can click or drag to seek) below.
  */
 function MiniRow({ expandRef }) {
+  const t = useT();
   const { expand, dismiss } = useNarrationUI();
   const { controller } = useNarration();
   const state = useNarrationState();
@@ -48,7 +50,7 @@ function MiniRow({ expandRef }) {
   const shownSecond = useRef('');
 
   const line = useMemo(() => (controller ? sentenceText(controller.tl, state.activeSentence) : ''), [controller, state.activeSentence]);
-  const chapter = controller && state.activeChapter >= 0 ? controller.tl.chapters[state.activeChapter].label : 'Narration';
+  const chapter = controller && state.activeChapter >= 0 ? controller.tl.chapters[state.activeChapter].label : t('nr.narration', 'Narration');
   const duration = controller ? controller.tl.duration : 0;
 
   useNarrationFrame((frame) => {
@@ -75,14 +77,14 @@ function MiniRow({ expandRef }) {
           <b>{chapter}</b>
           <span>{line}</span>
         </div>
-        <button ref={expandRef} type="button" className="nr-mini__btn" aria-label={`Expand narration transcript. Now: ${chapter}`} title="Show the transcript" onClick={expand}>
+        <button ref={expandRef} type="button" className="nr-mini__btn" aria-label={t('nr.expandAria', 'Expand narration transcript. Now: {chapter}', { chapter })} title={t('nr.expandTitle', 'Show the transcript')} onClick={expand}>
           <Svg><path d="m4 10 4-4 4 4" /></Svg>
         </button>
         <button
           type="button"
           className="nr-mini__btn"
-          aria-label="Close narration player"
-          title="Close (pauses the narration)"
+          aria-label={t('nr.closeAria', 'Close narration player')}
+          title={t('nr.closeTitle', 'Close (pauses the narration)')}
           onClick={() => {
             controller?.pause();
             dismiss();
@@ -93,19 +95,19 @@ function MiniRow({ expandRef }) {
       </div>
 
       <div className="nr-mini__bottom">
-        <button type="button" className="nr-mini__skip" aria-label={`Back ${SKIP_SECONDS} seconds`} title={`Back ${SKIP_SECONDS} seconds`} disabled={!controller} onClick={() => controller?.skip(-SKIP_SECONDS)}>
+        <button type="button" className="nr-mini__skip" aria-label={t('nr.back', 'Back {n} seconds', { n: SKIP_SECONDS })} title={t('nr.back', 'Back {n} seconds', { n: SKIP_SECONDS })} disabled={!controller} onClick={() => controller?.skip(-SKIP_SECONDS)}>
           <RewindIcon />
         </button>
         <button
           type="button"
           className="nr-mini__play"
-          aria-label={playing ? 'Pause narration' : state.ended ? 'Replay narration' : 'Play narration'}
+          aria-label={playing ? t('nr.pauseNarration', 'Pause narration') : state.ended ? t('nr.replayNarration', 'Replay narration') : t('nr.playNarration', 'Play narration')}
           disabled={!controller}
           onClick={() => controller?.toggle()}
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
         </button>
-        <button type="button" className="nr-mini__skip" aria-label={`Forward ${SKIP_SECONDS} seconds`} title={`Forward ${SKIP_SECONDS} seconds`} disabled={!controller} onClick={() => controller?.skip(SKIP_SECONDS)}>
+        <button type="button" className="nr-mini__skip" aria-label={t('nr.forward', 'Forward {n} seconds', { n: SKIP_SECONDS })} title={t('nr.forward', 'Forward {n} seconds', { n: SKIP_SECONDS })} disabled={!controller} onClick={() => controller?.skip(SKIP_SECONDS)}>
           <ForwardIcon />
         </button>
         <span className="nr-mini__clock" ref={elapsedRef}>0:00</span>
@@ -117,7 +119,7 @@ function MiniRow({ expandRef }) {
           max={1000}
           step={1}
           defaultValue={0}
-          aria-label="Seek narration"
+          aria-label={t('nr.seek', 'Seek narration')}
           disabled={!controller}
           onInput={(event) => controller?.seek((Number(event.currentTarget.value) / 1000) * duration)}
           onKeyDown={(event) => {
@@ -137,6 +139,7 @@ function MiniRow({ expandRef }) {
 }
 
 export function NarrationPanel({ children }) {
+  const t = useT();
   const { mode, collapse } = useNarrationUI();
   const expanded = mode === 'expanded';
   const [hydrated, setHydrated] = useState(false);
@@ -169,7 +172,7 @@ export function NarrationPanel({ children }) {
         id="nr-dock"
         className="nr-dock"
         data-mode={mode}
-        aria-label="Narration"
+        aria-label={t('nr.narration', 'Narration')}
         inert={hydrated && mode === 'closed' ? true : undefined}
         onKeyDown={(event) => {
           if (event.key === 'Escape' && expanded) {
@@ -183,8 +186,11 @@ export function NarrationPanel({ children }) {
         </div>
         <div className="nr-dock__full" inert={hydrated && !expanded ? true : undefined}>
           <div className="nr-dock__bar">
-            <p className="nr-dock__label">Listen to the short version</p>
-            <button ref={collapseRef} type="button" className="nr-collapse" aria-label="Shrink to the small player" title="Shrink" onClick={collapse}>
+            <div>
+              <p className="nr-dock__label">{t('nr.listenShort', 'Listen to the short version')}</p>
+              {t('nr.audioNote', '') && <p className="nr-dock__note">{t('nr.audioNote', '')}</p>}
+            </div>
+            <button ref={collapseRef} type="button" className="nr-collapse" aria-label={t('nr.shrinkAria', 'Shrink to the small player')} title={t('nr.shrink', 'Shrink')} onClick={collapse}>
               <Svg><path d="m4 6 4 4 4-4" /></Svg>
             </button>
           </div>

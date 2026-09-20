@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useNarration, useNarrationState } from './NarrationProvider';
 import { approxDuration } from './timeline.mjs';
+import { useT } from '@/components/i18n/LangProvider';
 
 // The narration's chrome around the player: the floating card (a small player by default, expandable to the
 // full transcript), the "Listen" trigger in the hero, and the per-section "Listen to this part" buttons. The
@@ -82,13 +83,15 @@ export function NarrationTrigger({ duration, className = '' }) {
   const { showMini } = useNarrationUI();
   const { ensure } = useNarration();
   const state = useNarrationState();
+  const t = useT();
   const warm = () => ensure().catch(() => {});
-  const label = state.playing ? 'Pause the short version' : 'Listen to the short version';
+  const minutes = Math.max(1, Math.round(duration / 60));
+  const label = state.playing ? t('nr.pauseShort', 'Pause the short version') : t('nr.listenShort', 'Listen to the short version');
   return (
     <button
       type="button"
       className={`nr-trigger${state.playing ? ' is-playing' : ''} ${className}`.trim()}
-      aria-label={state.playing ? label : `${label}, about ${Math.round(duration / 60)} minutes`}
+      aria-label={state.playing ? label : t('nr.listenShortAbout', '{label}, about {minutes} minutes', { label, minutes })}
       onPointerEnter={warm}
       onFocus={warm}
       onTouchStart={warm}
@@ -99,7 +102,10 @@ export function NarrationTrigger({ duration, className = '' }) {
     >
       <WaveIcon />
       <span className="nr-trigger__label">{label}</span>
-      <span className="nr-trigger__time">{approxDuration(duration)}</span>
+      <span className="nr-trigger__time">
+        {t('nr.approx', approxDuration(duration), { n: minutes })}
+        {t('nr.audioTag', '')}
+      </span>
     </button>
   );
 }
@@ -111,6 +117,7 @@ export function NarrationTrigger({ duration, className = '' }) {
  */
 export function ListenButton({ index, label, length }) {
   const { ensure } = useNarration();
+  const t = useT();
   const state = useNarrationState();
   const ref = useRef(null);
   const active = state.playing && state.activeChapter === index;
@@ -139,7 +146,7 @@ export function ListenButton({ index, label, length }) {
   };
 
   return (
-    <button ref={ref} type="button" className="nr-listen" onClick={onClick} aria-label={active ? `Pause narration` : `Listen to this part: ${label}, ${length}`}>
+    <button ref={ref} type="button" className="nr-listen" onClick={onClick} aria-label={active ? t('nr.pauseNarration', 'Pause narration') : t('nr.listenPartAria', 'Listen to this part: {label}, {length}', { label, length })}>
       <span className="nr-listen__icon" aria-hidden="true">
         {active ? (
           <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10" rx="0.8" /><rect x="9" y="3" width="3" height="10" rx="0.8" /></svg>
@@ -147,7 +154,7 @@ export function ListenButton({ index, label, length }) {
           <svg viewBox="0 0 16 16"><path d="M5 3.2v9.6a.6.6 0 0 0 .92.5l7.4-4.8a.6.6 0 0 0 0-1L5.92 2.7a.6.6 0 0 0-.92.5Z" /></svg>
         )}
       </span>
-      <span>{active ? 'Pause' : 'Listen to this part'}</span>
+      <span>{active ? t('nr.pause', 'Pause') : t('nr.listenPart', 'Listen to this part')}</span>
       <span className="nr-listen__time">{length}</span>
     </button>
   );

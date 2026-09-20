@@ -7,6 +7,7 @@ import { SKIP_SECONDS } from './controller.mjs';
 import { createLyricSync } from './lyric.mjs';
 import { formatTime } from './timeline.mjs';
 import { ForwardIcon, PauseIcon, PlayIcon, RewindIcon } from './NarrationIcons';
+import { useT } from '@/components/i18n/LangProvider';
 
 // The interactive part of the player, kept deliberately quiet: rewind / play / forward, a speed button, one thin
 // scrubber with a small dot at each chapter, and a line naming the chapter you are in. The transcript below it is
@@ -35,6 +36,7 @@ export default function NarrationPlayerShell({ meta, className = '', children })
   const ui = useNarrationUIOptional();
   const open = ui ? ui.open : true;
   const state = useNarrationState();
+  const t = useT();
   const [followHint, setFollowHint] = useState(null); // null, or where the current sentence is: 'above' | 'below'
 
   const panelRef = useRef(null);
@@ -105,7 +107,7 @@ export default function NarrationPlayerShell({ meta, className = '', children })
     if (nowRef.current && shownSecond.current !== clock) {
       shownSecond.current = clock;
       nowRef.current.textContent = clock;
-      rangeRef.current?.setAttribute('aria-valuetext', `${clock} of ${formatTime(meta.duration)}`);
+      rangeRef.current?.setAttribute('aria-valuetext', `${clock} ${t('nr.of', 'of')} ${formatTime(meta.duration)}`);
     }
     const range = rangeRef.current;
     if (range) {
@@ -166,24 +168,24 @@ export default function NarrationPlayerShell({ meta, className = '', children })
   };
 
   const playing = state.playing;
-  const playLabel = playing ? 'Pause narration' : state.ended ? 'Replay narration' : 'Play narration';
+  const playLabel = playing ? t('nr.pauseNarration', 'Pause narration') : state.ended ? t('nr.replayNarration', 'Replay narration') : t('nr.playNarration', 'Play narration');
   const problem = status === 'error' ? 'The narration audio could not be loaded. The transcript below still reads in full.' : state.error?.message;
   const total = formatTime(meta.duration);
   const chapter = meta.chapters[state.activeChapter] ?? meta.chapters[0];
 
   return (
-    <div className={`nr${playing ? ' is-playing' : ''}${className ? ` ${className}` : ''}`} role="group" aria-label="Narration player">
+    <div className={`nr${playing ? ' is-playing' : ''}${className ? ` ${className}` : ''}`} role="group" aria-label={t('nr.player', 'Narration player')}>
       <div className="nr-controls">
-        <button type="button" className="nr-skip" aria-label={`Back ${SKIP_SECONDS} seconds`} title={`Back ${SKIP_SECONDS} seconds`} onClick={() => run((c) => c.skip(-SKIP_SECONDS))}>
+        <button type="button" className="nr-skip" aria-label={t('nr.back', 'Back {n} seconds', { n: SKIP_SECONDS })} title={t('nr.back', 'Back {n} seconds', { n: SKIP_SECONDS })} onClick={() => run((c) => c.skip(-SKIP_SECONDS))}>
           <RewindIcon />
         </button>
         <button type="button" className="nr-play" aria-label={playLabel} onClick={() => run((c) => c.toggle())}>
           {playing ? <PauseIcon /> : <PlayIcon />}
         </button>
-        <button type="button" className="nr-skip" aria-label={`Forward ${SKIP_SECONDS} seconds`} title={`Forward ${SKIP_SECONDS} seconds`} onClick={() => run((c) => c.skip(SKIP_SECONDS))}>
+        <button type="button" className="nr-skip" aria-label={t('nr.forward', 'Forward {n} seconds', { n: SKIP_SECONDS })} title={t('nr.forward', 'Forward {n} seconds', { n: SKIP_SECONDS })} onClick={() => run((c) => c.skip(SKIP_SECONDS))}>
           <ForwardIcon />
         </button>
-        <button type="button" className="nr-speed" aria-label={`Playback speed ${state.rate} times. Change speed`} onClick={() => run((c) => c.cycleRate())}>
+        <button type="button" className="nr-speed" aria-label={t('nr.speed', 'Playback speed {rate} times. Change speed', { rate: state.rate })} onClick={() => run((c) => c.cycleRate())}>
           {state.rate}×
         </button>
       </div>
@@ -197,8 +199,8 @@ export default function NarrationPlayerShell({ meta, className = '', children })
           max={1000}
           step={1}
           defaultValue={0}
-          aria-label="Seek narration"
-          aria-valuetext={`0:00 of ${total}`}
+          aria-label={t('nr.seek', 'Seek narration')}
+          aria-valuetext={`0:00 ${t('nr.of', 'of')} ${total}`}
           onInput={onRangeInput}
           onKeyDown={onRangeKeyDown}
           onPointerDown={() => (draggingRef.current = true)}
@@ -215,7 +217,7 @@ export default function NarrationPlayerShell({ meta, className = '', children })
                 type="button"
                 className={`nr-mark${state.activeChapter === i ? ' is-current' : ''}`}
                 style={{ left: `calc(7px + (100% - 14px) * ${c.start / meta.duration})` }}
-                aria-label={`Jump to ${c.label}`}
+                aria-label={t('nr.jumpTo', 'Jump to {label}', { label: c.label })}
                 aria-current={state.activeChapter === i ? 'true' : undefined}
                 title={c.label}
                 onClick={() => seekAndFollow((ctl) => ctl.seekToChapter(i))}
@@ -247,7 +249,7 @@ export default function NarrationPlayerShell({ meta, className = '', children })
           ref={panelRef}
           className="nr-panel"
           role="region"
-          aria-label="Narration transcript"
+          aria-label={t('nr.transcript', 'Narration transcript')}
           tabIndex={0}
           onClick={onPanelClick}
           onScroll={onScroll}
@@ -261,7 +263,7 @@ export default function NarrationPlayerShell({ meta, className = '', children })
         {followHint && (
           <button type="button" className="nr-follow" onClick={followAgain}>
             <ArrowIcon up={followHint === 'above'} />
-            Follow along
+            {t('nr.follow', 'Follow along')}
           </button>
         )}
       </div>

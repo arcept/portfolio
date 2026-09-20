@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { animate, useInView } from 'motion/react';
 import { EASE, useReduce } from '@/components/case-study-kit/Motion';
+import { useLang } from '@/components/i18n/LangProvider';
+import { formatNumber, localSuffix } from '@/components/i18n/format';
 
 // A figure inside a sentence: green, and it counts up once it scrolls into view. The final value
 // is laid out (invisibly) from the start, so the line doesn't reflow while the digits are running.
 export default function Num({ to, prefix = '', suffix = '', decimals = 0, duration = 1.4 }) {
+  const { lang } = useLang();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -8% 0px' });
   const reduce = useReduce();
@@ -22,14 +25,14 @@ export default function Num({ to, prefix = '', suffix = '', decimals = 0, durati
     return () => controls.stop();
   }, [inView, reduce, to, duration]);
 
-  const final = `${prefix}${to.toFixed(decimals)}${suffix}`;
+  const final = `${prefix}${formatNumber(to, decimals, lang)}${localSuffix(suffix, lang)}`;
   return (
     <span ref={ref} className="px-num">
       <span className="px-num__final">{final}</span>
       <span className="px-num__live" aria-hidden="true">
         {prefix}
-        {value.toFixed(decimals)}
-        {suffix}
+        {formatNumber(value, decimals, lang)}
+        {localSuffix(suffix, lang)}
       </span>
     </span>
   );
