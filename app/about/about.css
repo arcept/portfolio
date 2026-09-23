@@ -302,6 +302,17 @@ html[data-abt-theme='light'] {
   height: auto;
 }
 
+/* The handwritten aside: exported paths rather than live text, so the lettering is exact without
+   shipping a script face. Behind the statement, and it rides the heading's parallax with it.
+   Sized and placed as a share of the heading block, so it stays tucked against the end of the first
+   line at every width instead of drifting as the type rescales. */
+.abt-sticker--whoami {
+  left: 56%;
+  top: -14%;
+  width: 31%;
+  rotate: -3deg;
+}
+
 .abt-sticker--craft {
   left: 34%;
   /* Straddles the seam between the second and third lines of the statement, so it reads as stuck on
@@ -329,6 +340,22 @@ html[data-abt-theme='light'] {
   .abt-sticker--heart {
     width: 44px;
     margin-right: 8%;
+  }
+}
+
+/* Phones only. Below 480px the statement wraps to four rows or five depending on the width, so no
+   gap between the lines is dependable — every candidate that is clear at 390 is covered by type at
+   360 or 430. It sits in the open space under the statement instead, where it is always legible. */
+@media (max-width: 480px) {
+  .abt-sticker--craft {
+    left: 2%;
+    top: calc(100% + 8px);
+    width: 19%;
+  }
+
+  .abt-sticker--whoami {
+    left: 52%;
+    top: -4%;
   }
 }
 
@@ -448,6 +475,50 @@ html[data-abt-theme='light'] {
   text-wrap: pretty;
 }
 
+/* Phones: the three paragraphs run long for a narrow column, so they start clipped to roughly half
+   their height with a fade and a toggle. Neutralised above 640px, where the block always reads in
+   full — see the media query below. */
+.abt-context-more {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .abt-context-clip {
+    position: relative;
+  }
+
+  /* ~10 lines before the fade (6 lines of the first paragraph, the gap, then 4 of the second) at this
+     column width. Animated rather than an abrupt cut: the target on open is a generous fixed height
+     rather than "none", so max-height has something finite to transition to. */
+  .abt-opening__context {
+    max-height: 276px;
+    overflow: hidden;
+    mask-image: linear-gradient(180deg, #000 0%, #000 75%, transparent 100%);
+    transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), mask-image 0.3s ease;
+  }
+
+  .abt-context-clip.is-open .abt-opening__context {
+    max-height: 900px;
+    mask-image: linear-gradient(180deg, #000 0%, #000 100%);
+  }
+
+  .abt-context-more {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--abt-accent);
+    cursor: pointer;
+  }
+}
+
 /* ---------------------------------------------------------------- Opening wash
 
    Colour behind the opening so the page does not start as a black slab: a warm blob that follows the
@@ -498,16 +569,59 @@ html[data-abt-theme='light'] {
   height: auto;
 }
 
-/* Anyone who cannot hover gets the photograph in the flow instead. */
-.abt-hovershot--static {
+/* Anyone who cannot hover gets a horizontal set of photographs instead of the single portrait the
+   cursor follows — a swipeable strip rather than one tall image and the empty space it used to
+   leave after the actions. */
+.abt-gallery-wrap {
   display: none;
-  position: static;
-  width: 100%;
-  max-width: 340px;
-  margin-top: clamp(32px, 5vh, 56px);
-  translate: none;
+}
+
+.abt-gallery {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* Replaces the old gap after the actions: bleeds to the screen edge, gutter restored as padding. */
+  margin: clamp(16px, 2.4vh, 28px) calc(var(--abt-gutter) * -1) 0;
+  padding: 0 var(--abt-gutter);
+  scroll-padding-inline: var(--abt-gutter);
+  scrollbar-width: none;
+}
+
+.abt-gallery::-webkit-scrollbar {
+  display: none;
+}
+
+.abt-gallery__slide {
+  position: relative;
+  flex: 0 0 auto;
+  height: 280px;
+  margin: 0;
+  scroll-snap-align: start;
   border-radius: 24px;
-  box-shadow: none;
+  overflow: hidden;
+}
+
+.abt-gallery__slide img {
+  display: block;
+  height: 100%;
+  width: auto;
+  object-fit: cover;
+}
+
+.abt-portrait-heart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  rotate: 12deg;
+  pointer-events: none;
+}
+
+.abt-portrait-heart img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 @media (hover: none), (prefers-reduced-motion: reduce) {
@@ -515,8 +629,14 @@ html[data-abt-theme='light'] {
     display: none;
   }
 
-  .abt-hovershot--static {
+  .abt-gallery-wrap {
     display: block;
+  }
+
+  /* The in-flow heart belongs to hover devices; touch gets the one on the first photograph's corner
+     instead of both. */
+  .abt-sticker--heart {
+    display: none;
   }
 }
 

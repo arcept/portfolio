@@ -3,7 +3,8 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import AboutLink from './AboutLink';
-import HoverPortrait, { StaticPortrait } from './HoverPortrait';
+import HoverPortrait, { TouchGallery } from './HoverPortrait';
+import ContextReveal from './ContextReveal';
 
 // The headline is authored as lines rather than measured, so each one can be masked and released on
 // its own. The type is sized so these lines hold at every width (see .abt-display in about.css).
@@ -71,6 +72,7 @@ export default function Opening() {
         </motion.p>
 
         <Sticker className="abt-sticker--craft" src="/about/stickers/craft.svg" width={108} height={51} delay={0.95} />
+        <Sticker className="abt-sticker--whoami" src="/about/stickers/who-am-i.svg" width={359} height={299} delay={0.55} />
 
         <h1 className="abt-display" id="abt-opening-title">
           {HEADLINE.map((line, i) => (
@@ -107,18 +109,14 @@ export default function Opening() {
             </AboutLink>
           </motion.div>
 
+          {/* Only where the static portrait is hidden — devices that hover. On touch this heart is
+              replaced by the one on the portrait's corner, in HoverPortrait.js. */}
           <Sticker className="abt-sticker--heart" src="/about/stickers/heart.png" width={194} height={154} delay={1.1} />
 
-          <StaticPortrait />
+          <TouchGallery />
         </div>
 
-        <div className="abt-opening__context">
-          {CONTEXT.map((paragraph, i) => (
-            <motion.p key={paragraph.slice(0, 24)} {...rise(0.7 + i * 0.1)}>
-              {paragraph}
-            </motion.p>
-          ))}
-        </div>
+        <ContextReveal paragraphs={CONTEXT} rise={rise} />
       </motion.div>
     </section>
   );

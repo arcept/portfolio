@@ -91,27 +91,61 @@ export default function HoverPortrait({ children }) {
   );
 }
 
-// The same photograph, in the flow, for anyone who cannot hover. It arrives the way everything else
-// on this page arrives: nothing is simply present when it comes into view.
-export function StaticPortrait() {
+// The photographs, for anyone who cannot hover (touch, and reduced motion): a swipeable horizontal
+// set rather than the single portrait the cursor follows on desktop. It arrives the way everything
+// else on this page arrives: nothing is simply present when it comes into view.
+const GALLERY = [
+  {
+    src: '/about/gallery/street.jpg',
+    width: 1500,
+    height: 2000,
+    alt: 'Manik Madaan standing in the middle of a wet street at dusk, string lights overhead.',
+  },
+  {
+    src: '/about/gallery/bangkok.jpg',
+    width: 675,
+    height: 900,
+    alt: 'Manik Madaan crossing a footbridge above traffic in Bangkok, carrying tote bags, the skyline behind him.',
+  },
+  {
+    src: '/about/gallery/cafe.jpg',
+    width: 675,
+    height: 900,
+    alt: 'Manik Madaan sitting in a café, mid-sip from a blue cup, looking off to the side.',
+  },
+  {
+    src: '/about/gallery/novatr-team.jpg',
+    width: 675,
+    height: 900,
+    alt: 'Manik Madaan and three former colleagues, arms around each other, in their office.',
+  },
+];
+
+export function TouchGallery() {
   const box = useRef(null);
   const shown = useInView(box, { once: true, amount: 0.2 });
 
   return (
-    <motion.figure
+    <motion.div
       ref={box}
-      className="abt-hovershot abt-hovershot--static"
+      className="abt-gallery-wrap"
       initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
       animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 30, filter: shown ? 'blur(0px)' : 'blur(8px)' }}
       transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Image
-        src="/about/manik-street.jpg"
-        alt="Manik Madaan standing in the middle of a wet street at dusk, string lights overhead."
-        width={1500}
-        height={2000}
-        sizes="(max-width: 860px) 100vw, 40vw"
-      />
-    </motion.figure>
+      <div className="abt-gallery">
+        {GALLERY.map((photo, i) => (
+          <figure className="abt-gallery__slide" key={photo.src}>
+            <Image src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} sizes="320px" />
+            {/* On the corner of the first photograph only, where it used to sit on the single portrait. */}
+            {i === 0 && (
+              <span className="abt-portrait-heart" aria-hidden="true">
+                <img src="/about/stickers/heart.png" alt="" width={194} height={154} />
+              </span>
+            )}
+          </figure>
+        ))}
+      </div>
+    </motion.div>
   );
 }
