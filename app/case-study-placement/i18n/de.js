@@ -39,13 +39,13 @@ export default {
     {
       eyebrow: 'Interaktiver Prototyp · Placement Hub',
       description:
-        'Ein funktionierender Prototyp der Vermittlungserfahrung: Startseite, Jobbörse, Stellenbeschreibungen, Bewerbungen und das Interessenformular. Jeder Bewerbungsstatus ist live – mit dem Becherglas-Button unten rechts im Frame schlüpfen Sie in die Rolle des Vermittlungsteams und führen eine Bewerbung durch ihre Phasen.',
+        'Ein funktionierender Prototyp der Vermittlungserfahrung. Mit dem Becherglas-Button im Frame schlüpfen Sie in die Rolle des Vermittlungsteams und führen eine Bewerbung durch ihre Phasen.',
     },
   ],
   'proto.title': 'Interaktiver Prototyp von Placement Hub',
   'proto.heading': 'Placement Hub live erleben',
   'proto.note':
-    'Alle Beispieldaten sind synthetisch. Scrollen und klicken Sie im Frame – es ist der vollständige Prototyp, nur eingerahmt. Probieren Sie das Interessenformular im Banner der Startseite aus, bewerben Sie sich auf eine Stelle oder öffnen Sie den Becherglas-Button, um eine Bewerbung durch ihre Phasen zu führen.',
+    'Alle Beispieldaten sind synthetisch. Scrollen und klicken Sie im Frame. Es ist der vollständige Prototyp, nur eingerahmt. Probieren Sie das Interessenformular im Banner der Startseite aus, bewerben Sie sich auf eine Stelle oder öffnen Sie den Becherglas-Button, um eine Bewerbung durch ihre Phasen zu führen.',
   'proto.mobileAlt':
     'Startseite von Placement Hub mit dem Banner zur Berechtigung, dem Banner zum Interessenformular und den laufenden Bewerbungen der Lernenden',
   'nav.sections': [

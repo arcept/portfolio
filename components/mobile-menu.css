@@ -1,0 +1,517 @@
+/* The phone menu (see MobileMenu.js and Nav.js): the hamburger button, and the full-screen layer a circle wipes open
+   from it. Colours come from the site tokens, so it follows the dark and light themes by itself. */
+
+/* ------------------------------------------------------------- the button in the bar */
+
+.site-nav__menu {
+  position: relative;
+  display: none; /* phones only, below */
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--graphite);
+  border-radius: 9999px;
+  background: var(--obsidian);
+  color: var(--paper);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* A bigger target than the 28px it looks like. */
+.site-nav__menu::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+.site-nav__menu:hover,
+.site-nav__menu[aria-expanded='true'] {
+  border-color: var(--ash);
+}
+
+.site-nav__menu:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Two lines, the lower one shorter, that rotate into a cross. */
+.site-nav__menu i {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1), top 0.55s cubic-bezier(0.7, 0, 0.2, 1), left 0.55s cubic-bezier(0.7, 0, 0.2, 1), right 0.55s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+.site-nav__menu i:nth-child(1) {
+  top: 10px;
+}
+
+.site-nav__menu i:nth-child(2) {
+  top: 16px;
+  left: 12px;
+}
+
+.site-nav__menu[aria-expanded='true'] i {
+  top: 13.25px;
+  left: 7.5px;
+  right: 7.5px;
+}
+
+.site-nav__menu[aria-expanded='true'] i:nth-child(1) {
+  transform: rotate(45deg);
+}
+
+.site-nav__menu[aria-expanded='true'] i:nth-child(2) {
+  transform: rotate(-45deg);
+}
+
+@media (max-width: 640px) {
+  .site-nav__menu {
+    display: block;
+  }
+
+  /* The links live in the menu here. */
+  .site-nav__links .site-nav__link {
+    display: none;
+  }
+
+  .site-nav__links {
+    gap: 8px;
+  }
+
+  /* The controls in the bar are bigger here: 36px to look at, with a 44px area around each to tap. The bar stays 56px tall. */
+  .site-nav__inner {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .site-nav .cs-lang__button,
+  .site-nav .cs-switch,
+  .site-nav .site-nav__menu {
+    height: 36px;
+  }
+
+  .site-nav .cs-lang__button::after,
+  .site-nav .cs-switch::after,
+  .site-nav .site-nav__menu::after {
+    content: '';
+    position: absolute;
+    inset: -5px; /* measured from inside the 1px border: 4px beyond the edge on every side, 44px in all */
+  }
+
+  .site-nav .cs-lang__button {
+    position: relative;
+    gap: 7px;
+    padding: 0 12px 0 11px;
+    font-size: 0.75rem;
+  }
+
+  /* On the very narrowest phones the language button is just the flag or globe, as wide as it is tall. */
+  @media (max-width: 340px) {
+    .site-nav .cs-lang__button {
+      width: 36px;
+      padding: 0;
+    }
+  }
+
+  .site-nav .cs-lang__globe {
+    width: 17px;
+    height: 17px;
+  }
+
+  .site-nav .cs-switch {
+    width: 68px;
+  }
+
+  .site-nav .cs-switch__knob {
+    top: 3px;
+    left: 3px;
+    width: 28px;
+    height: 28px;
+    transform: translateX(32px);
+  }
+
+  .site-nav .cs-switch svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .site-nav .cs-switch__icon--sun {
+    left: 10px;
+  }
+
+  .site-nav .cs-switch__icon--moon {
+    right: 10px;
+  }
+
+  .site-nav .site-nav__menu {
+    width: 36px;
+  }
+
+  .site-nav .site-nav__menu i {
+    left: 10px;
+    right: 10px;
+  }
+
+  .site-nav .site-nav__menu i:nth-child(1) {
+    top: 13.5px;
+  }
+
+  .site-nav .site-nav__menu i:nth-child(2) {
+    top: 20px;
+    left: 15px;
+  }
+
+  .site-nav .site-nav__menu[aria-expanded='true'] i {
+    top: 16.75px;
+    left: 9px;
+    right: 9px;
+  }
+
+  /* With the menu open the bar rides above it, clear of any tint of its own. */
+  .site-nav.is-menu-open {
+    z-index: 110;
+    background: transparent;
+    border-bottom-color: transparent;
+    backdrop-filter: none;
+  }
+}
+
+/* ------------------------------------------------------------------- the menu layer */
+
+.mm {
+  --ox: 90%;
+  --oy: 28px;
+  --r: 160vmax;
+  --mx: 50%;
+  --my: 36%;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: calc(var(--site-nav-h, 56px) + env(safe-area-inset-top, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--void);
+  color: var(--paper);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  /* closed: a dot at the button. open: a circle big enough to cover the screen. */
+  clip-path: circle(0px at var(--ox) var(--oy));
+  visibility: hidden;
+  pointer-events: none;
+  transition: clip-path 0.7s cubic-bezier(0.7, 0, 0.2, 1), visibility 0s linear 0.7s;
+}
+
+.mm.is-open {
+  clip-path: circle(var(--r) at var(--ox) var(--oy));
+  visibility: visible;
+  pointer-events: auto;
+  transition: clip-path 0.8s cubic-bezier(0.7, 0, 0.2, 1), visibility 0s;
+}
+
+/* Slow drifting light behind everything: an indigo glow above, an accent one below. */
+.mm__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mm__glow::before,
+.mm__glow::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(8px);
+}
+
+.mm__glow::before {
+  top: -46vmax;
+  left: -32vmax;
+  width: 110vmax;
+  height: 110vmax;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--chart-2, #6366f1) 42%, transparent), transparent);
+  animation: mm-drift 16s ease-in-out infinite alternate;
+}
+
+.mm__glow::after {
+  right: -50vmax;
+  bottom: -54vmax;
+  width: 100vmax;
+  height: 100vmax;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent, #e4f222) 22%, transparent), transparent);
+  animation: mm-drift 19s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes mm-drift {
+  to {
+    transform: translate3d(9vmax, 7vmax, 0) scale(1.12);
+  }
+}
+
+/* The spotlight that follows a finger or a pointer. */
+.mm__spot {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle 230px at var(--mx) var(--my), color-mix(in srgb, var(--paper) 9%, transparent), transparent);
+}
+
+/* --------------------------------------------------------------------- the links */
+
+.mm__list {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+  padding: 0 20px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.mm__item {
+  position: relative;
+}
+
+/* A hairline that draws in under each row. */
+.mm__item::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: color-mix(in srgb, var(--paper) 18%, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.mm.is-open .mm__item::after {
+  transform: scaleX(1);
+  transition: transform 1s var(--ease) calc(0.35s + var(--i) * 0.09s);
+}
+
+.mm__link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'num arrow'
+    'word arrow'
+    'note arrow';
+  align-items: center;
+  column-gap: 16px;
+  padding: clamp(14px, 2.6vh, 24px) 0;
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mm__link:focus-visible {
+  outline: 2px solid var(--article-green, var(--accent));
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* Pointing at (or pressing) one row quiets the others. */
+.mm__list:has(.mm__link:hover, .mm__link:focus-visible, .mm__link:active) .mm__link:not(:hover, :focus-visible, :active) {
+  opacity: 0.38;
+}
+
+.mm__num {
+  grid-area: num;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--article-green, var(--accent));
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.mm.is-open .mm__num {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.6s ease calc(0.5s + var(--i) * 0.09s), transform 0.6s var(--ease) calc(0.5s + var(--i) * 0.09s);
+}
+
+/* The word: it rises out of a mask; on press it rolls up to an accent copy of itself. */
+.mm__rise {
+  grid-area: word;
+  display: block;
+  overflow: hidden;
+  height: 1.12em; /* exactly one line: the second (accent) copy below it stays hidden until a press */
+  font-size: clamp(2.75rem, min(15vw, 10.5vh), 5.25rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.mm__enter {
+  display: block;
+  transform: translateY(118%) rotate(3deg);
+  transform-origin: left bottom;
+  transition: transform 0.45s ease;
+}
+
+.mm.is-open .mm__enter {
+  transform: none;
+  transition: transform 0.95s var(--ease) calc(0.3s + var(--i) * 0.09s);
+}
+
+.mm__roll {
+  display: block;
+  transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+.mm__word {
+  display: block;
+  height: 1.08em;
+}
+
+.mm__word--alt {
+  color: var(--article-green, var(--accent));
+}
+
+.mm__link:hover .mm__roll,
+.mm__link:focus-visible .mm__roll,
+.mm__link:active .mm__roll {
+  transform: translateY(-50%);
+}
+
+.mm__note {
+  grid-area: note;
+  padding-top: 6px;
+  font-size: 0.8125rem;
+  color: var(--fog);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mm.is-open .mm__note {
+  opacity: 1;
+  transition: opacity 0.7s ease calc(0.65s + var(--i) * 0.09s);
+}
+
+.mm__arrow {
+  grid-area: arrow;
+  color: var(--fog);
+  opacity: 0;
+  transform: translate(-10px, 10px);
+  transition: opacity 0.3s ease, transform 0.45s var(--ease), color 0.25s ease;
+}
+
+.mm.is-open .mm__arrow {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.6s ease calc(0.6s + var(--i) * 0.09s), transform 0.7s var(--ease) calc(0.6s + var(--i) * 0.09s), color 0.25s ease;
+}
+
+.mm__link:hover .mm__arrow,
+.mm__link:focus-visible .mm__arrow,
+.mm__link:active .mm__arrow {
+  color: var(--article-green, var(--accent));
+  transform: translate(4px, -4px) rotate(45deg);
+  transition-delay: 0s;
+}
+
+/* -------------------------------------------------------------- footer and ticker */
+
+/* An outlined line of type that drifts along the bottom edge. Decorative. */
+.mm__ticker {
+  position: relative;
+  overflow: hidden;
+  padding: 4px 0 14px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mm.is-open .mm__ticker {
+  opacity: 1;
+  transition: opacity 1s ease 0.9s;
+}
+
+.mm__ticker-track {
+  display: inline-flex;
+  animation: mm-ticker 34s linear infinite;
+}
+
+.mm__ticker-track span {
+  flex: none;
+  font-size: clamp(2.6rem, 13vw, 3.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--paper) 30%, transparent);
+}
+
+@keyframes mm-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* --------------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .mm,
+  .mm.is-open {
+    clip-path: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  .mm.is-open {
+    opacity: 1;
+    transition: opacity 0.2s ease, visibility 0s;
+  }
+
+  .mm__glow::before,
+  .mm__glow::after,
+  .mm__ticker-track {
+    animation: none;
+  }
+
+  .mm__enter,
+  .mm__num,
+  .mm__note,
+  .mm__arrow,
+  .mm__ticker,
+  .mm__item::after {
+    transition: none !important;
+  }
+
+  .mm__enter,
+  .mm__num,
+  .mm__note,
+  .mm__arrow,
+  .mm__ticker {
+    opacity: 1;
+    transform: none;
+  }
+
+  .mm__item::after {
+    transform: scaleX(1);
+  }
+
+  .mm__roll {
+    transition: none;
+  }
+
+  .site-nav__menu i {
+    transition: none;
+  }
+}

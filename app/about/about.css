@@ -1,0 +1,969 @@
+/* The About page.
+
+   A visual layer of its own — an editorial serif for the statements, mono for the apparatus, and a
+   warm palette — sitting on the site's existing structure (the nav, the footer, the site tokens and
+   the 1400px rhythm). The page has two themes and its own switch: the theme is an attribute on
+   <html> (data-abt-theme, set before first paint by the gate script in theme.js) and it is removed
+   when the page unmounts, so nothing else on the site is affected.
+
+   Text contrast: every level is a percentage of ink mixed into base. The faintest level used for
+   real copy stays above 4.5:1 in both themes; --t4 is for rules and decorative numerals only.       */
+
+/* ---------------------------------------------------------------- Tokens: dark */
+
+.abt {
+  --abt-ink: #f2f0ec;
+  --abt-base: #0a0b0e;
+  --abt-accent: #ff8351;    /* interaction, emphasis, the live edge of the page */
+  --abt-accent-2: #7fb2c9;  /* the cool counterpart: quieter signals and generated imagery */
+
+  --t1: color-mix(in srgb, var(--abt-ink) 97%, var(--abt-base));
+  --t2: color-mix(in srgb, var(--abt-ink) 82%, var(--abt-base));
+  --t3: color-mix(in srgb, var(--abt-ink) 64%, var(--abt-base));
+  --t4: color-mix(in srgb, var(--abt-ink) 42%, var(--abt-base));
+  --abt-line: color-mix(in srgb, var(--abt-ink) 16%, var(--abt-base));
+  --abt-line-2: color-mix(in srgb, var(--abt-ink) 30%, var(--abt-base));
+  --abt-veil: color-mix(in srgb, var(--abt-base) 72%, transparent);
+
+  /* Read by CursorField.js and eased on a theme change, so these two stay plain hex. */
+  --abt-field-a: #ff8351;
+  --abt-field-b: #7fb2c9;
+
+  /* The opening's colour, in the order the cycle runs them: green, purple, blue — the family the
+     case-study heroes use. The ember accent appears only in the bloom that follows the pointer, so
+     the page is not all orange. No dark tones here — every colour is lighter than the page it sits
+     on, so the wash can only ever add light and the page's own background shows between the blobs. */
+  --abt-wash-a: #2fb583;
+  --abt-wash-b: #8a6cff;
+  --abt-wash-c: #4d7bf0;
+  --abt-wash-bloom: #ff6a3d;
+  --abt-wash-strength: 0.2;
+
+  --abt-rail: 168px;
+  --abt-gutter: clamp(20px, 4.4vw, 76px);
+  --abt-max: 1520px;
+}
+
+/* ---------------------------------------------------------------- Tokens: light */
+
+html[data-abt-theme='light'] .abt {
+  --abt-ink: #14151a;
+  --abt-base: #f4f1ec;
+  --abt-accent: #b8390d;
+  --abt-accent-2: #2f6d88;
+
+  --t1: color-mix(in srgb, var(--abt-ink) 95%, var(--abt-base));
+  --t2: color-mix(in srgb, var(--abt-ink) 80%, var(--abt-base));
+  --t3: color-mix(in srgb, var(--abt-ink) 68%, var(--abt-base));
+  --t4: color-mix(in srgb, var(--abt-ink) 46%, var(--abt-base));
+  --abt-line: color-mix(in srgb, var(--abt-ink) 15%, var(--abt-base));
+  --abt-line-2: color-mix(in srgb, var(--abt-ink) 28%, var(--abt-base));
+  --abt-veil: color-mix(in srgb, var(--abt-base) 74%, transparent);
+
+  /* Colour carries much further on paper than on black, so light runs softer. */
+  --abt-field-a: #d98a62;
+  --abt-field-b: #8fb0c0;
+
+  /* Paper is already at 241 luminance, so any colour painted over it can only darken it — the only
+     way to tint without greying the page is colours that are themselves nearly that light, at a low
+     opacity. These sit within a point or two of the paper's luminance: hue, almost no shade. */
+  --abt-wash-a: #e7f7ef;
+  --abt-wash-b: #f1eaff;
+  --abt-wash-c: #e9f1ff;
+  --abt-wash-bloom: #ffeadd;
+  --abt-wash-strength: 0.9;
+}
+
+/* The site chrome (nav, footer, buttons) reads the site tokens, so light remaps those too and the
+   whole page flips together. Only present while this page is open. */
+html[data-abt-theme='light'] {
+  color-scheme: light;
+
+  --void: #f4f1ec;
+  --carbon: #ece8e2;
+  --obsidian: #e4e0d9;
+  --graphite: #d5d0c8;
+
+  --paper: #14151a;
+  --mist: #35363c;
+  --fog: #56585f;
+  --ash: #8a8c92;
+}
+
+/* ---------------------------------------------------------------- Page shell */
+
+.abt {
+  position: relative;
+  min-height: 100vh;
+  background: var(--abt-base);
+  color: var(--t2);
+  font-family: var(--font-abt-sans), system-ui, sans-serif;
+}
+
+/* The cursor field sits behind everything and stays while the page scrolls over it. */
+.abt-bodyfield,
+.abt-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.abt-field canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.abt-shell {
+  position: relative;
+  z-index: 1;
+  max-width: var(--abt-max);
+  margin: 0 auto;
+  padding: 0 var(--abt-gutter);
+}
+
+@media (min-width: 1100px) {
+  .abt-shell {
+    display: grid;
+    grid-template-columns: var(--abt-rail) minmax(0, 1fr);
+    column-gap: clamp(32px, 4vw, 72px);
+  }
+}
+
+/* ---------------------------------------------------------------- The rail
+
+   The site's bar is not fixed on this page — a black band across the top fought the colour behind
+   the statement — but the theme switch inside it still is, pinned where it sat in the bar. The rail
+   is a full-height sticky column: the index keeps its place near the top, the way back up sits at
+   the foot of the viewport.                                                                        */
+
+.abt .site-nav {
+  position: absolute;
+}
+
+/* Scrolled, the bar normally fills in and blurs what is behind it. Not here: that band across the
+   top fought the colour behind the statement. */
+.abt .site-nav.is-scrolled {
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+
+/* The switch sits in the bar's own flow and leaves with it. Its own breathing room, on top of the
+   bar's 24px gap, so it reads as separate from the links rather than the last one in the list. */
+.abt .site-nav .abt-switch {
+  margin-left: 20px;
+}
+
+/* Phones: the burger moves to the left of the name, leaving the far right to the switch.
+   `display: contents` lifts the burger out of its wrapper so it can be ordered against the name. */
+@media (max-width: 640px) {
+  .abt .site-nav__links {
+    display: contents;
+  }
+
+  .abt .site-nav__menu {
+    order: -1;
+  }
+
+  .abt .site-nav__name {
+    order: 0;
+    margin-right: auto;
+  }
+}
+
+.abt-rail {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .abt-rail {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: sticky;
+    top: var(--site-nav-h);
+    height: calc(100vh - var(--site-nav-h));
+    padding: 24vh 0 clamp(28px, 6vh, 64px);
+    align-self: start;
+  }
+
+  .abt-index ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 14px;
+  }
+}
+
+.abt-index__link {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0 4px 14px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--t4);
+  transition: color 0.35s ease;
+}
+
+.abt-index__link:hover,
+.abt-index__link:focus-visible {
+  color: var(--t2);
+}
+
+.abt-index__link[aria-current] {
+  color: var(--t1);
+}
+
+.abt-index__num {
+  font-variant-numeric: tabular-nums;
+  color: var(--abt-accent);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.abt-index__link[aria-current] .abt-index__num,
+.abt-index__link:hover .abt-index__num {
+  opacity: 1;
+}
+
+/* The marker travels between entries (a shared layout animation in AboutIndex.js). */
+.abt-index__marker {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 14px;
+  translate: 0 -50%;
+  background: var(--abt-accent);
+}
+
+/* The way back up. Present but quiet until the reader is far enough down to want it. */
+.abt-totop {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--t4);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease, color 0.3s ease, translate 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.abt-totop[data-away] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.abt-totop:hover,
+.abt-totop:focus-visible {
+  color: var(--abt-accent);
+}
+
+.abt-totop:hover .abt-totop__arrow {
+  translate: 0 -3px;
+}
+
+.abt-totop__arrow {
+  color: var(--abt-accent);
+  transition: translate 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------------------------------------------------------------- Stickers
+
+   Placed elements that belong to the page rather than to the layout: they sit behind the type, take
+   no pointer and are hidden from assistive technology. The Craft pill lives inside the heading block,
+   so it travels with the heading's parallax rather than sitting still behind it.                    */
+
+.abt-sticker {
+  position: absolute;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.abt-sticker img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.abt-sticker--craft {
+  left: 34%;
+  /* Straddles the seam between the second and third lines of the statement, so it reads as stuck on
+     rather than placed in a gap. */
+  top: 63%;
+  width: clamp(62px, 6.7vw, 106px);
+  rotate: -9deg;
+}
+
+/* In the flow, pushed to the right of the lead column and tilted the other way from the pill. */
+.abt-sticker--heart {
+  position: relative;
+  width: clamp(40px, 3.2vw, 48px);
+  margin: clamp(18px, 2.6vh, 34px) 14% 0 auto;
+  rotate: 12deg;
+}
+
+@media (max-width: 860px) {
+  .abt-sticker--craft {
+    left: 30%;
+    top: 62%;
+    width: clamp(54px, 14vw, 77px);
+  }
+
+  .abt-sticker--heart {
+    width: 44px;
+    margin-right: 8%;
+  }
+}
+
+/* The type sits above the stickers. */
+.abt-opening__head {
+  position: relative;
+}
+
+.abt-display {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------- Opening */
+
+.abt-opening {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(44px, 7vh, 88px);
+  min-height: 100vh;
+  padding: calc(var(--site-nav-h) + clamp(64px, 11vh, 116px)) 0 clamp(80px, 12vh, 132px);
+}
+
+/* Phones open closer to the top: a full screen of air above the label reads as a loading page. */
+@media (max-width: 860px) {
+  .abt-opening {
+    padding-top: calc(var(--site-nav-h) + clamp(34px, 6.6vh, 68px));
+  }
+}
+
+.abt-label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 clamp(24px, 3.5vw, 44px);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+
+.abt-label__index {
+  color: var(--abt-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.abt-label__rule {
+  flex: 0 0 clamp(40px, 7vw, 110px);
+  height: 1px;
+  background: var(--abt-line-2);
+  transform-origin: left center;
+}
+
+/* Sized so the authored lines hold at every width instead of wrapping mid-phrase. */
+.abt-display {
+  margin: 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(34px, 5.9vw, 88px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--t1);
+}
+
+/* Each line is released from behind its own edge. The padding keeps descenders out of the mask. */
+.abt-display__mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.11em;
+  margin-bottom: -0.11em;
+}
+
+/* On phones the longest line no longer fits: balance splits it evenly instead of leaving an orphan. */
+.abt-display__line {
+  display: block;
+  text-wrap: balance;
+  will-change: transform;
+}
+
+.abt-opening__body {
+  display: grid;
+  gap: clamp(36px, 4.5vw, 84px);
+}
+
+/* The lead column is narrower than the context column, so the two run to a similar depth. */
+@media (min-width: 860px) {
+  .abt-opening__body {
+    grid-template-columns: 46fr 60fr;
+  }
+}
+
+.abt-lead {
+  margin: 0 0 clamp(28px, 3vw, 40px);
+  max-width: 34ch;
+  font-size: clamp(19px, 1.5vw, 25px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--t1);
+  text-wrap: pretty;
+}
+
+.abt-opening__context {
+  display: grid;
+  gap: 20px;
+  max-width: 62ch;
+  align-content: start;
+}
+
+/* Same weight of ink as the lead: the colour behind the opening eats the contrast of a quieter grey,
+   so size and measure carry the hierarchy here instead. */
+.abt-opening__context p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--t1);
+  text-wrap: pretty;
+}
+
+/* ---------------------------------------------------------------- Opening wash
+
+   Colour behind the opening so the page does not start as a black slab: a warm blob that follows the
+   pointer, drawn as a shader (HeroWash.js).                                                          */
+
+/* A child of .abt rather than of the opening, so it spans the viewport: the shell is capped at
+   --abt-max and offset by the index rail, so anything inside it is neither full width nor centred.
+   Its height covers the opening; the shader has faded it out well before that edge. */
+.abt-wash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 118vh;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.abt-wash canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------------------------------------------------------------- Portrait */
+
+.abt-hoverzone {
+  position: relative;
+}
+
+/* Follows the pointer, sitting beside it rather than over the sentence being read. */
+.abt-hovershot {
+  position: fixed;
+  z-index: 5;
+  width: 250px;
+  margin: 0;
+  translate: 26px -50%;
+  overflow: hidden;
+  border-radius: 24px;
+  pointer-events: none;
+  box-shadow: 0 30px 70px -30px rgb(0 0 0 / 0.75);
+}
+
+.abt-hovershot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Anyone who cannot hover gets the photograph in the flow instead. */
+.abt-hovershot--static {
+  display: none;
+  position: static;
+  width: 100%;
+  max-width: 340px;
+  margin-top: clamp(32px, 5vh, 56px);
+  translate: none;
+  border-radius: 24px;
+  box-shadow: none;
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .abt-hovershot {
+    display: none;
+  }
+
+  .abt-hovershot--static {
+    display: block;
+  }
+}
+
+/* ---------------------------------------------------------------- Links
+
+   Every link carries its underline at rest, like the case studies' text links. On hover an accent
+   rule draws itself across that underline from the left and the arrow travels.                      */
+
+.abt-link {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--t1);
+}
+
+.abt-link__label {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--abt-ink) 32%, transparent);
+  transition: color 0.3s ease;
+}
+
+.abt-link__label::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--abt-accent);
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.abt-link:hover .abt-link__label,
+.abt-link:focus-visible .abt-link__label {
+  color: var(--abt-accent);
+}
+
+/* An item with nowhere to go: still set as one, but nothing answers the pointer. */
+.abt-link--inert {
+  cursor: default;
+  color: var(--t3);
+}
+
+.abt-link--inert .abt-link__label {
+  border-color: color-mix(in srgb, var(--abt-ink) 18%, transparent);
+}
+
+.abt-link--inert:hover .abt-link__label {
+  color: inherit;
+}
+
+.abt-link--inert:hover .abt-link__label::after {
+  transform: scaleX(0);
+}
+
+.abt-link:hover .abt-link__label::after,
+.abt-link:focus-visible .abt-link__label::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+.abt-link__arrow {
+  font-size: 13px;
+  color: var(--abt-accent);
+  transition: translate 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.abt-link:hover .abt-link__arrow,
+.abt-link:focus-visible .abt-link__arrow {
+  translate: 3px -3px;
+}
+
+.abt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 30px;
+}
+
+/* ---------------------------------------------------------------- Theme switch
+
+   One disc does both states (see AboutThemeSwitch.js): a sun with rays, cratered into a moon. The
+   knob travels on a spring and squashes while held, and the theme itself is revealed by a circle
+   opening from the switch, via a view transition.                                                 */
+
+.abt-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 72px;
+  height: 38px;
+  padding: 4px;
+  border: 1px solid var(--abt-line-2);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--abt-ink) 7%, transparent);
+  cursor: pointer;
+  transition: border-color 0.3s ease, background-color 0.5s ease;
+}
+
+.abt-switch[data-theme='light'] {
+  justify-content: flex-start;
+}
+
+.abt-switch:hover {
+  border-color: var(--abt-accent);
+  background: color-mix(in srgb, var(--abt-ink) 11%, transparent);
+}
+
+/* The end markers. Each sits under one end of the track; the knob covers the active one, so what is
+   visible is always the state you would switch to. */
+.abt-switch__end {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  translate: 0 -50%;
+  color: var(--t4);
+  pointer-events: none;
+  transition: color 0.4s ease;
+}
+
+.abt-switch__end svg {
+  width: 100%;
+  height: 100%;
+}
+
+.abt-switch__end--sun {
+  left: 8px;
+}
+
+.abt-switch__end--moon {
+  right: 8px;
+}
+
+.abt-switch:hover .abt-switch__end {
+  color: var(--t3);
+}
+
+.abt-switch__knob {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--abt-accent);
+  color: #fff; /* the glyph reads as light on the accent in both themes */
+}
+
+.abt-switch__glyph {
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+}
+
+/* The wipe drives both snapshots itself, so every default animation is silenced — including the
+   group and image-pair ones, whose 250ms default would end the transition early and cut it short. */
+html[data-abt-wipe]::view-transition-new(root) {
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+html[data-abt-wipe]::view-transition-group(root),
+html[data-abt-wipe]::view-transition-image-pair(root),
+html[data-abt-wipe]::view-transition-old(root),
+html[data-abt-wipe]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-abt-wipe]::view-transition-old(root) {
+  z-index: 1;
+}
+
+html[data-abt-wipe]::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* ---------------------------------------------------------------- Focus */
+
+.abt :is(a, button):focus-visible {
+  outline: 2px solid var(--abt-accent);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------- Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .abt *,
+  .abt *::before,
+  .abt *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------- Section 02: the lenses
+
+   Six lenses argued as three pairs. On wide screens each pair's framing thought sticks while its two
+   positions pass it; on phones a pair is a panel you swipe, which reads better than a pinned column
+   in a single column of text.                                                                       */
+
+.abt-lenses {
+  padding: clamp(96px, 18vh, 200px) 0 clamp(80px, 12vh, 140px);
+}
+
+.abt-display--section {
+  max-width: 18ch;
+  font-size: clamp(30px, 4.4vw, 66px);
+}
+
+.abt-lenses__intro {
+  display: grid;
+  gap: 20px;
+  max-width: 62ch;
+  margin-top: clamp(28px, 4vh, 48px);
+}
+
+.abt-lenses__intro p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--t2);
+  text-wrap: pretty;
+}
+
+/* ---------------------------------------------------------------- Artwork note
+
+   The brief for the section's image, kept visible as a reminder until the artwork exists. */
+
+.abt-artnote {
+  margin: clamp(40px, 6vh, 72px) 0 0;
+  max-width: 62ch;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t4);
+}
+
+/* ---------------------------------------------------------------- Pairs */
+
+.abt-pairs {
+  margin-top: clamp(64px, 12vh, 140px);
+}
+
+.abt-pair + .abt-pair {
+  margin-top: clamp(72px, 14vh, 160px);
+}
+
+.abt-pair__count {
+  display: block;
+  margin-bottom: 14px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--abt-accent);
+}
+
+.abt-pair__title {
+  margin: 0 0 12px;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(26px, 2.7vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--t1);
+  text-wrap: balance;
+}
+
+.abt-pair__note {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--t3);
+}
+
+.abt-pair__lenses {
+  display: grid;
+  gap: clamp(36px, 5vh, 64px);
+  margin-top: clamp(28px, 4vh, 44px);
+}
+
+/* ---------------------------------------------------------------- A single lens */
+
+.abt-lens__name {
+  margin: 0 0 10px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t4);
+}
+
+.abt-lens__statement {
+  margin: 0 0 10px;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(21px, 1.9vw, 28px);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+  text-wrap: pretty;
+}
+
+.abt-lens__summary {
+  margin: 0;
+  max-width: 48ch;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--t2);
+  text-wrap: pretty;
+}
+
+.abt-lens__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t3);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.abt-lens__toggle:hover,
+.abt-lens__toggle:focus-visible {
+  color: var(--abt-accent);
+}
+
+/* A plus that becomes a minus when its reasoning is open. */
+.abt-lens__toggle-mark {
+  position: relative;
+  width: 10px;
+  height: 10px;
+}
+
+.abt-lens__toggle-mark::before,
+.abt-lens__toggle-mark::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 1px;
+  background: currentColor;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.abt-lens__toggle-mark::after {
+  transform: rotate(90deg);
+}
+
+.abt-lens__toggle[aria-expanded='true'] .abt-lens__toggle-mark::after {
+  transform: rotate(0deg);
+}
+
+.abt-lens__reasoning {
+  overflow: hidden;
+}
+
+.abt-lens__reasoning p {
+  margin: 16px 0 0;
+  max-width: 54ch;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--t2);
+  text-wrap: pretty;
+}
+
+.abt-lens__evidence {
+  margin-top: 14px;
+}
+
+.abt-source {
+  margin: clamp(56px, 10vh, 112px) 0 0;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--t4);
+}
+
+/* ---------------------------------------------------------------- Wide screens: the frame sticks */
+
+@media (min-width: 900px) {
+  .abt-pair {
+    display: grid;
+    grid-template-columns: 40fr 30fr 30fr;
+    gap: clamp(28px, 3.4vw, 64px);
+    align-items: start;
+  }
+
+  /* Lifts the two lenses out of their wrapper so they become columns two and three of the pair,
+     side by side, instead of stacking and doubling the section's scroll. */
+  .abt-pair__lenses {
+    display: contents;
+  }
+
+  .abt-pair__frame {
+    position: sticky;
+    top: calc(var(--site-nav-h) + 96px);
+  }
+
+}
+
+/* ---------------------------------------------------------------- Phones: a pair per panel */
+
+@media (max-width: 899px) {
+  .abt-pairs {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    /* Full-bleed so a panel can sit against the screen edge, with the gutter restored as padding. */
+    margin-inline: calc(var(--abt-gutter) * -1);
+    padding-inline: var(--abt-gutter);
+    scroll-padding-inline: var(--abt-gutter);
+    scrollbar-width: none;
+  }
+
+  .abt-pairs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .abt-pair {
+    flex: 0 0 86%;
+    scroll-snap-align: start;
+  }
+
+  .abt-pair + .abt-pair {
+    margin-top: 0;
+  }
+}

@@ -94,15 +94,24 @@ export default function PlacementBody({ headlineFont, fontVars, narrationDuratio
                 <a href="#prototype" className="btn btn--rainbow-outline">
                   {t('ui.tryPrototype', 'Try the prototype')} ↓
                 </a>
+                <NarrationTrigger className="btn btn--tertiary btn--rainbow-text" duration={narrationDuration} />
                 <PlacementStory className="btn btn--tertiary btn--rainbow-text" fontClass={fontVars}>
                   {t('hero.story', 'Read the 2-minute version')}
                 </PlacementStory>
-                <NarrationTrigger className="btn btn--tertiary btn--rainbow-text" duration={narrationDuration} />
               </div>
             </div>
 
             <div>
               <div className="cs-hero-cover cs-hero-frame ph-cover">
+                {/* The same browser bar as the live prototype below, so the screenshot reads as a real window. */}
+                <div className="proto-frame-bar" aria-hidden="true">
+                  <div className="proto-frame-dots">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <div className="proto-frame-url">placement-hub.novatr.internal/home</div>
+                </div>
                 <img
                   src="/case-studies/placement-hub/body/hero-home-updates.png"
                   alt={t('hero.coverAlt', 'Placement Hub home with the updates panel open, listing application updates and new opportunities, above the eligibility and interest-form banners.')}
@@ -123,7 +132,7 @@ export default function PlacementBody({ headlineFont, fontVars, narrationDuratio
             label: 'Placement Hub',
             eyebrow: 'Interactive prototype · Placement Hub',
             description:
-              'A working prototype of the placement experience: home, the jobs board, job descriptions, applications and the interest form. Every application status is live — use the beaker button at the bottom right of the frame to act as the placement team and move an application through its stages.',
+              'A working prototype of the placement experience. Use the beaker button in the frame to act as the placement team and move an application through its stages.',
             url: 'placement-hub.novatr.internal/home',
             embedSrc: '/case-studies/placement-hub/prototype/index.html',
             fullSrc: '/case-studies/placement-hub/prototype/index.html',
@@ -136,7 +145,7 @@ export default function PlacementBody({ headlineFont, fontVars, narrationDuratio
         ])}
         title={t('proto.title', 'Placement Hub interactive prototype')}
         heading={t('proto.heading', 'See Placement Hub, live')}
-        note={t('proto.note', "Sample data throughout is synthetic. Scroll and click inside the frame — it's the full prototype, just boxed in. Try the interest form from the home banner, apply to a job, or open the beaker button to move an application through its stages.")}
+        note={t('proto.note', "Sample data throughout is synthetic. Scroll and click inside the frame. It's the full prototype, just boxed in. Try the interest form from the home banner, apply to a job, or open the beaker button to move an application through its stages.")}
         mobileImage="/case-studies/placement-hub/preview.png"
         mobileImageAlt={t('proto.mobileAlt', "Placement Hub home showing the eligibility banner, the interest-form banner and the learner's applications in progress")}
       />
@@ -154,7 +163,7 @@ export default function PlacementBody({ headlineFont, fontVars, narrationDuratio
 
       <div className="cs-footer-nav wrap wrap--wide">
         <a href="/" className="btn btn--secondary">← {t('footer.all', 'All work')}</a>
-        <a href="mailto:manikdesigns@yahoo.com" className="btn btn--primary">{t('footer.contact', 'Get in touch')}</a>
+        <span className="btn btn--primary btn--inert">{t('footer.contact', 'Get in touch')}</span>
       </div>
 
     </>

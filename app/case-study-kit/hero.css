@@ -225,11 +225,118 @@
   color: var(--fog);
 }
 
+/* The three lead facts are one list at every width: the same size, and their labels in full white so they read. */
+.ph-facts dt {
+  color: var(--paper);
+}
+
+.ph-facts__lead dd,
+.ph-facts__lead .is-strong dd {
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.ph-facts__lead,
+.ph-facts__more {
+  gap: 20px 28px;
+}
+
+/* The two quieter actions under "Try the prototype": "Listen to the short version" is a soft fill with a waveform, its
+   length beside it; "Read the 2-minute version" is a plain text link. */
+.ph-hero .hero-actions .btn--tertiary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  font-size: 0.9375rem;
+}
+
+/* The text link: no border, no fill, just an underline to show it can be pressed. */
+.ph-hero .hero-actions .btn--tertiary:not(.nr-trigger) {
+  padding: 0; /* a link: no inset, so on its own line it lines up with the button above */
+  background: none;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--paper) 35%, transparent);
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1px;
+}
+
+.ph-hero .hero-actions .nr-trigger {
+  justify-content: flex-start;
+  gap: 12px;
+  background: color-mix(in srgb, var(--paper) 11%, transparent);
+  transition: background-color 0.2s ease;
+}
+
+/* The pill keeps its fill and plain text on hover (the rainbow text would clip the fill away): it just lightens. */
+.ph-hero .hero-actions .nr-trigger:hover {
+  background: color-mix(in srgb, var(--paper) 17%, transparent);
+  background-image: none;
+  -webkit-text-fill-color: currentColor;
+  animation: none;
+}
+
+.ph-hero .hero-actions .nr-trigger .nr-wave {
+  flex: none;
+  color: var(--article-green, var(--accent));
+}
+
+.ph-hero .hero-actions .nr-trigger__label {
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ph-hero .hero-actions .nr-trigger__time {
+  margin-left: 4px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--paper) 13%, transparent);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  opacity: 1;
+  white-space: nowrap;
+}
+
+/* On a touch screen the rainbow text would stay on after a tap, so the link stays plain there. */
+@media (hover: none) {
+  .ph-hero .hero-actions .btn--tertiary:hover {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    animation: none;
+  }
+}
+
 @media (max-width: 640px) {
   .ph-facts__lead,
   .ph-facts__more {
     grid-template-columns: minmax(0, 1fr);
-    gap: 18px;
+    gap: 14px;
+  }
+
+  /* Stacked, the actions are full-width and taller, and the pill's length sits at the far right. */
+  .ph-hero .hero-actions {
+    gap: 12px;
+  }
+
+  .ph-hero .hero-actions .btn--tertiary {
+    min-height: 52px;
+    padding: 0 16px;
+  }
+
+  .ph-hero .hero-actions .btn--tertiary:not(.nr-trigger) {
+    min-height: 44px;
+  }
+
+  .ph-hero .hero-actions .nr-trigger {
+    gap: 10px;
+  }
+
+  .ph-hero .hero-actions .nr-trigger__time {
+    margin-left: auto;
   }
 }
 
@@ -359,4 +466,35 @@
   .ph-facts__lead > div {
     animation: none;
   }
+}
+
+/* The hero image's browser bar (the same window furniture as the live prototype's, see PlacementBody.js): slim, and light,
+   because the screenshot inside is a light app and very wide. The colours are fixed, not themed, so it looks the same in
+   both themes. */
+.cs-hero-frame .proto-frame-bar {
+  gap: 10px;
+  height: 32px;
+  padding: 0 12px;
+  border-bottom: 1px solid #dfe2e7;
+  background: #eef0f3;
+}
+
+.cs-hero-frame .proto-frame-dots {
+  gap: 5px;
+}
+
+.cs-hero-frame .proto-frame-dots span {
+  width: 8px;
+  height: 8px;
+  background: #cdd1d8;
+}
+
+.cs-hero-frame .proto-frame-url {
+  margin: 0 20px;
+  padding: 2px 10px;
+  border-color: #dfe2e7;
+  background: #fff;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #7c828c;
 }

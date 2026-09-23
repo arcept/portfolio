@@ -4,9 +4,10 @@ export default function Footer() {
       <div className="wrap wrap--wide">
         <span>© 2026 Manik Madaan</span>
         <span>
-          <a href="mailto:manikdesigns@yahoo.com">manikdesigns@yahoo.com</a>
+          {/* Shown, but not linked: contact gets its own page. */}
+          <span>manikdesigns@yahoo.com</span>
           &nbsp;·&nbsp;
-          <a href="https://www.linkedin.com/in/manikmadaan" target="_blank" rel="noopener">LinkedIn</a>
+          <span>LinkedIn</span>
         </span>
       </div>
     </footer>

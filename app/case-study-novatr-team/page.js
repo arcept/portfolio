@@ -87,7 +87,7 @@ export default function CaseStudyNovatrTeam() {
 
       <div className="cs-footer-nav wrap wrap--wide">
         <a href="/" className="btn btn--secondary">← All work</a>
-        <a href="mailto:manikdesigns@yahoo.com" className="btn btn--primary">Get in touch</a>
+        <span className="btn btn--primary btn--inert">Get in touch</span>
       </div>
 
       <Footer />

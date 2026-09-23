@@ -133,15 +133,35 @@ a {
   gap: 24px;
 }
 
-.site-nav__links a {
+.site-nav__link {
   color: var(--fog);
   font-size: 14px;
   transition: color 0.15s ease;
 }
 
-.site-nav__links a:hover,
-.site-nav__links a:focus-visible {
+a.site-nav__link:hover,
+a.site-nav__link:focus-visible {
   color: var(--paper);
+}
+
+/* Shown, but with nowhere to go yet: it must not offer itself as a link. */
+.site-nav__link--inert,
+.btn--inert,
+.mm__link--inert {
+  cursor: default;
+}
+
+.site-nav__link--inert {
+  opacity: 0.55;
+}
+
+.btn--inert {
+  opacity: 0.5;
+}
+
+.btn--inert:hover {
+  opacity: 0.5;
+  transform: none;
 }
 
 /* ---------- Buttons ---------- */
@@ -570,6 +590,11 @@ button:focus-visible {
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* With a browser bar above it, the image stacks under the bar instead of sitting beside it. */
+.cs-hero-frame:has(.proto-frame-bar) {
+  flex-direction: column;
 }
 
 /* ---------- TL;DR expandable summary ---------- */
@@ -1163,8 +1188,10 @@ button:focus-visible {
   margin-bottom: 32px;
 }
 
-.proto-head > div {
-  max-width: 640px;
+/* The text takes about two thirds of the frame's width (the frame is as wide as this row); the button stays to its right. */
+.proto-head > div:first-child {
+  flex: 0 1 65%;
+  max-width: 65%;
 }
 
 .proto-head .btn {
@@ -1209,6 +1236,10 @@ button:focus-visible {
 }
 
 @media (max-width: 640px) {
+  .proto-head > div:first-child {
+    flex: none;
+    max-width: none;
+  }
   .proto-head {
     flex-direction: column;
     align-items: flex-start;
@@ -1290,6 +1321,9 @@ button:focus-visible {
 
 .proto-frame-url {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: 11px;
   color: var(--ash);
@@ -1298,6 +1332,63 @@ button:focus-visible {
   border-radius: 6px;
   padding: 4px 10px;
   margin: 0 24px;
+}
+
+/* "Live": a pulsing green dot and label inside the address bar, right after the address behind a hairline. It fades in once
+   the prototype has loaded. */
+.proto-frame-live {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid var(--graphite);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--article-green, var(--accent));
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.proto-frame-live.is-on {
+  opacity: 1;
+}
+
+.proto-frame-live i {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.proto-frame-live i::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  animation: proto-live 1.8s ease-out infinite;
+}
+
+@keyframes proto-live {
+  from {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-frame-live i::after {
+    animation: none;
+  }
 }
 
 .proto-frame-body {
@@ -1570,8 +1661,8 @@ html[data-cs-theme='light'] .cs-lang__menu {
   }
 }
 
-/* On phones the nav has no room for "DE ▾": the button shrinks to just the flag or globe (the list is unchanged). */
-@media (max-width: 480px) {
+/* On the very narrowest phones the language button shrinks to just the flag or globe. */
+@media (max-width: 340px) {
   .cs-lang__button {
     justify-content: center;
     width: 28px;
@@ -1582,41 +1673,10 @@ html[data-cs-theme='light'] .cs-lang__menu {
   .cs-lang__caret {
     display: none;
   }
-
-  .site-nav__name {
-    white-space: nowrap;
-  }
-
-  /* Only on a page that has the language control, so no other page's nav changes. */
-  .site-nav__inner:has(.cs-lang) {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .site-nav__links:has(.cs-lang) {
-    gap: 8px;
-  }
 }
 
-@media (max-width: 380px) {
-  .site-nav__inner:has(.cs-lang) .site-nav__name {
-    font-size: 15px;
-  }
-
-  .site-nav__links:has(.cs-lang) {
-    gap: 6px;
-  }
-
-  .site-nav__links:has(.cs-lang) a {
-    font-size: 13px;
-  }
-}
-
-/* The narrowest phones (iPhone 5 / SE 1st gen, 320px): there is room for the brand, two links and the two switches. */
-@media (max-width: 340px) {
-  .site-nav__links:has(.cs-lang) a[href='/#about'] {
-    display: none;
-  }
+.site-nav__name {
+  white-space: nowrap;
 }
 
 /* Theme switch on the Placement Hub case study (see components/theme/ThemeSwitch.js). Its state is

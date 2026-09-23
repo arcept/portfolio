@@ -6,6 +6,11 @@ dist
 *.log
 docs/planning/
 docs/Claude outputs/
+Claude outputs/
+
+# Source material for the About page: narrative blueprint, drafts and the ChatGPT prototypes.
+# Names former colleagues and discusses compensation — stays local, the repo is public.
+app/about/reference/
 
 # Narration tooling: the local Python environment and cached model/alignment output
 docs/narration/.venv/

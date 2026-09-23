@@ -1,6 +1,9 @@
 // German: the interface words shared by every case study (buttons, labels, spoken labels).
 export default {
   'ui.language': 'Sprache',
+  'ui.menu': 'Menü',
+  'ui.menuOpen': 'Menü öffnen',
+  'ui.menuClose': 'Menü schließen',
   'ui.questions': 'Fragen',
   'ui.marginSummary': 'Fachgebiet, Fragen und Ergebnisse',
   'ui.deliverables': 'Ergebnisse',
@@ -34,6 +37,7 @@ export default {
   'ui.darkTheme': 'Dunkles Design',
   'ui.caseStudySections': 'Abschnitte der Fallstudie',
   'ui.protoVersion': 'Prototyp-Version',
+  'ui.protoLive': 'Live',
   'ui.protoOpen': 'Vollständigen Prototyp öffnen',
   'ui.protoLoading': 'Prototyp wird geladen …',
   'ui.protoFailed': 'Der Prototyp konnte nicht geladen werden – nutzen Sie unten „Vollständigen Prototyp öffnen“.',

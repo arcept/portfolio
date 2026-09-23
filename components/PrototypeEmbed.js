@@ -183,7 +183,14 @@ export default function PrototypeEmbed({
           <div className="proto-frame">
             <div className="proto-frame-bar">
               <div className="proto-frame-dots"><span /><span /><span /></div>
-              <div className="proto-frame-url">{active.url}</div>
+              <div className="proto-frame-url">
+                {active.url}
+                {/* Beside the address, and only once it has loaded: "Live" means it is running, not a picture. */}
+                <span className={`proto-frame-live${status === 'loaded' ? ' is-on' : ''}`} aria-hidden={status !== 'loaded'}>
+                  <i aria-hidden="true" />
+                  {t('ui.protoLive', 'Live')}
+                </span>
+              </div>
             </div>
             <div className="proto-frame-body" ref={bodyRef} style={{ background: active.frameBackground ?? (frameIsDark ? 'var(--carbon)' : '#f9fafb') }}>
               {status !== 'loaded' && (

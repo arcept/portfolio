@@ -1,6 +1,9 @@
 // Italian: the interface words shared by every case study (buttons, labels, spoken labels).
 export default {
   'ui.language': 'Lingua',
+  'ui.menu': 'Menu',
+  'ui.menuOpen': 'Apri il menu',
+  'ui.menuClose': 'Chiudi il menu',
   'ui.questions': 'Domande',
   'ui.marginSummary': 'Disciplina, domande e deliverable',
   'ui.deliverables': 'Deliverable',
@@ -34,6 +37,7 @@ export default {
   'ui.darkTheme': 'Tema scuro',
   'ui.caseStudySections': 'Sezioni del caso di studio',
   'ui.protoVersion': 'Versione del prototipo',
+  'ui.protoLive': 'Live',
   'ui.protoOpen': 'Apri il prototipo completo',
   'ui.protoLoading': 'Caricamento del prototipo…',
   'ui.protoFailed': 'Impossibile caricare il prototipo: usa «Apri il prototipo completo» qui sotto.',

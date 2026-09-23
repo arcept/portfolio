@@ -201,6 +201,18 @@ for (const code of ['de', 'it']) {
   await ctx.close();
 }
 
+// ------------------------------------------------------------------ the two browser frames
+{
+  const { ctx, page } = await open();
+  const hero = await page.evaluate(() => { const f = document.querySelector('.cs-hero-frame'); const bar = f?.querySelector('.proto-frame-bar'); const img = f?.querySelector('img'); return { bar: !!bar, dots: bar?.querySelectorAll('.proto-frame-dots span').length, url: bar?.querySelector('.proto-frame-url')?.textContent, barAboveImage: bar && img ? bar.getBoundingClientRect().bottom <= img.getBoundingClientRect().top + 1 : false }; });
+  ok('the hero image sits in a browser frame: three dots and an address bar above it', hero.bar && hero.dots === 3 && hero.url === 'placement-hub.novatr.internal/home' && hero.barAboveImage, JSON.stringify(hero));
+  await page.evaluate(() => document.getElementById('prototype').scrollIntoView());
+  await page.waitForFunction(() => document.querySelector('.proto-frame-live.is-on'), null, { timeout: 15000 }).catch(() => {});
+  const live = await page.evaluate(() => { const url = document.querySelector('.proto-frame .proto-frame-url'); const l = url?.querySelector('.proto-frame-live'); return { text: l?.textContent, inside: !!l, opacity: l ? getComputedStyle(l).opacity : null, after: l && url ? l.getBoundingClientRect().left > url.querySelector('.proto-frame-live').previousSibling.parentElement.getBoundingClientRect().left : false }; });
+  ok('the live prototype\'s browser bar says "Live" beside the address once it has loaded', live.text === 'Live' && live.inside && live.opacity === '1', JSON.stringify(live));
+  await ctx.close();
+}
+
 // ------------------------------------------------------------------ the nav must fit on real phone widths
 for (const w of [320, 360, 375, 390]) {
   const { ctx, page } = await open({ viewport: { width: w, height: 700 }, hasTouch: true, isMobile: true });

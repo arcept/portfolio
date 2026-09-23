@@ -39,7 +39,7 @@ export default {
     {
       eyebrow: 'Prototipo interattivo · Placement Hub',
       description:
-        'Un prototipo funzionante dell’esperienza di placement: home, bacheca delle offerte, descrizioni delle posizioni, candidature e modulo di interesse. Ogni stato di candidatura è attivo: con il pulsante a forma di becher in basso a destra nel riquadro puoi vestire i panni del team di placement e far avanzare una candidatura nelle sue fasi.',
+        'Un prototipo funzionante dell’esperienza di placement. Con il pulsante a forma di becher nel riquadro puoi vestire i panni del team di placement e far avanzare una candidatura nelle sue fasi.',
     },
   ],
   'proto.title': 'Prototipo interattivo di Placement Hub',

@@ -39,7 +39,7 @@ export default function Home() {
           </p>
           <div className="hero-actions">
             <a href="#work" className="btn btn--rainbow">See selected work</a>
-            <a href="mailto:manikdesigns@yahoo.com" className="btn btn--rainbow-outline">Get in touch</a>
+            <span className="btn btn--rainbow-outline btn--inert">Get in touch</span>
           </div>
         </Reveal>
       </header>
