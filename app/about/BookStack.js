@@ -51,7 +51,15 @@ const VOLUMES = [
 const INK = '#241819';
 
 // How far a volume slides out when pulled: alternate sides, so the stack reads as handled.
-const pull = (i) => ({ x: i % 2 ? -90 : 110 });
+const pull = (i) => ({ x: REST[i].x + (i % 2 ? -90 : 110) });
+
+// The stack at rest: centred overall, but each volume nudged off the one below, as if set down by
+// hand rather than ruled edge to edge. Bottom volume first.
+const REST = [
+  { x: 26, rotate: 0.5 },
+  { x: -34, rotate: -0.7 },
+  { x: 14, rotate: 0.4 },
+];
 
 // `landed` (optional): how many volumes are down, bottom first — for a layout that builds the stack
 // from scroll. Without it the whole stack drops in once it is in view. `interactive`: a volume
@@ -99,7 +107,7 @@ export default function BookStack({ className = '', landed, interactive = false 
           <motion.g
             key={v.n}
             initial={{ y: -420, opacity: 0, rotate: i % 2 ? 1.6 : -1.8 }}
-            animate={isDown(i) ? { y: 0, opacity: 1, rotate: 0 } : { y: -420, opacity: 0, rotate: i % 2 ? 1.6 : -1.8 }}
+            animate={isDown(i) ? { y: 0, x: REST[i].x, opacity: 1, rotate: REST[i].rotate } : { y: -420, opacity: 0, rotate: i % 2 ? 1.6 : -1.8 }}
             whileHover={interactive && isDown(i) ? pull(i) : undefined}
             whileTap={interactive && isDown(i) ? pull(i) : undefined}
             transition={{

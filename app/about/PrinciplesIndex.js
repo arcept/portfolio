@@ -79,7 +79,7 @@ export default function PrinciplesIndex() {
                 onPointerEnter={hoverTo(i)}
                 onPointerLeave={hoverOff}
               >
-                <IconSlot size="sm" label={pair.title} still />
+                <IconSlot size="sm" label={pair.title} art={pair.art} active={on} still />
                 <span className="abt-ix__num">{pad(i)}</span>
                 <span className="abt-ix__title">{pair.title}</span>
                 <span className="abt-ix__mark" aria-hidden="true" />

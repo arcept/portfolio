@@ -15,6 +15,7 @@ export const INTRO = {
 export const PAIRS = [
   {
     id: 'framing',
+    art: 'keys',
     title: 'Start with a question.',
     note: 'A brief names a request. People give it context.',
     lenses: [
@@ -38,6 +39,7 @@ export const PAIRS = [
   },
   {
     id: 'evidence',
+    art: 'orb',
     title: 'Evidence needs interpretation.',
     note: 'Finding the problem takes more than counting what happened.',
     lenses: [
@@ -62,6 +64,7 @@ export const PAIRS = [
   },
   {
     id: 'release',
+    art: 'glass',
     title: 'Make it clear. Let it meet reality.',
     note: 'Craft and release need room in the same decision.',
     lenses: [

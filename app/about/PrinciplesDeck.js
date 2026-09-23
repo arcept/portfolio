@@ -84,7 +84,7 @@ export default function PrinciplesDeck() {
                 transition={{ duration: 0.7, ease: EASE }}
               >
                 <div className="abt-dk-card__face abt-dk-card__face--front" inert={showBack}>
-                  <IconSlot size="md" label={pair.title} still />
+                  <IconSlot size="md" label={pair.title} art={pair.art} still />
                   <div>
                     <p className="abt-dk-card__count">{pad(i)} / 03</p>
                     <h3 className="abt-dk-card__title">{pair.title}</h3>

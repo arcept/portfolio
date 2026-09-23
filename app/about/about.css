@@ -392,9 +392,8 @@ html[data-abt-theme='light'] {
 .abt-opening {
   display: flex;
   flex-direction: column;
-  gap: clamp(44px, 7vh, 88px);
-  min-height: 100vh;
-  padding: calc(var(--site-nav-h) + clamp(64px, 11vh, 116px)) 0 clamp(80px, 12vh, 132px);
+  gap: clamp(32px, 4.5vh, 56px);
+  padding: calc(var(--site-nav-h) + clamp(104px, 13.5vh, 148px)) 0 clamp(32px, 4vh, 52px);
 }
 
 /* Phones open closer to the top: a full screen of air above the label reads as a loading page. */
@@ -867,7 +866,7 @@ html[data-abt-wipe]::view-transition-new(root) {
    a deck of cards on phones (see "The principles" below).                                          */
 
 .abt-lenses {
-  padding: clamp(96px, 18vh, 200px) 0 clamp(80px, 12vh, 140px);
+  padding: clamp(56px, 8vh, 88px) 0 clamp(80px, 12vh, 140px);
 }
 
 .abt-display--section {
@@ -1041,6 +1040,35 @@ html[data-abt-theme='light'] .abt {
   text-transform: uppercase;
 }
 
+/* Finished artwork: no dashed frame or fill, just the canvas at the slot's size. */
+.abt-slot--art {
+  border: 0;
+  background: none;
+}
+
+
+.abt-glyph {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Where WebGL2 is unavailable: a still shape in the glyph's colours, so the slot is never empty. */
+.abt-glyph--orb[data-fallback='true'] {
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #6fb3ff, #1f6fe0 55%, #123f9e);
+}
+
+.abt-glyph--glass[data-fallback='true'] {
+  border-radius: 26%;
+  background: linear-gradient(150deg, #dfe7ff, #9fb0f0 60%, #6f7fd0);
+}
+
+.abt-glyph--keys[data-fallback='true'] {
+  border-radius: 24%;
+  background: linear-gradient(160deg, #fbfaf7, #d9d5cd);
+}
+
 .abt-slot--sm {
   width: 44px;
   height: 44px;
@@ -1090,10 +1118,11 @@ html[data-abt-theme='light'] .abt {
 /* ---------------------------------------------------------------- Wide screens: the index */
 
 .abt-ix {
+  --abt-ix-icon: clamp(96px, 8.5vw, 132px);
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-columns: minmax(0, 6fr) minmax(0, 7fr);
   align-items: start;
-  gap: clamp(40px, 5vw, 96px);
+  gap: clamp(40px, 4.5vw, 80px);
 }
 
 .abt-ix__list {
@@ -1112,11 +1141,11 @@ html[data-abt-theme='light'] .abt {
 
 .abt-ix__tab {
   display: grid;
-  grid-template-columns: 44px auto minmax(0, 1fr) auto;
+  grid-template-columns: var(--abt-ix-icon) 22px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
+  gap: clamp(10px, 1vw, 16px);
   width: 100%;
-  padding: 24px 0;
+  padding: 28px 0;
   border: 0;
   background: none;
   text-align: left;
@@ -1134,13 +1163,17 @@ html[data-abt-theme='light'] .abt {
 }
 
 .abt-ix__tab .abt-slot {
-  opacity: 0.55;
-  transition: opacity 0.35s ease, border-color 0.35s ease;
+  width: var(--abt-ix-icon);
+  height: var(--abt-ix-icon);
+  border-radius: calc(var(--abt-ix-icon) * 0.28);
 }
 
-.abt-ix__row.is-on .abt-slot {
-  opacity: 1;
-  border-color: var(--abt-accent);
+.abt-ix__tab .abt-slot__label {
+  font-size: 10px;
+}
+
+.abt-ix__row.is-on .abt-slot--art {
+  border-color: transparent;
 }
 
 .abt-ix__num {
@@ -1155,7 +1188,7 @@ html[data-abt-theme='light'] .abt {
 
 .abt-ix__title {
   font-family: var(--font-abt-display), Georgia, serif;
-  font-size: clamp(24px, 2.4vw, 36px);
+  font-size: clamp(22px, 2.1vw, 32px);
   line-height: 1.1;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -1438,4 +1471,17 @@ html[data-abt-theme='light'] .abt {
   font-size: 13px;
   line-height: 1.6;
   color: var(--t4);
+}
+
+/* Phones: the gap between section 01 and 02 was the opening's full-screen minimum height plus both
+   sections' desktop padding. Keep a breath, not a screen. */
+@media (max-width: 899px) {
+  .abt-opening {
+    min-height: 0;
+    padding-bottom: 40px;
+  }
+
+  .abt-lenses {
+    padding-top: 56px;
+  }
 }
