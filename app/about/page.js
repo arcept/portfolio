@@ -1,4 +1,3 @@
-import { Averia_Serif_Libre, DM_Sans } from 'next/font/google';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import { aboutThemeGate } from './theme';
@@ -8,23 +7,8 @@ import AboutIndex from './AboutIndex';
 import HeroWash from './HeroWash';
 import Opening from './Opening';
 import Lenses from './Lenses';
+import { display, sans } from './fonts';
 import './about.css';
-
-// Statements are set in the serif, reading copy in DM Sans, and the apparatus (section numbers,
-// index, labels) in the site's IBM Plex Mono.
-const display = Averia_Serif_Libre({
-  subsets: ['latin'],
-  weight: ['300', '400', '700'],
-  style: ['normal', 'italic'],
-  display: 'swap',
-  variable: '--font-abt-display',
-});
-
-const sans = DM_Sans({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-abt-sans',
-});
 
 export const metadata = {
   title: 'About — Manik Madaan',

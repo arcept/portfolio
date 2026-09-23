@@ -18,3 +18,7 @@ docs/narration/incoming/
 docs/narration/.cache/
 docs/narration/for-elevenlabs*.txt
 docs/narration/__pycache__/
+
+# The About page's layout lab (/about/lenses-lab): kept permanently on this machine as a reference
+# for layouts not chosen — never delete it — but it stays out of the public repo and the live site.
+app/about/lenses-lab/

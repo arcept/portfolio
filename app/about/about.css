@@ -863,9 +863,8 @@ html[data-abt-wipe]::view-transition-new(root) {
 
 /* ---------------------------------------------------------------- Section 02: the lenses
 
-   Six lenses argued as three pairs. On wide screens each pair's framing thought sticks while its two
-   positions pass it; on phones a pair is a panel you swipe, which reads better than a pinned column
-   in a single column of text.                                                                       */
+   The intro and the books, then six lenses argued as three principles: an index on wide screens,
+   a deck of cards on phones (see "The principles" below).                                          */
 
 .abt-lenses {
   padding: clamp(96px, 18vh, 200px) 0 clamp(80px, 12vh, 140px);
@@ -876,174 +875,562 @@ html[data-abt-wipe]::view-transition-new(root) {
   font-size: clamp(30px, 4.4vw, 66px);
 }
 
-.abt-lenses__intro {
-  display: grid;
-  gap: 20px;
-  max-width: 62ch;
-  margin-top: clamp(28px, 4vh, 48px);
+/* The intro. The handwritten "How I work" sits behind the headline, in the space after "obvious."
+   The lead-in is at reading size; the turn is a pull line on an accent rule, and it and the
+   paragraph after it light word by word on scroll (LensesIntro.js). The books sit beside the text
+   on wide screens and above it on phones, with a caption. */
+.abt-lenses__head {
+  position: relative;
 }
 
-.abt-lenses__intro p {
+.abt-sticker--howiwork {
+  left: clamp(230px, 17vw, 270px);
+  top: 6%;
+  width: clamp(180px, 15vw, 230px);
+  rotate: -5deg;
+}
+
+.abt-lenses__intro {
+  display: grid;
+  gap: clamp(32px, 5vh, 48px);
+  margin-top: clamp(44px, 6vh, 72px);
+}
+
+.abt-lenses__copy,
+.abt-lenses__lit {
+  display: grid;
+  gap: 26px;
+}
+
+.abt-lenses__copy p {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.7;
-  color: var(--t2);
   text-wrap: pretty;
 }
 
-/* ---------------------------------------------------------------- Artwork note
-
-   The brief for the section's image, kept visible as a reminder until the artwork exists. */
-
-.abt-artnote {
-  margin: clamp(40px, 6vh, 72px) 0 0;
-  max-width: 62ch;
-  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  font-size: 11px;
+.abt-lenses__before {
+  max-width: 56ch;
+  font-size: 16px;
   line-height: 1.7;
-  letter-spacing: 0.08em;
+  color: var(--t3);
+}
+
+.abt-lenses__turn {
+  padding-left: 24px;
+  border-left: 2px solid var(--abt-accent);
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(26px, 2.5vw, 36px);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+}
+
+.abt-lenses__after {
+  max-width: 44ch;
+  font-size: clamp(19px, 1.6vw, 22px);
+  line-height: 1.5;
+  color: var(--t2);
+}
+
+/* Visitors who ask for less motion get the copy fully lit, not waiting on the scroll. */
+@media (prefers-reduced-motion: reduce) {
+  .abt-lenses__lit span {
+    opacity: 1 !important;
+  }
+}
+
+.abt-lenses__books {
+  margin: 0;
+}
+
+.abt-lenses__books figcaption {
+  margin-top: 10px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-align: center;
   text-transform: uppercase;
   color: var(--t4);
 }
 
-/* ---------------------------------------------------------------- Pairs */
+.abt-books {
+  width: 100%;
+}
 
-.abt-pairs {
+.abt-books svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* The two versions of the drawing differ only here: the cover's upper tones and the shadow. */
+.abt {
+  --abt-book-c0: #ed505a;
+  --abt-book-c1: #db3946;
+  --abt-book-c2: #cb2b39;
+  --abt-book-shadow: #000000;
+  --abt-book-shadow-o: 0.65;
+}
+
+html[data-abt-theme='light'] .abt {
+  --abt-book-c0: #df4650;
+  --abt-book-c1: #d53843;
+  --abt-book-c2: #c62936;
+  --abt-book-shadow: #6e3033;
+  --abt-book-shadow-o: 0.16;
+}
+
+@media (min-width: 900px) {
+  .abt-lenses__intro {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: center;
+    column-gap: clamp(40px, 5vw, 96px);
+  }
+}
+
+/* Phones: the books above the story, the pull line and paragraph a step smaller, and the sticker
+   placed for the headline as it wraps at this width. */
+@media (max-width: 899px) {
+  .abt-lenses__books {
+    order: -1;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .abt-sticker--howiwork {
+    left: 44%;
+    top: 22%;
+    width: 40%;
+    max-width: 200px;
+  }
+
+  .abt-lenses__turn {
+    padding-left: 18px;
+    font-size: 24px;
+  }
+
+  .abt-lenses__books figcaption {
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-wrap: balance;
+  }
+
+  .abt-lenses__after {
+    font-size: 18px;
+  }
+}
+
+/* ---------------------------------------------------------------- Icon and illustration slots */
+
+.abt-slot {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border: 1.5px dashed var(--abt-line-2);
+  background: color-mix(in srgb, var(--abt-ink) 3%, transparent);
+  color: var(--t4);
+}
+
+.abt-slot__label {
+  padding: 8px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.abt-slot--sm {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+
+.abt-slot--sm .abt-slot__label {
+  padding: 0;
+  font-size: 7.5px;
+}
+
+.abt-slot--md {
+  width: 150px;
+  height: 150px;
+  border-radius: 30px;
+}
+
+.abt-slot--lg {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 44px;
+}
+
+/* ---------------------------------------------------------------- The principles
+
+   One set of content, two presentations: the index on wide screens (PrinciplesIndex.js), the deck
+   of cards on phones (PrinciplesDeck.js). Principles.js renders both; these two rules pick one.   */
+
+.abt-principles {
   margin-top: clamp(64px, 12vh, 140px);
 }
 
-.abt-pair + .abt-pair {
-  margin-top: clamp(72px, 14vh, 160px);
+.abt-principles__narrow {
+  display: none;
 }
 
-.abt-pair__count {
-  display: block;
-  margin-bottom: 14px;
+@media (max-width: 899px) {
+  .abt-principles__wide {
+    display: none;
+  }
+
+  .abt-principles__narrow {
+    display: block;
+  }
+}
+
+/* ---------------------------------------------------------------- Wide screens: the index */
+
+.abt-ix {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: start;
+  gap: clamp(40px, 5vw, 96px);
+}
+
+.abt-ix__list {
+  position: sticky;
+  top: 96px;
+  display: grid;
+}
+
+.abt-ix__row {
+  border-top: 1px solid var(--abt-line);
+}
+
+.abt-ix__row:last-child {
+  border-bottom: 1px solid var(--abt-line);
+}
+
+.abt-ix__tab {
+  display: grid;
+  grid-template-columns: 44px auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 24px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--t4);
+  cursor: pointer;
+  transition: color 0.35s ease;
+}
+
+.abt-ix__tab:hover {
+  color: var(--t2);
+}
+
+.abt-ix__row.is-on .abt-ix__tab {
+  color: var(--t1);
+}
+
+.abt-ix__tab .abt-slot {
+  opacity: 0.55;
+  transition: opacity 0.35s ease, border-color 0.35s ease;
+}
+
+.abt-ix__row.is-on .abt-slot {
+  opacity: 1;
+  border-color: var(--abt-accent);
+}
+
+.abt-ix__num {
   font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
+}
+
+.abt-ix__row.is-on .abt-ix__num {
   color: var(--abt-accent);
 }
 
-.abt-pair__title {
+.abt-ix__title {
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(24px, 2.4vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.abt-ix__mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--abt-accent);
+  scale: 0;
+  transition: scale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.abt-ix__row.is-on .abt-ix__mark {
+  scale: 1;
+}
+
+/* All panels in one cell; the outgoing one stays visible long enough to fade. */
+.abt-ix__stage {
+  display: grid;
+}
+
+.abt-ix__panel {
+  grid-area: 1 / 1;
+  visibility: hidden;
+  transition: visibility 0s linear 0.3s;
+}
+
+.abt-ix__panel.is-on {
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.abt-ix__note {
+  margin: 0 0 clamp(28px, 4vh, 44px);
+  max-width: 36ch;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(22px, 2vw, 28px);
+  line-height: 1.3;
+  color: var(--t2);
+}
+
+.abt-ix__lenses {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(28px, 3vw, 56px);
+}
+
+.abt-ix__lens {
+  padding-top: 20px;
+  border-top: 1px solid var(--abt-line);
+}
+
+.abt-ix__lensname {
+  margin: 0 0 10px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--abt-accent);
+}
+
+.abt-ix__statement {
   margin: 0 0 12px;
   font-family: var(--font-abt-display), Georgia, serif;
   font-weight: 400;
-  font-size: clamp(26px, 2.7vw, 40px);
-  line-height: 1.1;
+  font-size: clamp(20px, 1.8vw, 24px);
+  line-height: 1.22;
+  color: var(--t1);
+  text-wrap: pretty;
+}
+
+.abt-ix__summary {
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--t2);
+}
+
+.abt-ix__reasoning {
+  margin: 0 0 16px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--t3);
+}
+
+/* ---------------------------------------------------------------- Phones: the deck */
+
+.abt-dk {
+  display: grid;
+  gap: 28px;
+}
+
+.abt-dk__pile {
+  position: relative;
+  justify-self: center;
+  width: min(420px, calc(100% - 28px));
+  height: min(540px, 72svh);
+  outline: none;
+}
+
+.abt-dk__pile:focus-visible {
+  outline: 1.5px dashed var(--abt-line-2);
+  outline-offset: 12px;
+  border-radius: 32px;
+}
+
+.abt-dk__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  row-gap: 14px;
+}
+
+.abt-dk__arrow {
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--abt-line-2);
+  border-radius: 50%;
+  background: none;
+  font-size: 18px;
+  color: var(--t2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.abt-dk__count {
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t4);
+}
+
+.abt-dk__count span {
+  color: var(--abt-accent);
+}
+
+.abt-dk__hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--t4);
+}
+
+.abt-dk-card {
+  position: absolute;
+  inset: 0;
+  perspective: 1400px;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.abt-dk-card__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.abt-dk-card__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid var(--abt-line);
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--abt-ink) 6%, var(--abt-base));
+  box-shadow: 0 40px 70px -40px rgb(0 0 0 / 0.55);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* The cards underneath sit a step back in tone, so the top one reads as the one in hand. */
+.abt-dk-card[aria-hidden='true'] .abt-dk-card__face {
+  background: color-mix(in srgb, var(--abt-ink) 3%, var(--abt-base));
+}
+
+.abt-dk-card__face--back {
+  justify-content: flex-start;
+  gap: 14px;
+  transform: rotateY(180deg);
+}
+
+.abt-dk-card .abt-slot--md {
+  width: 112px;
+  height: 112px;
+  border-radius: 24px;
+}
+
+.abt-dk-card__count {
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--abt-accent);
+}
+
+.abt-dk-card__title {
+  margin: 12px 0 14px;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.04;
   letter-spacing: -0.03em;
   color: var(--t1);
   text-wrap: balance;
 }
 
-.abt-pair__note {
+.abt-dk-card__note {
   margin: 0;
-  max-width: 34ch;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.55;
   color: var(--t3);
 }
 
-.abt-pair__lenses {
-  display: grid;
-  gap: clamp(36px, 5vh, 64px);
-  margin-top: clamp(28px, 4vh, 44px);
-}
-
-/* ---------------------------------------------------------------- A single lens */
-
-.abt-lens__name {
-  margin: 0 0 10px;
-  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--t4);
-}
-
-.abt-lens__statement {
-  margin: 0 0 10px;
-  font-family: var(--font-abt-display), Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(21px, 1.9vw, 28px);
-  line-height: 1.18;
-  letter-spacing: -0.02em;
-  color: var(--t1);
-  text-wrap: pretty;
-}
-
-.abt-lens__summary {
-  margin: 0;
-  max-width: 48ch;
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--t2);
-  text-wrap: pretty;
-}
-
-.abt-lens__toggle {
+.abt-dk-card__turn {
+  align-self: flex-start;
   display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 16px;
-  padding: 0;
-  border: 0;
+  gap: 8px;
+  margin-top: auto;
+  padding: 10px 16px;
+  border: 1px solid var(--abt-line-2);
+  border-radius: 999px;
   background: none;
   font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--t3);
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.abt-lens__toggle:hover,
-.abt-lens__toggle:focus-visible {
-  color: var(--abt-accent);
-}
-
-/* A plus that becomes a minus when its reasoning is open. */
-.abt-lens__toggle-mark {
-  position: relative;
-  width: 10px;
-  height: 10px;
-}
-
-.abt-lens__toggle-mark::before,
-.abt-lens__toggle-mark::after {
-  content: '';
-  position: absolute;
-  inset: 50% 0 auto 0;
-  height: 1px;
-  background: currentColor;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.abt-lens__toggle-mark::after {
-  transform: rotate(90deg);
-}
-
-.abt-lens__toggle[aria-expanded='true'] .abt-lens__toggle-mark::after {
-  transform: rotate(0deg);
-}
-
-.abt-lens__reasoning {
-  overflow: hidden;
-}
-
-.abt-lens__reasoning p {
-  margin: 16px 0 0;
-  max-width: 54ch;
-  font-size: 15px;
-  line-height: 1.7;
   color: var(--t2);
-  text-wrap: pretty;
+  cursor: pointer;
 }
 
-.abt-lens__evidence {
-  margin-top: 14px;
+.abt-dk-card__lens {
+  padding-top: 14px;
+  border-top: 1px solid var(--abt-line);
 }
+
+.abt-dk-card__lensname {
+  margin: 0 0 6px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t4);
+}
+
+.abt-dk-card__statement {
+  margin: 0 0 8px;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--t1);
+}
+
+.abt-dk-card__summary {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--t2);
+}
+
+/* ---------------------------------------------------------------- Source */
 
 .abt-source {
   margin: clamp(56px, 10vh, 112px) 0 0;
@@ -1051,56 +1438,4 @@ html[data-abt-wipe]::view-transition-new(root) {
   font-size: 13px;
   line-height: 1.6;
   color: var(--t4);
-}
-
-/* ---------------------------------------------------------------- Wide screens: the frame sticks */
-
-@media (min-width: 900px) {
-  .abt-pair {
-    display: grid;
-    grid-template-columns: 40fr 30fr 30fr;
-    gap: clamp(28px, 3.4vw, 64px);
-    align-items: start;
-  }
-
-  /* Lifts the two lenses out of their wrapper so they become columns two and three of the pair,
-     side by side, instead of stacking and doubling the section's scroll. */
-  .abt-pair__lenses {
-    display: contents;
-  }
-
-  .abt-pair__frame {
-    position: sticky;
-    top: calc(var(--site-nav-h) + 96px);
-  }
-
-}
-
-/* ---------------------------------------------------------------- Phones: a pair per panel */
-
-@media (max-width: 899px) {
-  .abt-pairs {
-    display: flex;
-    gap: 20px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    /* Full-bleed so a panel can sit against the screen edge, with the gutter restored as padding. */
-    margin-inline: calc(var(--abt-gutter) * -1);
-    padding-inline: var(--abt-gutter);
-    scroll-padding-inline: var(--abt-gutter);
-    scrollbar-width: none;
-  }
-
-  .abt-pairs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .abt-pair {
-    flex: 0 0 86%;
-    scroll-snap-align: start;
-  }
-
-  .abt-pair + .abt-pair {
-    margin-top: 0;
-  }
 }
