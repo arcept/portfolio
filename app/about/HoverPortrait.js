@@ -131,7 +131,7 @@ export function TouchGallery() {
       className="abt-gallery-wrap"
       initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
       animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 30, filter: shown ? 'blur(0px)' : 'blur(8px)' }}
-      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: shown ? 1.3 : 0 }}
     >
       <div className="abt-gallery">
         {GALLERY.map((photo, i) => (

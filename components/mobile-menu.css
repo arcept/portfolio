@@ -11,7 +11,7 @@
   height: 28px;
   padding: 0;
   border: 1px solid var(--graphite);
-  border-radius: 9999px;
+  border-radius: 30%;
   background: var(--obsidian);
   color: var(--paper);
   cursor: pointer;
