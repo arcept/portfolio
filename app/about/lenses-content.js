@@ -10,6 +10,18 @@ export const INTRO = {
     'Design was also how something worked, whom it worked for, what it asked of them, what it made easier, and what it quietly made difficult. That discovery changed the direction of my life.',
 };
 
+// Section 03: Leadership. The draft's own wording, with a question as the subheading. `harder` is the
+// admission ("I can be demanding"); on phones it sits behind a button.
+export const LEADERSHIP = {
+  label: 'Leadership',
+  headline: 'I want challenge to produce growth without extinguishing joy.',
+  subheading: 'How hard can you push before you take the joy out?',
+  body:
+    'I have high standards for myself and for the designers I lead. I also know that improvement achieved through emotional exhaustion is not good leadership. People do their best creative work when they feel challenged, trusted, supported, and able to enjoy making.',
+  harder:
+    'I can be demanding. That makes it my responsibility to notice when the next improvement leaves too little room for appreciation.',
+};
+
 // Six lenses, argued as three principles of two.
 
 export const PAIRS = [

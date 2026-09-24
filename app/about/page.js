@@ -7,6 +7,7 @@ import AboutIndex from './AboutIndex';
 import HeroWash from './HeroWash';
 import Opening from './Opening';
 import Lenses from './Lenses';
+import Leadership from './Leadership';
 import { display, sans } from './fonts';
 import './about.css';
 
@@ -22,6 +23,7 @@ export const metadata = {
 const SECTIONS = [
   { id: 'opening', label: 'Introduction' },
   { id: 'how-i-work', label: 'How I work' },
+  { id: 'leadership', label: 'Leadership' },
 ];
 
 export default function About() {
@@ -39,6 +41,7 @@ export default function About() {
           <main>
             <Opening />
             <Lenses />
+            <Leadership />
           </main>
         </div>
 
