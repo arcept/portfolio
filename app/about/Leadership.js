@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { LEADERSHIP } from './lenses-content';
+import useFullBleed from './useFullBleed';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -141,34 +142,6 @@ function LitWord({ progress, from, to, children }) {
       </motion.span>{' '}
     </>
   );
-}
-
-// Pulls the card out of the page's column to run almost the width of the window, `margin` px (at most
-// 5% of the width) free each side, and the whole width on phones. It measures where the card
-// naturally starts and cancels that.
-function useFullBleed(ref, margin) {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    const apply = () => {
-      el.style.marginLeft = '0px';
-      el.style.width = 'auto';
-      const left = el.getBoundingClientRect().left;
-      const vw = document.documentElement.clientWidth;
-      // Phones: edge to edge, no margin.
-      const gap = vw < 900 ? 0 : Math.max(14, Math.min(margin, vw * 0.05));
-      el.style.marginLeft = `${gap - left}px`;
-      el.style.width = `${vw - gap * 2}px`;
-    };
-    apply();
-    const watcher = new ResizeObserver(apply);
-    watcher.observe(document.documentElement);
-    return () => {
-      watcher.disconnect();
-      el.style.marginLeft = '';
-      el.style.width = '';
-    };
-  }, [ref, margin]);
 }
 
 // Shrinks `ref` to the widest line of the text in `textRef`, so the sticker anchored to its corner

@@ -6,6 +6,7 @@ import AboutThemeSwitch from './AboutThemeSwitch';
 import AboutIndex from './AboutIndex';
 import HeroWash from './HeroWash';
 import Opening from './Opening';
+import LoopBand from './LoopBand';
 import Lenses from './Lenses';
 import Leadership from './Leadership';
 import { display, sans } from './fonts';
@@ -40,6 +41,7 @@ export default function About() {
           <AboutIndex sections={SECTIONS} />
           <main>
             <Opening />
+            <LoopBand />
             <Lenses />
             <Leadership />
           </main>

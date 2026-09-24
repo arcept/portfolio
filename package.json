@@ -19,6 +19,7 @@
     "narration:publish": "python3 docs/narration/narrate.py publish"
   },
   "dependencies": {
+    "gsap": "^3.15.0",
     "motion": "^13.1.1",
     "next": "^16.3.2",
     "ogl": "^1.0.11",

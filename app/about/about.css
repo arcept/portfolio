@@ -1612,7 +1612,7 @@ html[data-abt-theme='light'] .abt-dk-card[data-art='glass'] {
 @media (max-width: 899px) {
   .abt-opening {
     min-height: 0;
-    padding-bottom: 40px;
+    padding-bottom: 24px;
   }
 
   .abt-lenses {
@@ -1954,5 +1954,27 @@ html[data-abt-theme='light'] .ldr {
 
   .ldr__fold p {
     padding-top: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- The ribbon between 01 and 02
+
+   A band of looping type across the window (LoopBand.js). The ribbon is drawn on a tall canvas, so the
+   band is cropped to the height of the wave (its aspect ratio is set inline) and the canvas centred.                          */
+
+.abt-loop {
+  display: grid;
+  place-items: center;
+  margin-top: clamp(16px, 3vh, 40px);
+  overflow: hidden;
+}
+
+.abt-loop .text-loop {
+  flex: none;
+}
+
+@media (max-width: 899px) {
+  .abt-loop {
+    margin-top: 12px;
   }
 }
