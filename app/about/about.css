@@ -990,15 +990,20 @@ html[data-abt-theme='light'] .abt {
 /* Phones: the books above the story, the pull line and paragraph a step smaller, and the sticker
    placed for the headline as it wraps at this width. */
 @media (max-width: 899px) {
+  /* No books on phones: the story reads on its own. */
   .abt-lenses__books {
-    order: -1;
-    width: 100%;
-    max-width: 480px;
+    display: none;
+  }
+
+  /* With the books gone the paragraph follows the headline directly, and the handwritten sticker
+     hangs below it, so the story starts a little lower. */
+  .abt-lenses__intro {
+    margin-top: max(56px, calc(19.5vw - 16px));
   }
 
   .abt-sticker--howiwork {
-    left: 44%;
-    top: 22%;
+    left: calc(44% + 32px);
+    top: calc(22% - 16px);
     width: 40%;
     max-width: 200px;
   }
@@ -1339,6 +1344,24 @@ html[data-abt-theme='light'] .abt {
 /* The cards underneath sit a step back in tone, so the top one reads as the one in hand. */
 .abt-dk-card[aria-hidden='true'] .abt-dk-card__face {
   background: color-mix(in srgb, var(--abt-ink) 3%, var(--abt-base));
+}
+
+/* iOS Safari does not reliably honour backface-visibility for what is inside a face (a WebGL canvas
+   above all), so the face turned away is hidden outright, at the halfway point of the 0.7s turn
+   when the card is edge-on and neither face shows. */
+.abt-dk-card__face {
+  transition: visibility 0s linear 0.35s;
+}
+
+.abt-dk-card__inner[data-flipped='true'] .abt-dk-card__face--front,
+.abt-dk-card__inner[data-flipped='false'] .abt-dk-card__face--back {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .abt-dk-card__face {
+    transition-delay: 0s;
+  }
 }
 
 .abt-dk-card__face--back {

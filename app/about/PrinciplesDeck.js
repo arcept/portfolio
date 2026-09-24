@@ -105,6 +105,7 @@ export default function PrinciplesDeck() {
             >
               <motion.div
                 className="abt-dk-card__inner"
+                data-flipped={showBack}
                 initial={false}
                 animate={{ rotateY: showBack ? 180 : 0 }}
                 transition={{ duration: 0.7, ease: EASE }}
