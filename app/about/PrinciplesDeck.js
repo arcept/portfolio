@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import AboutLink from './AboutLink';
 import IconSlot from './IconSlot';
@@ -26,14 +26,36 @@ const SEATS = [
 export default function PrinciplesDeck() {
   const [order, setOrder] = useState(PAIRS.map((_, i) => i));
   const [flipped, setFlipped] = useState(false);
-  const top = order[0];
+  // A drag that ends over the card also fires a click; it is a swipe, not a tap, so it must not turn it.
+  const dragged = useRef(false);
 
-  const bring = (i) => {
+  // Throwing the top card sends it to the back, so the stack turns like a deck: 1, 2, 3, 1, 2, 3…
+  const next = () => {
     setFlipped(false);
-    setOrder((o) => [i, ...o.filter((n) => n !== i)]);
+    setOrder((o) => [...o.slice(1), o[0]]);
   };
-  const next = () => bring(order[1]);
-  const prev = () => bring(order[order.length - 1]);
+  const prev = () => {
+    setFlipped(false);
+    setOrder((o) => [o[o.length - 1], ...o.slice(0, -1)]);
+  };
+
+  // A tap turns the card; the same handler serves both faces. A drag that ends over the card also fires
+  // a click, but that was a swipe, so it is ignored.
+  const tapProps = (label, flip) => ({
+    type: 'button',
+    className: 'abt-dk-card__hit',
+    'aria-label': label,
+    onPointerDown: () => {
+      dragged.current = false;
+    },
+    onClick: () => {
+      if (dragged.current) {
+        dragged.current = false;
+        return;
+      }
+      flip();
+    },
+  });
 
   const onKeyDown = (e) => {
     if (e.key === 'ArrowRight') next();
@@ -43,7 +65,7 @@ export default function PrinciplesDeck() {
   };
 
   return (
-    <div className="abt-dk">
+    <div className="abt-dk abt-dk--solid">
       <motion.div
         className="abt-dk__pile"
         tabIndex={0}
@@ -63,6 +85,7 @@ export default function PrinciplesDeck() {
             <motion.article
               key={pair.id}
               className="abt-dk-card"
+              data-art={pair.art}
               style={{ zIndex: PAIRS.length - depth }}
               initial={false}
               animate={{ ...SEATS[depth], opacity: 1 }}
@@ -71,6 +94,9 @@ export default function PrinciplesDeck() {
               dragSnapToOrigin
               dragElastic={0.7}
               whileDrag={{ scale: 1.02 }}
+              onDragStart={() => {
+                dragged.current = true;
+              }}
               onDragEnd={(_, info) => {
                 if (Math.abs(info.offset.x) > THROW || Math.abs(info.velocity.x) > 500) next();
               }}
@@ -84,15 +110,32 @@ export default function PrinciplesDeck() {
                 transition={{ duration: 0.7, ease: EASE }}
               >
                 <div className="abt-dk-card__face abt-dk-card__face--front" inert={showBack}>
+                  {/* A huge, faint numeral behind everything, and a small round badge that repeats it. */}
+                  <span className="abt-dk-card__ghost" aria-hidden="true">{pad(i)}</span>
+                  <span className="abt-dk-card__badge">{pad(i)}</span>
+
                   <IconSlot size="md" label={pair.title} art={pair.art} still />
-                  <div>
-                    <p className="abt-dk-card__count">{pad(i)} / 03</p>
+
+                  <div className="abt-dk-card__text">
                     <h3 className="abt-dk-card__title">{pair.title}</h3>
                     <p className="abt-dk-card__note">{pair.note}</p>
+                    <ul className="abt-dk-card__tags" aria-label="Lenses">
+                      {pair.lenses.map((lens) => (
+                        <li key={lens.id}>{lens.name}</li>
+                      ))}
+                    </ul>
                   </div>
-                  <button type="button" className="abt-dk-card__turn" onClick={() => setFlipped(true)}>
-                    Turn over <span aria-hidden="true">↻</span>
-                  </button>
+
+                  {/* The whole front is the button: a tap turns the card over, a swipe (handled by the drag on
+                      the card) moves it on. Kept as its own layer so the headings underneath stay headings. */}
+                  <button {...tapProps(`Turn over: ${pair.title}`, () => setFlipped(true))} />
+                  <span className="abt-dk-card__turnicon" aria-hidden="true">↻</span>
+
+                  <span className="abt-dk-card__dots" aria-hidden="true">
+                    {PAIRS.map((p, n) => (
+                      <i key={p.id} className={n === i ? 'is-on' : ''} />
+                    ))}
+                  </span>
                 </div>
 
                 <div className="abt-dk-card__face abt-dk-card__face--back" inert={!showBack}>
@@ -105,9 +148,8 @@ export default function PrinciplesDeck() {
                       {lens.evidence && <AboutLink href={lens.evidence.href}>{lens.evidence.label}</AboutLink>}
                     </section>
                   ))}
-                  <button type="button" className="abt-dk-card__turn" onClick={() => setFlipped(false)}>
-                    Turn back <span aria-hidden="true">↺</span>
-                  </button>
+                  <button {...tapProps(`Turn back: ${pair.title}`, () => setFlipped(false))} />
+                  <span className="abt-dk-card__turnicon" aria-hidden="true">↺</span>
                 </div>
               </motion.div>
             </motion.article>
@@ -116,22 +158,12 @@ export default function PrinciplesDeck() {
       </motion.div>
 
       <motion.div
-        className="abt-dk__nav"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.8 }}
         transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
       >
-        <button type="button" className="abt-dk__arrow" onClick={prev} aria-label="Previous principle">
-          ←
-        </button>
-        <p className="abt-dk__count" aria-live="polite">
-          Principle <span>{pad(top)}</span> of 03
-        </p>
-        <button type="button" className="abt-dk__arrow" onClick={next} aria-label="Next principle">
-          →
-        </button>
-        <p className="abt-dk__hint">Swipe the card away, or turn it over.</p>
+        <p className="abt-dk__hint">Swipe the card away, or tap to turn it over.</p>
       </motion.div>
     </div>
   );

@@ -924,9 +924,9 @@ html[data-abt-wipe]::view-transition-new(root) {
 }
 
 .abt-lenses__after {
-  max-width: 44ch;
-  font-size: clamp(19px, 1.6vw, 22px);
-  line-height: 1.5;
+  max-width: 56ch;
+  font-size: 16px;
+  line-height: 1.7;
   color: var(--t2);
 }
 
@@ -1014,9 +1014,6 @@ html[data-abt-theme='light'] .abt {
     text-wrap: balance;
   }
 
-  .abt-lenses__after {
-    font-size: 18px;
-  }
 }
 
 /* ---------------------------------------------------------------- Icon and illustration slots */
@@ -1287,7 +1284,7 @@ html[data-abt-theme='light'] .abt {
   position: relative;
   justify-self: center;
   width: min(420px, calc(100% - 28px));
-  height: min(516px, 72svh);
+  height: min(540px, 72svh);
   outline: none;
 }
 
@@ -1297,41 +1294,7 @@ html[data-abt-theme='light'] .abt {
   border-radius: 32px;
 }
 
-.abt-dk__nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  row-gap: 14px;
-}
-
-.abt-dk__arrow {
-  width: 46px;
-  height: 46px;
-  border: 1px solid var(--abt-line-2);
-  border-radius: 50%;
-  background: none;
-  font-size: 18px;
-  color: var(--t2);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.abt-dk__count {
-  margin: 0;
-  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--t4);
-}
-
-.abt-dk__count span {
-  color: var(--abt-accent);
-}
-
 .abt-dk__hint {
-  flex-basis: 100%;
   margin: 0;
   font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
   font-size: 10px;
@@ -1390,12 +1353,192 @@ html[data-abt-theme='light'] .abt {
   border-radius: 24px;
 }
 
+/* The front: everything centred, the object as the hero, each card tinted with its object's colour. */
+.abt-dk-card__face--front {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 74px 22px 34px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 26%, color-mix(in srgb, var(--abt-tint) 26%, transparent), transparent 72%),
+    color-mix(in srgb, var(--abt-ink) 6%, var(--abt-base));
+}
+
+/* Each card takes its object's colour: --abt-tint for the wash and dots, --abt-obj for small text (a
+   deeper shade on the light theme, so it holds 4.5:1 on the card). */
+.abt-dk-card[data-art='keys'] {
+  --abt-tint: #ffa030;
+  --abt-obj: #ffb04a;
+}
+
+.abt-dk-card[data-art='orb'] {
+  --abt-tint: #2f8cff;
+  --abt-obj: #5aa5ff;
+}
+
+.abt-dk-card[data-art='glass'] {
+  --abt-tint: #a58bff;
+  --abt-obj: #b9a4ff;
+}
+
+html[data-abt-theme='light'] .abt-dk-card[data-art='keys'] {
+  --abt-obj: #9a5200;
+}
+
+html[data-abt-theme='light'] .abt-dk-card[data-art='orb'] {
+  --abt-obj: #1a62c4;
+}
+
+html[data-abt-theme='light'] .abt-dk-card[data-art='glass'] {
+  --abt-obj: #6a4cd0;
+}
+
+.abt-dk-card__face--front .abt-slot--md {
+  width: min(204px, 55vw);
+  height: auto;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  border-radius: 0;
+  z-index: 1;
+}
+
+.abt-dk-card__face--front > * {
+  flex-shrink: 0;
+}
+
+.abt-dk-card__ghost {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  translate: -50% -50%;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: 300px;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: color-mix(in srgb, var(--abt-ink) 7%, transparent);
+  pointer-events: none;
+  user-select: none;
+}
+
+.abt-dk-card__badge {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  translate: -50% 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--abt-line-2);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--abt-base) 60%, transparent);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--abt-obj);
+}
+
+.abt-dk-card__text {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.abt-dk-card__face--front .abt-dk-card__title {
+  margin: 0;
+  font-size: clamp(27px, 8.4vw, 36px);
+}
+
+.abt-dk-card__face--front .abt-dk-card__note {
+  max-width: 30ch;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.abt-dk-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 10px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--abt-obj);
+}
+
+.abt-dk-card__tags li + li::before {
+  content: '·';
+  margin-right: 10px;
+}
+
+.abt-dk-card__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.abt-dk-card__hit:focus-visible {
+  outline: 2px solid var(--abt-obj);
+  outline-offset: -8px;
+}
+
+/* A quiet turn mark in the corner: says "tap me" without being a button of its own. */
+/* The back's case-study links sit above the tap layer, so they open instead of turning the card. */
+.abt-dk-card__face--back a {
+  position: relative;
+  z-index: 3;
+}
+
+.abt-dk-card__turnicon {
+  position: absolute;
+  right: 22px;
+  bottom: 26px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--abt-obj);
+  pointer-events: none;
+}
+
+.abt-dk-card__dots {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.abt-dk-card__dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--abt-line-2);
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.abt-dk-card__dots i.is-on {
+  width: 18px;
+  background: var(--abt-tint);
+}
+
 .abt-dk-card__count {
   margin: 0;
   font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.12em;
-  color: var(--abt-accent);
+  color: var(--abt-obj);
 }
 
 .abt-dk-card__title {
@@ -1416,22 +1559,6 @@ html[data-abt-theme='light'] .abt {
   color: var(--t3);
 }
 
-.abt-dk-card__turn {
-  align-self: flex-start;
-  display: inline-flex;
-  gap: 8px;
-  margin-top: auto;
-  padding: 10px 16px;
-  border: 1px solid var(--abt-line-2);
-  border-radius: 999px;
-  background: none;
-  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--t2);
-  cursor: pointer;
-}
 
 .abt-dk-card__lens {
   padding-top: 14px;
@@ -1821,4 +1948,68 @@ html[data-abt-theme='light'] .ldr {
   .ldr__fold p {
     padding-top: 0;
   }
+}
+
+/* ---------------------------------------------------------------- Phone cards, solid colour (light theme)
+
+   On the light theme the FRONT of each card is a solid gradient in its object's colour, pale at the
+   top to deep at the bottom, with white type throughout (4.4:1 or better under the note, more
+   below). The backs, and everything on the dark theme, keep the neutral card with the object-
+   coloured text. To drop the effect, remove the abt-dk--solid class in PrinciplesDeck.js.         */
+
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card[data-art='keys'] {
+  --dk-a: #ffbb45;
+  --dk-b: #d9600a;
+  --dk-c: #a83c00;
+}
+
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card[data-art='orb'] {
+  --dk-a: #9fd0ff;
+  --dk-b: #3b86f0;
+  --dk-c: #123fae;
+}
+
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card[data-art='glass'] {
+  --dk-a: #d8c9ff;
+  --dk-b: #8d6cf0;
+  --dk-c: #4a2bb8;
+}
+
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card .abt-dk-card__face--front {
+  --t1: #fff;
+  --t2: rgba(255, 255, 255, 0.94);
+  --t3: rgba(255, 255, 255, 0.9);
+  --t4: rgba(255, 255, 255, 0.78);
+  --abt-line: rgba(255, 255, 255, 0.26);
+  --abt-line-2: rgba(255, 255, 255, 0.42);
+  --abt-obj: #fff;
+  --abt-tint: #fff;
+  border-color: rgba(255, 255, 255, 0.24);
+  background: linear-gradient(180deg, var(--dk-a) 0%, var(--dk-b) 50%, var(--dk-c) 100%);
+  box-shadow: 0 40px 70px -40px rgb(0 0 0 / 0.5);
+}
+
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card__ghost {
+  color: rgba(255, 255, 255, 0.16);
+}
+
+/* A solid white badge with the number in the card's deep colour: it has to read on the pale top. */
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card__badge {
+  border-color: transparent;
+  background: #fff;
+  color: var(--dk-c);
+  font-weight: 700;
+}
+
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card__dots i {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card__dots i.is-on {
+  background: #fff;
+}
+
+/* The objects sit on their own colour now, so give them a shadow to lift them off it. */
+html[data-abt-theme='light'] .abt-dk--solid .abt-dk-card__face--front .abt-glyph {
+  filter: drop-shadow(0 12px 14px rgb(0 0 0 / 0.3));
 }
