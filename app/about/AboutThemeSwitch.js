@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { ABT_ATTR, ABT_KEY, resolveTheme } from './theme';
+import { ABT_ATTR, ABT_KEY, MOBILE_QUERY, resolveTheme } from './theme';
 
 const apply = (theme) => document.documentElement.setAttribute(ABT_ATTR, theme);
 const current = () => (document.documentElement.getAttribute(ABT_ATTR) === 'light' ? 'light' : 'dark');
@@ -29,8 +29,9 @@ export default function AboutThemeSwitch() {
     apply(resolveTheme());
     setTheme(current());
     if (!window.matchMedia) return () => root.removeAttribute(ABT_ATTR);
-    // Follow the operating system live, unless a choice was made with the switch this visit.
-    const queries = ['(prefers-color-scheme: dark)', '(prefers-color-scheme: light)'].map((q) => window.matchMedia(q));
+    // Follow the default live (the operating system, or light on phones), unless a choice was made with the
+    // switch this visit.
+    const queries = ['(prefers-color-scheme: dark)', '(prefers-color-scheme: light)', MOBILE_QUERY].map((q) => window.matchMedia(q));
     const sync = () => {
       apply(resolveTheme());
       setTheme(current());
