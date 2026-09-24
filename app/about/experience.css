@@ -453,7 +453,7 @@ html[data-abt-theme='light'] .xp-row.is-open .xp-badge {
 
   .xp-sticker {
     right: 0;
-    top: -46px;
+    top: 26px;
     width: clamp(120px, 34vw, 170px);
   }
 
