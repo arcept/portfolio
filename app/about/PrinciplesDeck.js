@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useAnimate } from 'motion/react';
 import AboutLink from './AboutLink';
 import IconSlot from './IconSlot';
 import { PAIRS } from './lenses-content';
@@ -103,13 +103,7 @@ export default function PrinciplesDeck() {
               aria-hidden={!isTop}
               inert={!isTop}
             >
-              <motion.div
-                className="abt-dk-card__inner"
-                data-flipped={showBack}
-                initial={false}
-                animate={{ rotateY: showBack ? 180 : 0 }}
-                transition={{ duration: 0.7, ease: EASE }}
-              >
+              <CardFlip flipped={showBack}>
                 <div className="abt-dk-card__face abt-dk-card__face--front" inert={showBack}>
                   {/* A huge, faint numeral behind everything, and a small round badge that repeats it. */}
                   <span className="abt-dk-card__ghost" aria-hidden="true">{pad(i)}</span>
@@ -152,7 +146,7 @@ export default function PrinciplesDeck() {
                   <button {...tapProps(`Turn back: ${pair.title}`, () => setFlipped(false))} />
                   <span className="abt-dk-card__turnicon" aria-hidden="true">↺</span>
                 </div>
-              </motion.div>
+              </CardFlip>
             </motion.article>
           );
         })}
@@ -166,6 +160,46 @@ export default function PrinciplesDeck() {
       >
         <p className="abt-dk__hint">Swipe the card away, or tap to turn it over.</p>
       </motion.div>
+    </div>
+  );
+}
+
+// Turns a card over. Only one face is ever rendered (the other is display:none), and the card turns
+// edge-on, swaps the face at that moment, and turns back — so there is no back-to-back pair of faces
+// for a browser to composite wrongly. iOS Safari draws a WebGL canvas (the 3D object) on its own
+// layer and ignores backface-visibility for it, which is why the earlier two-faced flip showed the
+// object through the back of the card.
+function CardFlip({ flipped, children }) {
+  const [scope, animate] = useAnimate();
+  const [face, setFace] = useState(flipped ? 'back' : 'front');
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (!started.current) {
+      started.current = true;
+      return undefined;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setFace(flipped ? 'back' : 'front');
+      return undefined;
+    }
+    let stale = false;
+    (async () => {
+      await animate(scope.current, { rotateY: 90 }, { duration: 0.26, ease: 'easeIn' });
+      if (stale) return;
+      setFace(flipped ? 'back' : 'front');
+      await animate(scope.current, { rotateY: -90 }, { duration: 0 });
+      if (stale) return;
+      await animate(scope.current, { rotateY: 0 }, { duration: 0.3, ease: 'easeOut' });
+    })();
+    return () => {
+      stale = true;
+    };
+  }, [flipped, animate, scope]);
+
+  return (
+    <div className="abt-dk-card__inner" ref={scope} data-face={face}>
+      {children}
     </div>
   );
 }
