@@ -65,7 +65,7 @@ export default function PrinciplesDeck() {
   };
 
   return (
-    <div className="abt-dk abt-dk--solid">
+    <div className="abt-dk">
       <motion.div
         className="abt-dk__pile"
         tabIndex={0}
