@@ -27,7 +27,7 @@ export const LEADERSHIP = {
 export const PAIRS = [
   {
     id: 'framing',
-    art: 'keys',
+    art: 'pyramid',
     title: 'Start with a question.',
     note: 'A brief names a request. People give it context.',
     lenses: [

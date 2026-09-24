@@ -5,6 +5,7 @@ import { motion, useAnimate } from 'motion/react';
 import AboutLink from './AboutLink';
 import IconSlot from './IconSlot';
 import { PAIRS } from './lenses-content';
+import useGem from './gem';
 
 // Section 02's principles on phones (wide screens get PrinciplesIndex). Three cards in a stack:
 // swipe the top one away and it goes to the back; turn it over for its two lenses. The front
@@ -26,6 +27,7 @@ const SEATS = [
 export default function PrinciplesDeck() {
   const [order, setOrder] = useState(PAIRS.map((_, i) => i));
   const [flipped, setFlipped] = useState(false);
+  const gem = useGem();
   // A drag that ends over the card also fires a click; it is a swipe, not a tap, so it must not turn it.
   const dragged = useRef(false);
 
@@ -86,6 +88,7 @@ export default function PrinciplesDeck() {
               key={pair.id}
               className="abt-dk-card"
               data-art={pair.art}
+              data-gem={pair.art === 'pyramid' ? gem : undefined}
               style={{ zIndex: PAIRS.length - depth }}
               initial={false}
               animate={{ ...SEATS[depth], opacity: 1 }}

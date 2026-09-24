@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import OrbGlyph from './OrbGlyph';
 import KeysGlyph from './KeysGlyph';
+import PyramidGlyph from './PyramidGlyph';
 import GlassGlyph from './GlassGlyph';
 
 // A reserved place for an icon or illustration that does not exist yet: a dashed frame at the size
@@ -39,6 +40,8 @@ export default function IconSlot({ label, size = 'md', art, active, still = fals
     >
       {art === 'orb' ? (
         <OrbGlyph active={active} />
+      ) : art === 'pyramid' ? (
+        <PyramidGlyph active={active} />
       ) : art === 'keys' ? (
         <KeysGlyph active={active} />
       ) : art === 'glass' ? (

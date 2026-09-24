@@ -1066,6 +1066,11 @@ html[data-abt-theme='light'] .abt {
   background: linear-gradient(150deg, #dfe7ff, #9fb0f0 60%, #6f7fd0);
 }
 
+.abt-glyph--pyramid[data-fallback='true'] {
+  border-radius: 28%;
+  background: linear-gradient(160deg, #a9d4ff, #3b86f0 60%, #123fae);
+}
+
 .abt-glyph--keys[data-fallback='true'] {
   border-radius: 24%;
   background: linear-gradient(160deg, #fbfaf7, #d9d5cd);
@@ -1377,6 +1382,24 @@ html[data-abt-theme='light'] .abt {
 .abt-dk-card[data-art='keys'] {
   --abt-tint: #ffa030;
   --abt-obj: #ffb04a;
+}
+
+.abt-dk-card[data-art='pyramid'][data-gem='blue'] {
+  --abt-tint: #3ea6ff;
+  --abt-obj: #7cc0ff;
+}
+
+.abt-dk-card[data-art='pyramid'][data-gem='emerald'] {
+  --abt-tint: #0a9478;
+  --abt-obj: #4fe0b8;
+}
+
+html[data-abt-theme='light'] .abt-dk-card[data-art='pyramid'][data-gem='blue'] {
+  --abt-obj: #0b5fa5;
+}
+
+html[data-abt-theme='light'] .abt-dk-card[data-art='pyramid'][data-gem='emerald'] {
+  --abt-obj: #0a6b55;
 }
 
 .abt-dk-card[data-art='orb'] {
