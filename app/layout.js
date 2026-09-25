@@ -1,5 +1,6 @@
 import { Inter, IBM_Plex_Sans, IBM_Plex_Mono, Figtree } from 'next/font/google';
 import './globals.css';
+import Analytics from '@/components/Analytics';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,7 +34,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} ${figtree.variable}`}>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

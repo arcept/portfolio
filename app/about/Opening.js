@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import AboutLink from './AboutLink';
 import HoverPortrait, { TouchGallery } from './HoverPortrait';
 import ContextReveal from './ContextReveal';
+import ResumeDialog from './resume/ResumeDialog';
 
 // The headline is authored as lines rather than measured, so each one can be masked and released on
 // its own. The type is sized so these lines hold at every width (see .abt-display in about.css).
@@ -17,10 +18,6 @@ const CONTEXT = [
 ];
 
 const EASE = [0.16, 1, 0.3, 1];
-
-// Set this to '/about/manik-madaan-resume.pdf' once that file is in public/about/. Until then the
-// action is listed but does nothing, rather than offering a download that 404s.
-const RESUME = null;
 
 // Reduced motion is handled once, by AboutMotion — these describe the full animation.
 const rise = (delay) => ({
@@ -104,9 +101,7 @@ export default function Opening() {
             <AboutLink href="/#work">View selected work</AboutLink>
             {/* No destination yet: contact gets its own page. */}
             <AboutLink>Contact me</AboutLink>
-            <AboutLink href={RESUME} arrow="↓" download={RESUME ? '' : undefined}>
-              Download résumé
-            </AboutLink>
+            <ResumeDialog>Download résumé</ResumeDialog>
           </motion.div>
 
           {/* Only where the static portrait is hidden — devices that hover. On touch this heart is

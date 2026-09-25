@@ -1758,3 +1758,15 @@ html[data-cs-theme='light'] .cs-switch__icon--moon {
 html[data-cs-theme='light'] .cs-switch__icon--sun {
   display: none;
 }
+
+/* The footer's "Cookie settings": reads as the footer's text. */
+.footer-cookies {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

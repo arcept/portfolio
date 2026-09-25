@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { ABT_ATTR, ABT_KEY, MOBILE_QUERY, resolveTheme } from './theme';
+import { track } from '@/components/track';
 
 const apply = (theme) => document.documentElement.setAttribute(ABT_ATTR, theme);
 const current = () => (document.documentElement.getAttribute(ABT_ATTR) === 'light' ? 'light' : 'dark');
@@ -45,6 +46,7 @@ export default function AboutThemeSwitch() {
 
   const flip = () => {
     const next = current() === 'dark' ? 'light' : 'dark';
+    track('theme_switch', { to: next, page: 'about' });
     try {
       window.sessionStorage.setItem(ABT_KEY, next);
     } catch {

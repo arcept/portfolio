@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { THEME_ATTR, THEME_KEY, resolveTheme } from './theme';
 import useCsTheme from './useCsTheme';
 import { useT } from '@/components/i18n/LangProvider';
+import { track } from '@/components/track';
 
 function Sun() {
   return (
@@ -46,6 +47,7 @@ export default function ThemeSwitch() {
 
   const flip = () => {
     const next = current() === 'dark' ? 'light' : 'dark';
+    track('theme_switch', { to: next, page: 'case-study' });
     try {
       window.sessionStorage.setItem(THEME_KEY, next);
     } catch {

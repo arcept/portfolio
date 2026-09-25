@@ -1,0 +1,729 @@
+/* ---------------------------------------------------------------- Résumé download (ResumeDialog.js)
+
+   A centred panel over the dimmed page, in the page's own tokens and accent. */
+
+.abt-link--button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rsm {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--abt-base) 62%, transparent);
+}
+
+.rsm__panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+  width: min(860px, 100%);
+  min-height: min(556px, calc(100dvh - 32px)); /* the form's height, kept when it gives way to the download state */
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  border: 1px solid var(--abt-line);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--abt-base) 94%, var(--abt-ink));
+  box-shadow: 0 40px 90px -30px rgb(0 0 0 / 0.6);
+  color: var(--t2);
+}
+
+.rsm__body {
+  align-self: center;
+  overflow: auto;
+  max-height: calc(100dvh - 32px);
+  padding: 40px 36px 32px;
+}
+
+/* The illustration, edge to edge, with its credit over the foot. */
+.rsm__art {
+  position: relative;
+  margin: 0;
+  min-height: 100%;
+  overflow: hidden;
+  background: #1f3b3a;
+}
+
+.rsm__art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.rsm__credit {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 36px 16px 12px;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.85) 30%, transparent); /* legible over busy artwork */
+  color: rgb(255 255 255 / 0.85);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.rsm__credit a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rsm__close {
+  z-index: 2;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--abt-line);
+  border-radius: 50%;
+  background: none;
+  color: var(--t3);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.rsm__close:hover {
+  border-color: var(--abt-line-2);
+  color: var(--t1);
+}
+
+.rsm__kicker {
+  margin: 0 0 8px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--abt-accent);
+}
+
+.rsm__title {
+  margin: 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--t1);
+}
+
+.rsm__lede {
+  margin: 8px 0 22px;
+  font-size: 15px;
+  color: var(--t3);
+}
+
+.rsm__fields {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.rsm__field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--t3);
+}
+
+.rsm__field input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--abt-line-2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t1);
+  font: inherit;
+  font-size: 16px; /* 16px: iOS does not zoom the page on focus */
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rsm__field input:focus {
+  border-color: var(--abt-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--abt-accent) 22%, transparent);
+}
+
+/* The "also the ATS version" option: a custom box, the native checkbox kept for keyboard and screen
+   readers but visually hidden. */
+.rsm__check {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid var(--abt-line);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.rsm__check:hover {
+  border-color: var(--abt-line-2);
+}
+
+.rsm__check:has(input:checked) {
+  border-color: var(--abt-accent);
+  background: color-mix(in srgb, var(--abt-accent) 8%, transparent);
+}
+
+.rsm__check input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rsm__box {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border: 1.5px solid var(--abt-line-2);
+  border-radius: 6px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.rsm__box svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--abt-base);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  transition: stroke-dashoffset 0.25s ease;
+}
+
+.rsm__check input:checked + .rsm__box {
+  border-color: var(--abt-accent);
+  background: var(--abt-accent);
+}
+
+.rsm__check input:checked + .rsm__box svg {
+  stroke-dashoffset: 0;
+}
+
+.rsm__check input:focus-visible + .rsm__box {
+  outline: 2px solid var(--abt-accent);
+  outline-offset: 2px;
+}
+
+.rsm__checktext {
+  display: grid;
+  gap: 3px;
+}
+
+.rsm__checktext strong {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.rsm__checktext em {
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--t3);
+}
+
+.rsm__error {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: #e5534b;
+}
+
+.rsm__go,
+.rsm__done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--abt-accent);
+  color: #16140f;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+/* The light theme's accent is a deep orange: white type on it, not dark. */
+html[data-abt-theme='light'] :is(.rsm__go, .rsm__done) {
+  color: #fff;
+}
+
+html[data-abt-theme='light'] .rsm__tick {
+  stroke: #fff;
+}
+
+.rsm__go:hover,
+.rsm__done:hover {
+  filter: brightness(1.06);
+}
+
+.rsm__go:active,
+.rsm__done:active {
+  transform: scale(0.98);
+}
+
+.rsm__fine {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  text-align: center;
+  color: var(--t4);
+}
+
+/* The sending state: spinner, then sheets dropping into a tray and a check. */
+.rsm__send {
+  display: grid;
+  justify-items: center;
+  padding: 10px 0 4px;
+  text-align: center;
+}
+
+.rsm__tray {
+  position: relative;
+  width: 120px;
+  height: 110px;
+  margin-bottom: 18px;
+}
+
+.rsm__spinner {
+  position: absolute;
+  left: 50%;
+  top: 30px;
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+  border: 3px solid color-mix(in srgb, var(--abt-accent) 25%, transparent);
+  border-top-color: var(--abt-accent);
+  border-radius: 50%;
+  animation: rsm-spin 0.8s linear infinite;
+}
+
+@keyframes rsm-spin {
+  to { transform: rotate(360deg); }
+}
+
+.rsm__sheet {
+  position: absolute;
+  left: 36px;
+  top: 10px;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  width: 48px;
+  height: 62px;
+  padding: 10px 9px;
+  border-radius: 5px;
+  background: #fbf8f2;
+  box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.4);
+}
+
+.rsm__sheet span {
+  height: 3px;
+  border-radius: 2px;
+  background: #d8d2c6;
+}
+
+.rsm__sheet span:first-child {
+  width: 60%;
+  background: var(--abt-accent);
+}
+
+.rsm__traybox {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 12px;
+  height: 36px;
+  border: 2px solid var(--abt-line-2);
+  border-top: 0;
+  border-radius: 0 0 14px 14px;
+  background: color-mix(in srgb, var(--abt-base) 94%, var(--abt-ink));
+}
+
+.rsm__tick {
+  position: absolute;
+  right: 6px;
+  bottom: 30px;
+  width: 30px;
+  height: 30px;
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--abt-accent);
+  fill: none;
+  stroke: #16140f;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rsm__sendtitle {
+  margin: 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: 24px;
+  color: var(--t1);
+}
+
+.rsm__sendline {
+  min-height: 1.5em;
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--t3);
+}
+
+.rsm__sendline a {
+  color: var(--abt-accent);
+}
+
+.rsm__done {
+  width: auto;
+  min-width: 140px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rsm__spinner {
+    animation-duration: 2s;
+  }
+}
+
+/* Narrow screens: the illustration becomes a band across the top. */
+@media (max-width: 720px) {
+  .rsm__panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: 170px auto;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .rsm__body {
+    max-height: none;
+    overflow: visible;
+    padding: 26px 22px 22px;
+  }
+
+  .rsm__art img {
+    object-position: center 38%;
+  }
+
+  .rsm__close {
+    border-color: rgb(255 255 255 / 0.5);
+    background: rgb(0 0 0 / 0.35);
+    color: #fff;
+  }
+}
+
+@media (max-width: 520px) {
+  .rsm__panel {
+    border-radius: 20px;
+  }
+
+  .rsm__title {
+    font-size: 24px;
+  }
+}
+
+/* ---- Round 2 */
+
+/* A clearer split between the page and the panel: a darker, blurrier veil, and the panel lifted
+   with a rim and a deeper shadow. */
+.rsm {
+  background: rgb(8 9 11 / 0.72); /* the blur itself is animated in ResumeDialog.js */
+}
+
+.rsm__panel {
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4), 0 50px 120px -30px rgb(0 0 0 / 0.85);
+}
+
+html[data-abt-theme='light'] .rsm {
+  background: rgb(20 21 26 / 0.55);
+}
+
+html[data-abt-theme='light'] .rsm__panel {
+  border-color: rgb(0 0 0 / 0.06);
+  background: #fbf9f5;
+}
+
+/* Desktop: a larger panel, and room around the form. */
+@media (min-width: 721px) {
+  .rsm__panel {
+    width: min(960px, 100%);
+    min-height: min(620px, calc(100dvh - 32px));
+  }
+
+  .rsm__body {
+    padding: 56px 56px 44px;
+  }
+
+  .rsm__title {
+    font-size: 32px;
+  }
+
+  .rsm__lede {
+    margin-bottom: 28px;
+  }
+
+  .rsm__fields {
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+}
+
+/* The whole dialog in the page's ink rather than a colour: near-white on the dark theme, near-black
+   on the light, with the other of the two on anything filled. */
+.rsm {
+  --abt-accent: #efece6;
+  --rsm-on-accent: #16150f;
+  --rsm-accent-text: #efece6;
+}
+
+html[data-abt-theme='light'] .rsm {
+  --abt-accent: #1b1a17;
+  --rsm-on-accent: #fbf9f5;
+  --rsm-accent-text: #1b1a17;
+}
+
+.rsm__kicker,
+.rsm__sendline a {
+  color: var(--rsm-accent-text);
+}
+
+.rsm__go,
+.rsm__done,
+html[data-abt-theme='light'] :is(.rsm__go, .rsm__done) {
+  color: var(--rsm-on-accent);
+}
+
+.rsm__tick,
+html[data-abt-theme='light'] .rsm__tick,
+.rsm__box svg {
+  stroke: var(--rsm-on-accent);
+}
+
+/* Phones: the illustration a short landscape band, the form compact, so the button is in view without
+   scrolling. */
+@media (max-width: 720px) {
+  .rsm__panel {
+    grid-template-rows: 96px auto;
+  }
+
+  .rsm__art img {
+    object-position: center 44%;
+  }
+
+  .rsm__credit {
+    padding: 18px 12px 7px;
+    font-size: 10.5px;
+  }
+
+  .rsm__close {
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .rsm__body {
+    padding: 18px 20px 18px;
+  }
+
+  .rsm__kicker {
+    margin-bottom: 4px;
+  }
+
+  .rsm__title {
+    font-size: 22px;
+  }
+
+  .rsm__lede {
+    margin: 4px 0 14px;
+    font-size: 14px;
+  }
+
+  .rsm__fields {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .rsm__field input {
+    padding: 10px 12px;
+  }
+
+  .rsm__check {
+    padding: 11px 12px;
+  }
+
+  .rsm__checktext strong {
+    font-size: 14px;
+  }
+
+  .rsm__checktext em {
+    font-size: 12.5px;
+  }
+
+  .rsm__go {
+    margin-top: 14px;
+    padding: 13px 20px;
+  }
+
+  .rsm__fine {
+    margin-top: 8px;
+  }
+}
+
+/* Short phones (iPhone SE and the like): a thinner band, and the lines that can go without. */
+@media (max-width: 720px) and (max-height: 700px) {
+  .rsm__panel {
+    grid-template-rows: 64px auto;
+  }
+
+  .rsm__credit {
+    padding: 10px 12px 5px;
+    font-size: 9.5px;
+  }
+
+  .rsm__close {
+    top: 7px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    font-size: 17px;
+  }
+
+  .rsm__lede,
+  .rsm__fine,
+  .rsm__kicker {
+    display: none;
+  }
+
+  .rsm__title {
+    margin-bottom: 12px;
+    font-size: 20px;
+  }
+
+  .rsm__body {
+    padding-top: 14px;
+  }
+}
+
+/* Phones, round 3: a taller band (the landscape image) and more room inside the form. */
+@media (max-width: 720px) {
+  .rsm__panel {
+    grid-template-rows: 150px auto;
+  }
+
+  .rsm__art img {
+    object-position: center 40%;
+  }
+
+  .rsm__body {
+    padding: 24px 26px 24px;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 700px) {
+  .rsm__panel {
+    grid-template-rows: 96px auto;
+  }
+
+  .rsm__body {
+    padding: 16px 24px 16px;
+  }
+
+  .rsm__fields {
+    gap: 8px;
+  }
+
+  .rsm__go {
+    margin-top: 12px;
+  }
+}
+
+/* A slow, slight zoom when the pointer rests on the illustration (the <picture>, so it does not fight
+   the image's own entrance animation). */
+.rsm__art picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .rsm__art:hover picture {
+    transform: scale(1.045);
+  }
+}
+
+/* Desktop: the illustration a fifth narrower than the form beside it. */
+@media (min-width: 721px) {
+  .rsm__panel {
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 721px) {
+  .rsm__credit {
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+}
+
+/* Desktop: more room around the credit. */
+@media (min-width: 721px) {
+  .rsm__credit {
+    padding: 44px 24px 20px;
+    white-space: normal;
+  }
+}
+
+/* On phones the credit stays one line; on desktop it breaks after "Generated with AI,". */
+.rsm__creditbr {
+  display: none;
+}
+
+@media (min-width: 721px) {
+  .rsm__creditbr {
+    display: inline;
+  }
+}
+
+/* Desktop: the whole dialog a size smaller (same column ratio), so the fields are not so wide. */
+@media (min-width: 721px) {
+  .rsm__panel {
+    width: min(820px, 100%);
+    min-height: min(560px, calc(100dvh - 32px));
+  }
+
+  .rsm__body {
+    padding: 48px 48px 38px;
+  }
+
+  .rsm__title {
+    font-size: 28px;
+  }
+}

@@ -1,3 +1,5 @@
+'use client';
+
 export default function Footer() {
   return (
     <footer>
@@ -8,6 +10,10 @@ export default function Footer() {
           <span>manikdesigns@yahoo.com</span>
           &nbsp;·&nbsp;
           <span>LinkedIn</span>
+          &nbsp;·&nbsp;
+          <button type="button" className="footer-cookies" onClick={() => window.openCookieSettings?.()}>
+            Cookie settings
+          </button>
         </span>
       </div>
     </footer>

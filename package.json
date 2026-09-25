@@ -16,7 +16,8 @@
     "check:i18n": "node scripts/check-i18n.mjs",
     "narration:script": "python3 docs/narration/narrate.py script",
     "narration:align": "docs/narration/.venv/bin/python docs/narration/narrate.py align",
-    "narration:publish": "python3 docs/narration/narrate.py publish"
+    "narration:publish": "python3 docs/narration/narrate.py publish",
+    "resume": "node scripts/build-resume.mjs"
   },
   "dependencies": {
     "gsap": "^3.15.0",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
+    "playwright": "^1.63.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17"
   }

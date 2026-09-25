@@ -1,0 +1,633 @@
+/* ---------------------------------------------------------------- The résumés (ResumeDocs.js)
+
+   A4 in millimetres and points, one typeface (DM Sans). Printed to PDF by scripts/build-resume.mjs;
+   @page margins apply to every page.                                                               */
+
+/* ---------------------------------------------------------------- Résumé lab
+
+   Each layout is an A4 document in millimetres and points, so the screen preview and the PDF match.
+   One typeface throughout: DM Sans. Printing uses @page margins, so every page gets them. */
+@page {
+  size: A4;
+  margin: 13mm 15mm;
+}
+
+html,
+body {
+  margin: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.rs-doc {
+  --ink: #16140f;
+  --ink-2: #3d3a33;
+  --ink-3: #6b675d;
+  --rule: #e4ded2;
+  --gold: #a16c03; /* #ca8a04 deepened for text on white (4.9:1) */
+  --gold-soft: #e9d49c;
+  box-sizing: border-box;
+  width: 210mm;
+  padding: 13mm 15mm;
+  background: #fff;
+  color: var(--ink-2);
+  font-family: var(--font-abt-sans), 'DM Sans', system-ui, sans-serif;
+  font-size: 9.2pt;
+  line-height: 1.42;
+}
+
+.rs-doc *,
+.rs-doc *::before,
+.rs-doc *::after {
+  box-sizing: border-box;
+}
+
+@media print {
+  html, body {
+    background: #fff !important; /* the site's own page colour would print into the margins */
+    color-scheme: light; /* the site is color-scheme: dark, which also paints the page margins */
+  }
+
+  .rs-doc {
+    width: auto;
+    padding: 0;
+  }
+}
+
+/* The site's reset removes list markers; a résumé needs its bullets (and ATS parsers read them). */
+.rs-doc ul {
+  list-style: disc;
+}
+
+.rs-doc h1,
+.rs-doc h2,
+.rs-doc h3,
+.rs-doc p,
+.rs-doc ul {
+  margin: 0;
+}
+
+.rs-doc h1 {
+  font-size: 24pt;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.rs-photo {
+  display: block;
+  object-fit: cover;
+}
+
+.rs-keep {
+  break-inside: avoid;
+}
+
+/* Badges */
+.rs-badge {
+  display: block;
+  flex: none;
+  margin-top: 0.6mm;
+  border-radius: 22%;
+  object-fit: cover;
+}
+
+.rs-badge--tile {
+  display: grid;
+  place-items: center;
+}
+
+.rs-badge--plain {
+  display: grid;
+  place-items: center;
+  border: 0.25mm solid var(--rule);
+  object-fit: contain;
+  padding: 0.6mm;
+  background: #fff;
+}
+
+.rs-badge__mask {
+  width: 76%;
+  height: 76%;
+  background: #101010;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.rs-badge__mask--ink {
+  background: #36526a;
+}
+
+.rs-badge--empty {
+  border: 0.25mm dashed var(--rule);
+}
+
+/* ATS: plain on purpose. */
+.rs-ats {
+  font-size: 10pt;
+  line-height: 1.4;
+  color: #111;
+}
+
+.rs-ats h1 {
+  font-size: 20pt;
+}
+
+.rs-ats h2 {
+  margin: 5mm 0 2mm !important;
+  font-size: 11pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rs-ats h3 {
+  font-size: 10pt;
+  font-weight: 700;
+}
+
+.rs-ats__role {
+  margin-bottom: 3mm;
+  break-inside: avoid;
+}
+
+.rs-ats ul {
+  padding-left: 5mm;
+}
+
+/* ---------------------------------------------------------------- Round 2: a larger scale */
+.rx {
+  font-size: 10pt;
+  line-height: 1.45;
+  color: #3a3730;
+}
+
+.rx h1 {
+  font-size: 30pt;
+  letter-spacing: -0.03em;
+}
+
+.rx-title {
+  margin-top: 2mm !important;
+  font-size: 13pt;
+  font-weight: 500;
+  color: var(--gold);
+}
+
+.rx-h {
+  margin: 6.5mm 0 3mm !important;
+  font-size: 10pt;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  break-after: avoid;
+}
+
+.rx-role {
+  display: flex;
+  gap: 4mm;
+  padding: 2.6mm 0;
+  border-top: 0.25mm solid var(--rule);
+}
+
+/* A long role may break between bullets, but never between its heading and its first bullet. */
+.rx-role--early,
+.rx-role__top,
+.rx-company,
+.rx-bullets li {
+  break-inside: avoid;
+}
+
+.rx-company {
+  break-after: avoid;
+}
+
+.rx-role:first-of-type {
+  border-top: 0;
+}
+
+.rx-role__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.rx-role__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4mm;
+}
+
+.rx-role__top h3 {
+  font-size: 12.5pt;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.rx-when {
+  flex: none;
+  font-size: 9.5pt;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.rx-company {
+  margin-top: 0.5mm !important;
+  font-size: 10pt;
+  color: #3a3730;
+}
+
+.rx-company strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.rx-place,
+.rx-company span {
+  color: var(--ink-3);
+}
+
+.rx-bullets {
+  margin-top: 1.4mm !important;
+  padding-left: 4.5mm;
+}
+
+.rx-bullets li {
+  margin-bottom: 0.5mm;
+}
+
+.rx-bullets li::marker {
+  color: var(--gold);
+}
+
+.rx-line {
+  margin-top: 1.2mm !important;
+}
+
+.rx-role--early {
+  padding: 1.8mm 0;
+}
+
+.rx-role--early .rx-role__top h3 {
+  font-size: 11pt;
+}
+
+.rx-role .rs-badge {
+  margin-top: 0.8mm;
+}
+
+.rx-contactlist {
+  list-style: none !important;
+  padding: 0;
+}
+
+.rx-contactlist li {
+  display: grid;
+  gap: 0.2mm;
+  margin-bottom: 2.4mm;
+  font-size: 10pt;
+  color: var(--ink);
+}
+
+.rx-contactlist span {
+  font-size: 8pt;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* 5 · Modern */
+.rx-mo__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8mm;
+}
+
+.rx-mo h1 {
+  font-size: 34pt;
+}
+
+.rx-mo .rs-photo {
+  width: 28mm;
+  height: 28mm;
+  border-radius: 6mm;
+}
+
+.rx-mo__contact {
+  margin-top: 5mm !important;
+  padding: 3mm 0;
+  border-top: 0.3mm solid var(--rule);
+  border-bottom: 0.3mm solid var(--rule);
+  font-size: 9.8pt;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+}
+
+.rx-mo__lede {
+  margin-top: 6mm !important;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.rx-tl__pair {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10mm;
+}
+
+.rx-skillrow {
+  display: grid;
+  grid-template-columns: 24mm minmax(0, 1fr);
+  gap: 3mm;
+  margin-bottom: 1.6mm !important;
+  white-space: pre-wrap;
+}
+
+.rx-skillrow strong {
+  color: var(--ink);
+}
+
+/* 8 · Modern + timeline endings */
+.rx-mp a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rx-mp .rx-mo__contact a {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.rx-mp__logo {
+  display: flex;
+  align-items: flex-end;
+  height: 7mm;
+  margin-bottom: 0.5mm;
+}
+
+.rx-edlogo {
+  display: block;
+  width: auto;
+  object-fit: contain;
+}
+
+.rx-mp__end {
+  align-items: start;
+}
+
+/* Contact in a tinted card. */
+.rx-mp__card {
+  margin-top: 5mm;
+  padding: 4.5mm 6mm 2mm;
+  border-radius: 3mm;
+  background: #f6efdf;
+}
+
+.rx-mp__card .rx-h {
+  margin-top: 0 !important;
+}
+
+.rx-mp__card a {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--gold-soft);
+  text-underline-offset: 0.6mm;
+}
+
+/* Numbered section heads, as in the Editorial layout: the number in gold, the name in ink. */
+.rx-mp .rx-h {
+  display: flex;
+  align-items: baseline;
+  gap: 3mm;
+  padding-bottom: 1.8mm;
+  border-bottom: 0.3mm solid var(--gold-soft);
+  color: var(--ink);
+}
+
+.rx-mp .rx-h__n {
+  color: var(--gold);
+}
+
+.rx-mp__card .rx-h {
+  border-bottom-color: #e6d6ad;
+}
+
+/* Education in rows: a fixed logo slot so the text lines up, one line per school. */
+.rx-mp__edu {
+  display: grid;
+}
+
+.rx-mp__edrow {
+  display: grid;
+  grid-template-columns: 27mm minmax(0, 1fr) auto auto; /* logos up to 20mm, so 7mm of air after them */
+  align-items: center;
+  column-gap: 3.5mm;
+  padding: 2.2mm 0;
+  border-top: 0.25mm solid var(--rule);
+  break-inside: avoid;
+}
+
+.rx-mp__edrow:first-child {
+  border-top: 0;
+}
+
+.rx-mp__edrow .rx-mp__logo {
+  height: auto;
+  margin: 0;
+  justify-content: flex-start;
+}
+
+.rx-mp__edtext {
+  font-size: 9.6pt;
+
+  color: #3a3730;
+}
+
+.rx-mp__edtext strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.rx-mp__edsep {
+  color: var(--ink-3);
+}
+
+.rx-mp__ednote {
+  font-size: 9pt;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.rx-mp__edplace {
+  display: block;
+  margin-top: 0.3mm;
+  font-size: 8.8pt;
+  color: var(--ink-3);
+}
+
+/* 8: the dates keep a column of their own on the right; the title, company and bullets wrap before it. */
+.rx-mp .rx-role__body {
+  position: relative;
+  padding-right: 32mm;
+}
+
+.rx-mp .rx-role__top .rx-when {
+  position: absolute;
+  top: 0.5mm;
+  right: 0;
+}
+
+/* 8: a little tighter vertically, to hold two pages. */
+.rx-mp .rx-mo__lede {
+  margin-top: 5mm !important;
+  font-size: 11.5pt;
+}
+
+.rx-mp .rx-h {
+  margin-top: 5.5mm !important;
+}
+
+.rx-mp .rx-role {
+  padding: 2.2mm 0;
+}
+
+.rx-mp .rx-role--early {
+  padding: 1.5mm 0;
+}
+
+/* 8: a smaller header to make room — name, photo, section names. */
+.rx-mp h1 {
+  font-size: 28pt;
+}
+
+.rx-mp .rx-title {
+  margin-top: 1.2mm !important;
+  font-size: 12pt;
+}
+
+.rx-mp .rs-photo {
+  width: 21mm;
+  height: 21mm;
+  border-radius: 4.5mm;
+}
+
+.rx-mp .rx-mo__contact {
+  margin-top: 3.5mm !important;
+  padding: 2.4mm 0;
+}
+
+.rx-mp .rx-mo__lede {
+  margin-top: 4mm !important;
+  font-size: 11pt;
+}
+
+.rx-mp .rx-h {
+  margin: 5mm 0 2.4mm !important;
+  font-size: 9pt;
+}
+
+.rx-mp .rx-line {
+  margin-top: 0.8mm !important;
+  color: #3a3730;
+}
+
+.rx-phone:not(:empty)::before {
+  content: '   ·   ';
+  white-space: pre;
+}
+
+.rx-mp .rx-contactlist li {
+  margin-bottom: 1.8mm;
+}
+
+.rx-mp__card {
+  margin-top: 4mm;
+}
+
+.rx-mp .rx-mp__edrow {
+  padding: 1.8mm 0;
+}
+
+/* 8, more air: a smaller name, and the room it frees given back as spacing. */
+.rx-mp h1 {
+  font-size: 24pt;
+}
+
+.rx-mp .rx-title {
+  font-size: 11pt;
+}
+
+.rx-mp .rs-photo {
+  width: 19mm;
+  height: 19mm;
+}
+
+.rx-mp .rx-mo__lede {
+  margin-top: 5mm !important;
+  text-wrap: pretty; /* no short last line */
+}
+
+.rx-mp .rx-h {
+  margin: 6mm 0 2.8mm !important;
+}
+
+.rx-mp .rx-role {
+  padding: 2.6mm 0;
+}
+
+.rx-mp .rx-role--early {
+  padding: 2mm 0;
+}
+
+.rx-mp .rx-bullets li {
+  margin-bottom: 0.9mm;
+}
+
+/* The notes and the years in fixed columns, so they line up down the list (notes left-aligned). */
+.rx-mp .rx-mp__edrow {
+  grid-template-columns: 27mm minmax(0, 1fr) 29mm 20mm;
+}
+
+.rx-mp .rx-mp__edrow .rx-when {
+  text-align: right;
+}
+
+.rs-ats a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* "Dropped out" as the About page's rubber stamp: red, double-ruled, a little askew. */
+.rx-mp .rx-mp__stamp {
+  justify-self: start;
+  padding: 0.3mm 1.4mm 0.2mm;
+  border: 0.55mm double #c2362b;
+  border-radius: 0.8mm;
+  font-size: 6.2pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c2362b;
+  rotate: -5deg;
+}
+
+/* 8: one rule under the contact line, heavier and gold, as under Editorial's header. */
+.rx-mp .rx-mo__contact {
+  padding-top: 0;
+  border-top: 0;
+  border-bottom: 0.5mm solid var(--gold);
+}

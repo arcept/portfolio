@@ -15,6 +15,7 @@ import { display, sans } from './fonts';
 import './about.css';
 import './experience.css';
 import './education.css';
+import './resume/resume.css';
 
 export const metadata = {
   title: 'About — Manik Madaan',
