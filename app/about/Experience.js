@@ -25,7 +25,7 @@ const Place = ({ role }) => (role.place ? <span className="xp-place">{role.place
 const INK_REF = 0.4;
 
 export function Logotype({ role, size = 30, maxWidth = 160, className = '' }) {
-  if (!role.logo) {
+  if (!role.logo && !role.logoSquare) {
     return (
       <span className={`xp-wordmark xp-wordmark--text ${className}`} style={{ fontSize: size * 0.46, maxWidth }}>
         {role.company}
@@ -33,8 +33,17 @@ export function Logotype({ role, size = 30, maxWidth = 160, className = '' }) {
     );
   }
   // A finished square badge, or a mark on its coloured tile (Leo Burnett): the same footprint for
-  // every company that has one, so they line up.
+  // every company that has one, so they line up. A plain string is one badge for both themes; an
+  // {light, dark} pair (there being no real company mark to badge yet) swaps with the page instead.
   const side = Math.round(Math.min(size * 0.93, maxWidth));
+  if (role.logoSquare?.light) {
+    return (
+      <span className="xp-wordmark xp-wordmark--square xp-wordmark--squaretheme" role="img" aria-label={role.company} style={{ width: side, height: side }}>
+        <img className="xp-wordmark__square xp-wordmark__square--light" src={role.logoSquare.light} alt="" width={side} height={side} />
+        <img className="xp-wordmark__square xp-wordmark__square--dark" src={role.logoSquare.dark} alt="" width={side} height={side} />
+      </span>
+    );
+  }
   if (role.logoSquare) {
     return <img className={`xp-wordmark xp-wordmark--square ${className}`} src={role.logoSquare} alt={role.company} width={side} height={side} style={{ width: side, height: side }} />;
   }

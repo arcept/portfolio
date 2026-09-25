@@ -162,10 +162,12 @@ function useTightWidth(ref, textRef) {
     };
     fit();
     document.fonts?.ready.then(fit);
-    const watcher = new ResizeObserver(fit);
-    watcher.observe(document.documentElement);
+    // A viewport-width listener, not a ResizeObserver on the document: the document's content-box
+    // height changes on every layout shift anywhere on the page (not just real resizes), which would
+    // refire this and thrash `box.style.width` mid-scroll.
+    window.addEventListener('resize', fit);
     return () => {
-      watcher.disconnect();
+      window.removeEventListener('resize', fit);
       box.style.width = '';
     };
   }, [ref, textRef]);

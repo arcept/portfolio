@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react';
 import { ANSWERS, EDUCATION_HEADLINES, SCHOOLS } from './education-content';
 import { hand } from './fonts';
@@ -46,10 +46,21 @@ export default function Education() {
       : { target: stage, offset: ['start 0.7', 'end 0.5'] }
   );
   useMotionValueEvent(scrollYProgress, 'change', (p) => {
+    // On phones the sentence this progress is measured against is hidden (its answer now lives inside
+    // each tapped row instead), so scroll position no longer drives which step is "current" there.
+    if (phone) return;
     const n = reduced ? STEPS.length - 1 : Math.min(STEPS.length - 1, Math.max(0, Math.floor(p * STEPS.length)));
     setAt((cur) => (cur === n ? cur : n));
   });
   const pick = (i) => setAt(i);
+  // On phones, where the scrolling sentence above the list is hidden, tapping a row opens it in place
+  // instead: the answer, the dropped-out stamp where it applies, the handwritten note and the line —
+  // everything the sentence column carries, other than the school's own logo, name and degree, which
+  // the row already shows. Closed again on a second tap, or if the viewport grows past the phone width.
+  const [openRow, setOpenRow] = useState(null);
+  useEffect(() => {
+    if (!phone) setOpenRow(null);
+  }, [phone]);
   const current = STEPS[at];
   const [first, rest] = splitHeadline(headline);
   // While the master's is the step shown, hovering anywhere in the sentence column brings up a small
@@ -178,13 +189,20 @@ export default function Education() {
       </div>
 
       <ol className="ed-b__list">
-        {SCHOOLS.map((s, i) => (
+        {SCHOOLS.map((s, i) => {
+          const rowOpen = openRow === s.id;
+          return (
           <motion.li key={s.id} {...rise(0.1 + i * 0.06)}>
             <button
               type="button"
               className={`ed-b__school${i === at ? ' is-on' : ''}${i < at ? ' is-past' : ''}${s.emphasis ? ' is-major' : ''}${s.small ? ' is-small' : ''}`}
               aria-pressed={i === at}
-              onClick={() => pick(i)}
+              aria-expanded={phone ? rowOpen : undefined}
+              aria-controls={phone ? `ed-row-${s.id}` : undefined}
+              onClick={() => {
+                pick(i);
+                if (phone) setOpenRow((cur) => (cur === s.id ? null : s.id));
+              }}
               onPointerEnter={(e) => e.pointerType === 'mouse' && pick(i)}
             >
               <SchoolMarks school={s} size={52} slot={SLOT} />
@@ -201,9 +219,12 @@ export default function Education() {
                 {s.major && <DegreeBadge className="ed-row__badge" label={s.major} />}
                 {s.award && <MeritBadge className="ed-row__badge" />}
               </span>
+              <span className="ed-b__mark" aria-hidden="true" />
             </button>
+            <AnimatePresence initial={false}>{rowOpen && <RowDetail id={`ed-row-${s.id}`} step={s} />}</AnimatePresence>
           </motion.li>
-        ))}
+          );
+        })}
       </ol>
     </div>
     </section>
@@ -235,6 +256,62 @@ function Facts({ step }) {
       {step.answerNote && <span className="ed-b__note">{step.answerNote}. </span>}
       {step.line}
     </p>
+    </>
+  );
+}
+
+// Inside a tapped row on a phone: the answer itself, in plain type (it belongs to one school here, not
+// a sequence, so it is not struck through), the dropped-out stamp where it applies, the handwritten
+// note, and the line — everything Facts() shows, other than the school's own logo, name and degree,
+// which are already the row above this.
+// The measured, height-animated wrapper a tapped row opens into. Animating the literal string
+// 'auto' turned out not to behave like a normal tween on the way out: Framer resolves it via its own
+// measurement pass rather than a plain numeric interpolation, and on exit that pass and
+// AnimatePresence's own unmount timer fall out of step, so whatever height was still "in flight" gets
+// discarded in one frame instead of finishing smoothly — reproducible regardless of curve or duration.
+// Measuring the content's real pixel height with a ref and animating to that explicit number, instead
+// of to 'auto', sidesteps the special handling entirely, so the close is one continuous motion.
+function RowDetail({ id, step }) {
+  const ref = useRef(null);
+  const [h, setH] = useState(0);
+  useLayoutEffect(() => {
+    if (ref.current) setH(ref.current.scrollHeight);
+  }, [step]);
+  return (
+    <motion.div
+      id={id}
+      className="ed-b__detail"
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: h, opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.45, ease: EASE }}
+    >
+      <div ref={ref}>
+        <RowAnswer step={step} />
+      </div>
+    </motion.div>
+  );
+}
+
+function RowAnswer({ step }) {
+  return (
+    <>
+      <p className="ed-b__answer">
+        {ANSWERS[step.answer]}
+        {step.id === 'northcap' && (
+          <span className="ed-stamp ed-dropped ed-b__detailstamp" aria-label="Dropped out after two years">
+            Dropped out
+            <small>after 2 years</small>
+          </span>
+        )}
+      </p>
+      <span className="ed-b__hand" aria-hidden="true">
+        {NOTES[step.id]}
+      </span>
+      <p className="ed-b__line">
+        {step.answerNote && <span className="ed-b__note">{step.answerNote}. </span>}
+        {step.line}
+      </p>
     </>
   );
 }

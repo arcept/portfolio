@@ -93,6 +93,38 @@ html[data-abt-theme='light'] .xp-logos-brand .xp-wordmark__mark {
   border-radius: 22%;
 }
 
+/* A square badge with no real company mark yet (Independent): the page's own ink instead, swapping
+   with the theme rather than fixed to one. */
+.xp-wordmark--squaretheme {
+  position: relative;
+}
+
+.xp-wordmark__square {
+  position: absolute;
+  inset: 0;
+  border-radius: 22%;
+}
+
+.xp-wordmark__square--dark {
+  display: none;
+}
+
+html[data-abt-theme='light'] .xp-wordmark__square--light {
+  display: block;
+}
+
+html[data-abt-theme='light'] .xp-wordmark__square--dark {
+  display: none;
+}
+
+html:not([data-abt-theme='light']) .xp-wordmark__square--dark {
+  display: block;
+}
+
+html:not([data-abt-theme='light']) .xp-wordmark__square--light {
+  display: none;
+}
+
 /* A multi-colour mark: the ink mask in ink mode, the artwork for this theme in brand mode. */
 .xp-wordmark--art {
   position: relative;
@@ -163,15 +195,22 @@ html[data-abt-theme='light'] .xp-logos-brand .xp-wordmark__art--light {
 }
 
 .xp-sticker {
-  right: 4%;
+  right: -2%;
   top: -18%;
-  width: clamp(200px, 17vw, 270px);
+  /* Sized by height, not width: this artwork runs wider than sections 2 and 3's, so a matching width
+     rendered noticeably shorter. Height-first keeps every section's sticker the same size regardless
+     of its own aspect ratio. The ratio is set here on the wrapper (not left to the <img>'s intrinsic
+     sizing): with width:auto on both, the site's global `img { max-width: 100% }` resolves against
+     this wrapper's own (still-undetermined) width, and both collapse to 0 in a circular loop. */
+  height: 204px; /* 20% larger */
+  aspect-ratio: 597 / 299;
   rotate: -4deg;
 }
 
 .xp-sticker img {
+  display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 /* Section 04's accent: #5856d6, lifted on the dark theme so small text holds 4.5:1 (5.4:1). */
@@ -453,8 +492,13 @@ html[data-abt-theme='light'] .xp-row.is-open .xp-badge {
 
   .xp-sticker {
     right: 0;
-    top: 26px;
-    width: clamp(120px, 34vw, 170px);
+    top: 18px; /* nudged up from 26px: less empty space above the paragraph below */
+    /* Height-based, like desktop (see the base rule above): the previous width + inherited height
+       fought each other and squished the artwork off its true proportions (132px wide stretched to
+       170px tall, far from its real 597:299 ratio). Undistorted, that 132px-wide rendering was really
+       about 66px tall — so a proper ~25% increase from there is 84px, not the 170 it looked like. */
+    width: auto;
+    height: 84px;
   }
 
   /* Three columns: the badge; the company and what it is; the position, dates and place. The open/close mark sits in the top-right corner. */

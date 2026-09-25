@@ -27,14 +27,22 @@ html[data-abt-theme='light'] .ed-accent {
   right: 2%;
   top: -22%;
   z-index: 0;
-  width: clamp(200px, 17vw, 270px);
+  /* Height-first (see .ed-b__sticker, the rule actually active on the page, and .xp-sticker in
+     experience.css for why): this artwork is wider than sections 2 and 3's, so matching their width
+     rendered noticeably shorter than theirs. The width is then derived from that height via this same
+     aspect-ratio, set here on the wrapper rather than left to the <img>'s own intrinsic sizing: with
+     width:auto on both, the site's global `img { max-width: 100% }` resolves against this wrapper's
+     own (still-undetermined) width, so both collapse to 0 in a circular loop. Fixing the wrapper's
+     aspect-ratio directly sidesteps that. */
+  height: clamp(200px, 15vw, 250px);
+  aspect-ratio: 737 / 334;
   pointer-events: none;
 }
 
 .ed-sticker-slot img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 .ed-marks {
@@ -485,9 +493,9 @@ html[data-abt-theme='light'] .ed-b .ed-stamp {
 .ed-b__sticker {
   top: auto;
   right: auto;
-  left: 14px;
-  bottom: -0.55em; /* beside the first line, dropping a little toward the (shorter) second */
-  width: clamp(180px, 13.5vw, 220px);
+  left: 10px;
+  bottom: -0.3em; /* tugged in close to the end of the first line, not drifting away from it */
+  height: 160px;
 }
 
 .ed-b__oldtext {
@@ -657,8 +665,15 @@ html[data-abt-theme='light'] .ed-b .ed-stamp {
   /* B: the sentence first, the list under it. */
   .ed-b {
     grid-template-columns: 1fr;
-    grid-template-areas: 'head' 'main' 'list';
+    grid-template-areas: 'head' 'list';
     row-gap: 28px;
+  }
+
+  /* The scrolling sentence above the list (desktop only) was never actually hidden here before — only
+     its JS-driven scroll updates were disabled, freezing it on the first school and leaving it fully
+     visible, duplicating what a tapped row now shows in place. */
+  .ed-b__main {
+    display: none;
   }
 
   .ed-b__head {
@@ -704,8 +719,8 @@ html[data-abt-theme='light'] .ed-b .ed-stamp {
     top: auto;
     right: auto;
     left: 6px;
-    bottom: -0.4em;
-    width: 118px;
+    bottom: calc(-0.4em - 25px);
+    width: 154px;
   }
 }
 
@@ -738,5 +753,110 @@ html[data-abt-theme='light'] .ed-b .ed-stamp {
 
   .ed-b__school.is-major .ed-b__programme {
     font-size: 20px;
+  }
+
+  /* Each row can now open in place, so its <li> stacks the button above the detail panel instead of
+     the desktop-only height-matching row it otherwise is. The row's own divider now lives here, on
+     the <li>, rather than on the button: closed, it is the same plain grey rule every row has; open,
+     it is the same line turned to the accent colour, and — because it belongs to the box that now
+     contains the revealed content too — it moves down with that content instead of sitting above it. */
+  .ed-b__list > li {
+    display: block;
+    /* The width is fixed (only the colour changes) so opening/closing is one smooth motion: an
+       untransitioned width flipping 1px↔2px at the same moment the height animation starts read as a
+       small extra jump on top of it, not part of the same movement. */
+    border-bottom: 2px solid var(--abt-line);
+    transition: border-color 0.3s ease;
+  }
+
+  .ed-b__list > li:has(.ed-b__school[aria-expanded='true']) {
+    border-bottom-color: var(--abt-accent);
+  }
+
+  .ed-b__school {
+    flex: none;
+    width: 100%;
+    padding-right: 30px; /* room for the tap mark */
+    border-bottom: 0; /* the <li> now carries the row's divider, open or closed */
+  }
+
+  /* The tap-to-open mark: a plus that turns into a minus, the same shape as Experience's. */
+  .ed-b__mark {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    width: 12px;
+    height: 12px;
+    translate: 0 -50%;
+  }
+
+  .ed-b__mark::before,
+  .ed-b__mark::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto 0;
+    height: 1.5px;
+    background: var(--t3);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ed-b__mark::after {
+    transform: rotate(90deg);
+  }
+
+  .ed-b__school[aria-expanded='true'] .ed-b__mark::after {
+    transform: rotate(0deg);
+  }
+
+  /* The button's own accent underline (the desktop "selected" mark) is superseded here by the <li>'s
+     divider above. */
+  .ed-b__school.is-on::after {
+    display: none;
+  }
+
+  .ed-b__detail {
+    overflow: hidden;
+    /* No padding here: this box's height is what's animated (to an explicit measured pixel value, not
+       'auto' — see RowDetail in Education.js), so any fixed spacing on it directly would sit outside
+       that measurement and never shrink with it, leaving a static remainder to pop away at the end.
+       The gap before the row's divider is on .ed-b__line below instead, inside what gets measured. */
+  }
+
+  .ed-b__answer {
+    margin: 0;
+    padding-top: 14px;
+    font-family: var(--font-abt-display), Georgia, serif;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--t1);
+    text-wrap: balance;
+  }
+
+  .ed-b__detailstamp {
+    /* Without a defined column, the stamp's two lines ("Dropped out" / "after 2 years") land side by
+       side instead of stacking — auto-placement adds columns, not rows, when none are set. */
+    grid-template-columns: 1fr;
+    margin-left: 9px;
+    vertical-align: middle;
+    padding: 3px 8px 2px;
+    border-width: 2px;
+    font-size: 9px;
+  }
+
+  .ed-b__detailstamp small {
+    font-size: 6px;
+  }
+
+  .ed-b__detail .ed-b__hand {
+    display: block;
+    margin-top: 10px;
+    font-size: 20px;
+  }
+
+  .ed-b__detail .ed-b__line {
+    margin: 6px 0 18px;
+    max-width: none;
+    font-size: 14.5px;
   }
 }

@@ -19,10 +19,13 @@ export default function useFullBleed(ref, margin) {
       el.style.width = `${vw - gap * 2}px`;
     };
     apply();
-    const watcher = new ResizeObserver(apply);
-    watcher.observe(document.documentElement);
+    // A viewport-width listener, not a ResizeObserver on the document: the element's own box isn't
+    // what needs watching (it has no intrinsic size once full-bled), and observing the document root
+    // instead fires on every content-height change anywhere on the page — including this effect's own
+    // full-bleed toggle — thrashing the layout mid-scroll and occasionally yanking the scroll position.
+    window.addEventListener('resize', apply);
     return () => {
-      watcher.disconnect();
+      window.removeEventListener('resize', apply);
       el.style.marginLeft = '';
       el.style.width = '';
     };

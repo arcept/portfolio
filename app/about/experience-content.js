@@ -24,6 +24,21 @@ export const EXPERIENCE_INTRO =
 
 export const ROLES = [
   {
+    id: 'independent-now',
+    label: 'Independent practice',
+    company: 'Independent',
+    descriptor: 'Product design consultancy',
+    role: 'Product Design Consultant',
+    place: 'Delhi NCR, India',
+    dates: 'Jan 2026 – Present',
+    tier: 1,
+    // No real company mark yet: a plain "I", swapping with the theme (see Logotype in Experience.js).
+    logoSquare: { light: '/about/logos/independent-square-light.svg', dark: '/about/logos/independent-square-dark.svg' },
+    line: 'Independent consulting practice, picking up where the sabbatical left off.',
+    story:
+      'Back to client work on my own terms, before the next full-time role.',
+  },
+  {
     id: 'novatr',
     label: 'Teams & systems',
     company: 'Novatr',
@@ -31,7 +46,7 @@ export const ROLES = [
     descriptor: 'AEC technology and education',
     role: 'Product Design Manager',
     place: 'Gurugram, Haryana, India',
-    dates: 'Oct 2022 – Sep 2024',
+    dates: 'Oct 2022 – Jul 2024',
     tier: 1,
     logo: '/about/logos/novatr.svg',
     logoRatio: 5.547,

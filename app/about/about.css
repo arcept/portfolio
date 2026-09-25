@@ -890,8 +890,14 @@ html[data-abt-wipe]::view-transition-new(root) {
 .abt-sticker--howiwork {
   left: clamp(230px, 17vw, 270px);
   top: 6%;
-  width: clamp(180px, 15vw, 230px);
+  height: clamp(200px, 15vw, 250px);
+  aspect-ratio: 343 / 299;
   rotate: -5deg;
+}
+
+.abt-sticker--howiwork img {
+  width: 100%;
+  height: 100%;
 }
 
 .abt-lenses__intro {
@@ -1712,8 +1718,14 @@ html[data-abt-theme='light'] .ldr {
 .ldr__sticker {
   right: -8%;
   top: -42%;
-  width: clamp(190px, 16vw, 250px);
+  height: clamp(200px, 15vw, 250px);
+  aspect-ratio: 416 / 299;
   rotate: -6deg;
+}
+
+.ldr__sticker img {
+  width: 100%;
+  height: 100%;
 }
 
 .ldr__title {

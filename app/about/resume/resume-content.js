@@ -77,7 +77,8 @@ export const EXPERIENCE = ROLES.map((r) => ({
   role: r.role,
   dates: DATES[r.id] ?? r.dates,
   place: r.place,
-  badge: r.logoSquare ?? null,
+  // A theme-swapping badge (no real company mark yet) picks its light variant for the printed page.
+  badge: (typeof r.logoSquare === 'string' ? r.logoSquare : r.logoSquare?.light) ?? null,
   tile: r.logoTile ? { color: r.logoTile, mark: r.logo } : null,
   mark: r.logoSquare || r.logoTile ? null : r.logo,
   bullets: HIGHLIGHTS[r.id] ?? [r.line, ...sentences(r.story)],
