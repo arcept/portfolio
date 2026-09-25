@@ -6,6 +6,21 @@ import MetaStrip from '@/components/MetaStrip';
 export const metadata = {
   title: 'Building the Novatr LMS — Manik Madaan',
   description: 'A 0-to-1 platform build, design systems, and cross-functional leadership behind the Novatr Learning Management System.',
+  // Next.js replaces the whole openGraph/twitter object per page rather than merging it with the
+  // layout's, so the site's default share image is repeated explicitly here rather than assumed
+  // inherited (it silently drops otherwise).
+  openGraph: {
+    title: 'Building the Novatr LMS — Manik Madaan',
+    description: 'A 0-to-1 platform build, design systems, and cross-functional leadership behind the Novatr Learning Management System.',
+    type: 'article',
+    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'Manik Madaan — Product Design Leader' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og/default.jpg'],
+    title: 'Building the Novatr LMS — Manik Madaan',
+    description: 'A 0-to-1 platform build, design systems, and cross-functional leadership behind the Novatr Learning Management System.',
+  },
 };
 
 export default function CaseStudyNovatrLMS() {

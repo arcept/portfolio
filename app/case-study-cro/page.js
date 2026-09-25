@@ -32,6 +32,21 @@ const tldrSections = [
 export const metadata = {
   title: 'Designing for Confidence — Manik Madaan',
   description: "How behavioral data became an empathy tool for four teams at Novatr who couldn't agree on why a strong page wasn't converting.",
+  // Next.js replaces the whole openGraph/twitter object per page rather than merging it with the
+  // layout's, so the site's default share image is repeated explicitly here rather than assumed
+  // inherited (it silently drops otherwise).
+  openGraph: {
+    title: 'Designing for Confidence — Manik Madaan',
+    description: "How behavioral data became an empathy tool for four teams at Novatr who couldn't agree on why a strong page wasn't converting.",
+    type: 'article',
+    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'Manik Madaan — Product Design Leader' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og/default.jpg'],
+    title: 'Designing for Confidence — Manik Madaan',
+    description: "How behavioral data became an empathy tool for four teams at Novatr who couldn't agree on why a strong page wasn't converting.",
+  },
 };
 
 export default function CaseStudyCRO() {

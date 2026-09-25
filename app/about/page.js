@@ -17,10 +17,28 @@ import './experience.css';
 import './education.css';
 import './resume/resume.css';
 
+const TITLE = 'About — Manik Madaan';
+const DESCRIPTION =
+  'Manik Madaan is a product design leader based in Delhi NCR, working across freelance practice, studios, agencies, startups, consulting, and design leadership.';
+
 export const metadata = {
-  title: 'About — Manik Madaan',
-  description:
-    'Manik Madaan is a product design leader based in Delhi NCR, working across freelance practice, studios, agencies, startups, consulting, and design leadership.',
+  title: TITLE,
+  description: DESCRIPTION,
+  // Its own link-preview image (the résumé dialog's illustration, captioned) in place of the site's
+  // default card — openGraph.images here replaces the root layout's; everything else in openGraph
+  // (siteName, locale, …) is still inherited from there.
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    type: 'profile',
+    images: [{ url: '/og/about.jpg', width: 1200, height: 630, alt: TITLE }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/og/about.jpg'],
+  },
 };
 
 // Sections are added one at a time; the margin index lists the ones that exist.

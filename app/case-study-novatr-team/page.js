@@ -15,6 +15,21 @@ const neueAlteGrotesk = localFont({
 export const metadata = {
   title: 'Building a Design Team from Zero — Manik Madaan',
   description: 'The Novatr team-building story — hiring, structure, and design leadership from the first hire.',
+  // Next.js replaces the whole openGraph/twitter object per page rather than merging it with the
+  // layout's, so the site's default share image is repeated explicitly here rather than assumed
+  // inherited (it silently drops otherwise).
+  openGraph: {
+    title: 'Building a Design Team from Zero — Manik Madaan',
+    description: 'The Novatr team-building story — hiring, structure, and design leadership from the first hire.',
+    type: 'article',
+    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'Manik Madaan — Product Design Leader' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og/default.jpg'],
+    title: 'Building a Design Team from Zero — Manik Madaan',
+    description: 'The Novatr team-building story — hiring, structure, and design leadership from the first hire.',
+  },
 };
 
 export default function CaseStudyNovatrTeam() {

@@ -40,8 +40,22 @@ const serif = Newsreader({
 
 export const metadata = {
   title: 'Making Placement Visible — Manik Madaan',
-  description:
-    'Learners bought placement support but experienced it as a black box. I led the design direction for a learner portal and reusable placement system that made progress, eligibility, opportunities, and next steps visible.',
+  description: 'Learners bought placement support but experienced it as a black box. I led the design direction for a learner portal and reusable placement system that made progress, eligibility, opportunities, and next steps visible.',
+  // Next.js replaces the whole openGraph/twitter object per page rather than merging it with the
+  // layout's, so the site's default share image is repeated explicitly here rather than assumed
+  // inherited (it silently drops otherwise).
+  openGraph: {
+    title: 'Making Placement Visible — Manik Madaan',
+    description: 'Learners bought placement support but experienced it as a black box. I led the design direction for a learner portal and reusable placement system that made progress, eligibility, opportunities, and next steps visible.',
+    type: 'article',
+    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'Manik Madaan — Product Design Leader' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og/default.jpg'],
+    title: 'Making Placement Visible — Manik Madaan',
+    description: 'Learners bought placement support but experienced it as a black box. I led the design direction for a learner portal and reusable placement system that made progress, eligibility, opportunities, and next steps visible.',
+  },
 };
 
 // `version` is recorded by docs/narration/narrate.py when new audio is aligned: it changes the URLs, so a new

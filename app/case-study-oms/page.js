@@ -39,6 +39,21 @@ const serif = Newsreader({
 export const metadata = {
   title: 'Rebuilding OMS — Manik Madaan',
   description: "Novatr's entire sales org ran on a tool engineering had built with no product or design input. The product-and-design-led rebuild that replaced it.",
+  // Next.js replaces the whole openGraph/twitter object per page rather than merging it with the
+  // layout's, so the site's default share image is repeated explicitly here rather than assumed
+  // inherited (it silently drops otherwise).
+  openGraph: {
+    title: 'Rebuilding OMS — Manik Madaan',
+    description: "Novatr's entire sales org ran on a tool engineering had built with no product or design input. The product-and-design-led rebuild that replaced it.",
+    type: 'article',
+    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'Manik Madaan — Product Design Leader' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og/default.jpg'],
+    title: 'Rebuilding OMS — Manik Madaan',
+    description: "Novatr's entire sales org ran on a tool engineering had built with no product or design input. The product-and-design-led rebuild that replaced it.",
+  },
 };
 
 const HEADLINE = 'From spreadsheets to a single source of truth';
