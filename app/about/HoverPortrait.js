@@ -12,6 +12,20 @@ import { AnimatePresence, motion, useInView, useMotionValue, useSpring, useTrans
 // Where there is no hover (touch, and reduced motion) the photograph is shown in place instead —
 // .abt-hovershot--static in about.css — so it is never only available to a mouse.
 export default function HoverPortrait({ children }) {
+  const { zoneProps, shot } = useHoverShot({ src: '/about/manik-street.jpg', width: 1500, height: 2000, priority: true });
+  return (
+    <div className="abt-hoverzone" {...zoneProps}>
+      {children}
+      {shot}
+    </div>
+  );
+}
+
+// The photograph that follows the pointer, as a hook so other parts of the page can use the same
+// treatment on an element of their own: spread `zoneProps` onto the element to hover and render `shot`
+// anywhere. By default the photograph appears only over the lines of that element's first child (the
+// sentences); `whole` makes the whole element count, and `enabled: false` turns it off.
+export function useHoverShot({ src, width, height, whole = false, enabled = true, className = '', priority = false }) {
   const [shown, setShown] = useState(false);
   const [mounted, setMounted] = useState(false);
   const area = useRef(null);
@@ -24,11 +38,15 @@ export default function HoverPortrait({ children }) {
   const tilt = useTransform(sx, (value) => (value - x.get()) * 0.05);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (!enabled) setShown(false);
+  }, [enabled]);
 
   // True only when the pointer is over a line of the text itself. A Range gives one rect per line,
   // so the ragged right edge, the gap under the last line and the space around the paragraph are all
   // outside — the photograph belongs to the sentences, not to the column's empty space.
   const overText = (clientX, clientY) => {
+    if (whole) return true;
     const text = area.current?.firstElementChild;
     if (!text) return false;
     const range = document.createRange();
@@ -40,7 +58,7 @@ export default function HoverPortrait({ children }) {
   };
 
   const track = (event) => {
-    if (event.pointerType === 'touch') return;
+    if (event.pointerType === 'touch' || !enabled) return;
     if (!overText(event.clientX, event.clientY)) {
       if (shown) setShown(false);
       return;
@@ -56,39 +74,32 @@ export default function HoverPortrait({ children }) {
     }
   };
 
-  return (
-    <div
-      className="abt-hoverzone"
-      ref={area}
-      onPointerMove={track}
-      onPointerLeave={() => setShown(false)}
-    >
-      {children}
+  const zoneProps = { ref: area, onPointerMove: track, onPointerLeave: () => setShown(false) };
 
-      {/* Rendered into <body>: this column is inside a parallax transform, and a transformed ancestor
-          becomes the containing block for position:fixed — the photograph would ride the parallax
-          away from the cursor as soon as the page scrolled. */}
-      {mounted &&
-        createPortal(
-          <AnimatePresence>
-            {shown && (
-              <motion.figure
-                className="abt-hovershot"
-                style={{ left: sx, top: sy, rotate: tilt }}
-                initial={{ opacity: 0, scale: 0.88 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.94 }}
-                transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
-                aria-hidden="true"
-              >
-                <Image src="/about/manik-street.jpg" alt="" width={1500} height={2000} sizes="320px" priority />
-              </motion.figure>
-            )}
-          </AnimatePresence>,
-          document.body
+  // Rendered into <body>: a transformed ancestor (the parallax, the entrance animations) becomes the
+  // containing block for position:fixed, and the photograph would drift away from the cursor.
+  const shot =
+    mounted &&
+    createPortal(
+      <AnimatePresence>
+        {shown && (
+          <motion.figure
+            className={`abt-hovershot ${className}`}
+            style={{ left: sx, top: sy, rotate: tilt }}
+            initial={{ opacity: 0, scale: 0.88 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+            aria-hidden="true"
+          >
+            <Image src={src} alt="" width={width} height={height} sizes="320px" priority={priority} />
+          </motion.figure>
         )}
-    </div>
-  );
+      </AnimatePresence>,
+      document.body
+    );
+
+  return { zoneProps, shot };
 }
 
 // The photographs, for anyone who cannot hover (touch, and reduced motion): a swipeable horizontal

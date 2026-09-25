@@ -1,0 +1,742 @@
+/* ---------------------------------------------------------------- Section 05: Education
+
+   One sentence, "Design is…", corrected once per school as the section scrolls, beside the list of
+   schools (Education.js). Accent #ca8a04; on the light page, for small text, the same gold deepened.  */
+
+.abt-education {
+  padding: clamp(16px, 3vh, 32px) 0 clamp(80px, 12vh, 140px);
+}
+
+/* ---------------------------------------------------------------- Education (lab)
+
+   Layouts for Section 05, each meant to sit within one screen. The accent is #ca8a04 (6.7:1 on the
+   dark page); on the light page and on paper, where it would be too faint for small text, the same
+   gold deepened to #8a5d03.                                                                        */
+.ed-accent {
+  --abt-accent: #ca8a04;
+  --ed-accent-paper: #8a5d03; /* the same gold, deepened for small text on paper (5.1:1) */
+}
+
+html[data-abt-theme='light'] .ed-accent {
+  --abt-accent: #8a5d03;
+}
+
+/* The hand-lettered "Education & Disciplines". */
+.ed-sticker-slot {
+  position: absolute;
+  right: 2%;
+  top: -22%;
+  z-index: 0;
+  width: clamp(200px, 17vw, 270px);
+  pointer-events: none;
+}
+
+.ed-sticker-slot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ed-marks {
+  display: inline-flex;
+  gap: 6px;
+  flex: none;
+}
+
+.ed-mark {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--abt-line-2);
+  border-radius: 22%;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--t1);
+  background: color-mix(in srgb, var(--t1) 5%, transparent);
+}
+
+/* A lockup, one file per theme: dark theme by default, light on the light theme and on paper. */
+.ed-logo {
+  position: relative;
+  display: block;
+  flex: none;
+}
+
+.ed-logo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ed-logo__light,
+html[data-abt-theme='light'] .ed-logo__dark {
+  display: none;
+}
+
+html[data-abt-theme='light'] .ed-logo__light {
+  display: block;
+}
+
+.ed-marks {
+  align-items: center;
+  gap: 14px;
+}
+
+.ed-marks--slot {
+  justify-content: center;
+}
+
+
+
+/* The merit badge: a gold pill, plain type, a glint crossing it every few seconds. */
+.ed-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  padding: 5px 12px 5px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f6d77e 0%, #ca8a04 55%, #b07503 100%);
+  box-shadow: 0 0 0 1px rgba(255, 236, 170, 0.35) inset, 0 4px 14px -4px rgba(202, 138, 4, 0.6);
+  color: #241802;
+  font-family: var(--font-abt-sans), system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.ed-badge__medal {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+.ed-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.65) 50%, transparent 65%) no-repeat;
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  animation: ed-glint 3.6s ease-in-out 1s infinite;
+  pointer-events: none;
+}
+
+@keyframes ed-glint {
+  0% { background-position: 150% 0; }
+  35%, 100% { background-position: -50% 0; }
+}
+
+/* The master's badge: the merit badge's shape in the page's ink, a gold ring running round its edge. */
+.ed-degree {
+  --ring: #ca8a04;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 9px;
+  border-radius: 999px;
+  background: #f4efe3;
+  color: #16140f;
+  font-family: var(--font-abt-sans), system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  isolation: isolate;
+}
+
+html[data-abt-theme='light'] .ed-degree {
+  background: #1b1a17;
+  color: #f4efe3;
+}
+
+.ed-degree::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from var(--ed-angle, 0deg), transparent 0 55%, var(--ring) 75%, #f6d77e 82%, transparent 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: ed-ring 4s linear infinite;
+}
+
+@property --ed-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes ed-ring {
+  to { --ed-angle: 360deg; }
+}
+
+.ed-degree__cap {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--ring);
+}
+
+.ed-row__badge {
+  justify-self: start;
+  margin-top: 6px;
+}
+
+/* A school's logo lifts a little, with a small overshoot, when its row is pointed at or selected. */
+.ed-marks--slot .ed-logo,
+.ed-marks--slot .ed-mark {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s ease;
+}
+
+.ed-b__school:hover .ed-marks--slot :is(.ed-logo, .ed-mark),
+.ed-b__school.is-on .ed-marks--slot :is(.ed-logo, .ed-mark) {
+  transform: translateY(-3px) scale(1.08);
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.18));
+}
+
+.ed-b__school.is-on .ed-marks--slot :is(.ed-logo, .ed-mark) {
+  animation: ed-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ed-pop {
+  0% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(-5px) scale(1.14) rotate(-2deg); }
+  100% { transform: translateY(-3px) scale(1.08); }
+}
+
+/* ---- B · One changing answer */
+.ed-b {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-areas:
+    'head .'
+    'main list';
+  column-gap: clamp(32px, 4vw, 64px);
+  align-items: start;
+}
+
+/* Label, headline and sticker in their own row, over the sentence (as in E). */
+.ed-b__head {
+  position: relative;
+  grid-area: head;
+  margin-bottom: clamp(22px, 3vh, 34px);
+}
+
+.ed-b__head .abt-label {
+  margin-bottom: 16px;
+}
+
+.ed-b__list {
+  grid-area: list;
+}
+
+.ed-b__main {
+  position: relative;
+  grid-area: main;
+}
+
+.ed-b__answers {
+  min-height: 3.6em;
+}
+
+.ed-b__old {
+  position: relative;
+  display: table;
+  margin: 0 0 6px;
+  white-space: nowrap;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(18px, 1.7vw, 26px);
+  line-height: 1.15;
+  color: var(--t4);
+}
+
+.ed-b__strike {
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  top: 55%;
+  height: 2px;
+  background: var(--abt-accent);
+  transform-origin: left center;
+  rotate: -1deg;
+}
+
+.ed-b__now {
+  margin: 10px 0 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(36px, 4.2vw, 62px); /* never more than 62px */
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--t1);
+  text-wrap: balance;
+}
+
+.ed-b__line {
+  max-width: 56ch;
+  margin: clamp(20px, 3vh, 32px) 0 0;
+  font-size: clamp(15px, 1.2vw, 17px);
+  line-height: 1.55;
+  color: var(--t2);
+}
+
+.ed-b__note {
+  color: var(--abt-accent);
+}
+
+.ed-b__source {
+  display: flex;
+  align-items: center; /* logo, then the name and details beside it */
+  gap: 16px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--abt-line);
+}
+
+.ed-b__source--stacked {
+  flex-direction: column;
+  align-items: flex-start; /* the master's two logos on one line, the name under them */
+  gap: 12px;
+}
+
+.ed-b__sourcetext {
+  display: grid;
+  gap: 3px;
+  font-size: 15px;
+  color: var(--t2);
+}
+
+.ed-b__sourcetext strong {
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.ed-b__sourcemeta {
+  font-size: 13px;
+  color: var(--t3);
+}
+
+.ed-b__facts {
+  margin-top: clamp(18px, 2.6vh, 28px);
+}
+
+.ed-b__facts .ed-b__line {
+  margin-top: 6px;
+}
+
+/* The handwritten note, in the page's gold. */
+.ed-b__hand {
+  display: inline-block;
+  font-family: var(--font-ed-hand), cursive;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--abt-accent);
+  rotate: -2deg;
+}
+
+/* The stamp off paper: no multiply on the dark page, where it would vanish; a brighter red there. */
+.ed-b .ed-stamp {
+  mix-blend-mode: normal;
+  border-color: #e5534b;
+  color: #e5534b;
+}
+
+html[data-abt-theme='light'] .ed-b .ed-stamp {
+  border-color: #c2362b;
+  color: #c2362b;
+}
+
+.ed-b__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--abt-line);
+}
+
+.ed-b__school {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--abt-line);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  opacity: 0.9; /* a school not shown fades only a little */
+  transition: opacity 0.4s ease;
+}
+
+
+.ed-b__school.is-on { opacity: 1; }
+
+.ed-b__schooltext {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ed-b__years {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--t1);
+}
+
+.ed-b__programme {
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.ed-b__school.is-small .ed-b__programme { font-size: 16px; }
+
+.ed-b__schoolname strong {
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.ed-b__schoolname {
+  font-size: 13.5px;
+  color: var(--t3);
+}
+
+.ed-b__status {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--abt-accent);
+}
+
+.ed-b__school.is-on::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--abt-accent);
+}
+
+.ed-stamp {
+  display: inline-grid;
+  place-items: center;
+  padding: 5px 12px 4px;
+  border: 3px double #c2362b;
+  border-radius: 6px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  white-space: nowrap;
+  color: #c2362b;
+  mix-blend-mode: multiply;
+}
+
+.ed-stamp small {
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+}
+
+/* ---- B's headline, sticker, and what rides on an answer */
+.ed-b__headline {
+  max-width: 24ch;
+  margin: 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(32px, 3.2vw, 48px); /* 40–48px on desktop */
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+  text-wrap: balance;
+}
+
+/* Hung off the end of the headline's last word, rising a little above the line. */
+.ed-b__stickeranchor {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  vertical-align: baseline;
+}
+
+.ed-b__sticker {
+  top: auto;
+  right: auto;
+  left: 14px;
+  bottom: -0.55em; /* beside the first line, dropping a little toward the (shorter) second */
+  width: clamp(180px, 13.5vw, 220px);
+}
+
+.ed-b__oldtext {
+  position: relative;
+}
+
+/* The stamp and the badge ride along on their school's answer. */
+.ed-dropped {
+  margin-left: 14px;
+  vertical-align: middle;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.ed-b__now .ed-dropped {
+  margin-left: 18px;
+  font-size: 14px;
+}
+
+.ed-answerbadge {
+  margin-left: 12px;
+  vertical-align: middle;
+  translate: 0 -0.15em;
+}
+
+.ed-b__now .ed-badge {
+  font-size: 15px;
+  padding: 7px 15px 7px 10px;
+  letter-spacing: 0;
+}
+
+.ed-b__now .ed-badge__medal {
+  width: 18px;
+  height: 18px;
+}
+
+/* Pearl's and the master's: the full degrees. Never faded far, and a step larger. */
+.ed-b__school.is-major {
+  padding-block: 22px;
+}
+
+.ed-b__school.is-major .ed-b__programme {
+  font-size: 22px;
+}
+
+/* B, a little more air: between heading and content, the columns, the struck lines, and the rows. */
+.ed-b {
+  column-gap: clamp(40px, 5vw, 84px);
+}
+
+.ed-b__head {
+  margin-bottom: clamp(56px, 8vh, 88px);
+}
+
+@media (min-width: 900px) {
+  .ed-b__head {
+    grid-column: 1 / -1;
+  }
+}
+
+/* The sentence and the list run top to bottom together: the list keeps one height (its rows share it
+   out), the sentence column stretches to match, and its school, note and line sit at its foot, so the
+   two columns end on the same line. */
+.ed-b {
+  align-items: stretch;
+}
+
+.ed-b__main {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The real content and invisible copies of the tallest steps share one grid cell, so each part of the
+   column is as tall as its tallest step whichever step is showing (EdSentence.js, Ghosts). */
+.ed-b__answers,
+.ed-b__factsbox {
+  display: grid;
+}
+
+.ed-b__answers > *,
+.ed-b__factsbox > * {
+  grid-area: 1 / 1;
+}
+
+.ed-b__ghost {
+  display: grid;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* One ghost per step (its struck lines and its big answer), all laid over one another: the box fits
+   the tallest step exactly. */
+.ed-b__ghost > .ed-b__ghoststep,
+.ed-b__ghost > .ed-b__facts {
+  grid-area: 1 / 1;
+}
+
+/* Animated marks inside a ghost: no motion, no glint. */
+.ed-b__ghost * {
+  animation: none !important;
+  transition: none !important;
+}
+
+.ed-b__answers {
+  flex: 1;
+}
+
+.ed-b__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ed-b__list > li {
+  display: flex;
+  flex: 1;
+}
+
+.ed-b__school {
+  flex: 1;
+}
+
+.ed-b__old {
+  margin-bottom: 10px;
+}
+
+.ed-b__now {
+  margin-top: 16px;
+}
+
+.ed-b__facts {
+  margin-top: clamp(16px, 2.4vh, 24px);
+}
+
+.ed-b__facts .ed-b__line {
+  margin-top: 10px;
+}
+
+.ed-b__school {
+  padding-block: 20px;
+  gap: 18px;
+}
+
+.ed-b__school.is-major {
+  padding-block: 26px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ed-badge::after { animation: none;
+  }
+
+  .ed-degree::before { animation: none;
+  }
+
+  .ed-marks--slot :is(.ed-logo, .ed-mark) { transition: none; animation: none !important;
+  }
+}
+
+@media (max-width: 899px) {
+  .ed-sticker-slot {
+    top: -58px;
+    bottom: auto;
+    right: 0;
+    width: 96px;
+    font-size: 9px;
+  }
+
+  /* B: the sentence first, the list under it. */
+  .ed-b {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'head' 'main' 'list';
+    row-gap: 28px;
+  }
+
+  .ed-b__head {
+    margin-bottom: 12px;
+  }
+
+  .ed-b__answers {
+    min-height: 0;
+  }
+
+  .ed-b__now {
+    font-size: 34px;
+  }
+
+  /* Old answers may wrap on a phone, so they are struck with the text itself rather than a drawn line. */
+  .ed-b__old {
+    white-space: normal;
+    font-size: 17px;
+    text-decoration: line-through;
+    text-decoration-color: var(--abt-accent);
+    text-decoration-thickness: 2px;
+  }
+
+  .ed-b__strike {
+    display: none;
+  }
+
+  .ed-b__school {
+    padding: 12px 2px;
+  }
+
+  .ed-stamp {
+    font-size: 14px;
+    padding: 4px 10px;
+  }
+
+  /* The fixed logo slot, smaller on a phone (logos and slot alike). */
+  .ed-marks--slot {
+    zoom: 0.7;
+  }
+
+  .ed-b__sticker {
+    top: auto;
+    right: auto;
+    left: 6px;
+    bottom: -0.4em;
+    width: 118px;
+  }
+}
+
+/* Phones: each school's logo in a narrow left column, its text beside it. */
+@media (max-width: 899px) {
+  .ed-b__school {
+    align-items: center; /* the logo centred against the text beside it */
+    gap: 14px;
+    padding-block: 18px;
+  }
+
+  .ed-b__school.is-major {
+    padding-block: 20px;
+  }
+
+  /* The logo in its own left column, about 100px wide, the text beside it. */
+  .ed-b__school .ed-marks--slot {
+    zoom: 0.6; /* the 170px slot comes out at about 100px */
+  }
+
+  /* At this size Pearl's long wordmark and NorthCap's compact lockup read smaller than the others;
+     there is room in the column to lift both. */
+  .ed-b__school .ed-logo[aria-label='Pearl Academy'] {
+    zoom: 1.2;
+  }
+
+  .ed-b__school .ed-logo[aria-label='The NorthCap University'] {
+    zoom: 1.6;
+  }
+
+  .ed-b__school.is-major .ed-b__programme {
+    font-size: 20px;
+  }
+}

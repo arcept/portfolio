@@ -10,9 +10,11 @@ import LoopBand from './LoopBand';
 import Lenses from './Lenses';
 import Leadership from './Leadership';
 import Experience from './Experience';
+import Education from './Education';
 import { display, sans } from './fonts';
 import './about.css';
 import './experience.css';
+import './education.css';
 
 export const metadata = {
   title: 'About — Manik Madaan',
@@ -28,6 +30,7 @@ const SECTIONS = [
   { id: 'how-i-work', label: 'How I work' },
   { id: 'leadership', label: 'Leadership' },
   { id: 'experience', label: 'Experience' },
+  { id: 'education', label: 'Education' },
 ];
 
 export default function About() {
@@ -48,6 +51,7 @@ export default function About() {
             <Lenses />
             <Leadership />
             <Experience />
+            <Education />
           </main>
         </div>
 
