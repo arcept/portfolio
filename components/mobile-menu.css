@@ -1,5 +1,5 @@
-/* The phone menu (see MobileMenu.js and Nav.js): the hamburger button, and the full-screen layer a circle wipes open
-   from it. Colours come from the site tokens, so it follows the dark and light themes by itself. */
+/* The phone menu (see MobileMenu.js and Nav.js): the hamburger button, and the sheet that rises from the foot of the
+   screen when it is pressed. Colours come from the site tokens, so it follows the dark and light themes by itself. */
 
 /* ------------------------------------------------------------- the button in the bar */
 
@@ -91,13 +91,12 @@
   }
 
   .site-nav .cs-lang__button,
-  .site-nav .cs-switch,
   .site-nav .site-nav__menu {
     height: 36px;
   }
 
   .site-nav .cs-lang__button::after,
-  .site-nav .cs-switch::after,
+  .site-nav .theme-switch::after,
   .site-nav .site-nav__menu::after {
     content: '';
     position: absolute;
@@ -124,29 +123,12 @@
     height: 17px;
   }
 
-  .site-nav .cs-switch {
-    width: 68px;
-  }
-
-  .site-nav .cs-switch__knob {
-    top: 3px;
-    left: 3px;
-    width: 28px;
-    height: 28px;
-    transform: translateX(32px);
-  }
-
-  .site-nav .cs-switch svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .site-nav .cs-switch__icon--sun {
-    left: 10px;
-  }
-
-  .site-nav .cs-switch__icon--moon {
-    right: 10px;
+  .site-nav .theme-switch {
+    --ts-w: 68px;
+    --ts-h: 36px;
+    --ts-knob: 28px;
+    --ts-end: 17px;
+    --ts-glyph: 18px;
   }
 
   .site-nav .site-nav__menu {
@@ -184,331 +166,353 @@
 
 /* ------------------------------------------------------------------- the menu layer */
 
-.mm {
-  --ox: 90%;
-  --oy: 28px;
-  --r: 160vmax;
-  --mx: 50%;
-  --my: 36%;
+/* Colours: dark by default; the light themes (the About page's, the case studies') set their own below. */
+.ms {
+  --ms-bg: #17181b;
+  --ms-card: #212226;
+  --ms-ink: var(--paper);
+  --ms-soft: var(--fog);
+  --ms-line: color-mix(in srgb, var(--paper) 14%, transparent);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --swing: cubic-bezier(0.7, 0, 0.2, 1);
   position: fixed;
   z-index: 100;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding-top: calc(var(--site-nav-h, 56px) + env(safe-area-inset-top, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: var(--void);
-  color: var(--paper);
-  font-family: var(--font-inter), system-ui, sans-serif;
-  /* closed: a dot at the button. open: a circle big enough to cover the screen. */
-  clip-path: circle(0px at var(--ox) var(--oy));
+  color: var(--ms-ink);
+  font-family: var(--font-menu-sans), var(--font-inter), system-ui, sans-serif;
   visibility: hidden;
-  pointer-events: none;
-  transition: clip-path 0.7s cubic-bezier(0.7, 0, 0.2, 1), visibility 0s linear 0.7s;
+  transition: visibility 0s linear 0.6s;
 }
 
-.mm.is-open {
-  clip-path: circle(var(--r) at var(--ox) var(--oy));
+html[data-abt-theme='light'] .ms,
+html[data-cs-theme='light'] .ms {
+  --ms-bg: #ffffff;
+  --ms-card: var(--carbon);
+}
+
+.ms.is-open {
   visibility: visible;
-  pointer-events: auto;
-  transition: clip-path 0.8s cubic-bezier(0.7, 0, 0.2, 1), visibility 0s;
+  transition: visibility 0s;
 }
 
-/* Slow drifting light behind everything: an indigo glow above, an accent one below. */
-.mm__glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.mm__glow::before,
-.mm__glow::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(8px);
-}
-
-.mm__glow::before {
-  top: -46vmax;
-  left: -32vmax;
-  width: 110vmax;
-  height: 110vmax;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--chart-2, #6366f1) 42%, transparent), transparent);
-  animation: mm-drift 16s ease-in-out infinite alternate;
-}
-
-.mm__glow::after {
-  right: -50vmax;
-  bottom: -54vmax;
-  width: 100vmax;
-  height: 100vmax;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent, #e4f222) 22%, transparent), transparent);
-  animation: mm-drift 19s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes mm-drift {
-  to {
-    transform: translate3d(9vmax, 7vmax, 0) scale(1.12);
-  }
-}
-
-/* The spotlight that follows a finger or a pointer. */
-.mm__spot {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle 230px at var(--mx) var(--my), color-mix(in srgb, var(--paper) 9%, transparent), transparent);
-}
-
-/* --------------------------------------------------------------------- the links */
-
-.mm__list {
-  position: relative;
-  display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-  margin: 0;
-  padding: 0 20px;
-  list-style: none;
-  overflow-y: auto;
-}
-
-.mm__item {
-  position: relative;
-}
-
-/* A hairline that draws in under each row. */
-.mm__item::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 1px;
-  background: color-mix(in srgb, var(--paper) 18%, transparent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.4s ease;
-}
-
-.mm.is-open .mm__item::after {
-  transform: scaleX(1);
-  transition: transform 1s var(--ease) calc(0.35s + var(--i) * 0.09s);
-}
-
-.mm__link {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    'num arrow'
-    'word arrow'
-    'note arrow';
-  align-items: center;
-  column-gap: 16px;
-  padding: clamp(14px, 2.6vh, 24px) 0;
+.ms a {
   color: inherit;
   text-decoration: none;
-  transition: opacity 0.3s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.mm__link:focus-visible {
+.ms a:focus-visible {
   outline: 2px solid var(--article-green, var(--accent));
-  outline-offset: -2px;
-  border-radius: 6px;
+  outline-offset: 3px;
 }
 
-/* Pointing at (or pressing) one row quiets the others. */
-.mm__list:has(.mm__link:hover, .mm__link:focus-visible, .mm__link:active) .mm__link:not(:hover, :focus-visible, :active) {
-  opacity: 0.38;
+/* The page behind, dimmed and blurred; a tap on it closes the menu. */
+.ms__scrim {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.45s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.mm__num {
-  grid-area: num;
+.ms.is-open .ms__scrim {
+  opacity: 1;
+}
+
+.ms__sheet {
+  position: absolute;
+  isolation: isolate;
+  left: 8px;
+  right: 8px;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  max-height: calc(100% - var(--site-nav-h, 56px) - 24px - env(safe-area-inset-bottom, 0px));
+  overflow: hidden auto;
+  padding: 10px 14px 40px;
+  border-radius: 30px;
+  outline: none;
+  background: var(--ms-bg);
+  box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.5);
+  transform: translate3d(0, calc(100% + 16px), 0);
+  transition: transform 0.45s var(--swing);
+}
+
+.ms.is-open .ms__sheet {
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.7s cubic-bezier(0.2, 1.1, 0.3, 1);
+}
+
+.ms__handle {
+  display: block;
+  width: 40px;
+  height: 5px;
+  margin: 0 auto 10px;
+  border-radius: 3px;
+  background: var(--ms-line);
+}
+
+.ms__kicker {
+  margin: 0 4px 10px;
   font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  color: var(--article-green, var(--accent));
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ms-soft);
 }
 
-.mm.is-open .mm__num {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.6s ease calc(0.5s + var(--i) * 0.09s), transform 0.6s var(--ease) calc(0.5s + var(--i) * 0.09s);
+/* --------------------------------------------------------------------- the cards */
+
+.ms__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-/* The word: it rises out of a mask; on press it rolls up to an accent copy of itself. */
-.mm__rise {
-  grid-area: word;
-  display: block;
-  overflow: hidden;
-  height: 1.12em; /* exactly one line: the second (accent) copy below it stays hidden until a press */
-  font-size: clamp(2.75rem, min(15vw, 10.5vh), 5.25rem);
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 1;
-}
-
-.mm__enter {
-  display: block;
-  transform: translateY(118%) rotate(3deg);
-  transform-origin: left bottom;
-  transition: transform 0.45s ease;
-}
-
-.mm.is-open .mm__enter {
-  transform: none;
-  transition: transform 0.95s var(--ease) calc(0.3s + var(--i) * 0.09s);
-}
-
-.mm__roll {
-  display: block;
-  transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1);
-}
-
-.mm__word {
-  display: block;
-  height: 1.08em;
-}
-
-.mm__word--alt {
-  color: var(--article-green, var(--accent));
-}
-
-.mm__link:hover .mm__roll,
-.mm__link:focus-visible .mm__roll,
-.mm__link:active .mm__roll {
-  transform: translateY(-50%);
-}
-
-.mm__note {
-  grid-area: note;
-  padding-top: 6px;
-  font-size: 0.8125rem;
-  color: var(--fog);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.mm.is-open .mm__note {
-  opacity: 1;
-  transition: opacity 0.7s ease calc(0.65s + var(--i) * 0.09s);
-}
-
-.mm__arrow {
-  grid-area: arrow;
-  color: var(--fog);
-  opacity: 0;
-  transform: translate(-10px, 10px);
-  transition: opacity 0.3s ease, transform 0.45s var(--ease), color 0.25s ease;
-}
-
-.mm.is-open .mm__arrow {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.6s ease calc(0.6s + var(--i) * 0.09s), transform 0.7s var(--ease) calc(0.6s + var(--i) * 0.09s), color 0.25s ease;
-}
-
-.mm__link:hover .mm__arrow,
-.mm__link:focus-visible .mm__arrow,
-.mm__link:active .mm__arrow {
-  color: var(--article-green, var(--accent));
-  transform: translate(4px, -4px) rotate(45deg);
-  transition-delay: 0s;
-}
-
-/* -------------------------------------------------------------- footer and ticker */
-
-/* An outlined line of type that drifts along the bottom edge. Decorative. */
-.mm__ticker {
+.ms__card {
   position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 150px;
   overflow: hidden;
-  padding: 4px 0 14px;
-  white-space: nowrap;
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--ms-card);
+  opacity: 0;
+  /* 3D transforms throughout, open and closed: iOS Safari otherwise drops the card's layer when its opening
+     animation ends and, beside the blurred scrim and buttons, can stop drawing the card at all. */
+  isolation: isolate;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ms.is-open .ms__card {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.5s ease calc(0.2s + var(--i) * 0.06s), transform 0.7s var(--ease) calc(0.2s + var(--i) * 0.06s);
+}
+
+.ms__card--wide {
+  grid-column: span 2;
+  min-height: 132px;
+}
+
+.ms__card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 30%;
+}
+
+.ms__card--wide img {
+  object-position: 50% 45%;
+}
+
+/* A picture card: the picture darkened overall, and more so under the words, so they read over it. */
+.ms__card:has(img) {
+  color: #fff;
+}
+
+.ms__card:has(img)::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.82) 30%, rgba(0, 0, 0, 0.5) 60%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+/* The wide card is shorter, so its words sit over more of it: darker from the left, where they are. */
+.ms__card--wide:has(img)::before {
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.35) 60%, rgba(0, 0, 0, 0) 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+.ms__cardtext {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+
+.ms__card:not(:has(img)) .ms__cardtext {
+  text-shadow: none;
+}
+
+.ms__label {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ms__note {
+  font-size: 12.5px;
+  opacity: 0.8;
+}
+
+.ms__arrow {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #111;
+  font-size: 14px;
+  transition: transform 0.4s var(--ease);
+}
+
+.ms__card:active .ms__arrow,
+.ms__card:hover .ms__arrow {
+  transform: translate(2px, -2px);
+}
+
+.ms.is-open .ms__card:active {
+  transform: translate3d(0, 0, 0) scale(0.98);
+  transition: transform 0.15s ease;
+}
+
+.ms__soon {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(-45deg, transparent 0 10px, color-mix(in srgb, var(--ms-ink) 6%, transparent) 10px 11px);
+}
+
+.ms__card.is-inert {
+  color: var(--ms-soft);
+  cursor: default;
+}
+
+/* ------------------------------------------------------------- email and LinkedIn */
+
+.ms__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.ms.is-open .ms__actions {
+  opacity: 1;
+  transition: opacity 0.5s ease 0.45s;
+}
+
+.ms__actions a {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 50px;
+  border: 1px solid var(--ms-line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ms-bg) 55%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.ms__actions svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ----------------------------------------------------------------------- the glow */
+
+/* Three faint blooms rising from the sheet's foot, behind everything in it (the About page's ending, turned down). */
+.ms__glow {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
-.mm.is-open .mm__ticker {
+.ms.is-open .ms__glow {
   opacity: 1;
-  transition: opacity 1s ease 0.9s;
+  transition: opacity 1.2s ease 0.35s;
 }
 
-.mm__ticker-track {
-  display: inline-flex;
-  animation: mm-ticker 34s linear infinite;
+.ms__glow span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(36px);
 }
 
-.mm__ticker-track span {
-  flex: none;
-  font-size: clamp(2.6rem, 13vw, 3.75rem);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  color: transparent;
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--paper) 30%, transparent);
+.ms__glow span:nth-child(1) {
+  left: 15%;
+  right: 15%;
+  bottom: -45%;
+  height: 80%;
+  background: radial-gradient(closest-side, rgba(255, 131, 81, 0.32), rgba(255, 131, 81, 0));
+  animation: ms-drift 14s ease-in-out infinite alternate;
 }
 
-@keyframes mm-ticker {
+.ms__glow span:nth-child(2) {
+  left: -25%;
+  bottom: -30%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(closest-side, rgba(168, 107, 255, 0.2), rgba(168, 107, 255, 0));
+}
+
+.ms__glow span:nth-child(3) {
+  right: -25%;
+  bottom: -25%;
+  width: 70%;
+  height: 65%;
+  background: radial-gradient(closest-side, rgba(127, 178, 201, 0.2), rgba(127, 178, 201, 0));
+}
+
+@keyframes ms-drift {
   to {
-    transform: translateX(-50%);
+    translate: -4% -6%;
   }
 }
 
 /* --------------------------------------------------------------- reduced motion */
 
 @media (prefers-reduced-motion: reduce) {
-  .mm,
-  .mm.is-open {
-    clip-path: none;
-    opacity: 0;
-    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  .ms__scrim,
+  .ms__sheet,
+  .ms.is-open .ms__sheet,
+  .ms__card,
+  .ms.is-open .ms__card,
+  .ms__actions,
+  .ms.is-open .ms__actions,
+  .ms__glow,
+  .ms.is-open .ms__glow {
+    transition-duration: 0.01ms;
+    transition-delay: 0s;
   }
 
-  .mm.is-open {
-    opacity: 1;
-    transition: opacity 0.2s ease, visibility 0s;
-  }
-
-  .mm__glow::before,
-  .mm__glow::after,
-  .mm__ticker-track {
+  .ms__glow span {
     animation: none;
-  }
-
-  .mm__enter,
-  .mm__num,
-  .mm__note,
-  .mm__arrow,
-  .mm__ticker,
-  .mm__item::after {
-    transition: none !important;
-  }
-
-  .mm__enter,
-  .mm__num,
-  .mm__note,
-  .mm__arrow,
-  .mm__ticker {
-    opacity: 1;
-    transform: none;
-  }
-
-  .mm__item::after {
-    transform: scaleX(1);
-  }
-
-  .mm__roll {
-    transition: none;
   }
 
   .site-nav__menu i {

@@ -3,28 +3,32 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useT } from '@/components/i18n/LangProvider';
+import { menuSans } from './menu-font';
 import './mobile-menu.css';
 
-// The phone menu: a full-screen layer that a circle wipes open from the hamburger button. The bar (brand, language,
-// theme, the button) stays above it, so the switches keep working and the button turns into the close mark in place.
+// The phone menu: the page stays in view, dimmed and blurred, and a rounded sheet rises from the foot of the screen,
+// where a thumb can reach it. Work is a wide card and About and Contact sit side by side under it, each over a
+// picture (Contact, with nowhere to go yet, is hatched); the two ways to get in touch are buttons at the foot, over a
+// faint warm glow. The bar (brand, language, theme, the button) stays above it, so the switches keep working and the
+// button turns into the close mark in place.
 //
 // Rendered by Nav, which owns whether it is mounted and open. Everything here is behaviour and markup:
 //   - focus moves in when it opens and back to the button when it closes; Tab cycles between the bar and the menu
-//   - Escape closes; the page behind cannot scroll; a finger or pointer moving over it lights up a soft spotlight
+//   - Escape or a tap on the dimmed page closes; the page behind cannot scroll
 //   - choosing a link closes the menu first, then goes there, so the page never jumps under an open menu
 
-const ARROW = (
-  <svg className="mm__arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M7 17 17 7M8.5 7H17v8.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+const EMAIL = 'contact@arcept.in';
+const LINKEDIN = 'https://www.linkedin.com/in/manikmadaan/';
 
-const TICKER = 'Manik Madaan · Product design leadership · ';
+// Each link's picture, by label.
+const PICTURES = {
+  Work: '/about/sabbatical/set2-landscape.jpg',
+  About: '/about/portrait-collage.jpg',
+};
 
-export default function MobileMenu({ open, links, origin, onClose, onGo }) {
+export default function MobileMenu({ open, links, onClose, onGo }) {
   const t = useT();
   const root = useRef(null);
-  const frame = useRef(0);
 
   // While it exists: the page behind does not scroll.
   useEffect(() => {
@@ -36,11 +40,12 @@ export default function MobileMenu({ open, links, origin, onClose, onGo }) {
     };
   }, []);
 
-  // Once it is showing: focus goes in, Escape closes, and Tab stays between the bar and the menu.
+  // Once it is showing: focus goes to the sheet itself (not a card: focusing a card mid-animation is what made iOS
+  // Safari stop drawing it), Escape closes, and Tab stays between the bar and the menu.
   useEffect(() => {
     if (!open) return undefined;
-    const first = root.current?.querySelector('.mm__link');
-    const id = window.setTimeout(() => first?.focus({ preventScroll: true }), 120);
+    const sheet = root.current?.querySelector('.ms__sheet');
+    const id = window.setTimeout(() => sheet?.focus({ preventScroll: true }), 120);
     const onKey = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -52,6 +57,12 @@ export default function MobileMenu({ open, links, origin, onClose, onGo }) {
         const inMenu = [...(root.current?.querySelectorAll('a[href]') ?? [])];
         const all = [...inBar, ...inMenu];
         const at = all.indexOf(document.activeElement);
+        // From the sheet itself, Tab goes to the first card, Shift-Tab to the last link.
+        if (at === -1 && root.current?.contains(document.activeElement)) {
+          event.preventDefault();
+          (event.shiftKey ? inMenu[inMenu.length - 1] : inMenu[0])?.focus();
+          return;
+        }
         const next = event.shiftKey ? (at <= 0 ? all.length - 1 : at - 1) : at === -1 || at === all.length - 1 ? 0 : at + 1;
         event.preventDefault();
         all[next]?.focus();
@@ -64,72 +75,81 @@ export default function MobileMenu({ open, links, origin, onClose, onGo }) {
     };
   }, [open, onClose]);
 
-  // A finger (or pointer) moving over the menu drags a soft spotlight after it.
-  const track = (event) => {
-    const el = root.current;
-    if (!el || frame.current) return;
-    const { clientX, clientY } = event;
-    frame.current = window.requestAnimationFrame(() => {
-      frame.current = 0;
-      el.style.setProperty('--mx', `${clientX}px`);
-      el.style.setProperty('--my', `${clientY}px`);
-    });
-  };
-  useEffect(() => () => window.cancelAnimationFrame(frame.current), []);
+  const [first, ...rest] = links;
 
   return createPortal(
-    <div
-      ref={root}
-      id="site-menu"
-      className={`mm${open ? ' is-open' : ''}`}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t('ui.menu', 'Menu')}
-      style={{ '--ox': `${origin.x}px`, '--oy': `${origin.y}px`, '--r': `${origin.r}px` }}
-      onPointerMove={track}
-      onPointerDown={track}
-    >
-      <div className="mm__glow" aria-hidden="true" />
-      <div className="mm__spot" aria-hidden="true" />
+    <div ref={root} id="site-menu" className={`ms ${menuSans.variable}${open ? ' is-open' : ''}`}>
+      <button type="button" className="ms__scrim" aria-label={t('ui.menuClose', 'Close menu')} tabIndex={-1} onClick={() => onClose()} />
+      <div className="ms__sheet" role="dialog" aria-modal="true" aria-label={t('ui.menu', 'Menu')} tabIndex={-1}>
+        <span className="ms__glow" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
+        <span className="ms__handle" aria-hidden="true" />
+        <p className="ms__kicker" aria-hidden="true">
+          {t('ui.menu', 'Menu')}
+        </p>
 
-      <ul className="mm__list">
-        {links.map((link, i) => {
-          const Tag = link.href ? 'a' : 'span';
-          return (
-            <li key={link.label} className="mm__item" style={{ '--i': i }}>
-              <Tag
-                className={`mm__link${link.href ? '' : ' mm__link--inert'}`}
-                href={link.href || undefined}
-                // aria-label names a link; on the inert span it is prohibited, so that one carries
-                // its name as text instead (everything else here is decorative and hidden).
-                aria-label={link.href ? link.label : undefined}
-                onClick={link.href ? (event) => onGo(event, link.href) : undefined}
-              >
-                {!link.href && <span className="sr-only">{link.label}</span>}
-                <span className="mm__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-                <span className="mm__rise" aria-hidden="true">
-                  <span className="mm__enter">
-                    <span className="mm__roll">
-                      <span className="mm__word">{link.label}</span>
-                      <span className="mm__word mm__word--alt">{link.label}</span>
-                    </span>
-                  </span>
-                </span>
-                <span className="mm__note" aria-hidden="true">{link.note}</span>
-                {link.href ? ARROW : null}
-              </Tag>
-            </li>
-          );
-        })}
-      </ul>
+        <div className="ms__grid">
+          <Card link={first} wide i={0} onGo={onGo} />
+          {rest.map((link, n) => (
+            <Card key={link.label} link={link} i={n + 1} onGo={onGo} />
+          ))}
+        </div>
 
-      <div className="mm__ticker" aria-hidden="true">
-        <div className="mm__ticker-track">
-          <span>{TICKER.repeat(3)}</span>
-          <span>{TICKER.repeat(3)}</span>
+        <div className="ms__actions">
+          <a href={`mailto:${EMAIL}`}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+              <path d="m4 7 8 6 8-6" />
+            </svg>
+            Email
+          </a>
+          <a href={LINKEDIN} target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" />
+              <path d="M8 10.5V16M8 7.8v.1M11.5 16v-5.5M11.5 13c0-1.6 1-2.6 2.4-2.6s2.1 1 2.1 2.6V16" />
+            </svg>
+            LinkedIn
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
         </div>
       </div>
     </div>,
     document.body
+  );
+}
+
+// One link as a card: its picture darkened under the words, the label and its note, and an arrow. A link with no
+// `href` is shown, hatched, but does not act.
+function Card({ link, wide, i, onGo }) {
+  const src = PICTURES[link.label];
+  const className = `ms__card${wide ? ' ms__card--wide' : ''}${link.href ? '' : ' is-inert'}`;
+  const inside = (
+    <>
+      {src ? <img src={src} alt="" /> : <span className="ms__soon" aria-hidden="true" />}
+      <span className="ms__cardtext">
+        <span className="ms__label">{link.label}</span>
+        <span className="ms__note">{link.note}</span>
+      </span>
+      {link.href && (
+        <span className="ms__arrow" aria-hidden="true">
+          ↗
+        </span>
+      )}
+    </>
+  );
+  if (!link.href) {
+    return (
+      <span className={className} style={{ '--i': i }}>
+        {inside}
+      </span>
+    );
+  }
+  return (
+    <a href={link.href} className={className} style={{ '--i': i }} onClick={(event) => onGo(event, link.href)}>
+      {inside}
+    </a>
   );
 }
