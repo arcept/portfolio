@@ -1,7 +1,9 @@
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import { aboutThemeGate } from './theme';
+import { aboutIntroGate } from './intro';
 import AboutMotion from './AboutMotion';
+import AboutIntro from './AboutIntro';
 import AboutThemeSwitch from './AboutThemeSwitch';
 import AboutIndex from './AboutIndex';
 import HeroWash from './HeroWash';
@@ -61,24 +63,28 @@ export default function About() {
       <div className={`abt ${display.variable} ${sans.variable}`}>
         {/* Puts the theme on <html> before anything paints (see theme.js). */}
         <script dangerouslySetInnerHTML={{ __html: aboutThemeGate() }} />
-        {/* Outside .abt-shell so it spans the viewport, not the reading container. */}
-        <HeroWash />
-        <Nav actions={<AboutThemeSwitch />} />
+        {/* Decides, before anything paints, whether the loading curtain shows (see intro.js). */}
+        <script dangerouslySetInnerHTML={{ __html: aboutIntroGate() }} />
+        <AboutIntro>
+          {/* Outside .abt-shell so it spans the viewport, not the reading container. */}
+          <HeroWash />
+          <Nav actions={<AboutThemeSwitch />} />
 
-        <div className="abt-shell">
-          <AboutIndex sections={SECTIONS} />
-          <main>
-            <Opening />
-            <LoopBand />
-            <Lenses />
-            <Leadership />
-            <Experience />
-            <Education />
-            <Sabbatical />
-          </main>
-        </div>
+          <div className="abt-shell">
+            <AboutIndex sections={SECTIONS} />
+            <main>
+              <Opening />
+              <LoopBand />
+              <Lenses />
+              <Leadership />
+              <Experience />
+              <Education />
+              <Sabbatical />
+            </main>
+          </div>
 
-        <Footer />
+          <Footer />
+        </AboutIntro>
       </div>
     </AboutMotion>
   );

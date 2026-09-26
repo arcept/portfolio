@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { AnimatePresence, motion, useInView, useMotionValue, useSpring, useTransform } from 'motion/react';
+import { useIntroDone } from './AboutIntro';
 
 // The photograph is not given a column of its own. It appears beside the pointer while the visitor
 // is actually over the sentences about him, and follows with a little lag, so the person arrives
@@ -134,7 +135,9 @@ const GALLERY = [
 
 export function TouchGallery() {
   const box = useRef(null);
-  const shown = useInView(box, { once: true, amount: 0.2 });
+  const inView = useInView(box, { once: true, amount: 0.2 });
+  const ready = useIntroDone(); // held until the loading curtain lifts
+  const shown = inView && ready;
 
   return (
     <motion.div

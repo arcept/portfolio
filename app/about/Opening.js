@@ -1,11 +1,12 @@
 'use client';
 
 import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useInView, useScroll, useTransform } from 'motion/react';
 import AboutLink from './AboutLink';
 import HoverPortrait, { TouchGallery } from './HoverPortrait';
 import ContextReveal from './ContextReveal';
 import ResumeDialog from './resume/ResumeDialog';
+import { useIntroDone } from './AboutIntro';
 
 // The headline is authored as lines rather than measured, so each one can be masked and released on
 // its own. The type is sized so these lines hold at every width (see .abt-display in about.css).
@@ -19,23 +20,33 @@ const CONTEXT = [
 
 const EASE = [0.16, 1, 0.3, 1];
 
-// Reduced motion is handled once, by AboutMotion — these describe the full animation.
-const rise = (delay) => ({
-  initial: { opacity: 0, y: 26, filter: 'blur(6px)' },
-  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+// Reduced motion is handled once, by AboutMotion — these describe the full animation. Everything in
+// the opening is held at its starting state until the loading curtain lifts (`ready`, AboutIntro.js),
+// so the entrance plays in view rather than underneath it.
+const RISE_FROM = { opacity: 0, y: 26, filter: 'blur(6px)' };
+const rise = (delay, ready) => ({
+  initial: RISE_FROM,
+  animate: ready ? { opacity: 1, y: 0, filter: 'blur(0px)' } : RISE_FROM,
   transition: { duration: 1, ease: EASE, delay },
 });
 
 // The stickers: placed by CSS, popped in on a spring. Decorative, so they are hidden from assistive
 // technology and never take the pointer.
+const HEADLINE_FROM = { y: '110%', opacity: 0, filter: 'blur(10px)' };
+
+const STICKER_FROM = { opacity: 0, scale: 0.4, rotate: -24 };
+
 function Sticker({ className, src, width, height, delay }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.4 });
+  const ready = useIntroDone();
   return (
     <motion.span
+      ref={ref}
       className={`abt-sticker ${className}`}
       aria-hidden="true"
-      initial={{ opacity: 0, scale: 0.4, rotate: -24 }}
-      whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-      viewport={{ once: true, amount: 0.4 }}
+      initial={STICKER_FROM}
+      animate={inView && ready ? { opacity: 1, scale: 1, rotate: 0 } : STICKER_FROM}
       transition={{ type: 'spring', stiffness: 260, damping: 14, mass: 0.9, delay }}
     >
       <img src={src} alt="" width={width} height={height} />
@@ -45,6 +56,8 @@ function Sticker({ className, src, width, height, delay }) {
 
 export default function Opening() {
   const section = useRef(null);
+  const ready = useIntroDone();
+  const enter = (delay) => rise(delay, ready);
   const { scrollYProgress } = useScroll({ target: section, offset: ['start start', 'end start'] });
 
   // The headline leaves slowly and the columns leave at their own rate, so the opening pulls apart as
@@ -56,13 +69,13 @@ export default function Opening() {
   return (
     <section className="abt-opening" id="opening" ref={section} aria-labelledby="abt-opening-title">
       <motion.div className="abt-opening__head" style={{ y: headY, opacity: headOpacity }}>
-        <motion.p className="abt-label" {...rise(0.05)}>
+        <motion.p className="abt-label" {...enter(0.05)}>
           <span className="abt-label__index">01</span>
           <motion.span
             className="abt-label__rule"
             aria-hidden="true"
             initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
+            animate={{ scaleX: ready ? 1 : 0 }}
             transition={{ duration: 1.1, ease: EASE, delay: 0.25 }}
           />
           <span>About</span>
@@ -76,8 +89,8 @@ export default function Opening() {
             <span className="abt-display__mask" key={line}>
               <motion.span
                 className="abt-display__line"
-                initial={{ y: '110%', opacity: 0, filter: 'blur(10px)' }}
-                animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
+                initial={HEADLINE_FROM}
+                animate={ready ? { y: '0%', opacity: 1, filter: 'blur(0px)' } : HEADLINE_FROM}
                 transition={{ duration: 1.25, ease: EASE, delay: 0.18 + i * 0.13 }}
               >
                 {line}
@@ -91,13 +104,13 @@ export default function Opening() {
         <div className="abt-opening__lead">
           {/* Only the sentences carry the photograph — not the actions or the space around them. */}
           <HoverPortrait>
-            <motion.p className="abt-lead" {...rise(0.62)}>
+            <motion.p className="abt-lead" {...enter(0.62)}>
               I am Manik Madaan, a product design leader based in Delhi NCR. For more than a decade, I have worked across
               freelance practice, design studios, agencies, startups, consulting, digital products, and design leadership.
             </motion.p>
           </HoverPortrait>
 
-          <motion.div className="abt-actions" {...rise(0.74)}>
+          <motion.div className="abt-actions" {...enter(0.74)}>
             <AboutLink href="/#work">View selected work</AboutLink>
             {/* No destination yet: contact gets its own page. */}
             <AboutLink>Contact me</AboutLink>
@@ -111,7 +124,7 @@ export default function Opening() {
           <TouchGallery />
         </div>
 
-        <ContextReveal paragraphs={CONTEXT} rise={rise} />
+        <ContextReveal paragraphs={CONTEXT} rise={enter} />
       </motion.div>
     </section>
   );

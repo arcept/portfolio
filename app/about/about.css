@@ -2064,3 +2064,204 @@ html[data-abt-theme='light'] .ldr {
     margin-top: 12px;
   }
 }
+
+/* ---------------------------------------------------------------- Loading curtain (AboutIntro.js)
+
+   Displayed only while the gate script's attribute is on <html> (see intro.js), which also locks
+   scrolling so nothing underneath scrolls into view and plays its entrance unseen. Once the curtain
+   lifts, .is-lifting keeps it displayed for the length of the lift. If the page's script never runs
+   after the gate did, abt-intro-release and abt-intro-bail give the page back after eight seconds.   */
+
+.abt-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  background: var(--abt-base);
+}
+
+html[data-abt-intro] .abt-intro,
+.abt-intro.is-lifting {
+  display: flex;
+}
+
+html[data-abt-intro] {
+  overflow: hidden;
+  animation: abt-intro-release 0s linear 8s forwards;
+}
+
+html[data-abt-intro] .abt-intro {
+  animation: abt-intro-fill 8s linear both, abt-intro-bail 0s linear 8s forwards;
+}
+
+/* The fill runs in CSS from the curtain's first paint, so it is already moving while the page's
+   script downloads: steadily to 85 over the first 2.4s, then creeping toward 97. AboutIntro.js takes
+   it over from wherever it has reached once the page is ready and carries it to 100. --abt-p drives
+   the columns; --abt-n is the same value as a whole number, for the count. */
+@property --abt-p {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --abt-n {
+  syntax: '<integer>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@keyframes abt-intro-fill {
+  0% {
+    --abt-p: 0;
+    --abt-n: 0;
+    animation-timing-function: cubic-bezier(0.3, 0.15, 0.45, 1);
+  }
+  30% {
+    --abt-p: 85;
+    --abt-n: 85;
+    animation-timing-function: cubic-bezier(0.2, 0.5, 0.4, 1);
+  }
+  100% {
+    --abt-p: 97;
+    --abt-n: 97;
+  }
+}
+
+@counter-style abt-intro-pct {
+  system: extends decimal;
+  pad: 3 '0';
+}
+
+@keyframes abt-intro-release {
+  to { overflow: visible; }
+}
+
+@keyframes abt-intro-bail {
+  to { visibility: hidden; }
+}
+
+/* The shutter: accent columns rise in a staggered wave until the screen is full, then retract upward
+   one after another. The columns do the covering, so the curtain itself is clear and lets the page
+   through as they leave. Six columns on wide screens, four on phones. */
+.abt-intro--shutter {
+  background: transparent;
+  --span: 5; /* the last column's index */
+}
+
+@media (max-width: 599px) {
+  .abt-intro--shutter {
+    --span: 3;
+  }
+
+  .abt-intro--shutter .abt-intro__col:nth-child(n + 5) {
+    display: none;
+  }
+}
+
+.abt-intro--shutter .abt-intro__cols {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.abt-intro--shutter .abt-intro__col {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: var(--abt-base);
+}
+
+.abt-intro--shutter .abt-intro__col + .abt-intro__col {
+  box-shadow: inset 1px 0 0 var(--abt-line);
+}
+
+/* Column i starts rising 7 points after the one before it; all reach the top together at 100. */
+.abt-intro--shutter .abt-intro__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  height: calc(clamp(0, var(--abt-p, 0) * (1 + var(--span) * 0.07) - var(--i) * 7, 100) * 1%);
+  background: var(--abt-accent);
+}
+
+.abt-intro--shutter .abt-intro__name {
+  position: absolute;
+  top: clamp(22px, 3.2vh, 34px);
+  left: var(--abt-gutter);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+
+/* The count, at the screen's centre. It is drawn once in every column and once in every column's
+   fill, each copy clipped by its own box, so the rising accent cuts cleanly through the digits: the
+   copies in the columns are in the text colour, those in the fills, drawn over them, in the page
+   colour. Columns and fills are all anchored to the screen's bottom edge, so `bottom: 50dvh` is the
+   centre line for each, and column i begins i column-widths in from the left. */
+.abt-intro--shutter .abt-intro__num {
+  position: absolute;
+  bottom: 50vh;
+  bottom: 50dvh;
+  left: calc(50vw - var(--i) * 100vw / (var(--span) + 1));
+  translate: -50% 50%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.06em;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: clamp(64px, 12vw, 176px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--t1);
+}
+
+.abt-intro--shutter .abt-intro__fill .abt-intro__num {
+  color: var(--abt-base);
+}
+
+/* The percent sign at half size, its top level with the top of the digits: both are trimmed to cap
+   height (text-box), so aligning their boxes' tops aligns the glyphs. */
+.abt-intro--shutter .abt-intro__num::before {
+  counter-reset: abt-intro-pct var(--abt-n, 0);
+  content: counter(abt-intro-pct, abt-intro-pct);
+  text-box: trim-both cap alphabetic;
+}
+
+.abt-intro--shutter .abt-intro__num::after {
+  content: '%';
+  font-size: 0.5em;
+  letter-spacing: 0;
+  text-box: trim-both cap alphabetic;
+}
+
+/* The lift: the columns leave in turn, carrying their pieces of the count; done within LIFT_MS. */
+.abt-intro--shutter.is-lifting .abt-intro__col {
+  transform: translateY(-100%);
+  transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1) calc(var(--i) * 55ms);
+}
+
+.abt-intro--shutter.is-lifting .abt-intro__name {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* The fill still runs with reduced motion — it is information, not decoration. The exit's movement
+   goes; the curtain simply fades. */
+@media (prefers-reduced-motion: reduce) {
+  .abt-intro.is-lifting {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .abt-intro--shutter.is-lifting .abt-intro__col {
+    transform: none;
+  }
+}

@@ -22,3 +22,9 @@ docs/narration/__pycache__/
 # The About page's layout lab (/about/lenses-lab): kept permanently on this machine as a reference
 # for layouts not chosen — never delete it — but it stays out of the public repo and the live site.
 app/about/lenses-lab/
+
+# The homepage layout lab (/home-lab): four directions for the homepage, local-only like the lenses lab.
+app/home-lab/
+
+# The About page loading-curtain lab (/about/loader-lab): local-only like the other labs.
+app/about/loader-lab/
