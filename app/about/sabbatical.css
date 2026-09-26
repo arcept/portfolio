@@ -552,6 +552,25 @@
     height: 72px;
   }
 
+  /* The label and its dates on one line: a shorter rule, tighter spacing, a slimmer pill. */
+  .sab-label {
+    flex-wrap: nowrap;
+    gap: 10px;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  .sab-label__rule {
+    width: 20px;
+    flex: none;
+  }
+
+  .sab-label__dates {
+    padding: 3px 8px;
+    letter-spacing: 0.06em;
+  }
+
   .sab__intro {
     margin-top: 18px;
     font-size: 16px;
@@ -601,10 +620,10 @@
   }
 }
 
-/* Phones: the section keeps to the two sides and the AI line, with no rule between them; trading and
-   what the time held are left to wider screens. */
+/* Phones: the section keeps to its opening and the AI line, with no rule before it; the two sides,
+   trading and what the time held are left to wider screens. */
 @media (max-width: 599px) {
-  .sab-tr,
+  .sab__mid,
   .sab__held {
     display: none;
   }
@@ -615,11 +634,33 @@
   }
 }
 
-/* The narrowest phones: smaller, and further right, to clear the end of the headline's first line. */
+/* Narrower phones: the label drops its rule so the dates still fit beside it. */
+@media (max-width: 420px) {
+  .sab-label {
+    gap: 8px;
+  }
+
+  .sab-label__rule {
+    display: none;
+  }
+}
+
+/* The narrowest phones: smaller, and further right, to clear the end of the headline's first line;
+   the label a size down. */
 @media (max-width: 380px) {
   .sab__sticker {
     right: 12px;
     height: 58px;
+  }
+
+  .sab-label {
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .sab-label__dates {
+    padding: 3px 6px;
+    letter-spacing: 0.02em;
   }
 }
 
