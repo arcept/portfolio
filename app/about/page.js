@@ -1,5 +1,4 @@
 import Nav from '@/components/Nav';
-import Footer from '@/components/Footer';
 import { aboutThemeGate } from './theme';
 import { aboutIntroGate } from './intro';
 import AboutMotion from './AboutMotion';
@@ -14,11 +13,13 @@ import Leadership from './Leadership';
 import Experience from './Experience';
 import Education from './Education';
 import Sabbatical from './Sabbatical';
+import StoryBridge from './StoryBridge';
 import { display, sans } from './fonts';
 import './about.css';
 import './experience.css';
 import './education.css';
 import './sabbatical.css';
+import './story-bridge.css';
 import './resume/resume.css';
 
 const TITLE = 'About — Manik Madaan';
@@ -55,6 +56,7 @@ const SECTIONS = [
   { id: 'experience', label: 'Experience' },
   { id: 'education', label: 'Education' },
   { id: 'sabbatical', label: 'Sabbatical' },
+  { id: 'story-bridge', label: 'A note' },
 ];
 
 export default function About() {
@@ -71,7 +73,7 @@ export default function About() {
           <Nav actions={<AboutThemeSwitch />} />
 
           <div className="abt-shell">
-            <AboutIndex sections={SECTIONS} />
+            <AboutIndex sections={SECTIONS} until="story-bridge" />
             <main>
               <Opening />
               <LoopBand />
@@ -80,10 +82,10 @@ export default function About() {
               <Experience />
               <Education />
               <Sabbatical />
+              <StoryBridge />
             </main>
           </div>
-
-          <Footer />
+          {/* No site footer: section 07 ends the page, and carries its links and cookie settings. */}
         </AboutIntro>
       </div>
     </AboutMotion>

@@ -40,6 +40,7 @@
   --abt-wash-strength: 0.2;
 
   --abt-rail: 168px;
+  --abt-rail-gap: clamp(32px, 4vw, 72px);
   --abt-gutter: clamp(20px, 4.4vw, 76px);
   --abt-max: 1520px;
 }
@@ -127,7 +128,7 @@ html[data-abt-theme='light'] {
   .abt-shell {
     display: grid;
     grid-template-columns: var(--abt-rail) minmax(0, 1fr);
-    column-gap: clamp(32px, 4vw, 72px);
+    column-gap: var(--abt-rail-gap);
   }
 }
 
@@ -201,6 +202,11 @@ html[data-abt-theme='light'] {
     height: calc(100vh - var(--site-nav-h));
     padding: 24vh 0 clamp(28px, 6vh, 64px);
     align-self: start;
+  }
+
+  /* Hidden for a section that spans the page (07, centred on the window). */
+  .abt-rail[data-gone] {
+    visibility: hidden;
   }
 
   /* Scrolls on its own when the list is taller than the rail (the lab lists dozens of options). */

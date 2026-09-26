@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import { animate, motion } from 'motion/react';
 
 // The margin rail: a full-height sticky column, so the index keeps its place near the top while the
-// way back up sits at the foot of the viewport, out of the reading.
-export default function AboutIndex({ sections }) {
+// way back up sits at the foot of the viewport, out of the reading. `until`: the id of a section that
+// spans the page; the rail is hidden once it comes into view, and shown again above it.
+export default function AboutIndex({ sections, until }) {
   const [active, setActive] = useState(sections[0]?.id);
   const [away, setAway] = useState(false); // scrolled far enough that "back to top" is worth offering
+  const [gone, setGone] = useState(false); // the `until` section has arrived
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -38,11 +40,15 @@ export default function AboutIndex({ sections }) {
   }, [active]);
 
   useEffect(() => {
-    const onScroll = () => setAway(window.scrollY > window.innerHeight * 0.6);
+    const end = until && document.getElementById(until);
+    const onScroll = () => {
+      setAway(window.scrollY > window.innerHeight * 0.6);
+      if (end) setGone(end.getBoundingClientRect().top < window.innerHeight);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [until]);
 
   const toTop = () => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -78,7 +84,7 @@ export default function AboutIndex({ sections }) {
   };
 
   return (
-    <div className="abt-rail">
+    <div className="abt-rail" data-gone={gone || undefined}>
       <nav className="abt-index" aria-label="Sections" ref={listRef}>
         <ol>
           {sections.map((section, i) => {

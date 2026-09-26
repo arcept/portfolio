@@ -1,0 +1,376 @@
+/* ---------------------------------------------------------------- 07 · A note before you go
+
+   The page's last section and its ending, in place of the site footer: the invitation to the story, a
+   few photos, then the ground warms from the foot of the window. Centred on the window rather than the
+   reading column: on wide screens it reaches back over the margin index, which is hidden for it.      */
+
+.abt-end {
+  --abt-accent: #ff3b30; /* the sticker's red, for this section only */
+  position: relative;
+  padding-top: calc(clamp(96px, 14vh, 160px) - 25px);
+  text-align: center;
+}
+
+@media (min-width: 1100px) {
+  .abt-end {
+    margin-left: calc(-1 * (var(--abt-rail) + var(--abt-rail-gap)));
+  }
+}
+
+.abt-end__label {
+  justify-content: center;
+}
+
+/* Always two lines: each half holds together, and the size follows the width so neither wraps. */
+.abt-end__title {
+  margin: 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-weight: 400;
+  font-size: min(5.6vw, 88px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--t1);
+}
+
+.abt-end__title span {
+  display: block;
+  white-space: nowrap;
+}
+
+.abt-end__lead {
+  max-width: 74ch;
+  margin: clamp(24px, 3.5vh, 36px) auto 0;
+  font-size: clamp(20px, 1.9vw, 28px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  color: var(--t1);
+}
+
+.abt-end__accent {
+  color: var(--abt-accent);
+}
+
+/* The photos */
+.abt-end__snaps {
+  position: relative;
+  max-width: min(496px, 80%);
+  height: 240px;
+  margin: clamp(40px, 6vh, 64px) auto 0;
+}
+
+.abt-end__snap {
+  position: absolute;
+  width: 32%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border: 5px solid #fbf8f2;
+  border-radius: 16px;
+  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.55);
+  cursor: default;
+  transition: box-shadow 0.4s ease;
+}
+
+.abt-end__snap.is-lifted {
+  box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.6);
+}
+
+/* The glow: its ground reaches the window's edges (--bleed-l/-r, from useBleedEdges). */
+.abt-end__glow {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(48px, 7vh, 72px) 0 calc(min(13vw, 220px) * 0.72);
+}
+
+.abt-end__bg {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: calc(-1 * var(--bleed-l, 0px));
+  right: calc(-1 * var(--bleed-r, 0px));
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--abt-base), transparent 30%);
+}
+
+.abt-end__blob {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.75;
+  will-change: transform;
+}
+
+/* Fixed colours: the page's accent darkens under the light theme; the blooms keep their warmth. */
+.abt-end__blob--1 {
+  left: 50%;
+  bottom: -30%;
+  width: 90vw;
+  height: 70%;
+  margin-left: -45vw;
+  background: radial-gradient(closest-side, #ff8351, rgba(255, 131, 81, 0));
+  animation: abt-end-drift-1 16s ease-in-out infinite alternate;
+}
+
+.abt-end__blob--2 {
+  left: -10%;
+  bottom: -10%;
+  width: 55vw;
+  height: 60%;
+  background: radial-gradient(closest-side, #a86bff, rgba(168, 107, 255, 0));
+  opacity: 0.55;
+  animation: abt-end-drift-2 20s ease-in-out infinite alternate;
+}
+
+.abt-end__blob--3 {
+  right: -12%;
+  bottom: 0;
+  width: 50vw;
+  height: 55%;
+  background: radial-gradient(closest-side, #7fb2c9, rgba(127, 178, 201, 0));
+  opacity: 0.5;
+  animation: abt-end-drift-3 18s ease-in-out infinite alternate;
+}
+
+@keyframes abt-end-drift-1 {
+  to {
+    transform: translate(-4%, -8%) scale(1.12);
+  }
+}
+
+@keyframes abt-end-drift-2 {
+  to {
+    transform: translate(14%, -12%) scale(1.15);
+  }
+}
+
+@keyframes abt-end-drift-3 {
+  to {
+    transform: translate(-16%, -6%) scale(0.92);
+  }
+}
+
+.abt-end__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* The name, huge and cut off by the foot of the page, in the case studies' Neue Alte Grotesk. */
+.abt-end__word {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  margin: 0;
+  font-family: var(--font-wm-neue-alte), system-ui, sans-serif;
+  font-size: min(13vw, 220px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  color: transparent;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--abt-ink) 55%, transparent), transparent 88%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  transform: translate(-50%, 28%);
+}
+
+.abt-end__ask {
+  max-width: 18ch;
+  margin: 0 auto;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(24px, 2.4vw, 36px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--t1);
+}
+
+.abt-end__cta {
+  margin-top: clamp(24px, 4vh, 36px);
+}
+
+.abt-end__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 26px;
+  border-radius: 999px;
+  background: var(--t1);
+  color: var(--abt-base);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.abt-end__btn span {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.abt-end__btn:hover span {
+  transform: translate(3px, -3px);
+}
+
+.abt-end__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 32px;
+  margin: clamp(48px, 7vh, 72px) 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(20px, 1.9vw, 28px);
+}
+
+.abt-end__links a,
+.abt-end__resume {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--t1);
+  text-decoration: underline;
+  text-decoration-color: var(--abt-line-2);
+  text-underline-offset: 6px;
+  cursor: pointer;
+  transition: text-decoration-color 0.25s ease;
+}
+
+.abt-end__links a:hover,
+.abt-end__resume:hover {
+  text-decoration-color: var(--abt-accent);
+}
+
+/* The résumé button brings the site's link styling: one underline here, like the others. */
+.abt-end__resume .abt-link__label {
+  padding: 0;
+  border: 0;
+}
+
+.abt-end__resume .abt-link__label::after {
+  display: none;
+}
+
+/* The foot: spans the nav bar's width (--nav-l/-r), the name's edge to the last control's. */
+.abt-end__foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin: clamp(48px, 8vh, 80px) calc(-1 * var(--nav-r, 0px)) 0 calc(-1 * var(--nav-l, 0px));
+  padding: 20px 0;
+  font-size: 13px;
+  text-align: left;
+  color: var(--t2);
+}
+
+.abt-end__foot a,
+.abt-end__cookies {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.abt-end__foot a:hover,
+.abt-end__cookies:hover {
+  color: var(--t1);
+}
+
+.abt-end__btn:focus-visible,
+.abt-end__foot a:focus-visible,
+.abt-end__cookies:focus-visible {
+  outline: 2px solid var(--abt-accent);
+  outline-offset: 3px;
+}
+
+/* The hand-lettered "My Story". Height-first, with the aspect ratio on the wrapper (see
+   .ed-sticker-slot in education.css for why the <img> alone cannot size it). */
+.abt-end__sticker {
+  display: block;
+  height: 150px;
+  aspect-ratio: 410 / 309;
+  pointer-events: none;
+}
+
+.abt-end__sticker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* On the headline, hanging off its top-right corner (the headline's box hugs its lines). */
+.abt-end__title {
+  position: relative;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.abt-end__sticker {
+  position: absolute;
+  z-index: 2;
+  top: calc(-1.25em + 12px);
+  right: -1.7em;
+  height: 2.1em;
+}
+
+/* Into the story: a disc of the accent, over everything. */
+.abt-end__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: #ff3b30;
+}
+
+@media (max-width: 899px) {
+  .abt-end__title {
+    font-size: 8.6vw;
+  }
+
+  /* Phones: centred above the label, in the space before the section, with the section's top pushed
+     down a little to make room. */
+  .abt-end {
+    padding-top: calc(clamp(96px, 14vh, 160px) - 25px + 20px);
+  }
+
+  /* As tall as the space above the label allows (the section's top padding, less a little room at each
+     end), up to 100px; it sits just above the label, whose top is 36px above the headline's. */
+  .abt-end__sticker {
+    --h: min(100px, calc(clamp(96px, 14vh, 160px) - 5px - 16px));
+    top: calc(-42px - var(--h));
+    left: 0;
+    right: 0;
+    height: var(--h);
+    margin: 0 auto;
+  }
+
+  .abt-end__snaps {
+    height: 136px;
+  }
+
+  .abt-end__glow {
+    padding-bottom: calc(13vw * 0.72 + 8px);
+  }
+
+  .abt-end__foot {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .abt-end__blob {
+    animation: none;
+  }
+}

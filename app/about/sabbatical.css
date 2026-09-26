@@ -601,6 +601,20 @@
   }
 }
 
+/* Phones: the section keeps to the two sides and the AI line, with no rule between them; trading and
+   what the time held are left to wider screens. */
+@media (max-width: 599px) {
+  .sab-tr,
+  .sab__held {
+    display: none;
+  }
+
+  .sab__ai {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
 /* The narrowest phones: smaller, and further right, to clear the end of the headline's first line. */
 @media (max-width: 380px) {
   .sab__sticker {
