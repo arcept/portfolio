@@ -188,11 +188,15 @@ export default function Education() {
         </div>
       </div>
 
+      {/* Phones list the schools latest first (the master's at the top); wider screens keep them in the
+          order they happened, beside the sentence that steps through them. `i` stays the school's place
+          in that order, which is what `at` counts. */}
       <ol className="ed-b__list">
-        {SCHOOLS.map((s, i) => {
+        {(phone ? [...SCHOOLS].reverse() : SCHOOLS).map((s, row) => {
+          const i = SCHOOLS.indexOf(s);
           const rowOpen = openRow === s.id;
           return (
-          <motion.li key={s.id} {...rise(0.1 + i * 0.06)}>
+          <motion.li key={s.id} {...rise(0.1 + row * 0.06)}>
             <button
               type="button"
               className={`ed-b__school${i === at ? ' is-on' : ''}${i < at ? ' is-past' : ''}${s.emphasis ? ' is-major' : ''}${s.small ? ' is-small' : ''}`}
