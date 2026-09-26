@@ -177,7 +177,13 @@
   --swing: cubic-bezier(0.7, 0, 0.2, 1);
   position: fixed;
   z-index: 100;
-  inset: 0;
+  /* The part of the page actually on screen (MobileMenu sets these from window.visualViewport): on iOS the
+     layout viewport can be wider than, or offset from, what is visible, and a sheet placed against it would sit
+     off-centre. */
+  top: var(--vv-top, 0px);
+  left: var(--vv-left, 0px);
+  width: var(--vv-width, 100%);
+  height: var(--vv-height, 100%);
   color: var(--ms-ink);
   font-family: var(--font-menu-sans), var(--font-inter), system-ui, sans-serif;
   visibility: hidden;
@@ -232,7 +238,7 @@ html[data-cs-theme='light'] .ms {
   right: 8px;
   bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   max-height: calc(100% - var(--site-nav-h, 56px) - 24px - env(safe-area-inset-bottom, 0px));
-  overflow: hidden auto;
+  overflow: hidden;
   padding: 10px 14px 40px;
   border-radius: 30px;
   outline: none;
@@ -245,6 +251,11 @@ html[data-cs-theme='light'] .ms {
 .ms.is-open .ms__sheet {
   transform: translate3d(0, 0, 0);
   transition: transform 0.7s cubic-bezier(0.2, 1.1, 0.3, 1);
+}
+
+.ms__sheet > :not(.ms__glow) {
+  position: relative;
+  z-index: 1;
 }
 
 .ms__handle {
@@ -440,10 +451,11 @@ html[data-cs-theme='light'] .ms {
 
 /* ----------------------------------------------------------------------- the glow */
 
-/* Three faint blooms rising from the sheet's foot, behind everything in it (the About page's ending, turned down). */
+/* Three faint blooms rising from the sheet's foot, behind everything in it (the About page's ending, turned down).
+   Plain soft gradients, still: blurred, drifting layers here are what made iOS Safari stop drawing a card. */
 .ms__glow {
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -460,8 +472,6 @@ html[data-cs-theme='light'] .ms {
 
 .ms__glow span {
   position: absolute;
-  border-radius: 50%;
-  filter: blur(36px);
 }
 
 .ms__glow span:nth-child(1) {
@@ -469,8 +479,7 @@ html[data-cs-theme='light'] .ms {
   right: 15%;
   bottom: -45%;
   height: 80%;
-  background: radial-gradient(closest-side, rgba(255, 131, 81, 0.32), rgba(255, 131, 81, 0));
-  animation: ms-drift 14s ease-in-out infinite alternate;
+  background: radial-gradient(closest-side, rgba(255, 131, 81, 0.3), rgba(255, 131, 81, 0));
 }
 
 .ms__glow span:nth-child(2) {
@@ -489,12 +498,6 @@ html[data-cs-theme='light'] .ms {
   background: radial-gradient(closest-side, rgba(127, 178, 201, 0.2), rgba(127, 178, 201, 0));
 }
 
-@keyframes ms-drift {
-  to {
-    translate: -4% -6%;
-  }
-}
-
 /* --------------------------------------------------------------- reduced motion */
 
 @media (prefers-reduced-motion: reduce) {
@@ -509,10 +512,6 @@ html[data-cs-theme='light'] .ms {
   .ms.is-open .ms__glow {
     transition-duration: 0.01ms;
     transition-delay: 0s;
-  }
-
-  .ms__glow span {
-    animation: none;
   }
 
   .site-nav__menu i {

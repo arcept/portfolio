@@ -40,6 +40,27 @@ export default function MobileMenu({ open, links, onClose, onGo }) {
     };
   }, []);
 
+  // The menu covers what is on screen, which on iOS is not always the layout viewport (a zoomed or panned page):
+  // it takes the visual viewport's box, and follows it.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const el = root.current;
+    if (!vv || !el) return undefined;
+    const fit = () => {
+      el.style.setProperty('--vv-top', `${vv.offsetTop}px`);
+      el.style.setProperty('--vv-left', `${vv.offsetLeft}px`);
+      el.style.setProperty('--vv-width', `${vv.width}px`);
+      el.style.setProperty('--vv-height', `${vv.height}px`);
+    };
+    fit();
+    vv.addEventListener('resize', fit);
+    vv.addEventListener('scroll', fit);
+    return () => {
+      vv.removeEventListener('resize', fit);
+      vv.removeEventListener('scroll', fit);
+    };
+  }, []);
+
   // Once it is showing: focus goes to the sheet itself (not a card: focusing a card mid-animation is what made iOS
   // Safari stop drawing it), Escape closes, and Tab stays between the bar and the menu.
   useEffect(() => {
