@@ -104,13 +104,25 @@ a {
   background: transparent;
   backdrop-filter: none;
   border-bottom: 1px solid transparent;
-  transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .site-nav.is-scrolled {
   background: color-mix(in srgb, var(--void) 80%, transparent);
   backdrop-filter: blur(8px);
   border-bottom-color: var(--graphite);
+}
+
+/* Tucked away while the reader scrolls down, back as soon as they scroll up (Nav.js). Keyboard focus
+   inside it brings it back too. */
+.site-nav.is-hidden:not(:focus-within) {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
 }
 
 .site-nav__inner {

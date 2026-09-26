@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { animate, motion } from 'motion/react';
 
 // The margin rail: a full-height sticky column, so the index keeps its place near the top while the
@@ -8,6 +8,7 @@ import { animate, motion } from 'motion/react';
 export default function AboutIndex({ sections }) {
   const [active, setActive] = useState(sections[0]?.id);
   const [away, setAway] = useState(false); // scrolled far enough that "back to top" is worth offering
+  const listRef = useRef(null);
 
   useEffect(() => {
     const nodes = sections.map((s) => document.getElementById(s.id)).filter(Boolean);
@@ -23,6 +24,18 @@ export default function AboutIndex({ sections }) {
     nodes.forEach((node) => watcher.observe(node));
     return () => watcher.disconnect();
   }, [sections]);
+
+  // When the list scrolls (it is taller than the rail), keep the current entry in view. Only the list
+  // moves: scrollIntoView would scroll the page too.
+  useEffect(() => {
+    const list = listRef.current;
+    const link = list?.querySelector('[aria-current]');
+    if (!list || !link || list.scrollHeight <= list.clientHeight) return;
+    const top = link.offsetTop - list.offsetTop;
+    if (top < list.scrollTop + 24 || top + link.offsetHeight > list.scrollTop + list.clientHeight - 24) {
+      list.scrollTo({ top: top - list.clientHeight / 2, behavior: 'smooth' });
+    }
+  }, [active]);
 
   useEffect(() => {
     const onScroll = () => setAway(window.scrollY > window.innerHeight * 0.6);
@@ -66,13 +79,19 @@ export default function AboutIndex({ sections }) {
 
   return (
     <div className="abt-rail">
-      <nav className="abt-index" aria-label="Sections">
+      <nav className="abt-index" aria-label="Sections" ref={listRef}>
         <ol>
           {sections.map((section, i) => {
             const current = section.id === active;
             return (
               <li key={section.id}>
-                <a href={`#${section.id}`} className="abt-index__link" onClick={(e) => glide(e, section.id)} aria-current={current ? 'true' : undefined}>
+                <a
+                  href={`#${section.id}`}
+                  className="abt-index__link"
+                  data-id={section.id}
+                  onClick={(e) => glide(e, section.id)}
+                  aria-current={current ? 'true' : undefined}
+                >
                   <span className="abt-index__num">{String(i + 1).padStart(2, '0')}</span>
                   <span className="abt-index__label">{section.label}</span>
                   {current && (

@@ -11,10 +11,12 @@ import Lenses from './Lenses';
 import Leadership from './Leadership';
 import Experience from './Experience';
 import Education from './Education';
+import Sabbatical from './Sabbatical';
 import { display, sans } from './fonts';
 import './about.css';
 import './experience.css';
 import './education.css';
+import './sabbatical.css';
 import './resume/resume.css';
 
 const TITLE = 'About — Manik Madaan';
@@ -50,6 +52,7 @@ const SECTIONS = [
   { id: 'leadership', label: 'Leadership' },
   { id: 'experience', label: 'Experience' },
   { id: 'education', label: 'Education' },
+  { id: 'sabbatical', label: 'Sabbatical' },
 ];
 
 export default function About() {
@@ -71,6 +74,7 @@ export default function About() {
             <Leadership />
             <Experience />
             <Education />
+            <Sabbatical />
           </main>
         </div>
 

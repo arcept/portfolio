@@ -133,21 +133,17 @@ html[data-abt-theme='light'] {
 
 /* ---------------------------------------------------------------- The rail
 
-   The site's bar is not fixed on this page — a black band across the top fought the colour behind
-   the statement — but the theme switch inside it still is, pinned where it sat in the bar. The rail
+   The site's bar hides as the reader scrolls down and returns when they scroll up (Nav.js). At the top
+   of the page it has no band, since a band fought the colour behind the statement; once it comes back
+   over the page it is frosted in the page's own colour, so its links read over anything. The rail
    is a full-height sticky column: the index keeps its place near the top, the way back up sits at
    the foot of the viewport.                                                                        */
 
-.abt .site-nav {
-  position: absolute;
-}
-
-/* Scrolled, the bar normally fills in and blurs what is behind it. Not here: that band across the
-   top fought the colour behind the statement. */
 .abt .site-nav.is-scrolled {
-  background: transparent;
-  backdrop-filter: none;
-  border-bottom-color: transparent;
+  background: color-mix(in srgb, var(--abt-base) 72%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom-color: var(--abt-line);
 }
 
 /* The switch sits in the bar's own flow and leaves with it. Its own breathing room, on top of the
@@ -207,27 +203,37 @@ html[data-abt-theme='light'] {
     align-self: start;
   }
 
+  /* Scrolls on its own when the list is taller than the rail (the lab lists dozens of options). */
+  .abt-index {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--abt-line-2) transparent;
+  }
+
   .abt-index ol {
     margin: 0;
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 14px;
+    gap: 10px;
   }
 }
 
 .abt-index__link {
   position: relative;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
   padding: 4px 0 4px 14px;
   font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-size: 13px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--t4);
-  transition: color 0.35s ease;
+  color: var(--t3);
+  transition: color 0.35s ease, font-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .abt-index__link:hover,
@@ -236,19 +242,21 @@ html[data-abt-theme='light'] {
 }
 
 .abt-index__link[aria-current] {
+  font-size: 16px;
+  letter-spacing: 0.05em;
   color: var(--t1);
 }
 
 .abt-index__num {
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
-  color: var(--abt-accent);
-  opacity: 0;
-  transition: opacity 0.35s ease;
+  color: var(--t4);
+  transition: color 0.35s ease;
 }
 
 .abt-index__link[aria-current] .abt-index__num,
 .abt-index__link:hover .abt-index__num {
-  opacity: 1;
+  color: var(--ix-c, var(--abt-accent));
 }
 
 /* The marker travels between entries (a shared layout animation in AboutIndex.js). */
@@ -259,7 +267,45 @@ html[data-abt-theme='light'] {
   width: 2px;
   height: 14px;
   translate: 0 -50%;
-  background: var(--abt-accent);
+  background: var(--ix-c, var(--abt-accent));
+  transition: background-color 0.35s ease;
+}
+
+/* The current entry is larger, and its number and marker take its section's own colour (--ix-c). */
+.abt-index [data-id='how-i-work'] {
+  --ix-c: var(--abt-accent-2);
+}
+
+.abt-index [data-id='leadership'] {
+  --ix-c: #34c759;
+}
+
+.abt-index [data-id='experience'] {
+  --ix-c: #7b79ea;
+}
+
+.abt-index [data-id='education'] {
+  --ix-c: #ca8a04;
+}
+
+.abt-index [data-id='sabbatical'] {
+  --ix-c: #a78bfa;
+}
+
+html[data-abt-theme='light'] .abt-index [data-id='leadership'] {
+  --ix-c: #259643;
+}
+
+html[data-abt-theme='light'] .abt-index [data-id='experience'] {
+  --ix-c: #5856d6;
+}
+
+html[data-abt-theme='light'] .abt-index [data-id='education'] {
+  --ix-c: #8a5d03;
+}
+
+html[data-abt-theme='light'] .abt-index [data-id='sabbatical'] {
+  --ix-c: #6d4fd8;
 }
 
 /* The way back up. Present but quiet until the reader is far enough down to want it. */

@@ -18,6 +18,7 @@ const CLOSE_MS = 700; // how long the menu takes to wipe away
 export default function Nav({ actions }) {
   const t = useT();
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false); // tucked away while scrolling down, back on the way up
   const [mounted, setMounted] = useState(false); // the menu exists
   const [open, setOpen] = useState(false); // the menu is showing (drives the animation)
   const [origin, setOrigin] = useState({ x: 0, y: 0, r: 0 });
@@ -25,8 +26,21 @@ export default function Nav({ actions }) {
   const timer = useRef(0);
 
   useEffect(() => {
+    let last = window.scrollY;
+    let travel = 0; // distance moved in the current direction, so a jitter of a pixel or two does nothing
     function handleScroll() {
-      setScrolled(window.scrollY > 4);
+      const y = window.scrollY;
+      const dy = y - last;
+      last = y;
+      setScrolled(y > 4);
+      if (y < 80) {
+        travel = 0;
+        setHidden(false);
+        return;
+      }
+      travel = Math.sign(dy) === Math.sign(travel) ? travel + dy : dy;
+      if (travel > 12) setHidden(true);
+      else if (travel < -6) setHidden(false);
     }
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -74,7 +88,7 @@ export default function Nav({ actions }) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   return (
-    <nav className={`site-nav ${scrolled ? 'is-scrolled' : ''}${open ? ' is-menu-open' : ''}`}>
+    <nav className={`site-nav ${scrolled ? 'is-scrolled' : ''}${hidden && !mounted ? ' is-hidden' : ''}${open ? ' is-menu-open' : ''}`}>
       <div className="site-nav__inner">
         <a href="/" className="site-nav__name">Manik Madaan</a>
         <div className="site-nav__links">

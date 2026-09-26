@@ -1,0 +1,607 @@
+/* ---------------------------------------------------------------- Section 06: Sabbatical
+
+   An illustration, full bleed and the full height of the window, held still behind a card that
+   scrolls over it (Sabbatical.js). The card is tinted from whichever picture is showing and carries
+   light type in either theme, so it keeps its own tokens (--sx-*) rather than the page's.          */
+
+.sab {
+  --vtint: #2a1440;
+  position: relative;
+  isolation: isolate;
+  margin-top: 160px; /* a pause after Education before the picture begins */
+}
+
+.sab[data-shown='dusk'] {
+  --vtint: #111c63;
+}
+
+/* The picture layer reaches the window's edges (useBleedEdges.js), and starts a nav bar's height above
+   the section so the picture runs up behind the see-through nav rather than leaving a strip above it.
+   Clipped, not overflow:hidden, which would make it a scroll box and stop the frame sticking. */
+.sab__art {
+  position: absolute;
+  top: calc(-1 * var(--nav-h, var(--site-nav-h)));
+  bottom: 0;
+  left: calc(-1 * var(--bleed-l, 0px));
+  right: calc(-1 * var(--bleed-r, 0px));
+  z-index: 0;
+  overflow: clip;
+}
+
+/* A darker foot to the picture, under the card, for the credit to sit on. */
+.sab__art::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 220px;
+  background: linear-gradient(to bottom, transparent, rgba(6, 4, 16, 0.78) 60%);
+  pointer-events: none;
+}
+
+.sab__frame {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sab__frame picture,
+.sab__top {
+  position: absolute;
+  inset: 0;
+}
+
+.sab__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* How much of the picture shows above the card at the start, and below it at the end. */
+.sab__opening {
+  height: calc(200px - var(--nav-h, var(--site-nav-h)));
+}
+
+.sab__after {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: 100px;
+  margin-left: calc(-1 * var(--nav-l, 0px));
+}
+
+/* The illustrations' credit: plain text on the picture's darkened foot, light in either theme. */
+.sab__credit {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(251, 247, 255, 0.72);
+}
+
+.sab__credit a {
+  color: #fbf7ff;
+  text-decoration: underline;
+  text-decoration-color: rgba(251, 247, 255, 0.4);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.25s ease;
+}
+
+.sab__credit a:hover,
+.sab__credit a:focus-visible {
+  text-decoration-color: currentColor;
+}
+
+/* The card spans the nav bar's width (its name to its last control) rather than the column, which is
+   pushed right by the index. */
+.sab__card {
+  --sx-ink: #fbf7ff;
+  --sx-t2: rgba(251, 247, 255, 0.86);
+  --sx-t3: rgba(251, 247, 255, 0.7);
+  --sx-line: rgba(251, 247, 255, 0.22);
+  --sx-accent: #8fd6a5;
+  position: relative;
+  z-index: 1;
+  margin: 0 calc(-1 * var(--nav-r, 0px)) 0 calc(-1 * var(--nav-l, 0px));
+  padding: clamp(48px, 6vw, 104px) clamp(40px, 6.5vw, 112px) clamp(56px, 7vw, 120px);
+  border-radius: 28px;
+  background-color: var(--vtint);
+  color: var(--sx-ink);
+  box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.55);
+  transition: background-color 1.2s ease;
+}
+
+/* A soft violet glow rising out of the card's bottom edge, a lighter shade of the card's own purple. */
+.sab__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(60% 42% at 50% 104%, rgba(150, 96, 230, 0.42) 0%, rgba(120, 70, 200, 0.2) 40%, transparent 72%),
+    radial-gradient(95% 60% at 50% 100%, rgba(110, 60, 180, 0.22) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sab__card > :not(.sab__sticker) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The hand-lettered "The Sabbatical", in the card's top-right corner. Height-first, with the aspect
+   ratio on the wrapper (see .ed-sticker-slot in education.css for why the <img> alone cannot size it). */
+.sab__sticker {
+  position: absolute;
+  top: calc(clamp(18px, 2.4vw, 32px) + 30px);
+  right: calc(clamp(24px, 3vw, 48px) + 15px);
+  z-index: 2;
+  display: block;
+  height: 180px;
+  aspect-ratio: 616 / 334;
+  pointer-events: none;
+}
+
+.sab__sticker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The head: label, the headline (on two lines), the intro across the full width. */
+.sab-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sx-t3);
+}
+
+.sab-label__index {
+  color: var(--sx-accent);
+}
+
+.sab-label__rule {
+  width: clamp(36px, 5vw, 72px);
+  height: 1px;
+  background: var(--sx-line);
+  transform-origin: left center;
+}
+
+.sab-label__dates {
+  padding: 4px 10px;
+  border: 1px solid var(--sx-line);
+  border-radius: 999px;
+  letter-spacing: 0.12em;
+  color: var(--sx-accent);
+}
+
+.sab__title {
+  margin: clamp(16px, 2.4vh, 24px) 0 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(42px, 4.6vw, 66px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--sx-ink);
+  text-wrap: balance;
+}
+
+.sab__intro {
+  margin: clamp(22px, 3vh, 32px) 0 0;
+  font-size: 20px;
+  line-height: 1.6;
+  color: var(--sx-t2);
+  text-wrap: pretty;
+}
+
+.sab__kicker {
+  margin: 0 0 14px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sx-t3);
+}
+
+/* The two sides behind a switch, beside trading. */
+.sab__mid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(32px, 5vw, 80px);
+  margin-top: clamp(40px, 5vh, 60px);
+}
+
+.sab__switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 5px;
+  border: 1px solid var(--sx-line);
+  border-radius: 999px;
+}
+
+.sab__switch button {
+  position: relative;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sx-t3);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.sab__switch button:hover {
+  color: var(--sx-ink);
+}
+
+.sab__switch button.is-on {
+  color: var(--vtint);
+}
+
+.sab__switch button:focus-visible {
+  outline: 2px solid var(--sx-accent);
+  outline-offset: 2px;
+}
+
+.sab__thumb {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--sx-ink);
+}
+
+.sab__switchlabel {
+  position: relative;
+}
+
+.sab__list {
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sab__list li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: baseline;
+  padding: 16px 0;
+  border-top: 1px solid var(--sx-line);
+}
+
+.sab__num {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--sx-accent);
+}
+
+.sab__slot {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.sab__text {
+  display: block;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(19px, 1.6vw, 24px);
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+}
+
+.sab__text--away {
+  color: var(--sx-t2);
+}
+
+.sab__text--back {
+  color: var(--sx-ink);
+}
+
+/* What the time held. */
+.sab__held {
+  margin-top: clamp(36px, 5vh, 56px);
+  padding-top: 24px;
+  border-top: 1px solid var(--sx-line);
+}
+
+.sab__held ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sab__held li {
+  padding: 9px 16px;
+  border: 1px solid var(--sx-line);
+  border-radius: 999px;
+  font-size: 15px;
+  color: var(--sx-t2);
+}
+
+/* What trading taught me (SabbaticalTrade.js). */
+.sab-tr {
+  position: relative;
+  min-width: 0;
+  padding-left: clamp(24px, 3vw, 44px);
+  border-left: 1px solid var(--sx-line);
+  color: var(--sx-ink);
+}
+
+.sab-tr__kicker {
+  margin: 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sx-t3);
+}
+
+.sab-tr__line {
+  margin: 8px 0 18px;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(26px, 2.4vw, 36px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+/* The tape: what went up and what went down during the break, running past. */
+.sab-tr__tape {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 14px;
+  padding: 8px 0;
+  border-top: 1px solid var(--sx-line);
+  border-bottom: 1px solid var(--sx-line);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.sab-tr__tapetrack {
+  display: flex;
+  width: max-content;
+  animation: sab-tape 28s linear infinite;
+}
+
+.sab-tr__tape:hover .sab-tr__tapetrack {
+  animation-play-state: paused;
+}
+
+@keyframes sab-tape {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.sab-tr__tapeitem {
+  padding: 0 16px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--sx-t2);
+}
+
+.sab-tr__tapeitem b {
+  margin-left: 4px;
+  font-weight: 400;
+}
+
+.sab-tr__tapeitem .is-up {
+  color: #34c759;
+}
+
+.sab-tr__tapeitem .is-down {
+  color: #ff8fa3;
+}
+
+.sab-tr__chartwrap {
+  position: relative;
+  cursor: crosshair;
+}
+
+.sab-tr__chart {
+  display: block;
+  width: 100%;
+  height: 130px;
+  overflow: hidden;
+}
+
+.sab-tr__path {
+  fill: none;
+  stroke: #34c759; /* the sticker's green */
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 6px rgba(52, 199, 89, 0.55));
+  transition: stroke-width 0.3s ease, filter 0.3s ease;
+}
+
+/* Pointing at the chart: the line glows harder, a crosshair and a dot ride the price. */
+.sab-tr__chartwrap[data-hover] .sab-tr__path {
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 10px rgba(52, 199, 89, 0.85));
+}
+
+.sab-tr__cross,
+.sab-tr__dot {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.sab-tr__chartwrap[data-hover] .sab-tr__cross,
+.sab-tr__chartwrap[data-hover] .sab-tr__dot {
+  opacity: 1;
+}
+
+.sab-tr__cross {
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed rgba(251, 247, 255, 0.45);
+}
+
+.sab-tr__dot {
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  border: 2px solid #34c759;
+  border-radius: 50%;
+  background: var(--vtint);
+  box-shadow: 0 0 12px rgba(52, 199, 89, 0.9);
+}
+
+.sab-tr__floorline {
+  stroke: var(--sx-t3);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.sab-tr__floor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sx-t3);
+}
+
+.sab-tr__floor span {
+  flex: 0 0 22px;
+  border-top: 1.5px dashed var(--sx-t3);
+}
+
+.sab-tr__body {
+  max-width: 56ch;
+  margin: 20px 0 0;
+  font-size: 16px;
+  line-height: 1.62;
+  color: var(--sx-t2);
+}
+
+/* The AI line, as a quotation. */
+.sab__ai {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(12px, 2vw, 28px);
+  margin: clamp(44px, 6vh, 72px) 0 0;
+  padding-top: clamp(32px, 4vh, 48px);
+  border-top: 1px solid var(--sx-line);
+}
+
+.sab__mark {
+  display: block;
+  height: 0.62em;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(120px, 12vw, 200px);
+  line-height: 0.8;
+  color: var(--sx-accent);
+}
+
+.sab__ai blockquote {
+  margin: 0;
+}
+
+.sab__aitext {
+  max-width: 34ch;
+  margin: 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(30px, 3.2vw, 50px);
+  line-height: 1.14;
+  letter-spacing: -0.022em;
+  color: var(--sx-ink);
+  text-wrap: pretty;
+}
+
+/* Phones: the card keeps to the column, everything stacks, and the sticker straddles the card's top. */
+@media (max-width: 899px) {
+  .sab__opening {
+    height: 120px;
+  }
+
+  .sab__card {
+    padding: 24px 20px;
+    border-radius: 22px;
+  }
+
+  .sab__sticker {
+    top: -66px;
+    right: 4px;
+    height: 84px;
+  }
+
+  .sab__intro {
+    margin-top: 18px;
+    font-size: 16px;
+  }
+
+  .sab__mid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sab__switch {
+    display: flex;
+  }
+
+  .sab__switch button {
+    flex: 1;
+    padding: 11px 8px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+
+  .sab__list li {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .sab-tr {
+    padding: 24px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--sx-line);
+  }
+
+  .sab__ai {
+    grid-template-columns: 1fr;
+  }
+
+  .sab__mark {
+    font-size: 110px;
+    height: 56px;
+  }
+
+  .sab__after {
+    height: auto;
+    padding: 20px 0 28px;
+  }
+
+  .sab {
+    margin-top: 100px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sab-tr__tapetrack {
+    animation: none;
+  }
+}
