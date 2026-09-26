@@ -534,7 +534,7 @@
   text-wrap: pretty;
 }
 
-/* Phones: the card keeps to the column, everything stacks, and the sticker straddles the card's top. */
+/* Phones: the card keeps to the column and everything stacks. */
 @media (max-width: 899px) {
   .sab__opening {
     height: 120px;
@@ -545,10 +545,11 @@
     border-radius: 22px;
   }
 
+  /* Inside the card, beside the label: over the picture its green lettering vanished into the leaves. */
   .sab__sticker {
-    top: -66px;
-    right: 4px;
-    height: 84px;
+    top: 82px; /* beside the headline's first line */
+    right: 24px;
+    height: 72px;
   }
 
   .sab__intro {
@@ -597,6 +598,14 @@
 
   .sab {
     margin-top: 100px;
+  }
+}
+
+/* The narrowest phones: smaller, and further right, to clear the end of the headline's first line. */
+@media (max-width: 380px) {
+  .sab__sticker {
+    right: 12px;
+    height: 58px;
   }
 }
 

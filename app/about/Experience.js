@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { EXPERIENCE_HEADLINES, EXPERIENCE_INTRO, ROLES } from './experience-content';
+import SabbaticalGap from './SabbaticalGap';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -124,62 +125,65 @@ export default function Experience() {
           const on = open === role.id;
           const early = i >= recent;
           return (
-            <motion.li
-              key={role.id}
-              className={`xp-row${on ? ' is-open' : ''}${early ? ' xp-row--early' : ''}`}
-              {...rise(early ? (i - recent) * 0.05 : Math.min(i, 5) * 0.04)}
-              onPointerEnter={(e) => e.pointerType === 'mouse' && setOpen(role.id)}
-              onPointerLeave={(e) => e.pointerType === 'mouse' && setOpen(null)}
-            >
-              <button
-                type="button"
-                className="xp-row__button"
-                aria-expanded={on}
-                aria-controls={`xp-${role.id}`}
-                onClick={() => setOpen(on ? null : role.id)}
+            <Fragment key={role.id}>
+              <motion.li
+                className={`xp-row${on ? ' is-open' : ''}${early ? ' xp-row--early' : ''}`}
+                {...rise(early ? (i - recent) * 0.05 : Math.min(i, 5) * 0.04)}
+                onPointerEnter={(e) => e.pointerType === 'mouse' && setOpen(role.id)}
+                onPointerLeave={(e) => e.pointerType === 'mouse' && setOpen(null)}
               >
-                <span className="xp-row__logo">
-                  <span
-                    className={`xp-badge${role.logoSquare || role.logoTile ? ' xp-badge--icon' : ''}`}
-                    style={{ '--xp-i': i }}
-                  >
-                    <Logotype role={role} size={early ? 42 : 58} maxWidth={170} />
+                <button
+                  type="button"
+                  className="xp-row__button"
+                  aria-expanded={on}
+                  aria-controls={`xp-${role.id}`}
+                  onClick={() => setOpen(on ? null : role.id)}
+                >
+                  <span className="xp-row__logo">
+                    <span
+                      className={`xp-badge${role.logoSquare || role.logoTile ? ' xp-badge--icon' : ''}`}
+                      style={{ '--xp-i': i }}
+                    >
+                      <Logotype role={role} size={early ? 42 : 58} maxWidth={170} />
+                    </span>
                   </span>
-                </span>
-                <span className="xp-row__main">
-                  <span className="xp-row__company">{role.company}</span>
-                  {(role.product || role.formerly) && (
-                    <span className="xp-row__alias">{role.formerly ? `Previously ${role.formerly}` : role.product}</span>
+                  <span className="xp-row__main">
+                    <span className="xp-row__company">{role.company}</span>
+                    {(role.product || role.formerly) && (
+                      <span className="xp-row__alias">{role.formerly ? `Previously ${role.formerly}` : role.product}</span>
+                    )}
+                    <span className="xp-row__what">{role.descriptor}</span>
+                    <span className="xp-row__title">{role.role}</span>
+                  </span>
+                  <span className="xp-row__right">
+                    <span className="xp-row__role">{role.role}</span>
+                    <span className="xp-row__meta">
+                      <Dates role={role} />
+                      <Place role={role} />
+                    </span>
+                  </span>
+                  <span className="xp-row__mark" aria-hidden="true" />
+                </button>
+                <AnimatePresence initial={false}>
+                  {on && (
+                    <motion.div
+                      id={`xp-${role.id}`}
+                      className="xp-row__story"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.5, ease: EASE }}
+                    >
+                      <p className="xp-row__kind">{role.descriptor}</p>
+                      <p className="xp-row__lead">{role.line}</p>
+                      <p>{role.story}</p>
+                    </motion.div>
                   )}
-                  <span className="xp-row__what">{role.descriptor}</span>
-                  <span className="xp-row__title">{role.role}</span>
-                </span>
-                <span className="xp-row__right">
-                  <span className="xp-row__role">{role.role}</span>
-                  <span className="xp-row__meta">
-                    <Dates role={role} />
-                    <Place role={role} />
-                  </span>
-                </span>
-                <span className="xp-row__mark" aria-hidden="true" />
-              </button>
-              <AnimatePresence initial={false}>
-                {on && (
-                  <motion.div
-                    id={`xp-${role.id}`}
-                    className="xp-row__story"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.5, ease: EASE }}
-                  >
-                    <p className="xp-row__kind">{role.descriptor}</p>
-                    <p className="xp-row__lead">{role.line}</p>
-                    <p>{role.story}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.li>
+                </AnimatePresence>
+              </motion.li>
+              {/* The sabbatical sits between the current independent practice and Novatr. */}
+              {role.id === 'independent-now' && <SabbaticalGap />}
+            </Fragment>
           );
         })}
       </ol>

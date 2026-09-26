@@ -610,3 +610,242 @@ html[data-abt-theme='light'] .xp-row.is-open .xp-badge {
     padding: 20px 0 0;
   }
 }
+
+/* ---------------------------------------------------------------- The sabbatical, in the ledger
+
+   A row between Independent (now) and Novatr (SabbaticalGap.js), in the page's opposite colour: dark on
+   the light page, light on the dark one. At rest, tape runs the words past behind a paused pill. On hover
+   or focus it opens into a band of the sabbatical's illustration: the tape fades, the pause turns to
+   play, and the ends read "Inside Sabbatical" and "Read about the break". It leads down to Section 06. */
+
+.xp-gap {
+  --gap-bg: var(--t1);
+  --gap-ink: var(--abt-base);
+  position: relative;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--abt-line);
+  transform-origin: center;
+}
+
+.xp-gap__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--gap-bg);
+  color: var(--gap-ink);
+  text-decoration: none;
+  transition: height 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.xp-gap__bar:focus-visible {
+  outline: 2px solid var(--abt-accent);
+  outline-offset: 4px;
+}
+
+/* The illustration, hidden at rest, drifting slowly once shown. */
+.xp-gap__view {
+  position: absolute;
+  inset: 0;
+  background: url('/about/sabbatical/set3-landscape.jpg') center 38% / 130% auto no-repeat;
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 0.5s ease, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), background-position 6s linear;
+}
+
+/* The tape. */
+.xp-gap__tape {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  transition: opacity 0.4s ease;
+}
+
+.xp-gap__tapetrack {
+  display: flex;
+  width: max-content;
+  animation: xp-gap-tape 40s linear infinite;
+}
+
+.xp-gap__tapeitem {
+  padding-right: 14px;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.xp-gap__tapeitem i {
+  margin: 0 12px;
+  font-style: normal;
+  color: var(--abt-accent);
+}
+
+@keyframes xp-gap-tape {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* The pill: a pause mark and the word, in the reverse of the tape, with a ring that keeps the tape
+   from touching it. */
+.xp-gap__pill {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 22px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--gap-ink);
+  color: var(--gap-bg);
+  box-shadow: 0 0 0 6px var(--gap-bg);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1), padding 0.5s ease, background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.xp-gap__icon {
+  position: relative;
+  display: inline-block;
+  width: 10px;
+  height: 11px;
+}
+
+.xp-gap__pause,
+.xp-gap__play {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.xp-gap__pause {
+  border-left: 3px solid currentColor;
+  border-right: 3px solid currentColor;
+}
+
+.xp-gap__play {
+  width: 0;
+  height: 0;
+  border-left: 10px solid currentColor;
+  border-top: 5.5px solid transparent;
+  border-bottom: 5.5px solid transparent;
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+}
+
+/* "Inside Sabbatical" and "Read about the break", at the band's two ends once it opens. */
+.xp-gap__end {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(20, 10, 36, 0.78);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #fbf7ff;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.xp-gap__end--start {
+  left: 16px;
+  transform: translate(-12px, -50%);
+}
+
+.xp-gap__end--end {
+  right: 16px;
+  transform: translate(12px, -50%);
+}
+
+.xp-gap__arrow {
+  display: inline-block;
+}
+
+/* Open. */
+.xp-gap__bar:is(:hover, :focus-visible) {
+  height: 88px;
+}
+
+.xp-gap__bar:is(:hover, :focus-visible) .xp-gap__view {
+  opacity: 1;
+  transform: scale(1);
+  background-position: center 62%;
+}
+
+.xp-gap__bar:is(:hover, :focus-visible) .xp-gap__tape {
+  opacity: 0;
+}
+
+.xp-gap__bar:is(:hover, :focus-visible) .xp-gap__pill {
+  height: 34px;
+  padding: 0 18px;
+  background: #2a1440;
+  color: #fbf7ff;
+  box-shadow: 0 12px 26px -10px rgba(0, 0, 0, 0.6);
+}
+
+.xp-gap__bar:is(:hover, :focus-visible) .xp-gap__pause {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.xp-gap__bar:is(:hover, :focus-visible) .xp-gap__play {
+  opacity: 1;
+  transform: none;
+}
+
+.xp-gap__bar:is(:hover, :focus-visible) .xp-gap__end {
+  opacity: 1;
+  transform: translate(0, -50%);
+  transition-delay: 0.12s;
+}
+
+.xp-gap__bar:hover .xp-gap__arrow {
+  animation: xp-gap-nudge 1.1s ease-in-out infinite;
+}
+
+@keyframes xp-gap-nudge {
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+/* Phones: no hover, so the tape and paused pill are what shows; a tap goes to the section. The ends
+   would crowd the pill, so they stay away. */
+@media (max-width: 899px) {
+  .xp-gap__pill {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+  }
+
+  .xp-gap__end {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-gap__tapetrack,
+  .xp-gap__bar:hover .xp-gap__arrow {
+    animation: none;
+  }
+}
