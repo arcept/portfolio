@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useT } from '@/components/i18n/LangProvider';
 import MobileMenu from './MobileMenu';
 
-// The site's links. They appear in the bar on wide screens and in the full-screen menu on phones: add one here and it
+// The site's links. They appear in the bar on wide screens and in the menu's sheet on phones: add one here and it
 // shows in both. `note` is the short line under it in the menu. An item with no `href` is shown but does not act —
 // Contact waits for its own page.
 const NAV_LINKS = [
@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { label: 'Contact', href: null, note: 'Coming soon' },
 ];
 
-const CLOSE_MS = 700; // how long the menu takes to wipe away
+const CLOSE_MS = 600; // how long the menu's sheet takes to drop away
 
 export default function Nav({ actions }) {
   const t = useT();
@@ -21,7 +21,6 @@ export default function Nav({ actions }) {
   const [hidden, setHidden] = useState(false); // tucked away while scrolling down, back on the way up
   const [mounted, setMounted] = useState(false); // the menu exists
   const [open, setOpen] = useState(false); // the menu is showing (drives the animation)
-  const [origin, setOrigin] = useState({ x: 0, y: 0, r: 0 });
   const burger = useRef(null);
   const timer = useRef(0);
 
@@ -47,13 +46,16 @@ export default function Nav({ actions }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // The page is told when the bar is tucked away, so anything pinned under it (a case study's section bar on
+  // phones) can move up into its place.
+  const tucked = hidden && !mounted;
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-nav-hidden', tucked);
+  }, [tucked]);
+  useEffect(() => () => document.documentElement.removeAttribute('data-nav-hidden'), []);
+
   const openMenu = () => {
     window.clearTimeout(timer.current);
-    // The wipe grows from the middle of the button, far enough to reach the farthest corner.
-    const box = burger.current.getBoundingClientRect();
-    const x = box.left + box.width / 2;
-    const y = box.top + box.height / 2;
-    setOrigin({ x, y, r: Math.ceil(Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))) });
     setMounted(true);
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => setOpen(true)));
   };
@@ -88,7 +90,7 @@ export default function Nav({ actions }) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   return (
-    <nav className={`site-nav ${scrolled ? 'is-scrolled' : ''}${hidden && !mounted ? ' is-hidden' : ''}${open ? ' is-menu-open' : ''}`}>
+    <nav className={`site-nav ${scrolled ? 'is-scrolled' : ''}${tucked ? ' is-hidden' : ''}${open ? ' is-menu-open' : ''}`}>
       <div className="site-nav__inner">
         <a href="/" className="site-nav__name">Manik Madaan</a>
         <div className="site-nav__links">
@@ -119,7 +121,7 @@ export default function Nav({ actions }) {
           </button>
         </div>
       </div>
-      {mounted && <MobileMenu open={open} links={NAV_LINKS} origin={origin} onClose={closeMenu} onGo={go} />}
+      {mounted && <MobileMenu open={open} links={NAV_LINKS} onClose={closeMenu} onGo={go} />}
     </nav>
   );
 }

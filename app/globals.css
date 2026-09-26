@@ -15,6 +15,15 @@
   --chart-1: #eb5757;
   --chart-2: #6366f1;
   --site-nav-h: 56px;
+  /* Where anything pinned under the site's bar sits: the bar's height, or the top of the screen while the bar
+     is tucked away (Nav.js sets data-nav-hidden). Sticky elements that sit right under the bar use it for
+     `top`, with a transition on top (0.35s, the bar's own easing), so they move up into its place in step
+     with it instead of leaving a gap. */
+  --nav-top: var(--site-nav-h);
+}
+
+html[data-nav-hidden] {
+  --nav-top: 0px;
 }
 
 * {
@@ -107,9 +116,12 @@ a {
   transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Once the page has scrolled under it, the bar is frosted in the page's own colour (--void, which each page's
+   light theme remaps), so its links read over anything. */
 .site-nav.is-scrolled {
-  background: color-mix(in srgb, var(--void) 80%, transparent);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--void) 72%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
   border-bottom-color: var(--graphite);
 }
 
@@ -158,8 +170,7 @@ a.site-nav__link:focus-visible {
 
 /* Shown, but with nowhere to go yet: it must not offer itself as a link. */
 .site-nav__link--inert,
-.btn--inert,
-.mm__link--inert {
+.btn--inert {
   cursor: default;
 }
 
@@ -888,7 +899,7 @@ button:focus-visible {
   align-items: flex-start;
   overflow-x: auto;
   position: sticky;
-  top: var(--site-nav-h);
+  top: var(--nav-top);
   z-index: 5;
   background: color-mix(in srgb, var(--void) 90%, transparent);
   backdrop-filter: blur(8px);
@@ -901,6 +912,24 @@ button:focus-visible {
   scrollbar-width: none;
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
   mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+}
+
+/* Phones: the section bar runs edge to edge, out through the page's side padding (.wrap's 24px), and follows
+   the site's bar (see --nav-top). On wide screens the list sits in its own column instead. */
+@media (max-width: 899px) {
+  .cs-toc {
+    margin-left: -24px;
+    margin-right: -24px;
+    padding-left: 16px;
+    padding-right: 16px;
+    transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-toc {
+    transition: none;
+  }
 }
 
 /* The links that actually need to run horizontally live one level down, inside
@@ -1691,84 +1720,117 @@ html[data-cs-theme='light'] .cs-lang__menu {
   white-space: nowrap;
 }
 
-/* Theme switch on the Placement Hub case study (see components/theme/ThemeSwitch.js). Its state is
-   read from <html data-cs-theme>, so it is right on the first paint: knob to the right in dark. */
-.cs-switch {
+/* The theme switch (components/theme/AnimatedThemeSwitch.js), wherever a page has one. One disc does both
+   states: a sun with rays, cratered into a moon; the knob travels on a spring and squashes while held, and the
+   theme itself is revealed by a circle opening from the switch, via a view transition. Coloured with the site's
+   neutral tokens, which each page remaps for its light theme, so it flips with the page. Sized by the --ts-*
+   variables: this size by default, bigger in the bar on phones, and a page may set its own. */
+.theme-switch {
+  --ts-w: 54px;
+  --ts-h: 28px;
+  --ts-knob: 22px;
+  --ts-end: 14px;
+  --ts-glyph: 15px;
   position: relative;
   flex: none;
-  width: 54px;
-  height: 28px;
-  padding: 0;
-  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: var(--ts-w);
+  height: var(--ts-h);
+  padding: 0 calc((var(--ts-h) - var(--ts-knob)) / 2 - 1px);
   border: 1px solid var(--graphite);
+  border-radius: 999px;
   background: var(--obsidian);
-  color: var(--fog);
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.5s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.cs-switch:hover {
+.theme-switch[data-theme='light'] {
+  justify-content: flex-start;
+}
+
+.theme-switch:hover {
   border-color: var(--ash);
 }
 
-.cs-switch:focus-visible {
+.theme-switch:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
-.cs-switch__icon {
+/* The end markers. Each sits under one end of the track; the knob covers the active one, so what is visible is
+   always the state you would switch to. */
+.theme-switch__end {
   position: absolute;
   top: 50%;
-  display: flex;
-  transform: translateY(-50%);
-}
-
-.cs-switch__icon--sun {
-  left: 8px;
-}
-
-.cs-switch__icon--moon {
-  right: 8px;
-}
-
-.cs-switch__knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  width: var(--ts-end);
+  height: var(--ts-end);
+  translate: 0 -50%;
+  color: var(--fog);
+  pointer-events: none;
+  transition: color 0.4s ease;
+}
+
+.theme-switch__end svg {
+  width: 100%;
+  height: 100%;
+}
+
+.theme-switch__end--sun {
+  left: calc((var(--ts-h) - var(--ts-end)) / 2);
+}
+
+.theme-switch__end--moon {
+  right: calc((var(--ts-h) - var(--ts-end)) / 2);
+}
+
+.theme-switch:hover .theme-switch__end {
+  color: var(--mist);
+}
+
+.theme-switch__knob {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: var(--ts-knob);
+  height: var(--ts-knob);
+  border-radius: 999px;
   background: var(--paper);
-  color: var(--void); /* the opposite of the knob, on either theme, so the icon on it always shows */
-  transform: translateX(26px);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  color: var(--void); /* the opposite of the knob, in either theme, so the glyph on it always shows */
 }
 
-html[data-cs-theme='light'] .cs-switch__knob {
-  transform: none;
+.theme-switch__glyph {
+  width: var(--ts-glyph);
+  height: var(--ts-glyph);
+  overflow: visible;
 }
 
-/* The icon for the current mode is on the knob; the track shows only the mode you would switch to. */
-.cs-switch__glyph {
-  grid-area: 1 / 1;
-  display: flex;
+/* The wipe drives both snapshots itself, so every default animation is silenced — including the group and
+   image-pair ones, whose 250ms default would end the transition early and cut it short. */
+html[data-theme-wipe]::view-transition-new(root) {
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
 }
 
-.cs-switch__glyph--sun,
-html[data-cs-theme='light'] .cs-switch__glyph--moon,
-.cs-switch__icon--moon {
-  display: none;
+html[data-theme-wipe]::view-transition-group(root),
+html[data-theme-wipe]::view-transition-image-pair(root),
+html[data-theme-wipe]::view-transition-old(root),
+html[data-theme-wipe]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
-html[data-cs-theme='light'] .cs-switch__glyph--sun,
-html[data-cs-theme='light'] .cs-switch__icon--moon {
-  display: flex;
+html[data-theme-wipe]::view-transition-old(root) {
+  z-index: 1;
 }
 
-html[data-cs-theme='light'] .cs-switch__icon--sun {
-  display: none;
+html[data-theme-wipe]::view-transition-new(root) {
+  z-index: 2;
 }
 
 /* The footer's "Cookie settings": reads as the footer's text. */

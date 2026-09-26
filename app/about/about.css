@@ -136,57 +136,11 @@ html[data-abt-theme='light'] {
 
    The site's bar hides as the reader scrolls down and returns when they scroll up (Nav.js). At the top
    of the page it has no band, since a band fought the colour behind the statement; once it comes back
-   over the page it is frosted in the page's own colour, so its links read over anything. The rail
+   over the page it is frosted in the page's own colour. Its look, layout and controls (the frosting,
+   the theme switch, the menu button) follow the site's rules in globals.css and
+   components/mobile-menu.css, the same as every other page. The rail
    is a full-height sticky column: the index keeps its place near the top, the way back up sits at
    the foot of the viewport.                                                                        */
-
-.abt .site-nav.is-scrolled {
-  background: color-mix(in srgb, var(--abt-base) 72%, transparent);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  backdrop-filter: blur(14px) saturate(1.2);
-  border-bottom-color: var(--abt-line);
-}
-
-/* The switch sits in the bar's own flow and leaves with it. Its own breathing room, on top of the
-   bar's 24px gap, so it reads as separate from the links rather than the last one in the list. */
-.abt .site-nav .abt-switch {
-  margin-left: 20px;
-}
-
-/* Phones: the burger moves to the left of the name, leaving the far right to the switch.
-   `display: contents` lifts the burger out of its wrapper so it can be ordered against the name. */
-@media (max-width: 640px) {
-  .abt .site-nav__links {
-    display: contents;
-  }
-
-  .abt .site-nav__menu {
-    order: -1;
-    margin-right: 16px;
-    /* Matches the theme switch's own height (see .abt-switch) so the two pills in this bar read as
-       the same scale. The lines only need re-centring for the taller box — their horizontal insets
-       are unchanged. */
-    width: 38px;
-    height: 38px;
-  }
-
-  .abt .site-nav__menu i:nth-child(1) {
-    top: 15px;
-  }
-
-  .abt .site-nav__menu i:nth-child(2) {
-    top: 21px;
-  }
-
-  .abt .site-nav__menu[aria-expanded='true'] i {
-    top: 18.25px;
-  }
-
-  .abt .site-nav__name {
-    order: 0;
-    margin-right: auto;
-  }
-}
 
 .abt-rail {
   display: none;
@@ -793,108 +747,6 @@ html[data-abt-theme='light'] .abt-index [data-id='sabbatical'] {
   display: flex;
   flex-wrap: wrap;
   gap: 14px 30px;
-}
-
-/* ---------------------------------------------------------------- Theme switch
-
-   One disc does both states (see AboutThemeSwitch.js): a sun with rays, cratered into a moon. The
-   knob travels on a spring and squashes while held, and the theme itself is revealed by a circle
-   opening from the switch, via a view transition.                                                 */
-
-.abt-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 72px;
-  height: 38px;
-  padding: 4px;
-  border: 1px solid var(--abt-line-2);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--abt-ink) 7%, transparent);
-  cursor: pointer;
-  transition: border-color 0.3s ease, background-color 0.5s ease;
-}
-
-.abt-switch[data-theme='light'] {
-  justify-content: flex-start;
-}
-
-.abt-switch:hover {
-  background: color-mix(in srgb, var(--abt-ink) 11%, transparent);
-}
-
-/* The end markers. Each sits under one end of the track; the knob covers the active one, so what is
-   visible is always the state you would switch to. */
-.abt-switch__end {
-  position: absolute;
-  top: 50%;
-  display: grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  translate: 0 -50%;
-  color: var(--t4);
-  pointer-events: none;
-  transition: color 0.4s ease;
-}
-
-.abt-switch__end svg {
-  width: 100%;
-  height: 100%;
-}
-
-.abt-switch__end--sun {
-  left: 8px;
-}
-
-.abt-switch__end--moon {
-  right: 8px;
-}
-
-.abt-switch:hover .abt-switch__end {
-  color: var(--t3);
-}
-
-.abt-switch__knob {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: var(--abt-accent);
-  color: #fff; /* the glyph reads as light on the accent in both themes */
-}
-
-.abt-switch__glyph {
-  width: 18px;
-  height: 18px;
-  overflow: visible;
-}
-
-/* The wipe drives both snapshots itself, so every default animation is silenced — including the
-   group and image-pair ones, whose 250ms default would end the transition early and cut it short. */
-html[data-abt-wipe]::view-transition-new(root) {
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
-}
-
-html[data-abt-wipe]::view-transition-group(root),
-html[data-abt-wipe]::view-transition-image-pair(root),
-html[data-abt-wipe]::view-transition-old(root),
-html[data-abt-wipe]::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-html[data-abt-wipe]::view-transition-old(root) {
-  z-index: 1;
-}
-
-html[data-abt-wipe]::view-transition-new(root) {
-  z-index: 2;
 }
 
 /* ---------------------------------------------------------------- Focus */
