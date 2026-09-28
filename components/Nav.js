@@ -93,7 +93,13 @@ export default function Nav({ actions }) {
   return (
     <nav className={`site-nav ${navSans.variable} ${scrolled ? 'is-scrolled' : ''}${tucked ? ' is-hidden' : ''}${open ? ' is-menu-open' : ''}`}>
       <div className="site-nav__inner">
-        <a href="/" className="site-nav__name">Manik Madaan</a>
+        <a href="/" className="site-nav__name">
+          {/* The ✦ is drawn, not typed: the bar's face has no glyph for it, and a fallback's would vary. */}
+          <svg className="site-nav__star" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 0C12.6 6.6 17.4 11.4 24 12 17.4 12.6 12.6 17.4 12 24 11.4 17.4 6.6 12.6 0 12 6.6 11.4 11.4 6.6 12 0Z" />
+          </svg>
+          Manik Madaan
+        </a>
         <div className="site-nav__links">
           {NAV_LINKS.map((link) =>
             link.href ? (

@@ -148,8 +148,18 @@ a {
 }
 
 .site-nav__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
   font-weight: 590;
   color: var(--paper);
+}
+
+.site-nav__star {
+  width: 0.8em;
+  height: 0.8em;
+  flex: none;
+  fill: #34c759;
 }
 
 .site-nav__links {
