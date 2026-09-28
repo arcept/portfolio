@@ -7,6 +7,7 @@
 //      the default again);
 //   2. on phones and tablets in portrait (the same width the page's phone layouts use), light,
 //      whatever the operating system is set to;
+//   (a page may declare its own default instead of 2 and 3: see defaultTheme);
 //   3. otherwise the operating system's setting;
 //   4. dark, when the browser doesn't expose one.
 
@@ -17,6 +18,10 @@ export const MOBILE_QUERY = '(max-width: 899px)';
 
 export function defaultTheme() {
   if (typeof window === 'undefined' || !window.matchMedia) return 'dark';
+  // A page can declare its own default on <html> (data-abt-default); /about doesn't, and follows the
+  // rules above. A choice made with the switch still wins over it.
+  const declared = document.documentElement.dataset.abtDefault;
+  if (declared === 'light' || declared === 'dark') return declared;
   if (window.matchMedia(MOBILE_QUERY).matches) return 'light';
   if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
   if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';

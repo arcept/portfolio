@@ -1,0 +1,838 @@
+/* The homepage (app/page.js): the hero over the aurora contours, the statement, and the runner, in
+   the About page's system (its tokens, theme switch and loading curtain, from about.css) with the
+   homepage's own colours and buttons. Built in the homepage lab (hybrid I) and brought over as
+   picked: Google Sans, E's buttons with the rainbow, the ink cursor mask, light first. */
+
+html[data-abt-theme='light'] .abt:has(.hx-i) {
+  --abt-ink: #11142a;
+  --abt-base: #f3f4fa;
+  --abt-accent: #c8318a;
+  --hx-on-accent: #ffffff;
+}
+
+html[data-abt-theme='light']:has(.hx-i) {
+  --void: #f3f4fa;
+}
+
+.abt:has(.hx-i) {
+  --abt-ink: #eef0fb;
+  --abt-base: #0b0d17;
+  --abt-accent: #ff7ac6;
+  --hx-on-accent: #0b0d17;
+}
+
+.hx-i {
+  --hx-i-fs: clamp(28px, 4.2vw, 60px);
+  overflow-x: clip;
+}
+
+.abt:has(.hx-i) .abt-switch__knob {
+  color: var(--hx-on-accent);
+}
+
+/* The loading curtain (the About page's shutter) fills in the violet of the shirt in the second
+   portrait instead of the pink accent, in both themes, with the digits it covers in white. */
+.abt:has(.hx-i) .abt-intro--shutter .abt-intro__fill {
+  background: #5a1798;
+}
+
+.abt:has(.hx-i) .abt-intro--shutter .abt-intro__fill .abt-intro__num {
+  color: #fff;
+}
+
+.hx-i main {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------- The poster
+
+   E's poster without its frame: the background (Scene.js) runs full-bleed behind the whole first
+   screen, under the site's bar, and the poster is only the layer of words over it that zooms out on
+   scroll. */
+
+.hx-i-hero {
+  position: relative;
+  padding-top: calc(var(--site-nav-h) + 8px);
+}
+
+.hx-i-poster {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100svh - var(--site-nav-h) - 24px);
+  overflow: hidden;
+  transform-origin: 50% 0%;
+  /* Scaled and faded by the scroll: kept on a layer of its own, so a phone moves it rather than
+     redrawing it every frame. */
+  will-change: transform, opacity;
+}
+
+
+.hx-i-poster__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: inherit;
+  padding: clamp(16px, 3vh, 48px) clamp(28px, 4vw, 64px) clamp(40px, 6vh, 72px);
+  text-align: center;
+}
+
+.hx-i-title {
+  align-self: stretch;
+  margin: 12px 0 8px;
+  font-size: var(--hx-i-fs);
+  line-height: 1.02;
+  color: var(--t1);
+}
+
+/* ---------------------------------------------------------------- The name band
+
+   The name in very large type, edge to edge across the poster, behind everything in front of it
+   (z-index -1 inside the poster's content, so above the aurora and under the rest). The headline is
+   a subheading under it. */
+
+.hx-i-mq {
+  z-index: -1;
+  overflow: hidden;
+  color: var(--abt-ink);
+  font-size: clamp(88px, 11vw, 160px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  white-space: pre;
+}
+
+.hx-i-mq__track {
+  display: flex;
+  width: max-content;
+}
+
+.hx-i-mq__star {
+  display: inline-block;
+  width: 0.46em;
+  height: 0.46em;
+  margin: 0 0.32em;
+  vertical-align: 0.06em;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0C12.6 6.6 17.4 11.4 24 12 17.4 12.6 12.6 17.4 12 24 11.4 17.4 6.6 12.6 0 12 6.6 11.4 11.4 6.6 12 0Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0C12.6 6.6 17.4 11.4 24 12 17.4 12.6 12.6 17.4 12 24 11.4 17.4 6.6 12.6 0 12 6.6 11.4 11.4 6.6 12 0Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* The portrait stands in the middle, in the flow, and the band runs across its middle behind it
+   (out of the flow, centred on the portrait's height). */
+.hx-i-stage {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+  /* A clear pause between the portrait and the words under it. */
+  margin: 18px 0 clamp(44px, 8vh, 88px);
+}
+
+.hx-i-stage .hx-i-mq {
+  position: absolute;
+  left: calc(clamp(28px, 4vw, 64px) * -1);
+  right: calc(clamp(28px, 4vw, 64px) * -1);
+  top: 50%;
+  margin: -0.56em 0 0;
+}
+
+.hx-i-portrait-scale {
+  position: relative;
+  will-change: transform;
+}
+
+/* "Hello / Ciao" over the portrait's top-right corner: 112px tall, --down from the portrait's top
+   and --past its right edge. Its shadow copy is clipped to the portrait (its top-right corner
+   rounded to match), so only the lettering on the picture casts a shadow. */
+.hx-i-hello {
+  --down: 12px;
+  --past: 74px;
+  --round: 28px;
+  position: absolute;
+  z-index: 2;
+  top: var(--down);
+  right: calc(-1 * var(--past));
+  height: 112px;
+  color: #f2f2f7;
+  pointer-events: none;
+}
+
+.hx-i-hello svg {
+  display: block;
+  width: auto;
+  height: 100%;
+  fill: currentColor;
+}
+
+/* The plain copy on top of the shadowed one. */
+.hx-i-hello > svg {
+  position: relative;
+}
+
+.hx-i-hello__shade {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(calc(-1 * var(--down)) var(--past) -40px -40px round 0 var(--round) 0 0);
+}
+
+.hx-i-hello__shade svg {
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+}
+
+/* The handwritten name (NameSticker.js) under the portrait, 160px tall and centred, its lettering
+   (which starts 22px into the drawing) lapping over the portrait's foot by 3% of its height. Over the
+   picture, under the headline and buttons. */
+.hx-i-name {
+  position: absolute;
+  z-index: 2;
+  top: calc(97% - 22px);
+  left: 50%;
+  height: 160px;
+  translate: -50% 0;
+  color: #af52de;
+  pointer-events: none;
+}
+
+.hx-i-name svg {
+  display: block;
+  width: auto;
+  height: 100%;
+  fill: currentColor;
+}
+
+.hx-i-title,
+.hx-i-actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* In the light theme, the nav star's green. */
+html[data-abt-theme='light'] .hx-i-hello {
+  color: #34c759;
+}
+
+.hx-i-portrait {
+  position: relative;
+  width: clamp(264px, 25.3vw, 396px);
+  aspect-ratio: 3 / 4;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--abt-base);
+  box-shadow:
+    0 0 0 1px var(--abt-line),
+    0 40px 80px -36px rgba(20, 12, 40, 0.55);
+}
+
+/* The portraits (or the canvas that draws them) stack in the frame; the next comes in over the last. */
+.hx-i-portrait__img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A strip of the next portrait: a window that slides in, with the whole picture inside it (offset to
+   the strip's place) sliding the other way. */
+.hx-i-portrait__slice {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.hx-i-portrait__strip {
+  position: absolute;
+  top: 0;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 700px) {
+  .hx-i-portrait {
+    width: min(68vw, 290px);
+    border-radius: 22px;
+  }
+  .hx-i-hello {
+    --down: 9px;
+    --past: 58px;
+    --round: 22px;
+    height: 88px;
+  }
+  .hx-i-name {
+    top: calc(97% - 17px);
+    height: 126px;
+  }
+}
+
+.hx-i-title__mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+/* The zoom-out as the hero scrolls away, where the browser can tie an animation to the scroll itself
+   (a view timeline on the hero, over the stretch from its top reaching the top of the screen to its
+   bottom doing so): the poster shrinks a little and fades, and the portrait shrinks further. Elsewhere
+   Hero.js and Portrait.js do the same from the scroll position in JavaScript, which on iOS Safari lags
+   the scroll and shakes. */
+@supports (animation-timeline: view()) {
+  .hx-i-hero {
+    view-timeline: --hx-hero block;
+  }
+  .hx-i-poster,
+  .hx-i-portrait-scale {
+    animation: linear both;
+    animation-timeline: --hx-hero;
+    animation-range: exit-crossing 0% exit-crossing 100%;
+  }
+  .hx-i-poster {
+    animation-name: hx-poster-away;
+  }
+  .hx-i-portrait-scale {
+    animation-name: hx-portrait-away;
+  }
+}
+
+@keyframes hx-poster-away {
+  to {
+    transform: scale(0.88);
+    opacity: 0.35;
+  }
+}
+
+@keyframes hx-portrait-away {
+  to {
+    transform: scale(0.6);
+  }
+}
+
+/* Each line stays whole: Headline (Hero.js) steps the size down so the longer one fits. */
+.hx-i-title__line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- The background
+
+   Scene.js: pinned to the screen behind the hero, fading out as the hero scrolls away. */
+.hx-i-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.hx-i-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+.hx-i-backdrop canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Everything after the hero sits over the background while it fades. */
+.hx-i main > :not(.hx-i-hero),
+.hx-i > footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------- The statement
+
+   Statement.js: a full-width band under the hero with the statement in one wide column, and a
+   ruler down its side that fills as the statement plays. It follows the theme, a shade off the
+   hero's background (--abt-base): a band only as tall as its content, whose colour fades in from the
+   hero above and out into the page below (::before), rather than starting and ending on an edge. */
+
+.hx-st {
+  --st-bg: #080a13;
+  --st-ink: #f1f2fb;
+  --st-ring: rgba(255, 255, 255, 0.85);
+  --st-burst: #a57bff;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: clamp(48px, 7vh, 80px) clamp(20px, 4vw, 72px);
+  color: var(--st-ink);
+}
+
+.hx-st::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 -30vh;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--st-bg) clamp(120px, 20vh, 200px),
+    var(--st-bg) calc(100% - 30vh),
+    transparent
+  );
+  pointer-events: none;
+}
+
+html[data-abt-theme='light'] .hx-st {
+  --st-bg: #eceef6;
+  --st-ink: #17142a;
+  --st-ring: #fff;
+  --st-burst: #7a4dff;
+}
+
+.hx-st__inner {
+  display: grid;
+  grid-template-columns: clamp(220px, 22vw, 360px) minmax(0, 1fr) 14px;
+  grid-template-areas: 'art text ruler';
+  align-items: center;
+  gap: clamp(24px, 3vw, 56px);
+  width: min(100%, 1520px);
+  margin: 0 auto;
+}
+
+/* The illustration's column: a 3:4 painting with rounded corners, kept narrow so the statement
+   beside it runs to no more than eight or nine lines. */
+.hx-st__art {
+  grid-area: art;
+  width: 100%;
+  justify-self: center;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.hx-st__art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hx-st__text {
+  grid-area: text;
+  margin: 0;
+  font-size: clamp(20px, 2.5vw, 36px);
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+
+.hx-st__w {
+  display: inline-block;
+}
+
+/* Key phrases: underlined, as in a well-set essay (a line drawn under the whole phrase, spaces too). */
+.hx-st__key {
+  background: linear-gradient(color-mix(in srgb, var(--st-ink) 55%, transparent), color-mix(in srgb, var(--st-ink) 55%, transparent)) 0 100% / 100% 0.06em no-repeat;
+  padding-bottom: 0.04em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* The emblems between the words: about a capital's height, set on the line. */
+.hx-st__icon {
+  vertical-align: -0.08em;
+}
+
+.hx-st__icon svg,
+.hx-st__icon img {
+  display: inline-block;
+  width: 0.82em;
+  height: 0.82em;
+  margin: 0 0.06em;
+}
+
+.hx-st__icon--star svg {
+  fill: #34c759;
+}
+
+.hx-st__icon--burst svg {
+  fill: var(--st-burst);
+}
+
+.hx-st__icon--portrait img {
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  box-shadow: 0 0 0 2px var(--st-ring);
+}
+
+/* The ruler: fine ticks, the ones already passed lit, a marker at the reading point. */
+.hx-st__ruler {
+  --p: 0;
+  grid-area: ruler;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-self: stretch;
+  padding: 0.4em 0;
+}
+
+.hx-st__ruler i {
+  display: block;
+  width: 6px;
+  height: 1px;
+  background: color-mix(in srgb, var(--st-ink) 22%, transparent);
+  transition: background 0.2s, width 0.2s;
+}
+
+.hx-st__ruler i:nth-child(5n + 1) {
+  width: 12px;
+}
+
+.hx-st__ruler i:where([style]) {
+  background: color-mix(in srgb, var(--st-ink) calc((0.22 + 0.7 * clamp(0, (var(--p) - var(--i)) * 40 + 1, 1)) * 100%), transparent);
+}
+
+.hx-st__ruler::after {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: calc(0.4em + (100% - 0.8em) * var(--p));
+  width: 0;
+  height: 0;
+  border-block: 4px solid transparent;
+  border-left: 6px solid #34c759;
+  transform: translateY(-50%);
+}
+
+/* On a phone the illustration sits above the words: the landscape version, as a banner no taller than
+   120px, cropped around the view through the arch. */
+@media (max-width: 700px) {
+  .hx-st__inner {
+    grid-template-columns: minmax(0, 1fr) 8px;
+    grid-template-areas: 'art art' 'text ruler';
+    gap: 20px 16px;
+  }
+  .hx-st__art {
+    width: 100%;
+  }
+  .hx-st__art img {
+    height: 120px;
+    object-fit: cover;
+    object-position: 50% 58%;
+  }
+  .hx-st__ruler i:nth-child(5n + 1) {
+    width: 8px;
+  }
+}
+
+/* ---------------------------------------------------------------- The buttons */
+
+.hx-i-actions {
+  justify-content: center;
+  margin-top: 28px;
+}
+
+/* ---------------------------------------------------------------- Buttons
+
+   E: made for a colourful surface — a dark pill with a light disc, and a frosted ghost. The site's
+   rainbow rises through them on hover (in place of the accent), flowing while the pointer stays,
+   with the words in white. The rainbow is deepened here (mixed with ink) so white stays readable over
+   its pale cyan and lime stretches too. */
+.hx-i .hx-btn::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--rb-1) 70%, #16121c),
+    color-mix(in srgb, var(--rb-2) 70%, #16121c),
+    color-mix(in srgb, var(--rb-3) 62%, #16121c),
+    color-mix(in srgb, var(--rb-4) 52%, #16121c),
+    color-mix(in srgb, var(--rb-5) 48%, #16121c),
+    color-mix(in srgb, var(--rb-1) 70%, #16121c)
+  );
+  background-size: 200% 100%;
+}
+
+.hx-i .hx-btn:hover::before,
+.hx-i .hx-btn:focus-visible::before {
+  animation: rainbow var(--rb-speed) linear infinite;
+}
+
+.hx-i .hx-btn:hover,
+.hx-i .hx-btn:focus-visible,
+html[data-abt-theme='dark'] .hx-i .hx-btn--ghost:hover,
+html[data-abt-theme='dark'] .hx-i .hx-btn--ghost:focus-visible,
+.hx-i .hx-btn--ghost:hover .hx-btn__icon {
+  color: #fff;
+}
+
+.hx-i .hx-btn--primary {
+  background: #16121c;
+  color: #fff;
+}
+
+.hx-i .hx-btn--primary .hx-btn__icon {
+  background: #fff;
+  color: #16121c;
+}
+
+.hx-i .hx-btn--ghost {
+  background: rgba(255, 255, 255, 0.45);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #16121c;
+  box-shadow: inset 0 0 0 1px rgba(22, 18, 28, 0.16);
+}
+
+html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--t1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+/* ---------------------------------------------------------------- The runner */
+
+.hx-i-runner {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  margin-top: clamp(40px, 7vh, 80px);
+  padding: clamp(16px, 2.6vh, 28px) 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.hx-i-runner__track {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+}
+
+.hx-i-runner__item {
+  display: inline-flex;
+  align-items: center;
+  font-size: clamp(34px, 5vw, 76px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.hx-i-runner__word {
+  color: var(--t1);
+}
+
+.hx-i-runner__word.is-accent {
+  color: var(--abt-accent);
+}
+
+.hx-i-runner__pic {
+  display: inline-block;
+  margin: 0 0.4em;
+  flex: none;
+}
+
+.hx-i-runner__pic img {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.hx-i-runner__pic--shot {
+  width: 1.5em;
+  height: 0.95em;
+  overflow: hidden;
+  border-radius: 0.16em;
+  box-shadow: 0 0 0 1px var(--abt-line-2);
+  rotate: -6deg;
+}
+
+.hx-i-runner__pic--shot img {
+  object-fit: cover;
+  object-position: 0 0;
+}
+
+.hx-i-runner__pic--sticker {
+  height: 0.9em;
+  rotate: 8deg;
+}
+
+.hx-i-runner__pic--sticker img {
+  width: auto;
+}
+
+
+/* ---------------------------------------------------------------- Buttons */
+
+.hx .abt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.hx-magnet {
+  display: inline-block;
+}
+
+.hx-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  height: 50px;
+  padding: 0 6px 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--t1);
+  color: var(--abt-base);
+  font: 500 15px/1 var(--font-abt-sans), system-ui, sans-serif;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.35s ease;
+}
+
+/* The accent rises through the pill from below, on a curve, rather than a flat colour swap. */
+.hx-btn::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: -10%;
+  right: -10%;
+  top: 0;
+  height: 220%;
+  border-radius: 50% 50% 0 0;
+  background: var(--abt-accent);
+  transform: translateY(50%);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hx-btn:hover::before,
+.hx-btn:focus-visible::before {
+  transform: translateY(-30%);
+}
+
+.hx-btn:hover,
+.hx-btn:focus-visible {
+  color: var(--hx-on-accent);
+}
+
+.hx-btn:focus-visible {
+  outline: 2px solid var(--abt-accent);
+  outline-offset: 3px;
+}
+
+.hx-btn__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--abt-base);
+  color: var(--t1);
+  overflow: hidden;
+}
+
+.hx-btn__arrow {
+  display: inline-block;
+  font-size: 15px;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hx-btn:hover .hx-btn__arrow {
+  transform: rotate(-45deg);
+}
+
+/* A downward arrow drops through its disc and comes back in from the top, instead of turning. */
+.hx-btn[href^='#']:hover .hx-btn__arrow {
+  transform: none;
+  animation: hx-drop 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes hx-drop {
+  0% { transform: translateY(0); }
+  45% { transform: translateY(120%); }
+  46% { transform: translateY(-120%); }
+  100% { transform: translateY(0); }
+}
+
+.hx-btn--ghost {
+  background: transparent;
+  color: var(--t1);
+  box-shadow: inset 0 0 0 1px var(--abt-line-2);
+}
+
+.hx-btn--ghost .hx-btn__icon {
+  background: color-mix(in srgb, var(--abt-ink) 9%, transparent);
+}
+
+
+/* ---------------------------------------------------------------- The older sections
+
+   Selected work and About, from the homepage before this one, kept until they are rebuilt. Their
+   markup and the site's shared card classes are unchanged; here they take the page's theme (its ink,
+   base, lines and pink accent) in place of the site's fixed dark palette and its lime. */
+
+.home-old {
+  position: relative;
+  z-index: 1;
+  color: var(--t2);
+}
+
+.home-old h2,
+.home-old .card__title {
+  color: var(--t1);
+}
+
+.home-old .text-fog,
+.home-old .card__stat-label {
+  color: var(--t3);
+}
+
+.home-old .text-mist {
+  color: var(--t2);
+}
+
+.home-old .card {
+  background: color-mix(in srgb, var(--abt-ink) 4%, var(--abt-base));
+  border-color: var(--abt-line);
+  border-radius: 20px;
+}
+
+.home-old .card__cover {
+  background: color-mix(in srgb, var(--abt-ink) 8%, var(--abt-base));
+  color: var(--t3);
+  border-radius: 14px;
+}
+
+.home-old .tag {
+  border-color: var(--abt-line-2);
+  color: var(--t2);
+}
+
+.home-old .tag--progress {
+  border-color: var(--abt-accent);
+  color: var(--abt-accent);
+}
+
+.home-old .card__stat-value,
+.home-old .card__cta {
+  color: var(--abt-accent);
+}
+
+/* ---------------------------------------------------------------- Leaving for About
+
+   useWipeTo.js: the colour that rises over the screen before About opens, in About's own background
+   for the theme (its --abt-base, about.css), so About's loading curtain carries straight on from it. */
+
+.hx-wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background: #0a0b0e;
+}
+
+html[data-abt-theme='light'] .hx-wipe {
+  background: #f4f1ec;
+}
