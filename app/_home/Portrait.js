@@ -45,7 +45,7 @@ export default function Portrait({ progress, css, ready }) {
         <Slices index={index} />
       </motion.div>
       <Hello ready={ready} />
-      <NameSticker ready={ready} />
+      <NameSticker ready={ready} index={index} />
     </motion.div>
   );
 }

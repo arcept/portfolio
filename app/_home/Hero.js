@@ -7,6 +7,7 @@ import { FACE } from './fonts';
 import { useIntroDone } from './HomeIntro';
 import useScrollTimeline from './useScrollTimeline';
 import useWipeTo from './useWipeTo';
+import glideTo from './glideTo';
 import Marquee from './Marquee';
 import Portrait from './Portrait';
 import Scene from './Scene';
@@ -24,7 +25,6 @@ export default function Hero() {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.88]);
-  const fade = useTransform(scrollYProgress, [0, 1], [1, 0.35]);
   // In CSS where the browser can tie it to the scroll itself: on iOS Safari a zoom driven from
   // JavaScript lags the scroll by a frame or so, and shakes.
   const css = useScrollTimeline();
@@ -36,7 +36,7 @@ export default function Hero() {
       <Scene hero={ref} ready={ready} />
       <motion.div
         className="hx-i-poster"
-        style={css ? undefined : { scale, opacity: fade }}
+        style={css ? undefined : { scale }}
       >
         {/* It opens out of a clip. The clip is on this inner layer, not on the poster the scroll
             scales: a clip on a scaling element makes Safari repaint it every frame. */}
@@ -58,7 +58,7 @@ export default function Hero() {
             animate={ready ? { opacity: 1, y: 0 } : undefined}
             transition={{ duration: 1, ease: EASE, delay: 0.85 }}
           >
-            <Action href="#work" arrow="↓">
+            <Action href="#work" arrow="↓" onClick={glideTo}>
               See the work
             </Action>
             <Action href="/about" variant="ghost" onClick={toAbout}>
