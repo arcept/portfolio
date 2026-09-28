@@ -1,6 +1,7 @@
 import { Inter, IBM_Plex_Sans, IBM_Plex_Mono, Figtree } from 'next/font/google';
 import './globals.css';
 import Analytics from '@/components/Analytics';
+import BrowserTint from '@/components/BrowserTint';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -62,6 +63,7 @@ export default function RootLayout({ children }) {
       <body suppressHydrationWarning>
         {children}
         <Analytics />
+        <BrowserTint />
       </body>
     </html>
   );
