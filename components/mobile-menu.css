@@ -185,7 +185,7 @@
   width: var(--vv-width, 100%);
   height: var(--vv-height, 100%);
   color: var(--ms-ink);
-  font-family: var(--font-menu-sans), var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-nav-sans), var(--font-inter), system-ui, sans-serif;
   visibility: hidden;
   transition: visibility 0s linear 0.6s;
 }

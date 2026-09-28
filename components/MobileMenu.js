@@ -3,8 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useT } from '@/components/i18n/LangProvider';
-import { menuSans } from './menu-font';
 import './mobile-menu.css';
+import { navSans } from './nav-font';
 
 // The phone menu: the page stays in view, dimmed and blurred, and a rounded sheet rises from the foot of the screen,
 // where a thumb can reach it. Work is a wide card and About and Contact sit side by side under it, each over a
@@ -99,7 +99,7 @@ export default function MobileMenu({ open, links, onClose, onGo }) {
   const [first, ...rest] = links;
 
   return createPortal(
-    <div ref={root} id="site-menu" className={`ms ${menuSans.variable}${open ? ' is-open' : ''}`}>
+    <div ref={root} id="site-menu" className={`ms ${navSans.variable}${open ? ' is-open' : ''}`}>
       <button type="button" className="ms__scrim" aria-label={t('ui.menuClose', 'Close menu')} tabIndex={-1} onClick={() => onClose()} />
       <div className="ms__sheet" role="dialog" aria-modal="true" aria-label={t('ui.menu', 'Menu')} tabIndex={-1}>
         <span className="ms__glow" aria-hidden="true">

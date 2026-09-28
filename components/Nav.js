@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useT } from '@/components/i18n/LangProvider';
 import MobileMenu from './MobileMenu';
+import { navSans } from './nav-font';
 
 // The site's links. They appear in the bar on wide screens and in the menu's sheet on phones: add one here and it
 // shows in both. `note` is the short line under it in the menu. An item with no `href` is shown but does not act —
@@ -90,7 +91,7 @@ export default function Nav({ actions }) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   return (
-    <nav className={`site-nav ${scrolled ? 'is-scrolled' : ''}${tucked ? ' is-hidden' : ''}${open ? ' is-menu-open' : ''}`}>
+    <nav className={`site-nav ${navSans.variable} ${scrolled ? 'is-scrolled' : ''}${tucked ? ' is-hidden' : ''}${open ? ' is-menu-open' : ''}`}>
       <div className="site-nav__inner">
         <a href="/" className="site-nav__name">Manik Madaan</a>
         <div className="site-nav__links">
