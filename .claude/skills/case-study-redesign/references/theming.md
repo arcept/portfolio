@@ -7,15 +7,18 @@ exists. The page never forks content.
 ## Mechanism
 1. **State**: `data-cs-theme="dark"|"light"` on `<html>`. Only present while a page that installs the kit is
    open. Everything else on the site is untouched (verify: `/`, other case studies have no attribute).
-2. **Which theme**: a choice made with the switch this visit (sessionStorage `cs-theme`) → else the OS
+2. **Which theme**: the site's one theme (`components/theme/site.js`), shared with the homepage and About:
+   a choice made with any page's switch this visit (sessionStorage `site-theme`) → else the OS
    (`prefers-color-scheme`, live — it follows changes while the page is open) → else dark. Session-only on
-   purpose, so the next visit starts from the OS again.
+   purpose, so the next visit starts from the OS again. A case study without a light version yet simply
+   installs nothing and stays dark; the choice is kept for the next page that has one.
 3. **No flash**: an inline `<script dangerouslySetInnerHTML={{__html: themeGateScript()}}/>` as the *first
    child of the page wrapper* sets the attribute during parse, before paint. `<html>` in `app/layout.js`
    needs `suppressHydrationWarning` (the attribute isn't in the server HTML).
 4. **Client navigations**: inline scripts don't run there, so `ThemeSwitch` (mounted in the nav) applies the
-   theme on mount, follows OS changes, and **removes the attribute on unmount** so a choice can't leak onto
-   other pages.
+   theme on mount, follows OS changes, re-reads it when the browser restores the page on Back (the theme may
+   have been switched on another page), and **removes the attribute on unmount** so it doesn't linger onto
+   pages that don't use it.
 5. **The switch**: `<Nav actions={<ThemeSwitch />} />`. Knob/icon position is CSS from the `<html>`
    attribute (`html[data-cs-theme='light'] .cs-switch__knob`), so it is correct on first paint;
    `aria-checked` comes from `useCsTheme()`.

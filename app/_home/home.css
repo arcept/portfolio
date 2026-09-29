@@ -601,7 +601,7 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   z-index: 1;
   overflow: hidden;
   margin-top: clamp(40px, 7vh, 80px);
-  padding: clamp(16px, 2.6vh, 28px) 0;
+  padding: clamp(10px, 1.6vh, 17px) 0;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
@@ -610,12 +610,25 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   display: flex;
   width: max-content;
   white-space: nowrap;
+  animation: hx-runner 42s linear infinite;
+}
+
+@keyframes hx-runner {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-i-runner__track {
+    animation: none;
+  }
 }
 
 .hx-i-runner__item {
   display: inline-flex;
   align-items: center;
-  font-size: clamp(34px, 5vw, 76px);
+  font-size: clamp(20px, 3vw, 46px);
   line-height: 1.1;
   letter-spacing: -0.02em;
 }
@@ -772,11 +785,819 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
 }
 
 
-/* ---------------------------------------------------------------- The older sections
+/* ---------------------------------------------------------------- Selected work
 
-   Selected work and About, from the homepage before this one, kept until they are rebuilt. Their
-   markup and the site's shared card classes are unchanged; here they take the page's theme (its ink,
-   base, lines and pink accent) in place of the site's fixed dark palette and its lime. */
+   Work.js: the featured case studies as a list with one card beside it (a carousel on phones), then
+   "Read more". Each row and card carries its case study's colour as --accent. */
+
+.hx-w {
+  --hx-w-gutter: clamp(16px, 4.4vw, 76px);
+  --hx-w-face: var(--font-abt-sans), system-ui, sans-serif;
+  position: relative;
+  isolation: isolate;
+  padding: clamp(96px, 14vh, 160px) 0 clamp(80px, 12vh, 140px);
+}
+
+.hx-w-wrap {
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 0 var(--hx-w-gutter);
+}
+
+/* The faint lines behind the cards (Behind.js), drawn on a canvas under the section. */
+.hx-w-behind {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.hx-w-behind canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hx-w__head {
+  margin-bottom: clamp(64px, calc(6vh + 24px), 96px);
+}
+
+/* "Selected work" (and "Read more"): the logo's green ✦, then the words, then a faint line on to the
+   edge, fading out as it goes. */
+.hx-w__heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--hx-w-head-face, var(--hx-w-face));
+  font-size: clamp(26px, 2.4vw, 32px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--t1);
+}
+
+.hx-w__star {
+  width: 0.62em;
+  height: 0.62em;
+  flex: none;
+  fill: #34c759;
+}
+
+.hx-w__streak {
+  flex: 1;
+  height: 1px;
+  margin-left: 10px;
+  background: linear-gradient(to right, color-mix(in srgb, var(--abt-ink) 16%, transparent), transparent);
+  transform-origin: left center;
+}
+
+/* A clip that words rise out of (the space stays outside it). */
+.hx-w__mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+/* ------------------------------------------------ The list */
+
+.hx-w-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-w-row {
+  position: relative;
+}
+
+/* Lines only between the projects, none above the first. */
+.hx-w-row__rule {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--abt-line);
+  transform-origin: left center;
+}
+
+.hx-w-row:first-child .hx-w-row__rule {
+  display: none;
+}
+
+.hx-w-row__link {
+  display: block;
+  padding: clamp(18px, 2.6vh, 28px) 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.hx-w-row__head {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px 20px;
+}
+
+/* Down a touch, so the number sits level with the title's first line. */
+.hx-w-row .hx-w-num {
+  margin-top: 6px;
+}
+
+/* The number: pale grey fading out towards its foot while it rests; solid in the case study's colour
+   when its row is open (or its card hovered, or on a phone the card in view). The two ends of the
+   gradient are registered colours, so the change eases instead of snapping. */
+@property --hx-n-top {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+
+@property --hx-n-foot {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+
+.hx-w-num {
+  --hx-n-top: color-mix(in srgb, var(--abt-ink) 34%, transparent);
+  --hx-n-foot: color-mix(in srgb, var(--abt-ink) 6%, transparent);
+  display: block;
+  width: fit-content;
+  padding-bottom: 0.06em;
+  font-family: var(--hx-w-face);
+  font-size: 54px;
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: transparent;
+  background: linear-gradient(to bottom, var(--hx-n-top) 10%, var(--hx-n-foot) 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition:
+    --hx-n-top 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    --hx-n-foot 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Light pages need less grey for the same pale step. */
+html[data-abt-theme='light'] .hx-w-num {
+  --hx-n-top: color-mix(in srgb, var(--abt-ink) 24%, transparent);
+  --hx-n-foot: color-mix(in srgb, var(--abt-ink) 4%, transparent);
+}
+
+.hx-w-row[data-on='true'] .hx-w-num,
+a.hx-w-card:hover .hx-w-num,
+a.hx-w-card:focus-visible .hx-w-num,
+.hx-w-ph__card[data-on='true'] .hx-w-num {
+  --hx-n-top: var(--accent);
+  --hx-n-foot: var(--accent);
+}
+
+.hx-w-row__text {
+  display: grid;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.hx-w-row__title {
+  display: inline-block;
+  font-family: var(--hx-w-face);
+  font-size: clamp(30px, 3.2vw, 48px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--t1);
+}
+
+.hx-w-row__line {
+  display: block;
+  max-width: 52ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--t3);
+}
+
+/* The rows not open step back, so the one being read stands out. */
+.hx-w-row .hx-w-row__head {
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hx-w-row[data-on='false'] .hx-w-row__head {
+  opacity: 0.7;
+}
+
+.hx-w-row[data-on='false'] .hx-w-row__link:hover .hx-w-row__head,
+.hx-w-row[data-on='false'] .hx-w-row__link:focus-visible .hx-w-row__head {
+  opacity: 1;
+}
+
+.hx-w-row__link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+
+/* ------------------------------------------------ The card: frosted glass in the dark, solid in the light */
+
+.hx-w-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  padding: clamp(16px, 1.6vw, 24px);
+  border-radius: clamp(20px, 2vw, 32px);
+  border: 1px solid color-mix(in srgb, var(--abt-ink) 12%, transparent);
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
+    color-mix(in srgb, var(--abt-base) 50%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html[data-abt-theme='light'] .hx-w-card {
+  border-color: transparent;
+  background: #fff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 1px 3px rgba(20, 24, 50, 0.05),
+    0 18px 40px -20px rgba(20, 24, 50, 0.14);
+}
+
+a.hx-w-card:hover {
+  transform: translateY(-4px);
+}
+
+a.hx-w-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* The screenshot's frame, glowing in the case study's colour (no line round it: the card has one). */
+.hx-w-card__media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--abt-ink) 6%, var(--abt-base));
+  box-shadow: 0 40px 90px -30px color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+.hx-w-card__canvas,
+.hx-w-card__canvas canvas,
+.hx-w-shot {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hx-w-shot {
+  object-fit: cover;
+  object-position: top left;
+}
+
+/* The light running round the edge (Beam): the OMS prototype frame's StarBorder, drawn in a ring just
+   inside the card instead of behind a padded wrapper, so it works over either surface. */
+.hx-w-beam {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  padding: 3px;
+  border-radius: inherit;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+.hx-w-beam__top,
+.hx-w-beam__bottom {
+  position: absolute;
+  width: 300%;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent), transparent 10%);
+  animation-duration: 5s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+.hx-w-beam__top {
+  top: -12px;
+  left: -250%;
+  animation-name: hx-beam-top;
+}
+
+.hx-w-beam__bottom {
+  right: -250%;
+  bottom: -12px;
+  animation-name: hx-beam-bottom;
+}
+
+@keyframes hx-beam-top {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes hx-beam-bottom {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-w .hx-w-beam {
+    display: none;
+  }
+}
+
+/* The wide card's details, all in one cell: the card takes the tallest, whichever is shown. */
+.hx-w-card__bodies {
+  display: grid;
+}
+
+.hx-w-card__body {
+  grid-area: 1 / 1;
+  padding: clamp(18px, 2vw, 26px) clamp(4px, 0.6vw, 8px) 4px;
+}
+
+.hx-w-card__kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 16px;
+  font-family: var(--hx-w-face);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--t3);
+}
+
+.hx-w-proto {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.hx-w-proto::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* The case study's headline number, in its colour, with what it counts beside it. */
+.hx-w-metric {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.hx-w-metric__value {
+  font-family: var(--hx-w-face);
+  font-size: clamp(30px, 2.6vw, 38px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  color: var(--accent);
+}
+
+.hx-w-metric__label {
+  max-width: 30ch;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--t3);
+}
+
+/* The facts: a label over a value, in a row. */
+.hx-w-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px clamp(20px, 2.4vw, 36px);
+  margin-bottom: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--abt-line);
+}
+
+.hx-w-facts__item {
+  display: grid;
+  gap: 3px;
+}
+
+.hx-w-facts__key {
+  font-family: var(--hx-w-face);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t4);
+}
+
+.hx-w-facts__value {
+  font-size: 15px;
+  color: var(--t2);
+}
+
+.hx-w-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--hx-w-face);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.hx-w-cta > span {
+  color: var(--accent);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hx-w-card:hover .hx-w-cta > span {
+  transform: translateX(6px);
+}
+
+/* ------------------------------------------------ Wide: the list and its card */
+
+.hx-w-split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: start;
+  gap: clamp(32px, 4.5vw, 80px);
+}
+
+/* The card rides along beside the list as it scrolls. */
+.hx-w-split__card {
+  position: sticky;
+  top: calc(var(--site-nav-h) + 32px);
+}
+
+/* ------------------------------------------------ Phones: the carousel */
+
+@media (max-width: 899px) {
+  .hx-w__head {
+    margin-bottom: 32px;
+  }
+}
+
+/* One card and the edge of the next (about 30px of it on a phone), snapping; it runs to the screen's
+   edges. */
+.hx-w-ph__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc(100% - 27px);
+  column-gap: 14px;
+  margin: 0 calc(-1 * var(--hx-w-gutter));
+  padding: 4px var(--hx-w-gutter) 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--hx-w-gutter);
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  list-style: none;
+}
+
+.hx-w-ph__track::-webkit-scrollbar {
+  display: none;
+}
+
+.hx-w-ph__slide {
+  scroll-snap-align: start;
+}
+
+.hx-w-ph__card {
+  display: grid;
+  align-content: start;
+  gap: 26px;
+  height: 100%;
+  padding: 12px 12px 22px;
+  border-radius: 24px;
+}
+
+.hx-w-ph__text {
+  display: grid;
+  gap: 12px;
+  padding: 0 6px;
+}
+
+/* A little more air under the title than between the lines that follow it. */
+.hx-w-ph__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.hx-w-ph__card .hx-w-num {
+  font-size: 40px;
+}
+
+.hx-w-ph__title {
+  font-family: var(--hx-w-face);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--t1);
+}
+
+.hx-w-ph__card .hx-w-card__kicker {
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+.hx-w-ph__card .hx-w-metric {
+  margin: 6px 0 8px;
+}
+
+.hx-w-ph__card .hx-w-metric__value {
+  font-size: 30px;
+}
+
+.hx-w-ph__card .hx-w-metric__label {
+  font-size: 13px;
+}
+
+.hx-w-ph__dots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.hx-w-ph__dot {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.hx-w-ph__dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--abt-ink) 22%, transparent);
+  transition:
+    width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.4s ease;
+}
+
+.hx-w-ph__dot[data-on='true']::before {
+  width: 24px;
+  background: var(--accent);
+}
+
+.hx-w-ph__dot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ------------------------------------------------ Read more: the rest, quieter than the featured */
+
+.hx-w-more {
+  margin-top: clamp(72px, 10vh, 120px);
+}
+
+/* A step down from "Selected work". */
+.hx-w-more__heading {
+  margin-bottom: 44px;
+  font-size: clamp(21px, 1.9vw, 25px);
+}
+
+.hx-w-more__list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(20px, 2.4vw, 32px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-w-more__list li {
+  min-width: 0;
+}
+
+.hx-w-more__list li > div {
+  height: 100%;
+}
+
+.hx-w-more__title {
+  font-family: var(--hx-w-face);
+  font-size: clamp(20px, 1.8vw, 28px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+}
+
+.hx-w-more__line {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--t3);
+}
+
+.hx-w-more__kicker {
+  font-family: var(--hx-w-face);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t4);
+}
+
+.hx-w-more a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+/* Still being written: a quiet tag, and a placeholder where the screenshot will go. */
+.hx-w-more__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+  padding: 3px 9px 3px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--abt-ink) 7%, transparent);
+  font-family: var(--hx-w-face);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t3);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.hx-w-more__state::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.hx-w-more__soon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  background:
+    radial-gradient(80% 90% at 30% 20%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 70%),
+    radial-gradient(70% 80% at 85% 90%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    color-mix(in srgb, var(--abt-ink) 4%, var(--abt-base));
+  font-family: var(--hx-w-face);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t3);
+}
+
+.hx-w-more__soon svg {
+  width: 28px;
+  height: 28px;
+  fill: var(--accent);
+}
+
+/* Wide: a smaller card each, the words beside the frame. */
+.hx-w-more__card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(16px, 2vw, 28px);
+  height: 100%;
+  padding: clamp(20px, 2.2vw, 32px);
+}
+
+.hx-w-more__text {
+  display: grid;
+  gap: 10px;
+  align-content: center;
+}
+
+.hx-w-more__card .hx-w-more__line {
+  margin-bottom: 8px;
+}
+
+.hx-w-more__card .hx-w-card__media {
+  aspect-ratio: 4 / 3.4;
+}
+
+/* Phones: a short row each, hairlines between. */
+.hx-w-more__list--rows {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.hx-w-more__list--rows li + li {
+  border-top: 1px solid var(--abt-line);
+}
+
+.hx-w-more__row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.hx-w-more__list--rows li:first-child .hx-w-more__row {
+  padding-top: 0;
+}
+
+.hx-w-more__thumb {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--abt-line);
+}
+
+.hx-w-more__thumb .hx-w-more__soon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.hx-w-more__rowtext {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.hx-w-more__rowtop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hx-w-more__rowtop .hx-w-more__state {
+  margin-left: 0;
+}
+
+.hx-w-more__num {
+  font-family: var(--hx-w-face);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--t4);
+}
+
+.hx-w-more__row .hx-w-more__title {
+  font-size: 19px;
+}
+
+.hx-w-more__go {
+  font-size: 20px;
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- The older section
+
+   About, from the homepage before this one, kept until it is rebuilt. Its markup is unchanged; here it
+   takes the page's theme (its ink and base) in place of the site's fixed dark palette. */
 
 .home-old {
   position: relative;
@@ -784,60 +1605,22 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   color: var(--t2);
 }
 
-.home-old h2,
-.home-old .card__title {
+.home-old h2 {
   color: var(--t1);
-}
-
-.home-old .text-fog,
-.home-old .card__stat-label {
-  color: var(--t3);
 }
 
 .home-old .text-mist {
   color: var(--t2);
 }
 
-.home-old .card {
-  background: color-mix(in srgb, var(--abt-ink) 4%, var(--abt-base));
-  border-color: var(--abt-line);
-  border-radius: 20px;
-}
+/* ---------------------------------------------------------------- Leaving the page
 
-.home-old .card__cover {
-  background: color-mix(in srgb, var(--abt-ink) 8%, var(--abt-base));
-  color: var(--t3);
-  border-radius: 14px;
-}
-
-.home-old .tag {
-  border-color: var(--abt-line-2);
-  color: var(--t2);
-}
-
-.home-old .tag--progress {
-  border-color: var(--abt-accent);
-  color: var(--abt-accent);
-}
-
-.home-old .card__stat-value,
-.home-old .card__cta {
-  color: var(--abt-accent);
-}
-
-/* ---------------------------------------------------------------- Leaving for About
-
-   useWipeTo.js: the colour that rises over the screen before About opens, in About's own background
-   for the theme (its --abt-base, about.css), so About's loading curtain carries straight on from it. */
+   Leave.js: the curtain that rises over the screen before another page opens, in that page's colour
+   (set by Leave.js), so the page arrives already in its own colour. */
 
 .hx-wipe {
   position: fixed;
   inset: 0;
   z-index: 200;
   pointer-events: none;
-  background: #0a0b0e;
-}
-
-html[data-abt-theme='light'] .hx-wipe {
-  background: #f4f1ec;
 }

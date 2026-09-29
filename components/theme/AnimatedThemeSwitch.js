@@ -9,11 +9,12 @@ import { track } from '@/components/track';
 // travels on a spring and squashes while it is held, so the control has some give, and the new theme is revealed
 // by a circle opening from the switch.
 //
-// Each page keeps its own theme (its own attribute on <html> and its own stored choice), so the switch is told
-// which one it drives: `attr`, `storageKey`, `resolve` (the theme to use when the switch has not been touched),
-// `follow` (media queries, beyond the operating system's colour scheme, that the default depends on) and `page`
-// (for the analytics event). It also owns keeping <html> in step: on client-side navigations the page's inline
-// gate script doesn't run, and the attribute is removed on unmount so the choice does not leak onto other pages.
+// It drives the site's one theme (components/theme/site.js) on whichever attribute the page's CSS keys off, so
+// it is told: `attr`, `storageKey`, `resolve` (the theme to use when the switch has not been touched), `follow`
+// (media queries, beyond the operating system's colour scheme, that the default depends on) and `page` (for the
+// analytics event). It also owns keeping <html> in step: on client-side navigations the page's inline gate script
+// doesn't run; on coming Back to a page the browser kept, the theme may have been changed on another page since;
+// and the attribute is removed on unmount so it does not linger onto pages that don't use it.
 
 const SPRING = { type: 'spring', stiffness: 700, damping: 30, mass: 0.8 };
 const SOLID = 0.55; // where the wipe's gradient stops being fully opaque — keep in step with `edge`
@@ -41,8 +42,11 @@ export default function AnimatedThemeSwitch({ attr, storageKey, resolve, follow 
       setTheme(current());
     };
     queries.forEach((q) => q.addEventListener('change', sync));
+    const back = (event) => event.persisted && sync();
+    window.addEventListener('pageshow', back);
     return () => {
       queries.forEach((q) => q.removeEventListener('change', sync));
+      window.removeEventListener('pageshow', back);
       root.removeAttribute(attr);
     };
   }, []);

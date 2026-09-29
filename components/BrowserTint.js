@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 // The two themes' attributes, and the homepage's and About's loading curtain (whose fill would
 // otherwise be what's at the top of the screen while it's up).
 const WATCHED = ['data-abt-theme', 'data-cs-theme', 'data-abt-intro'];
-// Overlays that are passing, not the page: the loading curtain and the homepage's wipe to About.
+// Overlays that are passing, not the page: the loading curtain and the homepage's curtain on leaving.
 const PASSING = '.abt-intro, .hx-wipe';
 
 // A computed colour's opacity: 1 for rgb(), the last value for rgba() or color(… / a).

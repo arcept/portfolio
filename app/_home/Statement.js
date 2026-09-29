@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion, useReducedMotion } from 'motion/react';
@@ -33,18 +33,26 @@ const STATEMENT = [
 ];
 const TICKS = 34;
 const HOLD = 0.5; // how long it holds on screen, in screen heights of scroll
+const PHONE = '(max-width: 700px)'; // where the illustration sits above the words (home.css)
+const TOUCH = '(max-width: 899px)'; // phones and tablets: no hold, which a quick flick of the page stutters on
 
 // Under the hero: a full-width band, following the site's theme, with an illustration on the left and
 // the statement in a column beside it, played by the scroll (GSAP ScrollTrigger). It starts faint and
 // each word lights up to full as the scroll reaches it, from as the text comes into view, the key
-// phrases underlined as their words light; the section holds, centred on screen, until they all
-// have, then lets the page go on.
+// phrases underlined as their words light. On a wide screen the section holds, centred on screen,
+// until they all have, then lets the page go on; under 900px it never holds, and they have all lit by
+// the time the statement reaches the middle of the screen.
 // A ruler down the side fills as it plays. With reduced motion it is simply there, whole.
+// The illustration beside the words rises in out of a narrower crop as the section comes into view. On a
+// phone, where it sits above them, it grows instead, with the scroll: from 70% and nearly clear as it
+// comes up the screen, to full size just as the first word lights.
 export default function Statement() {
   const section = useRef(null);
   const text = useRef(null);
   const ruler = useRef(null);
+  const artRef = useRef(null);
   const still = useReducedMotion();
+  const phone = usePhone();
 
   useEffect(() => {
     if (still) return undefined;
@@ -54,17 +62,18 @@ export default function Statement() {
       ctx = gsap.context(() => {
         const words = [...text.current.querySelectorAll('.hx-st__w')];
         const keys = [...text.current.querySelectorAll('.hx-st__key')];
-        // It holds with its content centred on the screen for half a screen's scroll. The words start
-        // lighting earlier, as the text comes up into view, and are all lit as the hold ends.
-        const hold = Math.round(window.innerHeight * HOLD);
-        ScrollTrigger.create({ trigger: section.current, start: 'center center', end: `+=${hold}`, pin: true });
+        // Wide, it holds with its content centred on the screen for half a screen's scroll, and the
+        // words, which start lighting as the text comes up into view, are all lit as the hold ends.
+        // Under 900px it scrolls straight on, and they are all lit as the text reaches the middle.
+        const hold = window.matchMedia(TOUCH).matches ? 0 : Math.round(window.innerHeight * HOLD);
+        if (hold) ScrollTrigger.create({ trigger: section.current, start: 'center center', end: `+=${hold}`, pin: true });
         const tl = gsap.timeline({
           defaults: { ease: 'none' },
           scrollTrigger: {
             trigger: text.current,
             start: 'top 80%',
-            endTrigger: section.current,
-            end: `center center-=${hold}`,
+            endTrigger: hold ? section.current : text.current,
+            end: hold ? `center center-=${hold}` : 'center center',
             scrub: 0.5,
             onUpdate: (self) => ruler.current?.style.setProperty('--p', self.progress.toFixed(4)),
           },
@@ -80,10 +89,23 @@ export default function Statement() {
           underline(k, words.indexOf(own[0]) * 0.06, own.length * 0.06 + 0.2);
         });
         tl.fromTo('.hx-st__icon', { scale: 0.3, rotate: -40 }, { scale: 1, rotate: 0, duration: 0.3, stagger: 0.9, ease: 'back.out(2)' }, 0.1);
+
+        if (phone && artRef.current) {
+          gsap.fromTo(
+            artRef.current,
+            { scale: 0.7, autoAlpha: 0.1 },
+            {
+              scale: 1,
+              autoAlpha: 1,
+              ease: 'none',
+              scrollTrigger: { trigger: artRef.current, start: 'top bottom', endTrigger: text.current, end: 'top 80%', scrub: 0.5 },
+            },
+          );
+        }
       }, section);
     };
     build();
-    // Rebuilt when the column's width changes (the pinned length depends on it).
+    // Rebuilt when the column's width changes (the pinned length depends on it, and whether it pins).
     let width = text.current.offsetWidth;
     let timer = 0;
     const watch = new ResizeObserver(() => {
@@ -99,7 +121,7 @@ export default function Statement() {
       watch.disconnect();
       ctx?.revert();
     };
-  }, [still]);
+  }, [still, phone]);
 
   // Words each in their own span, so they can light up one at a time.
   const words = (run, at) =>
@@ -113,13 +135,20 @@ export default function Statement() {
   return (
     <section ref={section} className="hx-st" aria-label="What I do">
       <div className="hx-st__inner">
-        {/* It rises and opens out of a narrower crop as the section comes into view. */}
+        {/* A phone swaps in a plain frame the scroll grows (above); keyed, so neither inherits the
+            other's styles. */}
         <motion.div
+          key={phone ? 'phone' : 'wide'}
+          ref={artRef}
           className="hx-st__art"
-          initial={{ opacity: 0, y: 40, clipPath: 'inset(10% 14% 10% 14% round 24px)' }}
-          whileInView={{ opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0% round 24px)' }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          {...(phone
+            ? {}
+            : {
+                initial: { opacity: 0, y: 40, clipPath: 'inset(10% 14% 10% 14% round 24px)' },
+                whileInView: { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0% round 24px)' },
+                viewport: { once: true, amount: 0.3 },
+                transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+              })}
         >
           {/* On a phone, the landscape version, as a low banner above the words. */}
           <picture>
@@ -160,6 +189,20 @@ export default function Statement() {
       </div>
     </section>
   );
+}
+
+// Whether the illustration sits above the words (a phone). False until mounted: the section is below
+// the first screen, so it has changed before it is seen.
+function usePhone() {
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia(PHONE);
+    const read = () => setPhone(query.matches);
+    read();
+    query.addEventListener('change', read);
+    return () => query.removeEventListener('change', read);
+  }, []);
+  return phone;
 }
 
 // The small emblems set between the words: the logo's star, the portrait, a burst.

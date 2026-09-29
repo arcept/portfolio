@@ -6,7 +6,6 @@ import Action from './Action';
 import { FACE } from './fonts';
 import { useIntroDone } from './HomeIntro';
 import useScrollTimeline from './useScrollTimeline';
-import useWipeTo from './useWipeTo';
 import glideTo from './glideTo';
 import Marquee from './Marquee';
 import Portrait from './Portrait';
@@ -28,8 +27,6 @@ export default function Hero() {
   // In CSS where the browser can tie it to the scroll itself: on iOS Safari a zoom driven from
   // JavaScript lags the scroll by a frame or so, and shakes.
   const css = useScrollTimeline();
-  // About me leaves with a wipe in About's own background, which its loading curtain then carries on.
-  const [toAbout, wipe] = useWipeTo();
 
   return (
     <section className="hx-i-hero" ref={ref}>
@@ -61,13 +58,12 @@ export default function Hero() {
             <Action href="#work" arrow="↓" onClick={glideTo}>
               See the work
             </Action>
-            <Action href="/about" variant="ghost" onClick={toAbout}>
+            <Action href="/about" variant="ghost">
               About me
             </Action>
           </motion.div>
         </motion.div>
       </motion.div>
-      {wipe}
     </section>
   );
 }

@@ -1,18 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
-import {
-  motion,
-  useAnimationFrame,
-  useInView,
-  useMotionValue,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-  useVelocity,
-  wrap,
-} from 'motion/react';
+import { motion } from 'motion/react';
 import { FACE } from './fonts';
 
 const WORDS = ['Design leadership', 'Systems', 'Prototypes you can click', 'Behavioural data', 'Teams from zero', 'Craft'];
@@ -36,31 +24,9 @@ const PICTURES = WORDS.map((_, i) => {
 });
 
 // A band of words running across the page, with pictures between them, in the statement's face. It
-// drifts on its own and the scroll pushes it: faster and leaning when the page moves fast, reversing
-// when it goes back.
+// runs steadily to the left, whatever the page's scroll is doing (a CSS animation, home.css: the line
+// is there twice, so moving it by half its length loops without a seam). Still with reduced motion.
 export default function Runner() {
-  const reduced = useReducedMotion();
-  const box = useRef(null);
-  const seen = useInView(box); // not moved while it is off screen
-  const base = useMotionValue(0);
-  const { scrollY } = useScroll();
-  const velocity = useVelocity(scrollY);
-  const smooth = useSpring(velocity, { damping: 50, stiffness: 400 });
-  const factor = useTransform(smooth, [-2000, 0, 2000], [-5, 0, 5], { clamp: false });
-  const skew = useTransform(smooth, [-3000, 0, 3000], [8, 0, -8]);
-  const x = useTransform(base, (v) => `${wrap(-50, 0, v)}%`);
-  const direction = useRef(-1);
-
-  useAnimationFrame((_, delta) => {
-    if (reduced || !seen) return;
-    let move = direction.current * 1.2 * (delta / 1000);
-    const f = factor.get();
-    if (f < 0) direction.current = 1;
-    else if (f > 0) direction.current = -1;
-    move += direction.current * move * f;
-    base.set(base.get() + move);
-  });
-
   const line = WORDS.map((word, i) => {
     const pic = PICTURES[i];
     return (
@@ -75,7 +41,6 @@ export default function Runner() {
 
   return (
     <motion.div
-      ref={box}
       className="hx-i-runner"
       aria-hidden="true"
       initial={{ opacity: 0, y: 20 }}
@@ -83,13 +48,10 @@ export default function Runner() {
       viewport={{ once: true }}
       transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
     >
-      <motion.div
-        className="hx-i-runner__track"
-        style={{ x, skewX: skew, fontFamily: FACE.family, fontWeight: 500 }}
-      >
+      <div className="hx-i-runner__track" style={{ fontFamily: FACE.family, fontWeight: 500 }}>
         {line}
         {line}
-      </motion.div>
+      </div>
     </motion.div>
   );
 }

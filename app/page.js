@@ -1,18 +1,17 @@
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
-import Card from '@/components/Card';
-import StatCounter from '@/components/StatCounter';
-import CROCover from '@/components/CROCover';
 import AboutMotion from './about/AboutMotion';
 import AboutThemeSwitch from './about/AboutThemeSwitch';
 import { display, sans } from './about/fonts';
+import { aboutThemeGate } from './about/theme';
 import HomeIntro from './_home/HomeIntro';
 import Hero from './_home/Hero';
 import Statement from './_home/Statement';
 import Runner from './_home/Runner';
+import Work from './_home/Work';
+import Leave from './_home/Leave';
 import { homeIntroGate } from './_home/intro';
-import { homeThemeGate } from './_home/theme';
 import './about/about.css';
 import './_home/home.css';
 
@@ -42,15 +41,15 @@ export const metadata = {
   },
 };
 
-// The homepage: the hero, the statement and the runner (app/_home, in the About page's system and
-// its loading curtain), then the selected work and a short about, restyled to follow the theme until
-// they are rebuilt.
+// The homepage: the hero, the statement, the runner and the selected work (app/_home, in the About
+// page's system and its loading curtain), then a short about, restyled to follow the theme until it is
+// rebuilt.
 export default function Home() {
   return (
     <AboutMotion>
       <div className={`abt ${display.variable} ${sans.variable}`}>
-        {/* Puts the theme on <html> before anything paints: light, unless chosen otherwise. */}
-        <script dangerouslySetInnerHTML={{ __html: homeThemeGate() }} />
+        {/* Puts the site's theme on <html> before anything paints (the system's, unless chosen). */}
+        <script dangerouslySetInnerHTML={{ __html: aboutThemeGate() }} />
         {/* Decides, before anything paints, whether the loading curtain shows (see _home/intro.js). */}
         <script dangerouslySetInnerHTML={{ __html: homeIntroGate() }} />
         <HomeIntro>
@@ -61,130 +60,7 @@ export default function Home() {
               <Statement />
               <Runner />
 
-              <section className="section wrap wrap--wide home-old" id="work">
-                <Reveal>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '32px' }}>
-                    <h2 className="text-heading font-semibold">Selected work</h2>
-                    <span className="text-caption text-fog">Archive is being rebuilt — updating regularly</span>
-                  </div>
-                </Reveal>
-
-                <div className="work-grid">
-                  <Reveal>
-                    <Card href="/case-study-oms" className="card--featured">
-                      <div className="card__cover">Cover art pending</div>
-                      <StatCounter value={-18} suffix="%" label="Drop/dispose rate after the rebuild" />
-                      <div className="card__tags">
-                        <span className="tag">Product Strategy</span>
-                        <span className="tag">0-to-1</span>
-                        <span className="tag">Interactive Prototype</span>
-                      </div>
-                      <h3 className="card__title font-semibold">
-                        Rebuilding OMS: A v3.0 Retrospective
-                      </h3>
-                      <p className="text-body text-fog">
-                        Novatr&apos;s entire sales org ran on a tool engineering had built with no product or
-                        design input. The product-and-design-led rebuild that replaced it — with a live,
-                        click-through prototype you can try yourself.
-                      </p>
-                      <span className="card__cta">Read the case study →</span>
-                    </Card>
-                  </Reveal>
-
-                  <Reveal delay={0.08}>
-                    <Card href="/case-study-placement" className="card--featured">
-                      <div className="card__cover card__cover--image">
-                        <img
-                          src="/case-studies/placement-hub/body/hero-home-updates.png"
-                          alt="Placement Hub home with the updates panel open, above the eligibility and interest-form banners."
-                          width={1440}
-                          height={1000}
-                          loading="lazy"
-                        />
-                      </div>
-                      <StatCounter value={30} suffix="%" label="of placements were self-placed, and invisible to the company" />
-                      <div className="card__tags">
-                        <span className="tag">Product Design Leadership</span>
-                        <span className="tag">Systems Design</span>
-                        <span className="tag">Interactive Prototype</span>
-                      </div>
-                      <h3 className="card__title font-semibold">
-                        Making Placement Visible: Designing Novatr&apos;s Placement Hub
-                      </h3>
-                      <p className="text-body text-fog">
-                        Learners bought placement support but experienced it as a black box. I led the design
-                        direction for a learner portal and a reusable placement system that made progress,
-                        eligibility and next steps visible — with a live, click-through prototype you can try
-                        yourself.
-                      </p>
-                      <span className="card__cta">Read the case study →</span>
-                    </Card>
-                  </Reveal>
-
-                  <Reveal delay={0.16}>
-                    <Card href="/case-study-cro" className="card--featured">
-                      <CROCover />
-                      <StatCounter value={20} suffix="%" label="Conversion improvement" />
-                      <div className="card__tags">
-                        <span className="tag">Product Strategy</span>
-                        <span className="tag">Behavioral Data</span>
-                        <span className="tag">Cross-functional Leadership</span>
-                      </div>
-                      <h3 className="card__title font-semibold">
-                        Designing for Confidence: A Data-Informed Redesign of Novatr&apos;s Flagship Course Page
-                      </h3>
-                      <p className="text-body text-fog">
-                        How behavioral data — not more traffic — became the difference between hesitation
-                        and conversion on Novatr&apos;s highest-revenue product page, and how that changed the
-                        way four teams made decisions together.
-                      </p>
-                      <span className="card__cta">Read the case study →</span>
-                    </Card>
-                  </Reveal>
-
-                  <div className="work-support-grid">
-                    <Reveal delay={0.24}>
-                      <Card href="/case-study-novatr-lms">
-                        <div className="card__cover">Cover art pending</div>
-                        <div className="card__tags">
-                          <span className="tag tag--progress">Case study in progress</span>
-                          <span className="tag">Product Strategy</span>
-                          <span className="tag">Design Systems</span>
-                          <span className="tag">0-to-1</span>
-                        </div>
-                        <h3 className="card__title font-semibold">
-                          Building the Novatr LMS
-                        </h3>
-                        <p className="text-body text-fog">
-                          A 0-to-1 platform build, design systems, and cross-functional leadership behind
-                          Novatr&apos;s Learning Management System.
-                        </p>
-                        <span className="card__cta">Read the case study →</span>
-                      </Card>
-                    </Reveal>
-
-                    <Reveal delay={0.32}>
-                      <Card href="/case-study-novatr-team">
-                        <div className="card__cover">Cover art pending</div>
-                        <div className="card__tags">
-                          <span className="tag tag--progress">Case study in progress</span>
-                          <span className="tag">Team Building</span>
-                          <span className="tag">Hiring</span>
-                          <span className="tag">Design Leadership</span>
-                        </div>
-                        <h3 className="card__title font-semibold">
-                          Building a Design Team from Zero
-                        </h3>
-                        <p className="text-body text-fog">
-                          The Novatr team-building story — hiring, structure, and design leadership
-                          from the very first hire.
-                        </p>
-                        <span className="card__cta">Read the case study →</span>
-                      </Card>
-                    </Reveal>
-                  </div>
-                </div>
-              </section>
+              <Work />
 
               <section className="section wrap wrap--wide home-old" id="about">
                 <Reveal>
@@ -210,6 +86,8 @@ export default function Home() {
             </main>
             <Footer />
           </div>
+          {/* Any link to another page leaves under a curtain in that page's colour. */}
+          <Leave />
         </HomeIntro>
       </div>
     </AboutMotion>
