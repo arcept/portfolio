@@ -26,8 +26,8 @@ Seven-ish numbered sections, each: sticky **margin** (category, question, delive
 
 ## Hero
 - Text column ≈ **59%** (`1.45fr / 1fr`, gap 72px) at ≥900px; single column below.
-- Headline: `clamp(28px, 3.4vw, 44px)`, `text-wrap: balance`, **no `max-width: 24ch`** (the site default caps
-  it there and strands one word on a fourth line). Verify: ≤3 lines at 900/1024/1280/1440/1920.
+- Headline: `clamp(28px, 3.4vw, 44px)`, `text-wrap: balance`, **no `ch` cap** (a `24ch` cap strands one word
+  on a fourth line). Verify: ≤3 lines at 900/1024/1280/1440/1920.
 - **Hierarchy in four tiers**, each quieter: (1) green mono eyebrow + headline — what this is;
   (2) intro (18px, `--mist`) + lead facts (role larger, in `--paper`) — why it matters, who did it;
   (3) the rest of the facts, collapsed behind one quiet toggle; (4) actions: one outlined, one plain text.

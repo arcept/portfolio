@@ -1,6 +1,6 @@
 # Placement Hub — interactive prototype (`products/placement`)
 
-A portfolio prototype for Manik's (arcept.in) case study of **Novatr Placement Hub (2024)**. It follows the same pattern as `products/oms`: a standalone Vite app in this monorepo, built and synced into `public/case-studies/placement/prototype/`, and embedded by the case study. It must feel like the shipped product, one step beyond polished.
+A portfolio prototype for Manik's (arcept.in) case study of **Novatr Placement Hub (2024)**. It follows the same pattern as `products/oms`: a standalone Vite app in this monorepo, built for `public/case-studies/placement/prototype/`. The case study currently embeds a different app, `products/placement-hub`, not this one. It must feel like the shipped product, one step beyond polished.
 
 The spec lives in **`docs/placement/`** (paths below are relative to the repo root).
 

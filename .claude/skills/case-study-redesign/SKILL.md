@@ -85,7 +85,7 @@ make it additive/token-neutral and confirm other pages render identically. Don't
 2. **Look at the screenshots** (`--shots`) in both themes: hero, a text section, a table section, an image
    section, the story, phone. Numbers pass while things still look wrong; eyes catch the rest.
 3. Run the existing suites for pages you touched shared files for, and `npx next build`.
-4. Check the other case studies and `/` still look identical (no theme attribute, 1400px container).
+4. Check the other case studies and `/` still look identical (no `data-cs-theme` attribute, 1400px container).
 
 ### 5. Clean up and hand over
 - Delete whatever the port orphaned (unused CSS rules, props, components, README lines) — grep before you

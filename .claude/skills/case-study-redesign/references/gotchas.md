@@ -27,7 +27,7 @@ handlers in a ref and depend only on `isOpen`. Restore `document.body.style.over
 **Layout shift in counters.** A counting number changes width as it runs. `Num` renders the final value
 invisibly to reserve space and overlays the live value. Use `tabular-nums`.
 
-**Headline orphan.** `max-width: 24ch` (the site's default headline) leaves one word on a fourth line. Use
+**Headline orphan.** A `ch` cap on the hero headline (`24ch` did this) leaves one word on a fourth line. Use
 `text-wrap: balance` and no ch cap; verify line count at several widths.
 
 **Narrow shared captions.** `.proto-note { max-width: 46ch }` is site-wide. Override with a page-scoped

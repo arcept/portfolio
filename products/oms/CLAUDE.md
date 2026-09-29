@@ -16,7 +16,7 @@ This is an **Untitled UI React** component library project built with:
 
 ### Import Naming Convention
 
-**CRITICAL**: All imports from `react-aria-components` must be prefixed with `Aria*` for clarity and consistency:
+Prefix every import from `react-aria-components` with `Aria*`:
 
 ```typescript
 // ✅ Correct
@@ -33,7 +33,7 @@ This convention:
 
 ### File Naming Convention
 
-**IMPORTANT**: All files must be named in **kebab-case** for consistency:
+Name all files in **kebab-case**:
 
 ```
 ✅ Correct:
@@ -206,7 +206,7 @@ import { Home01, Settings01, ChevronDown } from "@untitledui/icons";
 <Button iconLeading={ChevronDown}>Options</Button>
 
 // Standalone usage
-<Home01 className="size-5 text-gray-600" />
+<Home01 className="size-5 text-fg-quaternary" />
 
 // As JSX element - MUST include data-icon
 <Button iconLeading={<ChevronDown data-icon className="size-4" />}>Options</Button>
@@ -218,8 +218,8 @@ import { Home01, Settings01, ChevronDown } from "@untitledui/icons";
 // Size: use size-4 (16px), size-5 (20px), size-6 (24px)
 <Home01 className="size-5" />
 
-// Color: use semantic text colors
-<Home01 className="size-5 text-brand-600" />
+// Color: use the foreground (fg-*) colour classes (see COLORS)
+<Home01 className="size-5 text-fg-brand-primary" />
 
 // Stroke width (line icons only)
 <Home01 className="size-5" strokeWidth={2} />
@@ -314,7 +314,7 @@ Select.ComboBox = ComboBox;
 
 ### Global State
 
-- Theme context in `src/providers/theme.tsx`
+- Theme context in `src/providers/theme-provider.tsx`
 - Router context in `src/providers/router-provider.tsx`
 
 ## Key Files and Utilities
@@ -330,18 +330,6 @@ Select.ComboBox = ComboBox;
 - `src/styles/globals.css` - Global styles
 - `src/styles/theme.css` - Theme definitions
 - `src/styles/typography.css` - Typography styles
-
-## Best Practices for AI Assistance
-
-### When Adding New Components
-
-1. Follow the existing component structure
-2. Use React Aria Components as foundation
-3. Implement proper TypeScript types
-4. Add size and color variants where applicable
-5. Include accessibility features
-6. Follow the naming conventions
-7. Add components to appropriate folders (`base/`, `application/`, etc.)
 
 ## Most Used Components Reference
 
