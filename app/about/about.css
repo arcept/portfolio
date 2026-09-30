@@ -193,7 +193,7 @@ html[data-abt-theme='light'] {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--t3);
-  transition: color 0.35s ease, font-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color 0.35s ease, padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .abt-index__link:hover,
@@ -202,9 +202,23 @@ html[data-abt-theme='light'] {
 }
 
 .abt-index__link[aria-current] {
-  font-size: 16px;
-  letter-spacing: 0.05em;
+  /* The room the larger text used to take, so the list is spaced as before. */
+  padding-block: 6px;
   color: var(--t1);
+}
+
+/* The current entry's label grows to 16px from its left edge, by transform rather than font-size, so
+   the index isn't laid out again on every frame of it. Its tracking tightens to what 0.05em is at
+   16px. */
+.abt-index__label {
+  display: inline-block;
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.abt-index__link[aria-current] .abt-index__label {
+  transform: scale(1.2308);
+  letter-spacing: 0.05em;
 }
 
 .abt-index__num {
@@ -297,8 +311,11 @@ html[data-abt-theme='light'] .abt-index [data-id='sabbatical'] {
   color: var(--abt-accent);
 }
 
-.abt-totop:hover .abt-totop__arrow {
-  translate: 0 -3px;
+/* Hover only where there is a real pointer: a tap on a touch screen would leave it on. */
+@media (hover: hover) and (pointer: fine) {
+  .abt-totop:hover .abt-totop__arrow {
+    translate: 0 -3px;
+  }
 }
 
 .abt-totop__arrow {
@@ -726,10 +743,16 @@ html[data-abt-theme='light'] .abt-index [data-id='sabbatical'] {
   transform: scaleX(0);
 }
 
-.abt-link:hover .abt-link__label::after,
 .abt-link:focus-visible .abt-link__label::after {
   transform: scaleX(1);
   transform-origin: left center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .abt-link:hover .abt-link__label::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
 }
 
 .abt-link__arrow {
@@ -738,9 +761,14 @@ html[data-abt-theme='light'] .abt-index [data-id='sabbatical'] {
   transition: translate 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.abt-link:hover .abt-link__arrow,
 .abt-link:focus-visible .abt-link__arrow {
   translate: 3px -3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .abt-link:hover .abt-link__arrow {
+    translate: 3px -3px;
+  }
 }
 
 .abt-actions {
@@ -759,13 +787,15 @@ html[data-abt-theme='light'] .abt-index [data-id='sabbatical'] {
 
 /* ---------------------------------------------------------------- Reduced motion */
 
+/* Less motion, not none: animations stop, and transitions keep only what fades (colour, opacity,
+   visibility), so anything that moved, grew or turned simply changes, while fades still fade. */
 @media (prefers-reduced-motion: reduce) {
   .abt *,
   .abt *::before,
   .abt *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+    transition-property: opacity, color, background-color, border-color, text-decoration-color, fill, stroke, visibility !important;
   }
 }
 

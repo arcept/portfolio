@@ -456,15 +456,25 @@ html[data-abt-theme='light'] #experience {
   16%, 100% { background-position: -30% 0; }
 }
 
-.xp-row:hover .xp-badge,
 .xp-row.is-open .xp-badge {
   transform: translateY(-4px);
   filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.28));
 }
 
-html[data-abt-theme='light'] .xp-row:hover .xp-badge,
 html[data-abt-theme='light'] .xp-row.is-open .xp-badge {
   filter: drop-shadow(0 10px 8px rgba(20, 21, 26, 0.2));
+}
+
+/* The badge lifts on hover only where there is a real pointer (on touch, only when its row is open). */
+@media (hover: hover) and (pointer: fine) {
+  .xp-row:hover .xp-badge {
+    transform: translateY(-4px);
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.28));
+  }
+
+  html[data-abt-theme='light'] .xp-row:hover .xp-badge {
+    filter: drop-shadow(0 10px 8px rgba(20, 21, 26, 0.2));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

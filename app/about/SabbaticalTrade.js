@@ -124,6 +124,9 @@ function LiveLine() {
     let raf = 0;
     let prev = 0;
     const loop = (t) => {
+      raf = requestAnimationFrame(loop);
+      // At most about 30 redraws a second: the tape moves 14px a second, which 60 can't improve on.
+      if (prev && t - prev < 32) return;
       const dt = prev ? Math.min(64, t - prev) / 1000 : 0;
       prev = t;
       const s = state.current;
@@ -134,7 +137,6 @@ function LiveLine() {
         s.pts.push(s.next());
       }
       draw();
-      raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);

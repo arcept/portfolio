@@ -194,8 +194,11 @@ export default function HeroWash() {
 
     const pointerTarget = [0.62, 0.66];
     let pointerOn = 0;
+    let movedAt = -1e9;
     const onPointer = (event) => {
-      if (reduced) return;
+      // Only a mouse steers it: a finger scrolling the page shouldn't.
+      if (reduced || event.pointerType !== 'mouse') return;
+      movedAt = performance.now();
       const box = node.getBoundingClientRect();
       pointerTarget[0] = (event.clientX - box.left) / box.width;
       pointerTarget[1] = 1 - (event.clientY - box.top) / box.height;
@@ -211,12 +214,20 @@ export default function HeroWash() {
 
     let frame = 0;
     let last = performance.now();
+    let count = 0;
     const step = (a, b, k) => a + (b - a) * k;
     const render = (now) => {
       frame = requestAnimationFrame(render);
+      if (!onScreen || document.hidden) {
+        last = now;
+        return;
+      }
+      // Half the frame rate once it has faded in and the mouse is resting: the wash drifts slowly
+      // enough not to show the difference.
+      count += 1;
+      if (u.uFade.value > 0.99 && now - movedAt > 1000 && count % 2) return;
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
-      if (!onScreen || document.hidden) return;
 
       u.uTime.value = now / 1000;
       u.uFade.value = step(u.uFade.value, 1, dt * 1.1);

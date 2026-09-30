@@ -210,8 +210,10 @@
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.abt-end__btn:hover span {
-  transform: translate(3px, -3px);
+@media (hover: hover) and (pointer: fine) {
+  .abt-end__btn:hover span {
+    transform: translate(3px, -3px);
+  }
 }
 
 .abt-end__links {

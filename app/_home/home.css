@@ -1872,14 +1872,6 @@ html[data-abt-theme='light'] .hx-me {
   background: var(--hx-me-fg);
 }
 
-/* On touch screens a tap would leave the underline drawn (the hover in about.css isn't gated); it
-   shows there only for keyboard focus. */
-@media not ((hover: hover) and (pointer: fine)) {
-  .hx-me .hx-me__link:hover:not(:focus-visible) .abt-link__label::after {
-    transform: scaleX(0);
-  }
-}
-
 .hx-me .hx-me__link .abt-link__arrow {
   font-size: 19px;
   color: var(--hx-me-fg);
