@@ -16,6 +16,9 @@ import './about/resume/resume.css';
 import './_home/home.css';
 
 const TITLE = 'Manik Madaan — Product Design Leader';
+
+// The runner (the scrolling line of words after the statement) is hidden for now; true brings it back.
+const SHOW_RUNNER = false;
 const DESCRIPTION = 'I build design functions and I still do the craft work to prove it.';
 
 // Its own link-preview image (the pink-shirt portrait from the hero, cropped wide, with the name on
@@ -41,8 +44,8 @@ export const metadata = {
   },
 };
 
-// The homepage: the hero, the statement, the runner, the selected work, and the About section that ends
-// the page in place of the site footer (app/_home, in the About page's system and its loading curtain).
+// The homepage: the hero, the statement, the runner (hidden for now, SHOW_RUNNER), the selected work,
+// and the About section that ends the page in place of the site footer (app/_home, in the About page's system and its loading curtain).
 export default function Home() {
   return (
     <AboutMotion>
@@ -57,7 +60,7 @@ export default function Home() {
             <main>
               <Hero />
               <Statement />
-              <Runner />
+              {SHOW_RUNNER && <Runner />}
 
               <Work />
 

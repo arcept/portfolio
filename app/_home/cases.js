@@ -3,7 +3,8 @@ import omsCover from './art/oms-cover.webp';
 // The homepage's selected work (Work.js): the three case studies it features, in order, then the ones
 // still being written, under "Read more". Each wears its own colour (`accent`). `image` is the
 // featured card's screenshot (`srcLight` in the light theme, where there is one), with its size, which
-// the dissolve between them needs to crop it.
+// the dissolve between them needs to crop it. `breakAfter` breaks the title's line after that word where
+// it is set large (the list, the phone cards).
 
 export const CASES = [
   {
@@ -53,6 +54,7 @@ export const CASES = [
     href: '/case-study-cro',
     kicker: 'Course page CRO · Novatr',
     title: 'Designing for Confidence',
+    breakAfter: 'for',
     line: 'The flagship course page had strong traffic and weak conversion, and four teams disagreed on why. Behavioural data became the thing they could agree on.',
     metric: { value: 20, suffix: '%', label: 'conversion improvement on the highest-revenue page' },
     facts: [

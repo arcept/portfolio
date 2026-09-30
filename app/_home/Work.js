@@ -129,7 +129,8 @@ function Split({ active, pick }) {
   );
 }
 
-// A row of the list: hovering or focusing it opens its card.
+// A row of the list, just the number and the title with room around them: hovering or focusing it opens
+// its card, which carries the rest.
 function Row({ work, i, on, pick }) {
   return (
     <motion.li
@@ -169,20 +170,27 @@ function Row({ work, i, on, pick }) {
                 variants={{ hide: { y: '110%' }, show: { y: '0%' } }}
                 transition={{ duration: 1.1, ease: EASE, delay: 0.15 + i * 0.1 }}
               >
-                {work.title}
+                <Heading work={work} />
               </motion.span>
             </span>
-            <motion.span
-              className="hx-w-row__line"
-              variants={{ hide: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }}
-              transition={{ duration: 1, ease: EASE, delay: 0.3 + i * 0.1 }}
-            >
-              {work.line}
-            </motion.span>
           </span>
         </span>
       </a>
     </motion.li>
+  );
+}
+
+// A title as it is set large, broken after `breakAfter` when it has one.
+function Heading({ work }) {
+  const at = work.breakAfter ? work.title.indexOf(` ${work.breakAfter} `) : -1;
+  if (at < 0) return work.title;
+  const cut = at + work.breakAfter.length + 1;
+  return (
+    <>
+      {work.title.slice(0, cut)}
+      <br />
+      {work.title.slice(cut + 1)}
+    </>
   );
 }
 
@@ -257,7 +265,9 @@ function Slide({ work, i, on, scrollX, step }) {
             <span className="hx-w-num" aria-hidden="true">
               {work.index}
             </span>
-            <span className="hx-w-ph__title">{work.title}</span>
+            <span className="hx-w-ph__title">
+              <Heading work={work} />
+            </span>
           </span>
           <Kicker work={work} />
           <span className="hx-w-row__line">{work.line}</span>
@@ -375,11 +385,13 @@ function Kicker({ work }) {
   );
 }
 
-// What the wide card says beyond the list: where it's from, the headline number, the facts, the way in.
+// What the wide card says beyond the list: where it's from, what it was, the headline number, the facts,
+// the way in.
 function Details({ work }) {
   return (
     <>
       <Kicker work={work} />
+      <span className="hx-w-card__line">{work.line}</span>
       <Metric metric={work.metric} />
       <span className="hx-w-facts">
         {work.facts.map(([k, v]) => (
