@@ -41,7 +41,7 @@ export default function Leave() {
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       event.preventDefault();
       setColour(colourFor(url.pathname));
-      window.setTimeout(() => window.location.assign(url.href), 850);
+      window.setTimeout(() => window.location.assign(url.href), 480);
     };
     document.addEventListener('click', onClick);
     window.addEventListener('pageshow', reset);
@@ -59,7 +59,7 @@ export default function Leave() {
       style={{ background: colour }}
       initial={{ clipPath: 'inset(100% 0 0 0)' }}
       animate={{ clipPath: 'inset(0% 0 0 0)' }}
-      transition={{ duration: 0.8, ease: [0.7, 0, 0.3, 1] }}
+      transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
     />,
     document.body,
   );

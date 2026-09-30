@@ -132,6 +132,8 @@ function Split({ active, pick }) {
 // A row of the list, just the number and the title with room around them: hovering or focusing it opens
 // its card, which carries the rest.
 function Row({ work, i, on, pick }) {
+  const intent = useRef(0);
+  useEffect(() => () => window.clearTimeout(intent.current), []);
   return (
     <motion.li
       className="hx-w-row"
@@ -145,12 +147,17 @@ function Row({ work, i, on, pick }) {
         className="hx-w-row__rule"
         aria-hidden="true"
         variants={{ hide: { scaleX: 0 }, show: { scaleX: 1 } }}
-        transition={{ duration: 1.3, ease: EASE, delay: i * 0.1 }}
+        transition={{ duration: 1.3, ease: EASE, delay: i * 0.06 }}
       />
       <a
         href={work.href}
         className="hx-w-row__link"
-        onPointerEnter={() => pick(i)}
+        onPointerEnter={() => {
+          // A moment's pause first, so sweeping across the list doesn't switch the card at every row.
+          window.clearTimeout(intent.current);
+          intent.current = window.setTimeout(() => pick(i), 80);
+        }}
+        onPointerLeave={() => window.clearTimeout(intent.current)}
         onFocus={() => pick(i)}
         aria-label={`${work.title}: read the case study`}
       >
@@ -159,7 +166,7 @@ function Row({ work, i, on, pick }) {
             className="hx-w-num"
             aria-hidden="true"
             variants={{ hide: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } }}
-            transition={{ duration: 1.1, ease: EASE, delay: 0.1 + i * 0.1 }}
+            transition={{ duration: 1.1, ease: EASE, delay: 0.1 + i * 0.06 }}
           >
             {work.index}
           </motion.span>
@@ -168,7 +175,7 @@ function Row({ work, i, on, pick }) {
               <motion.span
                 className="hx-w-row__title"
                 variants={{ hide: { y: '110%' }, show: { y: '0%' } }}
-                transition={{ duration: 1.1, ease: EASE, delay: 0.15 + i * 0.1 }}
+                transition={{ duration: 1.1, ease: EASE, delay: 0.15 + i * 0.06 }}
               >
                 <Heading work={work} />
               </motion.span>
@@ -295,7 +302,7 @@ function More({ compact }) {
       <ol className={compact ? 'hx-w-more__list hx-w-more__list--rows' : 'hx-w-more__list'}>
         {MORE.map((w, i) => (
           <li key={w.slug} style={{ '--accent': w.accent }}>
-            <Enter delay={i * 0.1}>{compact ? <MoreRow work={w} /> : <MoreCard work={w} />}</Enter>
+            <Enter delay={i * 0.06}>{compact ? <MoreRow work={w} /> : <MoreCard work={w} />}</Enter>
           </li>
         ))}
       </ol>

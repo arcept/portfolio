@@ -713,7 +713,7 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   letter-spacing: -0.005em;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.35s ease;
+  transition: color 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* The accent rises through the pill from below, on a curve, rather than a flat colour swap. */
@@ -728,7 +728,7 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   border-radius: 50% 50% 0 0;
   background: var(--abt-accent);
   transform: translateY(50%);
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.38s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .hx-btn:focus-visible::before {
@@ -767,8 +767,14 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
 
 .hx-btn__arrow {
   display: inline-block;
+  grid-area: 1 / 1;
   font-size: 15px;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* The downward arrow's twin, waiting above the disc. */
+.hx-btn__arrow--next {
+  transform: translateY(-120%);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -776,19 +782,17 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
     transform: rotate(-45deg);
   }
 
-  /* A downward arrow drops through its disc and comes back in from the top, instead of turning. */
+  /* A downward arrow drops out of its disc as its twin drops in from the top, instead of turning:
+     transitions, so leaving part-way sends them smoothly back. */
   .hx-btn[href^='#']:hover .hx-btn__arrow {
-    transform: none;
-    animation: hx-drop 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(120%);
+  }
+
+  .hx-btn[href^='#']:hover .hx-btn__arrow--next {
+    transform: translateY(0);
   }
 }
 
-@keyframes hx-drop {
-  0% { transform: translateY(0); }
-  45% { transform: translateY(120%); }
-  46% { transform: translateY(-120%); }
-  100% { transform: translateY(0); }
-}
 
 .hx-btn--ghost {
   background: transparent;
@@ -955,8 +959,8 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   -webkit-background-clip: text;
   background-clip: text;
   transition:
-    --hx-n-top 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    --hx-n-foot 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    --hx-n-top 0.25s cubic-bezier(0.23, 1, 0.32, 1),
+    --hx-n-foot 0.25s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* Light pages need less grey for the same pale step. */
@@ -1003,7 +1007,7 @@ a.hx-w-card:focus-visible .hx-w-num,
 
 /* The rows not open step back, so the one being read stands out. */
 .hx-w-row .hx-w-row__head {
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .hx-w-row[data-on='false'] .hx-w-row__head {
@@ -1044,8 +1048,8 @@ a.hx-w-card:focus-visible .hx-w-num,
   color: inherit;
   text-decoration: none;
   transition:
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.25s cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 0.25s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 html[data-abt-theme='light'] .hx-w-card {
@@ -2116,7 +2120,10 @@ html[data-abt-theme='light'] .hx-me {
   .hx-btn:hover .hx-btn__arrow,
   .hx-btn[href^='#']:hover .hx-btn__arrow {
     transform: none;
-    animation: none;
+  }
+
+  .hx-btn__arrow--next {
+    display: none;
   }
 
   a.hx-w-card:hover,

@@ -85,7 +85,7 @@ export default function DissolveImage({ images, active, light, className }) {
     let frame = 0;
     let shown = 0;
     let began = 0;
-    const DURATION = 900;
+    const DURATION = 550;
 
     const draw = () => renderer.render({ scene: mesh });
     const tick = (now) => {
