@@ -1594,23 +1594,441 @@ a.hx-w-card:focus-visible {
   color: var(--accent);
 }
 
-/* ---------------------------------------------------------------- The older section
+/* ---------------------------------------------------------------- About me, the page's end
 
-   About, from the homepage before this one, kept until it is rebuilt. Its markup is unchanged; here it
-   takes the page's theme (its ink and base) in place of the site's fixed dark palette. */
+   AboutMe.js: the closing section, in place of the site footer. Edge to edge, on the page's own ground
+   (it follows the theme): a short letter beside a video, the links onward, the page's last line, and the
+   name across the width with its feet cut off. Behind it all, a grainy glow rising from the foot
+   (Glow.js). Nothing between the glow's canvas and the name may start a stacking context of its own
+   (no z-index, no isolation): the name is colour-dodged over the canvas. */
 
-.home-old {
+.hx-me {
+  /* What sits on the glow (the links, the signature, the last line): white on the dark, the ink on the
+     light, where white would vanish. */
+  --hx-me-fg: #fff;
+  --hx-me-gutter: 40px;
   position: relative;
-  z-index: 1;
-  color: var(--t2);
-}
-
-.home-old h2 {
+  isolation: isolate;
+  overflow: clip;
+  padding-top: clamp(96px, 14vh, 160px);
+  background: var(--abt-base);
+  font-family: var(--font-abt-sans), system-ui, sans-serif;
   color: var(--t1);
 }
 
-.home-old .text-mist {
-  color: var(--t2);
+html[data-abt-theme='light'] .hx-me {
+  --hx-me-fg: var(--abt-ink);
+}
+
+.hx-me__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hx-me__glow canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hx-me__body {
+  position: relative;
+}
+
+/* The heading over the letter; the video beside it, its top level with the first line's capitals. The
+   letter keeps a 780px measure; the pair is centred. */
+.hx-me__inner {
+  display: grid;
+  grid-template-areas:
+    '. head'
+    'media letter';
+  grid-template-columns: minmax(220px, 300px) minmax(0, 780px);
+  justify-content: center;
+  column-gap: clamp(36px, 3.6vw, 52px);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 clamp(24px, 2.6vw, 36px);
+}
+
+.hx-me__head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: clamp(32px, 5vh, 48px);
+}
+
+.hx-me__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 20%;
+}
+
+.hx-me__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--hx-me-face);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+}
+
+.hx-me__star {
+  width: 0.62em;
+  height: 0.62em;
+  flex: none;
+  fill: #34c759;
+}
+
+.hx-me__media {
+  grid-area: media;
+  align-self: start;
+  /* Down to the top of the first line's capitals, not the top of its line box: about 0.3 of the
+     first paragraph's size (below). */
+  margin-top: calc(clamp(22px, 2.16vw, 32px) * 0.3);
+}
+
+.hx-me__letter {
+  grid-area: letter;
+}
+
+.hx-me__paras {
+  display: grid;
+  gap: 1.1em;
+}
+
+.hx-me__text {
+  margin: 0;
+  font-family: var(--font-abt-display), Georgia, serif;
+  font-size: clamp(18px, 1.6vw, 24px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--t1);
+}
+
+.hx-me__text:first-child {
+  font-size: clamp(22px, 2.16vw, 32px);
+  line-height: 1.3;
+}
+
+/* The video's frame leans towards the pointer (Tilt); a soft shadow comes up under it as it lifts. */
+.hx-me__tilt {
+  border-radius: 24px;
+  transition: box-shadow 0.5s ease;
+}
+
+.hx-me__tilt:hover {
+  box-shadow: 0 22px 44px -22px rgba(11, 13, 23, 0.45);
+}
+
+.hx-me__clip {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--abt-ink) 8%, var(--abt-base));
+}
+
+.hx-me__still,
+.hx-me__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The video fades in over the photograph once it is actually playing. */
+.hx-me__video {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.hx-me__video.is-playing {
+  opacity: 1;
+}
+
+/* The signature, in white (the ink on the light): NameSticker colours it from a portrait inline, so the
+   fill is set on the drawing itself. */
+.hx-me__sign {
+  height: 88px;
+  margin: 20px 0 6px -10px;
+}
+
+.hx-me__sign .hx-i-name {
+  position: static;
+  display: block;
+  height: 100%;
+  translate: none;
+}
+
+.hx-me__sign .hx-i-name svg {
+  fill: var(--hx-me-fg);
+}
+
+/* The ways onward, with dots between: 24px, and under the pointer they lift a little while an underline
+   draws itself beneath the words (the About page's link line, about.css). */
+.hx-me__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-me__links li + li::before {
+  content: '·';
+  margin: 0 16px;
+  font-size: 24px;
+  color: color-mix(in srgb, var(--hx-me-fg) 50%, transparent);
+}
+
+.hx-me .hx-me__link {
+  gap: 5px;
+  font-size: 24px;
+  white-space: nowrap;
+  color: var(--hx-me-fg);
+  text-decoration: none;
+  transition: translate 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hx-me .hx-me__link:hover,
+.hx-me .hx-me__link:focus-visible {
+  translate: 0 -4px;
+}
+
+.hx-me .hx-me__link .abt-link__label {
+  padding: 0 0 3px;
+  border: 0;
+}
+
+.hx-me .hx-me__link:hover .abt-link__label,
+.hx-me .hx-me__link:focus-visible .abt-link__label {
+  color: var(--hx-me-fg);
+}
+
+.hx-me .hx-me__link .abt-link__label::after {
+  height: 1.5px;
+  bottom: 0;
+  background: var(--hx-me-fg);
+}
+
+.hx-me .hx-me__link .abt-link__arrow {
+  font-size: 19px;
+  color: var(--hx-me-fg);
+}
+
+/* The last 300px: the page's last line, then the name across the width, its feet cut off. */
+.hx-me__base {
+  position: relative;
+  height: clamp(200px, 21vw, 300px);
+  margin-top: clamp(48px, 7vh, 80px);
+  padding: 0 var(--hx-me-gutter);
+}
+
+/* Three columns of two lines, small capitals in the site's sans, white (the ink on the light). */
+.hx-me__foot {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px 32px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--hx-me-fg);
+}
+
+.hx-me__col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.hx-me__col--end {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.hx-me__foot a,
+.hx-me__foot button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hx-me__foot a:hover,
+.hx-me__foot button:hover,
+.hx-me__foot a:focus-visible,
+.hx-me__foot button:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.hx-me__clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.hx-me__foot-star {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: 2px;
+  vertical-align: -0.1em;
+  fill: currentColor;
+}
+
+/* The name's copies (Wordmark), stacked exactly over one another and colour-dodged over the glow as one
+   layer: bright where the colour is, a dim grey over the dark (on the light ground, pale over the colour
+   and gone into the ground elsewhere). The stack is pushed down past the section's foot, so the bottom
+   of the letters is cut off. */
+.hx-me__namebox {
+  position: absolute;
+  left: var(--hx-me-gutter);
+  right: var(--hx-me-gutter);
+  bottom: 0;
+  mix-blend-mode: color-dodge;
+}
+
+.hx-me__stack {
+  position: relative;
+  isolation: isolate;
+  width: max-content;
+  line-height: 1;
+  translate: 0 18%;
+}
+
+/* Each copy filled with a pale gradient, clear at the top. */
+.hx-me__name {
+  display: block;
+  width: max-content;
+  margin: 0;
+  font-family: var(--hx-me-face);
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  color: transparent;
+  background:
+    radial-gradient(56% 156% at 47% 2%, transparent 0%, var(--hx-me-tint) 100%),
+    linear-gradient(transparent, color-mix(in srgb, var(--hx-me-tint) 35%, transparent));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.hx-me__name + .hx-me__name {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Added, not laid over: where two copies crossfade their shares add up to exactly one, so the joins
+     between bands don't show as lines. */
+  mix-blend-mode: plus-lighter;
+}
+
+/* Phones: one column (the heading, then the letter; no video), the links two by two, the last line's
+   statement across the top over the other two columns, and the name in flow at the foot. */
+@media (max-width: 899px) {
+  .hx-me {
+    --hx-me-gutter: 16px;
+    padding-top: clamp(72px, 12vh, 112px);
+  }
+
+  .hx-me__inner {
+    grid-template-areas:
+      'head'
+      'letter';
+    grid-template-columns: 1fr;
+    padding: 0 var(--hx-me-gutter);
+  }
+
+  .hx-me__head {
+    margin-bottom: 24px;
+  }
+
+  .hx-me__sign {
+    height: 72px;
+    margin: 20px 0 12px -8px;
+  }
+
+  /* Two by two, each column as wide as its longer link, so none breaks onto a second line. */
+  .hx-me__links {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    gap: 16px 32px;
+  }
+
+  .hx-me__links li + li::before {
+    content: none;
+  }
+
+  .hx-me .hx-me__link {
+    font-size: 20px;
+  }
+
+  .hx-me .hx-me__link .abt-link__arrow {
+    font-size: 16px;
+  }
+
+  .hx-me__base {
+    height: auto;
+    margin-top: 56px;
+  }
+
+  .hx-me__foot {
+    grid-template-areas:
+      'mid mid'
+      'start end';
+    grid-template-columns: 1fr auto;
+    gap: 20px 16px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Each line of the last row on one line; on the narrowest phones the time zone goes to make room. */
+  .hx-me__col > * {
+    white-space: nowrap;
+  }
+
+  .hx-me__col--start {
+    grid-area: start;
+  }
+
+  .hx-me__col--mid {
+    grid-area: mid;
+  }
+
+  .hx-me__col--end {
+    grid-area: end;
+  }
+
+  .hx-me__namebox {
+    position: relative;
+    left: auto;
+    right: auto;
+    margin-top: 40px;
+  }
+}
+
+@media (max-width: 419px) {
+  .hx-me__zone {
+    display: none;
+  }
 }
 
 /* ---------------------------------------------------------------- Leaving the page

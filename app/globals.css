@@ -180,13 +180,8 @@ a.site-nav__link:focus-visible {
 }
 
 /* Shown, but with nowhere to go yet: it must not offer itself as a link. */
-.site-nav__link--inert,
 .btn--inert {
   cursor: default;
-}
-
-.site-nav__link--inert {
-  opacity: 0.55;
 }
 
 .btn--inert {

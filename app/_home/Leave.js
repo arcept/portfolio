@@ -17,6 +17,7 @@ import { resolveSiteTheme } from '@/components/theme/site';
 const SITE = '#08090a'; // the site's own dark: the case studies without a light theme, and any other page
 const COLOURS = {
   '/about': { dark: '#0a0b0e', light: '#f4f1ec' },
+  '/contact': { dark: '#0a0b0e', light: '#f4f1ec' },
   '/case-study-oms': { dark: SITE, light: '#f1f1f1' },
   '/case-study-placement': { dark: SITE, light: '#f1f1f1' },
 };

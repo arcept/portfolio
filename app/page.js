@@ -1,6 +1,4 @@
 import Nav from '@/components/Nav';
-import Footer from '@/components/Footer';
-import Reveal from '@/components/Reveal';
 import AboutMotion from './about/AboutMotion';
 import AboutThemeSwitch from './about/AboutThemeSwitch';
 import { display, sans } from './about/fonts';
@@ -10,9 +8,11 @@ import Hero from './_home/Hero';
 import Statement from './_home/Statement';
 import Runner from './_home/Runner';
 import Work from './_home/Work';
+import AboutMe from './_home/AboutMe';
 import Leave from './_home/Leave';
 import { homeIntroGate } from './_home/intro';
 import './about/about.css';
+import './about/resume/resume.css';
 import './_home/home.css';
 
 const TITLE = 'Manik Madaan — Product Design Leader';
@@ -41,9 +41,8 @@ export const metadata = {
   },
 };
 
-// The homepage: the hero, the statement, the runner and the selected work (app/_home, in the About
-// page's system and its loading curtain), then a short about, restyled to follow the theme until it is
-// rebuilt.
+// The homepage: the hero, the statement, the runner, the selected work, and the About section that ends
+// the page in place of the site footer (app/_home, in the About page's system and its loading curtain).
 export default function Home() {
   return (
     <AboutMotion>
@@ -62,29 +61,8 @@ export default function Home() {
 
               <Work />
 
-              <section className="section wrap wrap--wide home-old" id="about">
-                <Reveal>
-                  <h2 className="text-heading font-semibold" style={{ marginBottom: '24px' }}>About</h2>
-                  <p className="text-body text-mist" style={{ maxWidth: '720px', marginBottom: '16px' }}>
-                    I&apos;m a Gurugram-based product designer and design leader. Most recently I was Product
-                    Design Manager at Novatr (previously Oneistox), where I led design for a Learning
-                    Management System that supported a 4x increase in company revenue, built a unified
-                    design system across web and mobile, and ran the cross-functional processes that let
-                    design, product, marketing, and engineering move in the same direction. Before that,
-                    I built and led design teams at Hapramp Studio and Shyft, and started my career in
-                    interaction design at Leo Burnett after a Master&apos;s in Interaction Design from Domus
-                    Academy in Milan.
-                  </p>
-                  <p className="text-body text-mist" style={{ maxWidth: '720px' }}>
-                    I&apos;m currently rebuilding this site and my case study archive after a career break —
-                    partly to have a proper home for this work, and partly to get hands-on with AI-assisted
-                    design and development again. This site itself is one of those projects: built and
-                    deployed with AI-assisted tooling as I go.
-                  </p>
-                </Reveal>
-              </section>
+              <AboutMe />
             </main>
-            <Footer />
           </div>
           {/* Any link to another page leaves under a curtain in that page's colour. */}
           <Leave />

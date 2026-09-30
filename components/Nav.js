@@ -6,12 +6,11 @@ import MobileMenu from './MobileMenu';
 import { navSans } from './nav-font';
 
 // The site's links. They appear in the bar on wide screens and in the menu's sheet on phones: add one here and it
-// shows in both. `note` is the short line under it in the menu. An item with no `href` is shown but does not act —
-// Contact waits for its own page.
+// shows in both. `note` is the short line under it in the menu.
 const NAV_LINKS = [
   { label: 'Work', href: '/#work', note: 'Selected case studies' },
   { label: 'About', href: '/about', note: 'The person behind them' },
-  { label: 'Contact', href: null, note: 'Coming soon' },
+  { label: 'Contact', href: '/contact', note: 'Say hello' },
 ];
 
 const CLOSE_MS = 600; // how long the menu's sheet takes to drop away
@@ -101,17 +100,11 @@ export default function Nav({ actions }) {
           Manik Madaan
         </a>
         <div className="site-nav__links">
-          {NAV_LINKS.map((link) =>
-            link.href ? (
-              <a key={link.label} href={link.href} className="site-nav__link">
-                {link.label}
-              </a>
-            ) : (
-              <span key={link.label} className="site-nav__link site-nav__link--inert">
-                {link.label}
-              </span>
-            )
-          )}
+          {NAV_LINKS.map((link) => (
+            <a key={link.label} href={link.href} className="site-nav__link">
+              {link.label}
+            </a>
+          ))}
           {actions}
           <button
             ref={burger}

@@ -24,6 +24,7 @@ const LINKEDIN = 'https://www.linkedin.com/in/manikmadaan/';
 const PICTURES = {
   Work: '/about/sabbatical/set2-landscape.jpg',
   About: '/about/portrait-collage.jpg',
+  Contact: '/about/gallery/cafe.jpg',
 };
 
 export default function MobileMenu({ open, links, onClose, onGo }) {
@@ -142,35 +143,23 @@ export default function MobileMenu({ open, links, onClose, onGo }) {
   );
 }
 
-// One link as a card: its picture darkened under the words, the label and its note, and an arrow. A link with no
-// `href` is shown, hatched, but does not act.
+// One link as a card: its picture darkened under the words, the label and its note, and an arrow.
 function Card({ link, wide, i, onGo }) {
-  const src = PICTURES[link.label];
-  const className = `ms__card${wide ? ' ms__card--wide' : ''}${link.href ? '' : ' is-inert'}`;
-  const inside = (
-    <>
-      {src ? <img src={src} alt="" /> : <span className="ms__soon" aria-hidden="true" />}
+  return (
+    <a
+      href={link.href}
+      className={`ms__card${wide ? ' ms__card--wide' : ''}`}
+      style={{ '--i': i }}
+      onClick={(event) => onGo(event, link.href)}
+    >
+      <img src={PICTURES[link.label]} alt="" />
       <span className="ms__cardtext">
         <span className="ms__label">{link.label}</span>
         <span className="ms__note">{link.note}</span>
       </span>
-      {link.href && (
-        <span className="ms__arrow" aria-hidden="true">
-          ↗
-        </span>
-      )}
-    </>
-  );
-  if (!link.href) {
-    return (
-      <span className={className} style={{ '--i': i }}>
-        {inside}
+      <span className="ms__arrow" aria-hidden="true">
+        ↗
       </span>
-    );
-  }
-  return (
-    <a href={link.href} className={className} style={{ '--i': i }} onClick={(event) => onGo(event, link.href)}>
-      {inside}
     </a>
   );
 }

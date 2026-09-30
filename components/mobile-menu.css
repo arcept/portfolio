@@ -399,17 +399,6 @@ html[data-cs-theme='light'] .ms {
   transition: transform 0.15s ease;
 }
 
-.ms__soon {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(-45deg, transparent 0 10px, color-mix(in srgb, var(--ms-ink) 6%, transparent) 10px 11px);
-}
-
-.ms__card.is-inert {
-  color: var(--ms-soft);
-  cursor: default;
-}
-
 /* ------------------------------------------------------------- email and LinkedIn */
 
 .ms__actions {
