@@ -96,8 +96,12 @@ export default function DissolveImage({ images, active, light, className }) {
     };
     const show = (i, instant) => {
       cancelAnimationFrame(frame);
-      u.uFrom.value = u.uTo.value;
-      u.uFromSize.value = u.uToSize.value;
+      // Interrupted mid-dissolve, it carries on from whichever picture was showing more, so nothing
+      // jumps to full before dissolving again.
+      if (u.uMix.value >= 0.5) {
+        u.uFrom.value = u.uTo.value;
+        u.uFromSize.value = u.uToSize.value;
+      }
       u.uTo.value = textures[i];
       u.uToSize.value = [images[i].w, images[i].h];
       shown = i;

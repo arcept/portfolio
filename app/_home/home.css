@@ -473,7 +473,6 @@ html[data-abt-theme='light'] .hx-st {
 
 /* The ruler: fine ticks, the ones already passed lit, a marker at the reading point. */
 .hx-st__ruler {
-  --p: 0;
   grid-area: ruler;
   position: relative;
   display: flex;
@@ -483,32 +482,30 @@ html[data-abt-theme='light'] .hx-st {
   padding: 0.4em 0;
 }
 
+/* Each tick's --lit (0 to 1) is set on it by Statement.js as the reading point passes. */
 .hx-st__ruler i {
   display: block;
   width: 6px;
   height: 1px;
-  background: color-mix(in srgb, var(--st-ink) 22%, transparent);
-  transition: background 0.2s, width 0.2s;
+  background-color: color-mix(in srgb, var(--st-ink) calc((0.22 + 0.7 * var(--lit, 0)) * 100%), transparent);
+  transition: background-color 0.2s;
 }
 
 .hx-st__ruler i:nth-child(5n + 1) {
   width: 12px;
 }
 
-.hx-st__ruler i:where([style]) {
-  background: color-mix(in srgb, var(--st-ink) calc((0.22 + 0.7 * clamp(0, (var(--p) - var(--i)) * 40 + 1, 1)) * 100%), transparent);
-}
-
-.hx-st__ruler::after {
-  content: '';
+/* The marker at the reading point, moved down by transform (Statement.js). */
+.hx-st__marker {
   position: absolute;
   left: -9px;
-  top: calc(0.4em + (100% - 0.8em) * var(--p));
+  top: 0.4em;
   width: 0;
   height: 0;
   border-block: 4px solid transparent;
   border-left: 6px solid #34c759;
   transform: translateY(-50%);
+  will-change: transform;
 }
 
 /* On a phone the illustration sits above the words: the landscape version, as a banner no taller than

@@ -130,12 +130,16 @@ void main() {
     mask *= mask;
   }
 
-  // Worked out for every pixel, with no branching, so the grain's edge smoothing (which compares
-  // neighbouring pixels) stays clean.
   vec4 glow = paint(shape);
 
   // Inside the trail: faint lines over two fainter alternating bands of the colour, drifting slowly,
-  // laid over the glow.
+  // laid over the glow. Worked out only while there is a trail. The test is on a uniform, the same for
+  // every pixel, so it doesn't upset the edge smoothing (which compares neighbouring pixels); inside,
+  // nothing branches pixel by pixel.
+  if (uTrailCount < 0.5) {
+    fragColor = glow;
+    return;
+  }
   float h = fbm(px / 560.0 + vec2(uTime * 0.015, -uTime * 0.01)) * 11.0;
   float band = mod(floor(h), 2.0);
   float line = 1.0 - min(abs(fract(h - 0.5) - 0.5) / max(fwidth(h), 1e-4), 1.0);
@@ -267,10 +271,19 @@ export default function Glow({ colours, pale = 0, className }) {
 
     let frame = 0;
     let visible = false;
+    let count = 0;
+    let lastTop = null;
     const start = performance.now();
     const render = (now) => {
       frame = requestAnimationFrame(render);
       if (!visible) return;
+      // Half the frame rate while nothing needs it smoother: the page still, no trail, the mouse
+      // resting. The drift is slow enough not to show the difference.
+      const top = section.getBoundingClientRect().top;
+      const idle = top === lastTop && !u.uTrailCount.value && now - pointer.at > 1000;
+      lastTop = top;
+      count += 1;
+      if (!still && idle && count % 2) return;
       // How far the end of the section has come up: 0 while its foot is still 60% of its height below
       // the window, 1 once its foot reaches the window's. The horizon climbs from 80px below the foot to
       // 234px above it, whatever the section's height; with the peaks on top the glow reaches about the

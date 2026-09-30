@@ -129,11 +129,19 @@ export default function Behind() {
 
     let frame = 0;
     let visible = false;
+    let count = 0;
+    let lastTop = null;
     const start = performance.now();
     const render = (now) => {
       frame = requestAnimationFrame(render);
       if (!visible) return;
       const box = section.getBoundingClientRect();
+      // Half the frame rate while the page is still: the lines drift too slowly to show it. While it
+      // scrolls, every frame, so the lines keep up with the section.
+      const idle = box.top === lastTop;
+      lastTop = box.top;
+      count += 1;
+      if (!reduced && idle && count % 2) return;
       u.uSection.value = [box.top, box.bottom];
       u.uTime.value = reduced ? 0 : (now - start) / 1000;
       const list = section.querySelector('.hx-w-list');

@@ -50,6 +50,7 @@ export default function Statement() {
   const section = useRef(null);
   const text = useRef(null);
   const ruler = useRef(null);
+  const marker = useRef(null);
   const artRef = useRef(null);
   const still = useReducedMotion();
   const phone = usePhone();
@@ -66,6 +67,27 @@ export default function Statement() {
         // words, which start lighting as the text comes up into view, are all lit as the hold ends.
         // Under 900px it scrolls straight on, and they are all lit as the text reaches the middle.
         const hold = window.matchMedia(TOUCH).matches ? 0 : Math.round(window.innerHeight * HOLD);
+
+        // The ruler follows the reading point. Each tick lights as it is passed, written only on the
+        // tick whose state changes (a variable on the ruler itself would restyle all of them every
+        // frame), and the marker moves by transform, not by its position.
+        const ticks = [...ruler.current.querySelectorAll('i')];
+        const lit = ticks.map(() => 0);
+        let travel = 0;
+        const measure = () => {
+          const r = ruler.current;
+          travel = r.clientHeight - parseFloat(getComputedStyle(r).fontSize) * 0.8;
+        };
+        measure();
+        const follow = (p) => {
+          ticks.forEach((tick, i) => {
+            const v = Math.round(Math.min(1, Math.max(0, (p - i / (TICKS - 1)) * 40 + 1)) * 20) / 20;
+            if (v === lit[i]) return;
+            lit[i] = v;
+            tick.style.setProperty('--lit', v);
+          });
+          if (marker.current) marker.current.style.transform = `translate3d(0, ${(travel * p).toFixed(1)}px, 0) translateY(-50%)`;
+        };
         if (hold) ScrollTrigger.create({ trigger: section.current, start: 'center center', end: `+=${hold}`, pin: true });
         const tl = gsap.timeline({
           defaults: { ease: 'none' },
@@ -75,7 +97,8 @@ export default function Statement() {
             endTrigger: hold ? section.current : text.current,
             end: hold ? `center center-=${hold}` : 'center center',
             scrub: 0.5,
-            onUpdate: (self) => ruler.current?.style.setProperty('--p', self.progress.toFixed(4)),
+            onUpdate: (self) => follow(self.progress),
+            onRefresh: measure,
           },
         });
 
@@ -183,8 +206,9 @@ export default function Statement() {
         </p>
         <div ref={ruler} className="hx-st__ruler" aria-hidden="true">
           {Array.from({ length: TICKS }, (_, i) => (
-            <i key={i} style={{ '--i': i / (TICKS - 1) }} />
+            <i key={i} />
           ))}
+          <span className="hx-st__marker" ref={marker} />
         </div>
       </div>
     </section>
