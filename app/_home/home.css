@@ -556,17 +556,26 @@ html[data-abt-theme='light'] .hx-st {
   background-size: 200% 100%;
 }
 
-.hx-i .hx-btn:hover::before,
 .hx-i .hx-btn:focus-visible::before {
   animation: rainbow var(--rb-speed) linear infinite;
 }
 
-.hx-i .hx-btn:hover,
 .hx-i .hx-btn:focus-visible,
-html[data-abt-theme='dark'] .hx-i .hx-btn--ghost:hover,
-html[data-abt-theme='dark'] .hx-i .hx-btn--ghost:focus-visible,
-.hx-i .hx-btn--ghost:hover .hx-btn__icon {
+html[data-abt-theme='dark'] .hx-i .hx-btn--ghost:focus-visible {
   color: #fff;
+}
+
+/* Hover only where there is a real pointer: a tap on a touch screen would leave it stuck on. */
+@media (hover: hover) and (pointer: fine) {
+  .hx-i .hx-btn:hover::before {
+    animation: rainbow var(--rb-speed) linear infinite;
+  }
+
+  .hx-i .hx-btn:hover,
+  html[data-abt-theme='dark'] .hx-i .hx-btn--ghost:hover,
+  .hx-i .hx-btn--ghost:hover .hx-btn__icon {
+    color: #fff;
+  }
 }
 
 .hx-i .hx-btn--primary {
@@ -722,14 +731,22 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hx-btn:hover::before,
 .hx-btn:focus-visible::before {
   transform: translateY(-30%);
 }
 
-.hx-btn:hover,
 .hx-btn:focus-visible {
   color: var(--hx-on-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hx-btn:hover::before {
+    transform: translateY(-30%);
+  }
+
+  .hx-btn:hover {
+    color: var(--hx-on-accent);
+  }
 }
 
 .hx-btn:focus-visible {
@@ -754,14 +771,16 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hx-btn:hover .hx-btn__arrow {
-  transform: rotate(-45deg);
-}
+@media (hover: hover) and (pointer: fine) {
+  .hx-btn:hover .hx-btn__arrow {
+    transform: rotate(-45deg);
+  }
 
-/* A downward arrow drops through its disc and comes back in from the top, instead of turning. */
-.hx-btn[href^='#']:hover .hx-btn__arrow {
-  transform: none;
-  animation: hx-drop 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  /* A downward arrow drops through its disc and comes back in from the top, instead of turning. */
+  .hx-btn[href^='#']:hover .hx-btn__arrow {
+    transform: none;
+    animation: hx-drop 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 @keyframes hx-drop {
@@ -947,11 +966,17 @@ html[data-abt-theme='light'] .hx-w-num {
 }
 
 .hx-w-row[data-on='true'] .hx-w-num,
-a.hx-w-card:hover .hx-w-num,
 a.hx-w-card:focus-visible .hx-w-num,
 .hx-w-ph__card[data-on='true'] .hx-w-num {
   --hx-n-top: var(--accent);
   --hx-n-foot: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a.hx-w-card:hover .hx-w-num {
+    --hx-n-top: var(--accent);
+    --hx-n-foot: var(--accent);
+  }
 }
 
 .hx-w-row__text {
@@ -985,9 +1010,14 @@ a.hx-w-card:focus-visible .hx-w-num,
   opacity: 0.7;
 }
 
-.hx-w-row[data-on='false'] .hx-w-row__link:hover .hx-w-row__head,
 .hx-w-row[data-on='false'] .hx-w-row__link:focus-visible .hx-w-row__head {
   opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hx-w-row[data-on='false'] .hx-w-row__link:hover .hx-w-row__head {
+    opacity: 1;
+  }
 }
 
 .hx-w-row__link:focus-visible {
@@ -1028,8 +1058,10 @@ html[data-abt-theme='light'] .hx-w-card {
     0 18px 40px -20px rgba(20, 24, 50, 0.14);
 }
 
-a.hx-w-card:hover {
-  transform: translateY(-4px);
+@media (hover: hover) and (pointer: fine) {
+  a.hx-w-card:hover {
+    transform: translateY(-4px);
+  }
 }
 
 a.hx-w-card:focus-visible {
@@ -1255,8 +1287,10 @@ a.hx-w-card:focus-visible {
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hx-w-card:hover .hx-w-cta > span {
-  transform: translateX(6px);
+@media (hover: hover) and (pointer: fine) {
+  .hx-w-card:hover .hx-w-cta > span {
+    transform: translateX(6px);
+  }
 }
 
 /* ------------------------------------------------ Wide: the list and its card */
@@ -1730,8 +1764,10 @@ html[data-abt-theme='light'] .hx-me {
   transition: box-shadow 0.5s ease;
 }
 
-.hx-me__tilt:hover {
-  box-shadow: 0 22px 44px -22px rgba(11, 13, 23, 0.45);
+@media (hover: hover) and (pointer: fine) {
+  .hx-me__tilt:hover {
+    box-shadow: 0 22px 44px -22px rgba(11, 13, 23, 0.45);
+  }
 }
 
 .hx-me__clip {
@@ -1806,9 +1842,14 @@ html[data-abt-theme='light'] .hx-me {
   transition: translate 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hx-me .hx-me__link:hover,
 .hx-me .hx-me__link:focus-visible {
   translate: 0 -4px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hx-me .hx-me__link:hover {
+    translate: 0 -4px;
+  }
 }
 
 .hx-me .hx-me__link .abt-link__label {
@@ -1825,6 +1866,14 @@ html[data-abt-theme='light'] .hx-me {
   height: 1.5px;
   bottom: 0;
   background: var(--hx-me-fg);
+}
+
+/* On touch screens a tap would leave the underline drawn (the hover in about.css isn't gated); it
+   shows there only for keyboard focus. */
+@media not ((hover: hover) and (pointer: fine)) {
+  .hx-me .hx-me__link:hover:not(:focus-visible) .abt-link__label::after {
+    transform: scaleX(0);
+  }
 }
 
 .hx-me .hx-me__link .abt-link__arrow {
@@ -2035,6 +2084,47 @@ html[data-abt-theme='light'] .hx-me {
 @media (max-width: 419px) {
   .hx-me__zone {
     display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- Less motion
+
+   For visitors who ask for less motion: the hover and focus feedback keeps its colour changes but
+   drops its movement. The button's accent fades in instead of rising, the arrows stay put, and
+   cards and links don't lift. (Motion's own animations are handled by AboutMotion; the backgrounds and
+   the video by their own components.) */
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-btn::before {
+    transform: translateY(-30%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .hx-btn:hover::before,
+  .hx-btn:focus-visible::before {
+    transform: translateY(-30%);
+    opacity: 1;
+  }
+
+  .hx-i .hx-btn:hover::before,
+  .hx-i .hx-btn:focus-visible::before {
+    animation: none;
+  }
+
+  .hx-btn .hx-btn__arrow,
+  .hx-btn:hover .hx-btn__arrow,
+  .hx-btn[href^='#']:hover .hx-btn__arrow {
+    transform: none;
+    animation: none;
+  }
+
+  a.hx-w-card:hover,
+  .hx-w-card:hover .hx-w-cta > span,
+  .hx-me .hx-me__link:hover,
+  .hx-me .hx-me__link:focus-visible {
+    transform: none;
+    translate: none;
   }
 }
 

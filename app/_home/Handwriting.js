@@ -23,7 +23,9 @@ export default function Handwriting({ viewBox, words, ready, still, sway, swayAt
               x={w.box[0]}
               y={w.box[1]}
               height={w.box[3]}
-              initial={{ width: still ? w.box[2] : 0 }}
+              // Always from 0, so the page the server sends (which can't know about reduced motion) matches
+              // the browser's first render; with reduced motion it then shows at once.
+              initial={{ width: 0 }}
               animate={{ width: ready || still ? w.box[2] : 0 }}
               transition={still ? { duration: 0 } : { delay: w.at, duration: w.for, ease: EASE }}
             />
