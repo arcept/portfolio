@@ -3,7 +3,8 @@ import { Newsreader } from 'next/font/google';
 import Nav from '@/components/Nav';
 import ThemeSwitch from '@/components/theme/ThemeSwitch';
 import { themeGateScript } from '@/components/theme/theme';
-import Footer from '@/components/Footer';
+import SiteFooter from '@/components/case-study-kit/SiteFooter';
+import CaseStudyEnd from '@/components/case-study-kit/CaseStudyEnd';
 import PrototypeEmbed from '@/components/PrototypeEmbed';
 import CaseStudyNav from '@/components/CaseStudyNav';
 import HeroBackdrop from '@/components/case-study-kit/HeroBackdrop';
@@ -17,6 +18,9 @@ import '../case-study-kit/themes.css';
 import '../case-study-kit/blocks.css';
 import '../case-study-kit/hero.css';
 import '../case-study-kit/story.css';
+import '../about/about.css';
+import '../about/resume/resume.css';
+import '../_home/home.css';
 import './oms.css';
 
 const neueAlteGrotesk = localFont({
@@ -202,12 +206,9 @@ export default function CaseStudyOMS() {
         <CaseStudyNav sections={sections} projectFiles={projectFiles} />
       </div>
 
-      <div className="cs-footer-nav wrap wrap--wide">
-        <a href="/" className="btn btn--secondary">← All work</a>
-        <span className="btn btn--primary btn--inert">Get in touch</span>
-      </div>
-
-      <Footer />
+      <SiteFooter fontVars={`${neueAlteGrotesk.variable} ${serif.variable}`}>
+        <CaseStudyEnd current="oms" />
+      </SiteFooter>
     </div>
   );
 }

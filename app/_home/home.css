@@ -793,6 +793,17 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   }
 }
 
+/* A way back: the disc leads, and the arrow nudges back rather than turning. */
+.hx-btn--back {
+  flex-direction: row-reverse;
+  padding: 0 22px 0 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hx-btn--back:hover .hx-btn__arrow {
+    transform: translateX(-3px);
+  }
+}
 
 .hx-btn--ghost {
   background: transparent;
@@ -1679,6 +1690,12 @@ html[data-abt-theme='light'] .hx-me {
 
 .hx-me__body {
   position: relative;
+}
+
+/* What opens the section above the letter (a case study's "Up next"). */
+.hx-me__lead {
+  position: relative;
+  margin-bottom: clamp(112px, 16vh, 176px);
 }
 
 /* The heading over the letter; the video beside it, its top level with the first line's capitals. The

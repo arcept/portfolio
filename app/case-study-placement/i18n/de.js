@@ -57,6 +57,8 @@ export default {
     { label: 'Übergabe' },
     { label: 'Launch und Messung' },
   ],
+  'footer.next': 'Als Nächstes',
+  'footer.read': 'Zur Fallstudie',
   'footer.all': 'Alle Arbeiten',
   'footer.contact': 'Kontakt aufnehmen',
 

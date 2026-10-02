@@ -1,0 +1,355 @@
+/* The foot of a case study (SiteFooter.js): the case study's end (CaseStudyEnd.js) and the homepage's
+   closing section, in one band.
+
+   The band's colours come from the homepage's tokens, which turn light on html[data-abt-theme]. A case
+   study carries the site theme on html[data-cs-theme] instead (and sets the site's own tokens from it),
+   so the same light values are applied here, to this band alone, keyed to that attribute. Keep in step
+   with about.css, the homepage's light block in _home/home.css and the résumé dialog's in resume.css. */
+
+/* Not a page of its own: no full-height shell. It fades in from the page above rather than starting
+   on an edge: transparent at its top, the homepage's ground by the time the next case study is
+   reached, and the closing section inside it lets that ground show through. */
+.abt.abt--foot {
+  min-height: 0;
+  background: linear-gradient(to bottom, transparent, var(--abt-base) min(50vh, 480px));
+}
+
+.abt--foot .hx-me {
+  padding-top: clamp(140px, 20vh, 220px);
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- Light */
+
+html[data-cs-theme='light'] .abt--foot {
+  --abt-ink: #11142a;
+  --abt-base: #f3f4fa;
+  --abt-accent: #c8318a;
+  --abt-accent-2: #2f6d88;
+  --hx-on-accent: #ffffff;
+
+  --t1: color-mix(in srgb, var(--abt-ink) 95%, var(--abt-base));
+  --t2: color-mix(in srgb, var(--abt-ink) 80%, var(--abt-base));
+  --t3: color-mix(in srgb, var(--abt-ink) 68%, var(--abt-base));
+  --t4: color-mix(in srgb, var(--abt-ink) 46%, var(--abt-base));
+  --abt-line: color-mix(in srgb, var(--abt-ink) 15%, var(--abt-base));
+  --abt-line-2: color-mix(in srgb, var(--abt-ink) 28%, var(--abt-base));
+  --abt-veil: color-mix(in srgb, var(--abt-base) 74%, transparent);
+}
+
+html[data-cs-theme='light'] .abt--foot .hx-me {
+  --hx-me-fg: var(--abt-ink);
+}
+
+/* On the dark ground the dark pill would vanish, so it turns light, its disc dark. Dark is any case
+   study not in light, including those with no theme of their own yet (no attribute at all). */
+html:not([data-cs-theme='light']) .abt--foot .hx-btn--primary {
+  background: #fff;
+  color: #16121c;
+}
+
+html:not([data-cs-theme='light']) .abt--foot .hx-btn--primary .hx-btn__icon {
+  background: #16121c;
+  color: #fff;
+}
+
+html:not([data-cs-theme='light']) .abt--foot .hx-btn--primary:focus-visible {
+  color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html:not([data-cs-theme='light']) .abt--foot .hx-btn--primary:hover {
+    color: #fff;
+  }
+}
+
+/* The ghost pill is solid white on the light ground (home.css) and a deep blue on the dark. */
+html:not([data-cs-theme='light']) .abt--foot .hx-btn--ghost {
+  background: #1b1e2c;
+  color: var(--t1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+html:not([data-cs-theme='light']) .abt--foot .hx-btn--ghost:focus-visible {
+  color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html:not([data-cs-theme='light']) .abt--foot .hx-btn--ghost:hover {
+    color: #fff;
+  }
+}
+
+/* The résumé dialog opens inside the band, so it takes the band's tokens; its light touches. */
+html[data-cs-theme='light'] .abt--foot .rsm {
+  --abt-accent: #1b1a17;
+  --rsm-on-accent: #fbf9f5;
+  --rsm-accent-text: #1b1a17;
+  background: rgb(20 21 26 / 0.55);
+}
+
+html[data-cs-theme='light'] .abt--foot .rsm__panel {
+  border-color: rgb(0 0 0 / 0.06);
+  background: #fbf9f5;
+}
+
+/* ---------------------------------------------------------------- The end of the case study
+
+   CaseStudyEnd.js, at the top of the closing section, on its glow and at the width of the letter and
+   video below: "Up next" (set like "About me") with the homepage's two pills beside it, then the two
+   case studies that follow, each a tile in its own colour (--accent): a hairline, a wash from one
+   corner, its ✦ over its cover, then the case study's own type (a mono eyebrow, the title in the
+   display face, Inter) and an underlined link. */
+
+.cse {
+  max-width: 1132px;
+  margin: 0 auto;
+  padding: 0 clamp(24px, 2.6vw, 36px);
+  box-sizing: content-box;
+  color: var(--t2);
+}
+
+.cse__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 28px;
+}
+
+.cse__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--hx-me-face);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+}
+
+.cse__star {
+  width: 0.62em;
+  height: 0.62em;
+  flex: none;
+  fill: #34c759;
+}
+
+.cse__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Smaller pills than the homepage's hero: they sit beside a 16px heading. */
+.cse__buttons .hx-btn {
+  height: 42px;
+  gap: 12px;
+  padding: 0 5px 0 18px;
+  font-size: 14px;
+}
+
+.cse__buttons .hx-btn--back {
+  padding: 0 18px 0 5px;
+}
+
+.cse__buttons .hx-btn__icon {
+  width: 32px;
+  height: 32px;
+}
+
+.cse__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cse__list > li {
+  display: flex;
+}
+
+/* ------------------------------------------------ The tile */
+
+.cse__card {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px;
+  border-radius: 20px;
+  background:
+    radial-gradient(90% 120% at 0% 100%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 62%),
+    color-mix(in srgb, var(--abt-ink) 4%, transparent);
+  box-shadow: inset 0 0 0 1px var(--abt-line);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    box-shadow 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.cse__card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.cse__media {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 2 / 1;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--abt-base));
+  box-shadow: inset 0 0 0 1px var(--abt-line);
+}
+
+/* No cover yet: the ✦ large, in the case study's colour, on a wash of it. */
+.cse__media--soon {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(60% 90% at 50% 50%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 70%),
+    color-mix(in srgb, var(--accent) 10%, var(--abt-base));
+}
+
+.cse__media--soon svg {
+  width: 56px;
+  height: 56px;
+  fill: var(--accent);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cse__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 0 0;
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The ✦ in the case study's colour, in the cover's corner (not over the large one standing in for a
+   cover). */
+.cse__mark {
+  position: absolute;
+  top: 26px;
+  left: 26px;
+  width: 22px;
+  height: 22px;
+  fill: var(--accent);
+  filter: drop-shadow(0 2px 8px rgb(0 0 0 / 0.35));
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cse__media--soon + .cse__mark {
+  display: none;
+}
+
+.cse__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 18px 10px 10px;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.cse__kicker {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+
+.cse__num {
+  margin-right: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.cse__title {
+  margin-top: 8px;
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-size: clamp(22px, 1.9vw, 28px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: var(--t1);
+  text-wrap: balance;
+}
+
+.cse__line {
+  display: -webkit-box;
+  margin-top: 8px;
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--t3);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.cse__read {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--t1);
+}
+
+.cse__read-label {
+  text-decoration: underline;
+  text-decoration-color: var(--abt-line-2);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.cse__read-arrow {
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.cse__card:focus-visible .cse__read-label {
+  text-decoration-color: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cse__card:hover {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .cse__card:hover .cse__read-label {
+    text-decoration-color: var(--accent);
+  }
+
+  .cse__card:hover .cse__read-arrow {
+    transform: translateX(4px);
+  }
+
+  .cse__card:hover .cse__media img {
+    transform: scale(1.03);
+  }
+
+  .cse__card:hover .cse__media--soon svg {
+    transform: rotate(45deg) scale(1.08);
+  }
+
+  .cse__card:hover .cse__mark {
+    transform: rotate(90deg) scale(1.15);
+  }
+}
+
+/* Narrow windows and phones: one over the other. */
+@media (max-width: 899px) {
+  .cse__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

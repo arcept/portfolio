@@ -29,16 +29,18 @@ function Magnetic({ children, pull = 0.28 }) {
 
 // A way onward: a pill with the arrow in a disc. On hover the rainbow rises through it and the arrow
 // turns to point the way. A downward one (a link further down the page) instead drops out of its disc
-// as its twin drops in from above (home.css).
+// as its twin drops in from above (home.css). A way back ('←') has its disc first, and its arrow
+// nudges back on hover.
 export default function Action({ href, arrow = '↗', variant = 'primary', onClick, children }) {
+  const back = arrow === '←';
   return (
     <Magnetic>
-      <a href={href} className={`hx-btn hx-btn--${variant}`} onClick={onClick}>
+      <a href={href} className={`hx-btn hx-btn--${variant}${back ? ' hx-btn--back' : ''}`} onClick={onClick}>
         <span className="hx-btn__label">
           <span>{children}</span>
         </span>
         <span className="hx-btn__icon" aria-hidden="true">
-          <span className="hx-btn__arrow">{arrow === '↓' ? '↓' : '→'}</span>
+          <span className="hx-btn__arrow">{arrow === '↓' || back ? arrow : '→'}</span>
           {arrow === '↓' && <span className="hx-btn__arrow hx-btn__arrow--next">↓</span>}
         </span>
       </a>

@@ -11,7 +11,7 @@ import { useT } from '@/components/i18n/LangProvider';
 import PlacementStory from './PlacementStory';
 import PlacementSections from './sections';
 
-// The case study's own words: the hero, the prototype frame, the article and the footer links. English is written
+// The case study's own words: the hero, the prototype frame, and the article (the end, "Up next", is CaseStudyEnd). English is written
 // here and in sections.js; another language replaces each piece by its key (see i18n/). It is a client component
 // so the words can change without a reload; it is still rendered on the server, so English is in the HTML.
 
@@ -159,11 +159,6 @@ export default function PlacementBody({ headlineFont, fontVars, narrationDuratio
         </main>
 
         <CaseStudyNav sections={t.list('nav.sections', SECTIONS)} />
-      </div>
-
-      <div className="cs-footer-nav wrap wrap--wide">
-        <a href="/" className="btn btn--secondary">← {t('footer.all', 'All work')}</a>
-        <span className="btn btn--primary btn--inert">{t('footer.contact', 'Get in touch')}</span>
       </div>
 
     </>

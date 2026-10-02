@@ -4,7 +4,8 @@ import Nav from '@/components/Nav';
 import ThemeSwitch from '@/components/theme/ThemeSwitch';
 import LangSwitch from '@/components/i18n/LangSwitch';
 import { themeGateScript } from '@/components/theme/theme';
-import Footer from '@/components/Footer';
+import SiteFooter from '@/components/case-study-kit/SiteFooter';
+import CaseStudyEnd from '@/components/case-study-kit/CaseStudyEnd';
 import ScrollProgress from '@/components/case-study-kit/ScrollProgress';
 import NarrationProvider from '@/components/narration/NarrationProvider';
 import { NarrationUIProvider } from '@/components/narration/NarrationUI';
@@ -20,6 +21,9 @@ import '../case-study-kit/themes.css';
 import '../case-study-kit/blocks.css';
 import '../case-study-kit/hero.css';
 import '../case-study-kit/story.css';
+import '../about/about.css';
+import '../about/resume/resume.css';
+import '../_home/home.css';
 
 const neueAlteGrotesk = localFont({
   src: '../fonts/NeueAlteGrotesk-SemiBold.ttf',
@@ -92,7 +96,9 @@ export default function CaseStudyPlacement() {
 
       <PlacementBody headlineFont={neueAlteGrotesk.className} fontVars={`${neueAlteGrotesk.variable} ${serif.variable}`} narrationDuration={narration.duration} listen={listen} />
 
-      <Footer />
+      <SiteFooter fontVars={`${neueAlteGrotesk.variable} ${serif.variable}`}>
+        <CaseStudyEnd current="placement" />
+      </SiteFooter>
     </div>
 
     {/* The narration: a floating card that is a small player by default and expands to the full player (a sheet on phones). */}

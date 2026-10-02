@@ -1,7 +1,11 @@
 import Nav from '@/components/Nav';
-import Footer from '@/components/Footer';
+import SiteFooter from '@/components/case-study-kit/SiteFooter';
+import CaseStudyEnd from '@/components/case-study-kit/CaseStudyEnd';
 import Reveal from '@/components/Reveal';
 import MetaStrip from '@/components/MetaStrip';
+import '../about/about.css';
+import '../about/resume/resume.css';
+import '../_home/home.css';
 
 export const metadata = {
   title: 'Building the Novatr LMS — Manik Madaan',
@@ -69,12 +73,9 @@ export default function CaseStudyNovatrLMS() {
         </Reveal>
       </main>
 
-      <div className="cs-footer-nav wrap wrap--wide">
-        <a href="/" className="btn btn--secondary">← All work</a>
-        <span className="btn btn--primary btn--inert">Get in touch</span>
-      </div>
-
-      <Footer />
+      <SiteFooter>
+        <CaseStudyEnd current="lms" />
+      </SiteFooter>
     </>
   );
 }

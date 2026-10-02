@@ -57,6 +57,8 @@ export default {
     { label: 'Passaggio di consegne' },
     { label: 'Lancio e misurazione' },
   ],
+  'footer.next': 'Prossimo',
+  'footer.read': 'Leggi il case study',
   'footer.all': 'Tutti i lavori',
   'footer.contact': 'Contattami',
 

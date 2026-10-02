@@ -42,7 +42,9 @@ const rise = (delay = 0, y = 24) => ({
   transition: { duration: 1, ease: EASE, delay },
 });
 
-export default function AboutMe() {
+// `lead` is anything that opens the section above the letter, on the same glow (a case study's "Up
+// next", components/case-study-kit/CaseStudyEnd.js).
+export default function AboutMe({ lead }) {
   const sign = useRef(null);
   const signed = useInView(sign, { once: true, amount: 1 });
   // On the light ground the glow's colours go a little paler.
@@ -52,6 +54,8 @@ export default function AboutMe() {
   return (
     <section className="hx-me" id="about" style={{ '--hx-me-face': FACE.family, '--hx-me-tint': TINT }} aria-labelledby="hx-me-title">
       <Glow colours={WAVE} pale={light ? 0.28 : 0} className="hx-me__glow" />
+
+      {lead && <div className="hx-me__lead">{lead}</div>}
 
       <motion.div className="hx-me__body" {...rise(0.05, 40)}>
         <div className="hx-me__inner">

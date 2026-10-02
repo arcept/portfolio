@@ -80,6 +80,11 @@
   will-change: transform, opacity;
 }
 
+/* The last section ends the article on space, not a rule: the page's foot follows it. */
+.lx-section:last-child .lx-panel {
+  border-bottom: 0;
+}
+
 @media (max-width: 1099px) {
   .lx-panel {
     grid-template-columns: 200px minmax(0, 1fr);
