@@ -10,7 +10,8 @@ import { useSearchParams } from 'next/navigation';
 import { pickBrief } from './briefs';
 
 // The case study's body: the hero, the five-beat summary (Scroll, unless ?brief= picks another; ?compare shows
-// the switcher, briefs.js), then the article, chapter by chapter.
+// the switcher, briefs.js), then the article, chapter by chapter. ?compare also brings back chapter 03's form
+// switch (FormFields.js, ?form=).
 //
 // The collage's pieces (public/case-study-cro/hero-01-*) are cut from a placeholder illustration until
 // its layered files arrive: the laptop's form still shows a typed name.

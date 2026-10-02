@@ -4,7 +4,7 @@
 /* ------------------------------------------------------------------ The chapter's standfirst */
 
 .cro-ch__standfirst {
-  max-width: 34ch;
+  max-width: var(--cro-head-measure);
   margin: 0 0 28px;
   font-family: var(--cro-display);
   font-weight: var(--h-weight);
@@ -26,8 +26,8 @@
   margin: 0;
 }
 .cro-blocks__p {
-  max-width: 60ch;
-  font-size: 18px;
+  max-width: var(--cro-measure);
+  font-size: var(--cro-body);
   line-height: 1.72;
   color: var(--t2);
 }
@@ -79,7 +79,7 @@
   grid-template-columns: 56px minmax(0, 1fr);
   column-gap: 16px;
   row-gap: 8px;
-  max-width: 64ch;
+  max-width: var(--cro-measure);
   opacity: 0.4;
   transition: opacity 0.6s ease;
 }
@@ -121,8 +121,9 @@
   color: var(--t1);
 }
 .cro-practice__body {
+  max-width: var(--cro-measure);
   margin: 0;
-  font-size: 16px;
+  font-size: var(--cro-body-sm);
   line-height: 1.65;
   color: var(--t2);
 }
@@ -138,7 +139,7 @@
 }
 .cro-shift__text,
 .cro-statement {
-  max-width: 30ch;
+  max-width: var(--cro-head-measure);
   margin: 0;
   font-family: var(--cro-display);
   font-weight: var(--h-weight);
@@ -183,9 +184,9 @@
   color: var(--t1);
 }
 .cro-move__body {
-  max-width: 58ch;
+  max-width: var(--cro-measure);
   margin: 12px 0 16px;
-  font-size: 16px;
+  font-size: var(--cro-body-sm);
   line-height: 1.65;
   color: var(--t2);
 }
@@ -205,7 +206,7 @@
 /* ---- 03 · The design detail: the pop-up / first-scroll interactive */
 
 .cro-detail__title {
-  max-width: 24ch;
+  max-width: var(--cro-head-measure);
   margin: 0 0 16px;
   font-family: var(--cro-display);
   font-weight: var(--h-weight);
@@ -216,9 +217,9 @@
   color: var(--t1);
 }
 .cro-detail__text {
-  max-width: 58ch;
+  max-width: var(--cro-measure);
   margin: 0 0 clamp(28px, 3vw, 40px);
-  font-size: 18px;
+  font-size: var(--cro-body);
   line-height: 1.72;
   color: var(--t2);
 }
@@ -418,6 +419,612 @@
 .cro-funnel__caption {
   max-width: 62ch;
   margin-top: 16px;
+  font-family: var(--cro-label);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--t3);
+}
+
+/* ---- 03 · The design detail's two parts, and the second: the form's fields before and after (FormFields.js) */
+
+.cro-detail__part + .cro-detail__part {
+  margin-top: clamp(48px, 5vw, 72px);
+}
+.cro-detail__step {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-family: var(--cro-label);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t1);
+}
+.cro-detail__step span {
+  color: var(--signal-ink);
+}
+.cro-detail__subtitle {
+  max-width: var(--cro-head-measure);
+  margin: 0 0 12px;
+  font-family: var(--cro-display);
+  font-weight: var(--h-weight);
+  font-variation-settings: var(--h-vary);
+  font-size: clamp(22px, 2.2vw, 30px);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--t1);
+}
+
+.cro-nf-wrap {
+  margin: 0;
+}
+/* The switch between the three options, while they're compared. */
+.cro-nf__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px dashed var(--line-2);
+  border-radius: 14px;
+}
+.cro-nf__options > span {
+  font-family: var(--cro-label);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.cro-nf__options .cro-form__switch {
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.cro-nf__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.cro-nf__bar .cro-form__switch {
+  margin: 0;
+}
+.cro-nf__count {
+  margin: 0;
+  font-family: var(--cro-label);
+  font-size: 13px;
+  color: var(--t2);
+}
+.cro-nf__count b {
+  display: inline-block;
+  margin-right: 4px;
+  font-family: var(--cro-sans);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--signal-ink);
+  vertical-align: -4px;
+  animation: cro-nf-count 0.5s var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+@keyframes cro-nf-count {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* The rebuilt form. It keeps the live form's proportions: a card 963 units wide, every size in those units
+   (--u), so it scales with the column. Narrow, it drops the course panel and fills the width with the form. */
+.cro-nf__fit {
+  container-type: inline-size;
+}
+.cro-nf__card {
+  --u: calc(100cqi / 963);
+  --purple: #7a3ff0;
+  --bar: #6a3bef;
+  --ink: #0f1317;
+  --hint: #9a9ea6;
+  --edge: #d6d8db;
+  position: relative;
+  display: grid;
+  grid-template-columns: calc(463 * var(--u)) 1fr;
+  height: calc(604 * var(--u));
+  overflow: hidden;
+  border-radius: calc(12 * var(--u));
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--cro-sans);
+  box-shadow: 0 0 0 1px var(--line-2), 0 24px 60px -30px rgb(0 0 0 / 0.45);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.cro-nf__card p,
+.cro-nf__card dl,
+.cro-nf__card dd,
+.cro-nf__card ul {
+  margin: 0;
+  padding: 0;
+}
+.cro-nf__side {
+  padding: calc(70 * var(--u)) calc(40 * var(--u)) 0 calc(52 * var(--u));
+  background: #faf6ff;
+  transition: background-color 0.5s ease;
+}
+.cro-nf__card.is-new .cro-nf__side {
+  background: #ebeaff;
+}
+.cro-nf__kicker,
+.cro-nf__course {
+  font-size: calc(27 * var(--u));
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: -0.01em;
+}
+.cro-nf__kicker {
+  color: var(--purple);
+}
+.cro-nf__meta {
+  display: grid;
+  gap: calc(10 * var(--u));
+  margin-top: calc(16 * var(--u)) !important;
+  padding: calc(2 * var(--u)) 0 calc(2 * var(--u)) calc(17 * var(--u)) !important;
+  border-left: calc(3 * var(--u)) solid var(--bar);
+  font-size: calc(14 * var(--u));
+  line-height: 1.3;
+}
+.cro-nf__meta div {
+  display: flex;
+  gap: calc(8 * var(--u));
+}
+.cro-nf__meta dt {
+  color: var(--bar);
+}
+.cro-nf__meta dd {
+  font-weight: 500;
+}
+.cro-nf__perks-title {
+  margin-top: calc(82 * var(--u)) !important;
+  font-size: calc(16 * var(--u));
+  font-weight: 500;
+}
+.cro-nf__perks {
+  display: grid;
+  gap: calc(12 * var(--u));
+  margin-top: calc(14 * var(--u)) !important;
+  list-style: none;
+  font-size: calc(14 * var(--u));
+  line-height: calc(20 * var(--u));
+}
+.cro-nf__perks li {
+  position: relative;
+  padding-left: calc(32 * var(--u));
+}
+.cro-nf__perks li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(20 * var(--u));
+  height: calc(20 * var(--u));
+  border-radius: 50%;
+  background: var(--bar) no-repeat center / 60%
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8'%3E%3Cpath d='M1 4 L4 7 L9 1' fill='none' stroke='white' stroke-width='1.6'/%3E%3C/svg%3E");
+}
+
+.cro-nf__main {
+  position: relative;
+  padding: calc(66 * var(--u)) 0 0 calc(60 * var(--u));
+}
+.cro-nf__close {
+  position: absolute;
+  top: calc(20 * var(--u));
+  right: calc(20 * var(--u));
+  width: calc(13 * var(--u));
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.6;
+}
+.cro-nf__intro {
+  width: calc(364 * var(--u));
+  min-height: calc(42 * var(--u));
+  font-size: calc(14 * var(--u));
+  line-height: calc(20.5 * var(--u));
+}
+.cro-nf__card.is-labelled .cro-nf__intro {
+  min-height: calc(68 * var(--u));
+}
+.cro-nf__intro,
+.cro-nf__card .cro-nf__intro {
+  transition: min-height 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* A field folds away (its height, then nothing) when it goes; its label shows only on the new form. */
+.cro-nf__row {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.35s, opacity 0.35s ease;
+}
+.cro-nf__row.is-gone {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.cro-nf__row:not(.is-gone) {
+  transition-delay: 0s, 0.3s;
+}
+.cro-nf__row-in {
+  display: grid;
+  grid-template-rows: 0fr auto;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: calc(12 * var(--u));
+  transition: grid-template-rows 0.6s cubic-bezier(0.65, 0, 0.35, 1), padding 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.cro-nf__card.is-labelled .cro-nf__row-in {
+  grid-template-rows: 1fr auto;
+  padding-bottom: calc(16 * var(--u));
+}
+/* Padding doesn't shrink with the row, so a field that's gone gives its spacing up too. */
+.cro-nf__card .cro-nf__row.is-gone .cro-nf__row-in {
+  padding-bottom: 0;
+  transition-delay: 0.35s;
+}
+.cro-nf__label {
+  min-height: 0;
+  overflow: hidden;
+  padding-left: calc(8 * var(--u));
+  font-size: calc(14 * var(--u));
+  font-weight: 600;
+  line-height: calc(20 * var(--u));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.cro-nf__card.is-labelled .cro-nf__label {
+  opacity: 1;
+  transition-delay: 0.3s;
+}
+.cro-nf__input {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  width: calc(364 * var(--u));
+  height: calc(44 * var(--u));
+  padding: 0 calc(15 * var(--u));
+  border: 1px solid var(--edge);
+  border-radius: calc(4 * var(--u));
+  font-size: calc(14 * var(--u));
+  color: var(--hint);
+  box-sizing: border-box;
+  transition: border-radius 0.5s ease;
+}
+.cro-nf__card.is-labelled .cro-nf__input {
+  border-radius: calc(8 * var(--u));
+}
+.cro-nf__hint {
+  flex: 1;
+  white-space: nowrap;
+}
+.cro-nf__hint b {
+  margin-right: calc(8 * var(--u));
+  font-weight: 400;
+}
+.cro-nf__input.is-phone {
+  padding-left: 0;
+}
+.cro-nf__code {
+  display: flex;
+  align-items: center;
+  gap: calc(6 * var(--u));
+  align-self: stretch;
+  padding: 0 calc(12 * var(--u));
+  border-right: 1px solid var(--edge);
+  background: #f6f7f8;
+  border-radius: inherit;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.cro-nf__code i {
+  /* India's flag, the country the form defaults to (+91): saffron, white with the navy chakra, green. */
+  width: calc(16 * var(--u));
+  height: calc(16 * var(--u));
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.15);
+  background: radial-gradient(circle, #000080 0 14%, transparent 16%),
+    linear-gradient(#ff9933 0 33.4%, #fff 33.4% 66.6%, #138808 66.6%);
+}
+.cro-nf__chev {
+  width: calc(12 * var(--u));
+  fill: none;
+  stroke: #5a5e66;
+  stroke-width: 1.4;
+}
+.cro-nf__mail {
+  width: calc(15 * var(--u));
+  fill: none;
+  stroke: #111;
+  stroke-width: 1.4;
+}
+.cro-nf__rule {
+  position: absolute;
+  top: calc(464 * var(--u));
+  left: calc(60 * var(--u));
+  width: calc(364 * var(--u));
+  margin: 0;
+  border: 0;
+  border-top: 1px solid #e6e7e9;
+  transition: opacity 0.4s ease;
+}
+.cro-nf__card.is-labelled .cro-nf__rule {
+  opacity: 0;
+}
+.cro-nf__submit {
+  position: absolute;
+  top: calc(490 * var(--u));
+  left: calc(60 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(12 * var(--u));
+  width: calc(364 * var(--u));
+  height: calc(52 * var(--u));
+  border-radius: calc(8 * var(--u));
+  background: #3e1c97;
+  color: #fff;
+  font-size: calc(18 * var(--u));
+  font-weight: 600;
+}
+
+@container (max-width: 560px) {
+  .cro-nf__card {
+    --u: calc(100cqi / 470);
+    grid-template-columns: 1fr;
+    height: calc(590 * var(--u));
+  }
+  .cro-nf__side {
+    display: none;
+  }
+  .cro-nf__main {
+    padding-left: calc(53 * var(--u));
+  }
+  .cro-nf__rule,
+  .cro-nf__submit {
+    left: calc(53 * var(--u));
+  }
+}
+
+/* A · what changed, under the form: the two fields struck through once they've gone, the one kept. */
+.cro-nf__changes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+.cro-nf__changes li {
+  padding: 6px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  color: var(--t2);
+  transition: color 0.4s ease, border-color 0.4s ease, opacity 0.4s ease;
+}
+.cro-nf__changes .is-cut {
+  text-decoration: line-through;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.4s ease 0.2s, color 0.4s ease;
+}
+.cro-nf__changes.is-after .is-cut {
+  color: var(--t4);
+  text-decoration-color: currentColor;
+}
+.cro-nf__changes .is-kept {
+  opacity: 0.4;
+}
+.cro-nf__changes.is-after .is-kept {
+  opacity: 1;
+  border-color: var(--signal);
+  color: var(--t1);
+}
+
+/* B · the dial: a track from more information to more leads, the step we landed on marked, two meters. */
+.cro-nf-dial {
+  margin-bottom: 20px;
+}
+.cro-nf-dial__ends {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-family: var(--cro-label);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.cro-nf-dial__track {
+  position: relative;
+  height: 28px;
+}
+.cro-nf-dial__track::before,
+.cro-nf-dial__track::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  right: 14px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 2px;
+  background: var(--line-2);
+  pointer-events: none;
+}
+.cro-nf-dial__track::after {
+  right: auto;
+  width: calc((100% - 28px) * var(--p));
+  background: var(--signal);
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cro-nf-dial__track input {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cro-nf-dial__track input::-webkit-slider-thumb {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--cro-bg);
+  border-radius: 50%;
+  background: var(--signal-fill);
+  box-shadow: 0 0 0 1px var(--signal), 0 4px 14px rgb(0 0 0 / 0.3);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cro-nf-dial__track input::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--cro-bg);
+  border-radius: 50%;
+  background: var(--signal-fill);
+}
+.cro-nf-dial__track input:focus-visible {
+  outline: none;
+}
+.cro-nf-dial__track input:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--t1);
+  outline-offset: 2px;
+}
+.cro-nf-dial__mark {
+  position: absolute;
+  top: 50%;
+  left: calc(14px + (100% - 28px) * var(--landed));
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border: 2px solid var(--signal);
+  border-radius: 50%;
+  background: var(--cro-bg);
+  pointer-events: none;
+}
+.cro-nf-dial__ticks {
+  position: relative;
+  height: 40px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--cro-label);
+  font-size: 12px;
+  color: var(--t4);
+}
+/* Each under its stop on the track: the first flush left, the last flush right, those between centred. */
+.cro-nf-dial__ticks li {
+  position: absolute;
+  top: 0;
+  left: calc(14px + (100% - 28px) * var(--s));
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  translate: calc(-100% * var(--s) + 14px * (2 * var(--s) - 1)) 0;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+.cro-nf-dial__ticks em {
+  font-style: normal;
+  color: var(--signal-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+.cro-nf-dial__ticks li.is-on {
+  color: var(--t1);
+}
+.cro-nf-dial__meters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 28px;
+  margin-top: 22px;
+}
+.cro-nf-dial__meters p {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--t2);
+}
+.cro-nf-dial__meters i {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(var(--signal), var(--signal)) no-repeat 0 0 / calc(var(--v) * 100%) 100%, var(--line);
+  transition: background-size 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cro-nf-dial__says {
+  min-height: 3.2em;
+  margin: 18px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--t2);
+}
+.cro-nf-dial__says.is-landed {
+  color: var(--t1);
+}
+.cro-nf-dial__says.is-over {
+  color: var(--t3);
+}
+@media (max-width: 560px) {
+  .cro-nf-dial__meters {
+    grid-template-columns: 1fr;
+  }
+  /* The option switch stacks, full width, rather than wrapping inside its pill. */
+  .cro-nf__options .cro-form__switch {
+    display: grid;
+    width: 100%;
+    border-radius: 20px;
+  }
+  .cro-nf__options .cro-form__switch button {
+    text-align: left;
+  }
+}
+
+/* ---- 03 · Proof near the decision: the page's proof sections, stacked screenshots with captions */
+
+.cro-proof__shots {
+  display: grid;
+  gap: clamp(28px, 3vw, 40px);
+}
+.cro-proof__shot {
+  margin: 0;
+}
+.cro-proof__frame {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  background: var(--raise);
+}
+.cro-proof__frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.cro-proof__caption {
+  max-width: 62ch;
+  margin-top: 14px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--t2);
+}
+.cro-proof__after {
+  margin: clamp(28px, 3vw, 40px) 0 0;
+}
+.cro-proof__note {
+  max-width: 62ch;
+  margin: 20px 0 0;
   font-family: var(--cro-label);
   font-size: 12px;
   line-height: 1.6;
@@ -646,11 +1253,12 @@
   font-size: clamp(22px, 2vw, 28px);
   line-height: 1.2;
   color: var(--t1);
+  max-width: var(--cro-head-measure);
 }
 .cro-caveat p {
-  max-width: 62ch;
+  max-width: var(--cro-measure);
   margin: 0;
-  font-size: 16px;
+  font-size: var(--cro-body-sm);
   line-height: 1.7;
   color: var(--t2);
 }

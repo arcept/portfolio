@@ -54,7 +54,7 @@ export default function CaseStudyCRO() {
       <ScrollProgress />
       <Nav actions={<ThemeSwitch />} />
 
-      {/* The body reads ?brief= and ?compare (the "In brief" layouts, kept to compare) in the browser, as the site is a static export. */}
+      {/* The body reads ?compare, ?brief= and ?form= (the "In brief" layouts and the form options, kept to compare) in the browser, as the site is a static export. */}
       <Suspense fallback={null}>
         <CroBody />
       </Suspense>

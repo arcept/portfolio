@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { ScrollTrigger, gsap, prefersStill, useIsoLayoutEffect } from './gsap';
 import FormDemo from './FormDemo';
+import FormFields from './FormFields';
 import FunnelExplorer from './FunnelExplorer';
 import ReviewLoop from './ReviewLoop';
 
@@ -88,7 +89,8 @@ function Moves({ items }) {
   );
 }
 
-function Detail({ label, title, text, caption }) {
+// The design detail in two parts: where the form sits (visible), then what it asks (manageable).
+function Detail({ label, title, text, caption, manage }) {
   return (
     <section className="cro-detail" aria-label={label}>
       <p className="cro-kicker" data-fade>
@@ -100,7 +102,82 @@ function Detail({ label, title, text, caption }) {
       <p className="cro-detail__text" data-fade>
         {text}
       </p>
-      <FormDemo caption={caption} />
+      <div className="cro-detail__part">
+        <p className="cro-detail__step" data-fade>
+          <span>01</span>Visible
+        </p>
+        <FormDemo caption={caption} />
+      </div>
+      {manage && (
+        <div className="cro-detail__part">
+          <p className="cro-detail__step" data-fade>
+            <span>02</span>Manageable
+          </p>
+          <h4 className="cro-detail__subtitle" data-fade>
+            {manage.title}
+          </h4>
+          <p className="cro-detail__text" data-fade>
+            {manage.text}
+          </p>
+          <FormFields caption={manage.caption} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Screenshots of the page's proof sections, stacked, with what led to them above and (`after`) what came of
+// them below: each frame opens upward as it scrolls in, its image
+// settling from a slight zoom.
+function Proof({ label, title, text, images, after, note }) {
+  const root = useRef(null);
+  useIsoLayoutEffect(() => {
+    if (prefersStill()) return undefined;
+    const el = root.current;
+    const ctx = gsap.context(() => {
+      el.querySelectorAll('[data-shot]').forEach((shot) => {
+        gsap
+          .timeline({ scrollTrigger: { trigger: shot, start: 'top 85%', once: true } })
+          .from(shot, { clipPath: 'inset(18% 0% 0% 0% round 16px)', autoAlpha: 0, duration: 1.1, ease: 'expo.out' })
+          .from(shot.querySelector('img'), { scale: 1.08, duration: 1.4, ease: 'expo.out' }, 0);
+      });
+    }, el);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section className="cro-detail cro-proof" aria-label={label} ref={root}>
+      <p className="cro-kicker" data-fade>
+        {label}
+      </p>
+      <h3 className="cro-detail__title" data-fade>
+        {title}
+      </h3>
+      <p className="cro-detail__text" data-fade>
+        {text}
+      </p>
+      <div className="cro-proof__shots">
+        {images.map(({ src, w, h, alt, caption }) => (
+          <figure key={src} className="cro-proof__shot">
+            <span className="cro-proof__frame" data-shot>
+              <img src={src} alt={alt} width={w} height={h} loading="lazy" decoding="async" />
+            </span>
+            <figcaption className="cro-proof__caption" data-fade>
+              {caption}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      {after && (
+        <p className="cro-detail__text cro-proof__after" data-fade>
+          {after}
+        </p>
+      )}
+      {note && (
+        <p className="cro-proof__note" data-fade>
+          {note}
+        </p>
+      )}
     </section>
   );
 }
@@ -132,6 +209,8 @@ export default function ChapterBlocks({ blocks }) {
             return <Shift key={key} label={block.label} text={block.text} />;
           case 'moves':
             return <Moves key={key} items={block.items} />;
+          case 'proof':
+            return <Proof key={key} {...block} />;
           case 'detail':
             return <Detail key={key} {...block} />;
           case 'funnel':

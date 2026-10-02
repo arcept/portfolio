@@ -137,7 +137,10 @@ export const CONTEXT = {
 //   steps      numbered steps that light in turn as they are read (02)
 //   shift      a labelled statement (02's "The shift")
 //   moves      numbered design moves, each with the signal it was read by (03)
-//   detail     a labelled design detail with the pop-up / first-scroll interactive (03)
+//   proof      screenshots of the page's proof sections, stacked, each with a caption, and optionally a paragraph
+//              after them (03, move 2's evidence)
+//   detail     a labelled design detail: the pop-up / first-scroll interactive, then (`manage`) the form's
+//              fields before and after (03)
 //   funnel     the explorable three-week funnel (04)
 //   caveat     a boxed note on what the evidence can and cannot tell us (04)
 //   loop       the review loop (05)
@@ -235,11 +238,56 @@ export const PROVING_GROUND = {
       ],
     },
     {
+      type: 'proof',
+      label: 'Proof near the decision',
+      title: 'Let the outcomes speak before the form asks.',
+      text: 'Two of the sections that gave proof room to work: learner outcomes in numbers, with the companies learners went on to join, and the career success report. We placed them close to where visitors decided whether to start the form. Sessions that reached these sections went on to start the form more often. They arrived alongside other changes in the same period, so we read that as a signal worth building on, not as proof.',
+      images: [
+        {
+          src: '/case-study-cro/proof-outcomes.webp',
+          w: 1920,
+          h: 698,
+          alt: 'Course page section: “Our learners work in companies that are building the world”, with 97% average hike in CTC after graduating, 343% highest hike achieved by a learner, 83% placement rate, and a band of partner company logos.',
+          caption: 'Outcomes in numbers. Novatr’s reported learner results, set beside the companies learners joined.',
+        },
+        {
+          src: '/case-study-cro/proof-career-report.webp',
+          w: 1920,
+          h: 594,
+          alt: 'Course page section: “Uncover our learner’s Career Success Report 2024”, a card with a download button.',
+          caption: 'The career success report. More detail, a download away, for anyone the headline numbers didn’t settle.',
+        },
+      ],
+      note: 'Screenshots from the live course page. Its figures are Novatr’s own, not results of this study.',
+    },
+    {
+      type: 'proof',
+      label: 'Credentials in view',
+      title: 'Say what the program is, and who stands behind it.',
+      text: 'We added a section for the certificates a graduate receives: Novatr’s own, the government-recognised NSDC and Skill India certificate, and Autodesk’s. It did two jobs. It made the program’s credibility visible, and it settled what kind of program this was, which had not been clear to every visitor. Above all, it put the program’s value in plain view.',
+      images: [
+        {
+          src: '/case-study-cro/proof-certifications.webp',
+          w: 1800,
+          h: 894,
+          alt: 'Course page section: “Graduate with credentials that carry industry-relevance”, with the Autodesk, NSDC and Novatr logos above three certificates: the Novatr BIM Professional Program certificate, the NSDC certificate and the Autodesk Revit certificate.',
+          caption: 'The certifications section: what a graduate receives, and from whom.',
+        },
+      ],
+      after: 'Adding the section was the easy part; ordering it was harder. Each certificate answered a different doubt, and which one led changed how the section read. We tried orders in turn, looked at what each change led to and how engagement with the page moved, and the certifications earned their place. As with the other changes, they shipped alongside others, so we read that as a signal, not proof.',
+      note: 'Screenshot from the live course page.',
+    },
+    {
       type: 'detail',
       label: 'Design detail',
       title: 'Make the form visible, then make it manageable.',
       text: 'A visible form changed what a button click meant. Reducing the effort inside the form addressed a different part of the journey: finishing after starting.',
       caption: 'This diagram represents the interaction principle; it is not an archival screenshot.',
+      manage: {
+        title: 'Fewer questions, more finished forms.',
+        text: 'The old form asked for six things. We kept the specialisation, because sales still needed it, and stopped asking for job title and years of experience. Each lead now came with less information, but more people finished the form, and sales had many more leads to work with. That was the balance we chose: enough to know who a lead was, little enough that they would finish.',
+        caption: 'The submissions are in the funnel in the next chapter.',
+      },
     },
   ],
 };
