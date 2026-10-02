@@ -3,8 +3,7 @@ import omsCover from './art/oms-cover.webp';
 // The homepage's selected work (Work.js): the three case studies it features, in order, then the ones
 // still being written, under "Read more". Each wears its own colour (`accent`). `image` is the
 // featured card's screenshot (`srcLight` in the light theme, where there is one), with its size, which
-// the dissolve between them needs to crop it. `breakAfter` breaks the title's line after that word where
-// it is set large (the list, the phone cards).
+// the dissolve between them needs to crop it.
 
 export const CASES = [
   {
@@ -53,18 +52,23 @@ export const CASES = [
     slug: 'cro',
     href: '/case-study-cro',
     kicker: 'Course page CRO · Novatr',
-    title: 'Designing for Confidence',
-    breakAfter: 'for',
-    line: 'The flagship course page had strong traffic and weak conversion, and four teams disagreed on why. Behavioural data became the thing they could agree on.',
-    metric: { value: 20, suffix: '%', label: 'conversion improvement on the highest-revenue page' },
+    title: 'Designing for Confidence: From Guesswork to Evidence',
+    line: 'Our flagship BIM course page was underperforming, but every team had a different explanation. I led a shared way to measure what visitors did, make design decisions together, and keep learning after each change.',
+    metric: { value: 9, prefix: '+', suffix: ' pp', label: 'more visitors started the form in the reported week, even as traffic fell' },
     facts: [
-      ['Role', 'Initiative lead'],
-      ['Teams', '4, aligned on one page'],
-      ['Method', 'Behavioural data'],
+      ['Role', 'Product Design Manager'],
+      ['Teams', '5, one shared journey'],
+      ['Focus', 'Acquisition and conversion'],
     ],
     prototype: false,
     accent: '#8a6cff',
-    image: { src: '/case-studies/cro-cover.png', w: 1400, h: 788, alt: 'Cover: the landing page conversion chart with its percentage changes.' },
+    // The case study's hero illustration, cropped to the card (a placeholder until it's regenerated).
+    image: {
+      src: '/case-studies/cro-cover-hero.webp',
+      w: 1400,
+      h: 788,
+      alt: 'Illustration: the BIM course page and its form on a laptop, in a collage of architectural imagery, with result cards.',
+    },
   },
 ].map((w, i) => ({ ...w, index: pad(i + 1) }));
 

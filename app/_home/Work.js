@@ -177,27 +177,13 @@ function Row({ work, i, on, pick }) {
                 variants={{ hide: { y: '110%' }, show: { y: '0%' } }}
                 transition={{ duration: 1.1, ease: EASE, delay: 0.15 + i * 0.06 }}
               >
-                <Heading work={work} />
+                {work.title}
               </motion.span>
             </span>
           </span>
         </span>
       </a>
     </motion.li>
-  );
-}
-
-// A title as it is set large, broken after `breakAfter` when it has one.
-function Heading({ work }) {
-  const at = work.breakAfter ? work.title.indexOf(` ${work.breakAfter} `) : -1;
-  if (at < 0) return work.title;
-  const cut = at + work.breakAfter.length + 1;
-  return (
-    <>
-      {work.title.slice(0, cut)}
-      <br />
-      {work.title.slice(cut + 1)}
-    </>
   );
 }
 
@@ -273,7 +259,7 @@ function Slide({ work, i, on, scrollX, step }) {
               {work.index}
             </span>
             <span className="hx-w-ph__title">
-              <Heading work={work} />
+              {work.title}
             </span>
           </span>
           <Kicker work={work} />

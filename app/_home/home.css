@@ -998,10 +998,11 @@ a.hx-w-card:focus-visible .hx-w-num,
   padding-top: 2px;
 }
 
+/* Sized so the longest title (the CRO case study's) still sets in two lines at every width. */
 .hx-w-row__title {
   display: inline-block;
   font-family: var(--hx-w-face);
-  font-size: clamp(30px, 3.2vw, 48px);
+  font-size: clamp(22px, 2.5vw, 40px);
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.03em;
@@ -1387,7 +1388,7 @@ a.hx-w-card:focus-visible {
 
 .hx-w-ph__title {
   font-family: var(--hx-w-face);
-  font-size: 26px;
+  font-size: clamp(14px, calc(4.35vw - 1px), 22px);
   font-weight: 600;
   line-height: 1.08;
   letter-spacing: -0.025em;
