@@ -1,0 +1,584 @@
+/* CRO case study — "In brief", three ways where the images support the words (BriefOptions.js): .is-index,
+   .is-rows, .is-top. The words always sit on the page's own background, in its tokens, so they read in either
+   theme; the illustrations keep their own colours. */
+
+.cro-bx {
+  padding-block: clamp(120px, 14vw, 220px);
+  border-top: 1px solid var(--line);
+  overflow-x: clip;
+}
+.cro-bx-head {
+  margin-bottom: clamp(56px, 6vw, 96px);
+}
+
+.cro-bx-tag {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--cro-label);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.cro-bx-tag span {
+  color: var(--signal-ink);
+}
+.cro-bx-line {
+  margin: 0;
+  font-family: var(--cro-sans);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+  text-wrap: balance;
+}
+.cro-bx-body {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--t2);
+}
+.cro-bx img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ------------------------------------------------------------------ index: the list and one image beside it */
+
+/* The text takes all the room the image panel (380px) leaves, with one gap between them. */
+.cro-bx-index {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(380px, 32%);
+  column-gap: clamp(40px, 4.5vw, 72px);
+  align-items: start;
+}
+.cro-bx-index__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.cro-bx-index__beat {
+  position: relative;
+  padding: clamp(28px, 3vw, 40px) 0 clamp(28px, 3vw, 40px) 28px;
+  border-bottom: 1px solid var(--line);
+}
+/* The beats not being read step back, but stay readable. (On the inner wrapper: the beat itself is faded in by
+   the scroll, which sets its own opacity.) */
+.cro-bx-index__text {
+  display: grid;
+  gap: 14px;
+  opacity: 0.6;
+  transition: opacity 0.4s ease;
+}
+/* The beat being read: full strength, and a rail beside it in the accent. */
+.cro-bx-index__beat::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: clamp(28px, 3vw, 40px);
+  bottom: clamp(28px, 3vw, 40px);
+  width: 2px;
+  border-radius: 2px;
+  background: var(--signal);
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cro-bx-index__beat.is-active .cro-bx-index__text {
+  opacity: 1;
+}
+.cro-bx-index__beat.is-active::before {
+  transform: scaleY(1);
+}
+.is-index .cro-bx-line {
+  font-size: clamp(28px, 2.7vw, 40px);
+  line-height: 1.14;
+}
+/* Even: the detail at reading size; the statement larger and heavier above the label's column. */
+.is-index.is-even .cro-bx-line,
+.is-index.is-even .cro-bx-body {
+  font-size: clamp(19px, 1.55vw, 22px);
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+}
+.is-index.is-even .cro-bx-line {
+  font-size: clamp(24px, 2.2vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+  color: var(--t1);
+}
+.is-index.is-even .cro-bx-body {
+  font-size: clamp(18px, 1.4vw, 20px);
+  font-weight: 400;
+  color: var(--t2);
+}
+/* Even, in two columns: the label and the statement under it on the left, the detail on the right. */
+.is-index.is-even .cro-bx-index__text {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-rows: auto 1fr;
+  column-gap: clamp(24px, 3vw, 48px);
+  row-gap: 14px;
+  align-items: start;
+}
+.is-index.is-even .cro-bx-tag {
+  grid-column: 1;
+  grid-row: 1;
+}
+.is-index.is-even .cro-bx-line {
+  grid-column: 1;
+  grid-row: 2;
+}
+.is-index.is-even .cro-bx-body {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+/* On a phone each beat carries its own image instead of the panel. */
+.cro-bx-index__thumb {
+  display: none;
+}
+
+.cro-bx-index__aside {
+  position: sticky;
+  top: max(calc(var(--site-nav-h) + 32px), calc(50svh - 260px));
+  width: 100%;
+}
+.cro-bx-index__panel {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--raise);
+}
+.cro-bx-index__panel img {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 0.7s ease, transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cro-bx-index__panel img.is-active {
+  opacity: 1;
+  transform: none;
+}
+/* The panel and, over it, unclipped, the layers. */
+.cro-bx-index__stage {
+  position: relative;
+}
+
+/* ---- A beat's layers: the logos as supplied, white blocks with rounded corners, scattered over and around
+   its image (not clipped by the frame), at their own sizes and tilts. */
+
+.cro-bx-layers {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  container-type: inline-size;
+}
+.cro-bx-layer {
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  translate: calc(-50% + var(--mx, 0) * var(--depth) * 14px) calc(-50% + var(--my, 0) * var(--depth) * 12px);
+  transition: translate 0.9s var(--ease);
+}
+/* The block is the logo's own image, at its own proportion; its corners are in step with its size, small enough
+   to stay inside the white the logo was supplied with. */
+.cro-bx-layer__tag {
+  display: block;
+  overflow: hidden;
+  border-radius: calc(var(--wn) * 0.045cqi);
+  background: #fff;
+  box-shadow:
+    0 calc(2px + var(--depth) * 10px) calc(10px + var(--depth) * 22px) rgb(6 6 30 / 0.32),
+    0 1px 2px rgb(6 6 30 / 0.18);
+  rotate: var(--tilt);
+  opacity: 0;
+  scale: 0.6;
+  transition:
+    opacity 0.5s ease calc(0.25s + var(--k) * 0.09s),
+    scale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) calc(0.25s + var(--k) * 0.09s);
+  animation: cro-bx-float calc(5s + var(--k) * 0.8s) ease-in-out calc(var(--k) * -1.3s) infinite alternate;
+}
+.cro-bx-layers.is-active .cro-bx-layer__tag {
+  opacity: 1;
+  scale: 1;
+}
+.cro-bx-layer__tag img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@keyframes cro-bx-float {
+  from {
+    transform: translateY(-3%);
+  }
+  to {
+    transform: translateY(3%);
+  }
+}
+.cro-bx-index__caption {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0 0;
+  font-family: var(--cro-label);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.cro-bx-index__caption span {
+  color: var(--signal-ink);
+}
+
+/* ------------------------------------------------------------------ rows: words first, a small thumbnail last */
+
+.cro-bx-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.cro-bx-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 2fr) minmax(0, 4fr) minmax(0, 4.5fr) 132px;
+  column-gap: clamp(24px, 3vw, 48px);
+  align-items: start;
+  padding: clamp(32px, 3.5vw, 48px) 0;
+  border-bottom: 1px solid var(--line);
+}
+.is-rows .cro-bx-tag {
+  padding-top: 0.5em;
+}
+.is-rows .cro-bx-line {
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.2;
+}
+.cro-bx-row__thumb {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 12px;
+}
+/* Muted at rest; its row pointed at brings it to full colour. */
+.cro-bx-row__thumb img {
+  filter: saturate(0.35);
+  opacity: 0.7;
+  transition: filter 0.5s ease, opacity 0.5s ease, transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cro-bx-row:hover .cro-bx-row__thumb img {
+  filter: none;
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+/* ------------------------------------------------------------------ top: an image band, the words below */
+
+.cro-bx-top {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cro-bx-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--raise);
+  transition: border-color 0.3s ease;
+}
+.cro-bx-card:hover {
+  border-color: var(--line-2);
+}
+.cro-bx-card__band {
+  display: block;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+.cro-bx-card__band img {
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cro-bx-card:hover .cro-bx-card__band img {
+  transform: scale(1.05);
+}
+.cro-bx-card__text {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 22px 22px 26px;
+}
+.is-top .cro-bx-line {
+  font-size: clamp(20px, 1.6vw, 24px);
+  line-height: 1.2;
+}
+.is-top .cro-bx-body {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------------ scroll: Split's presentation, with the image */
+
+/* The stepper and the image held either side; the beats, a screen each, scroll between them. */
+.cro-bxs {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) min(340px, 28%);
+  column-gap: clamp(32px, 4vw, 64px);
+  align-items: start;
+}
+.cro-bxs__steps,
+.cro-bxs__aside {
+  position: sticky;
+  top: max(calc(var(--site-nav-h) + 32px), calc(50svh - 225px));
+}
+.cro-bxs__steps ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cro-bxs__steps li {
+  --p: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.cro-bxs__steps li + li {
+  margin-top: 6px;
+}
+.cro-bxs__steps a {
+  display: block;
+  font-family: var(--cro-label);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--t3);
+  transition: color 0.3s ease;
+}
+.cro-bxs__steps li.is-active a,
+.cro-bxs__steps a:hover {
+  color: var(--signal-ink);
+}
+.cro-bxs__steps a:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.cro-bxs__bar {
+  display: block;
+  height: 2px;
+  margin-top: 16px;
+  background: var(--signal);
+  transform: scaleX(var(--p));
+  transform-origin: 0 50%;
+}
+
+.cro-bxs__beat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 62vh;
+  padding-block: 48px;
+}
+/* The beat being read at full strength; the rest a step back. (On a wrapper: the scroll-ins set their own
+   opacity on the words.) */
+.cro-bxs__text {
+  opacity: 0.35;
+  transition: opacity 0.5s ease;
+}
+.cro-bxs__beat.is-active .cro-bxs__text {
+  opacity: 1;
+}
+.cro-bxs__tag,
+.cro-bxs__thumb {
+  display: none;
+}
+/* Split's type: the statement in the display serif, the detail at reading size. */
+.cro-bxs__line {
+  margin: 0;
+  max-width: 17ch;
+  font-family: var(--cro-display);
+  font-weight: var(--h-weight);
+  font-variation-settings: var(--h-vary);
+  font-size: clamp(34px, 3.4vw, 56px);
+  line-height: 1.05;
+  letter-spacing: var(--h-track);
+  color: var(--t1);
+  text-wrap: balance;
+}
+.cro-bxs__body {
+  max-width: 52ch;
+  margin: 28px 0 0;
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--t2);
+}
+
+/* ------------------------------------------------------------------ Narrower screens */
+
+@media (max-width: 1199px) {
+  .cro-bx-top {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .cro-bx-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 112px;
+  }
+  .cro-bx-row .cro-bx-tag {
+    grid-column: 1 / -1;
+    margin-bottom: 14px;
+  }
+  .cro-bx-row__thumb {
+    grid-column: 3;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 899px) {
+  .cro-bx-index {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cro-bx-index__aside {
+    display: none;
+  }
+  .cro-bx-index__beat {
+    padding-left: 0;
+  }
+  .cro-bx-index__text {
+    opacity: 1;
+  }
+  .is-index.is-even .cro-bx-index__text {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .is-index.is-even .cro-bx-tag,
+  .is-index.is-even .cro-bx-line,
+  .is-index.is-even .cro-bx-body {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .cro-bx-index__beat::before {
+    display: none;
+  }
+  .cro-bx-index__thumb {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    margin: 28px 0 34px;
+  }
+  /* On a phone there's no room beside the image, so the layers keep within its width (and break out of its top
+     and bottom only). */
+  .cro-bx-index__thumb .cro-bx-layers {
+    inset: 0 14%;
+  }
+  .cro-bx-index__thumb-img {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 14px;
+  }
+
+  .cro-bx-row {
+    grid-template-columns: minmax(0, 1fr) 72px;
+    row-gap: 12px;
+  }
+  .cro-bx-row .cro-bx-tag {
+    grid-column: 1;
+    margin-bottom: 0;
+    align-self: center;
+    padding-top: 0;
+  }
+  .cro-bx-row__thumb {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .cro-bx-row .cro-bx-line,
+  .cro-bx-row .cro-bx-body {
+    grid-column: 1 / -1;
+  }
+  .cro-bx-row__thumb img {
+    filter: none;
+    opacity: 1;
+  }
+
+  .cro-bx-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* No stepper or panel: each beat carries its label and image, and none steps back. */
+  .cro-bxs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cro-bxs__steps,
+  .cro-bxs__aside {
+    display: none;
+  }
+  .cro-bxs__beat {
+    min-height: 0;
+    padding-block: 40px;
+    border-top: 1px solid var(--line);
+  }
+  .cro-bxs__text {
+    opacity: 1;
+  }
+  .cro-bxs__thumb {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    margin: 12px 0 34px;
+  }
+  .cro-bxs__thumb .cro-bx-layers {
+    inset: 0 14%;
+  }
+  .cro-bxs__tag {
+    display: block;
+    margin: 0 0 16px;
+    font-family: var(--cro-label);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--signal-ink);
+  }
+  .cro-bxs__line {
+    font-size: 32px;
+  }
+  .cro-bxs__body {
+    margin-top: 18px;
+    font-size: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cro-bxs__text,
+  .cro-bx-layer,
+  .cro-bx-layer__tag {
+    transition: none;
+    animation: none;
+  }
+  .cro-bx-index__text,
+  .cro-bx-index__beat::before,
+  .cro-bx-index__panel img,
+  .cro-bx-row__thumb img,
+  .cro-bx-card__band img {
+    transition: none;
+  }
+}
+
+/* Index · even: the labels go without their numbers, in the accent instead, and the image without a caption. */
+.is-index.is-even .cro-bx-tag span,
+.is-index.is-even .cro-bx-index__caption {
+  display: none;
+}
+.is-index.is-even .cro-bx-tag {
+  color: var(--signal-ink);
+}
+.is-index.is-even .cro-bx-tag {
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}

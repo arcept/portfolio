@@ -30,3 +30,16 @@ app/home-lab/
 app/about/loader-lab/
 # The phone-menu lab (/menu-lab): four directions for the expanded hamburger menu, local-only like the other labs.
 app/menu-lab/
+
+# /brag launch-video output (renders, captures, scripts): local only.
+brag-output*/
+
+# The CRO case-study lab (/case-study-cro-lab): a new page built with the Impeccable skill, local-only
+# like the other labs until it replaces /case-study-cro. Its images, and Impeccable's own working files
+# (product record, design record, briefs, review captures, and its after-edit hook), stay local too.
+app/case-study-cro-lab/
+public/case-study-cro-lab/
+.impeccable/
+/PRODUCT.md
+/DESIGN.md
+.claude/settings.local.json

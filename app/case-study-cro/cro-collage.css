@@ -1,0 +1,252 @@
+/* CRO case study — the collage hero (HeroCollage.js), on the Darkroom tokens
+   (cro.css). The illustration's pieces keep their own colours; the page around them stays Darkroom. */
+
+.cro-col {
+  position: relative;
+  padding-bottom: clamp(96px, 12vw, 180px);
+  overflow: clip;
+}
+/* Without the journey under it, the hero ends with its top; the next section's own spacing follows. */
+.cro-col.is-bare {
+  padding-bottom: 0;
+}
+
+/* The top: the words and the collage over the background, which runs under the nav and fades out below. */
+.cro-col__top {
+  position: relative;
+  padding: calc(var(--site-nav-h) + clamp(48px, 7vw, 112px)) 0 clamp(72px, 8vw, 128px);
+}
+.cro-col__top > .cro-wrap {
+  position: relative;
+  z-index: 1;
+}
+.cro-col__bg {
+  position: absolute;
+  inset: 0 0 -10% 0;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent);
+  mask-image: linear-gradient(to bottom, #000 62%, transparent);
+  animation: cro-bg-in 1.8s ease 0.2s both;
+  /* The light theme's wash under the lanes (HeroBackdrop → .ph-wash), in the illustration's colours. */
+  --ph-wash-a: #5b4dff;
+  --ph-wash-b: #8f5bff;
+}
+.cro-col__bg > * {
+  position: absolute;
+  inset: 0;
+}
+.cro-shader {
+  width: 100%;
+  height: 100%;
+}
+@keyframes cro-bg-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cro-col__bg {
+    animation: none;
+  }
+}
+
+/* The words take the larger share; the collage sits close beside them in a column of its own. */
+.cro-col__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(320px, 33vw, 560px);
+  column-gap: clamp(32px, 4vw, 64px);
+  align-items: start;
+}
+.cro-col__h1 {
+  font-size: clamp(44px, 6.1vw, 88px);
+}
+.cro-col__deck {
+  margin-top: clamp(48px, 5.5vw, 80px);
+}
+.cro-col__facts {
+  margin-top: clamp(48px, 5vw, 72px);
+}
+/* Placement Hub's facts (HeroFacts; styled in app/case-study-kit/hero.css) take this page's colours and faces as
+   they are; they only need the ease their toggle's plus turns on. */
+.cro-col__facts .ph-facts {
+  --ph-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  margin-top: 0;
+}
+
+/* ------------------------------------------------------------------ The collage */
+
+/* The stage is a fixed shape (its thread's viewBox, 100 × 104), so the pieces keep their places; the
+   cards are sized from its width (cqi), so the whole collage scales as one. */
+.cro-col__stage {
+  position: sticky;
+  top: calc(var(--site-nav-h) + 48px);
+  aspect-ratio: 100 / 104;
+  margin: clamp(24px, 4vw, 64px) 0 0;
+  container-type: inline-size;
+}
+.cro-col__layer {
+  position: absolute;
+  margin: 0;
+  will-change: transform;
+}
+.cro-col__layer img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cro-col__layer.is-back {
+  top: 0;
+  right: 0;
+  width: 76%;
+}
+.cro-col__layer.is-back img {
+  border-radius: 2.4cqi;
+}
+.cro-col__layer.is-laptop {
+  top: 20%;
+  left: 0;
+  width: 80%;
+}
+.cro-col__layer.is-laptop img {
+  border-radius: 2.4% / 3.6%;
+  box-shadow: 0 6cqi 12cqi -5cqi rgb(0 0 0 / 0.7);
+}
+
+.cro-col__thread {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.cro-col__thread path {
+  fill: none;
+  stroke: #ff7b47;
+  stroke-width: 0.32;
+  stroke-dasharray: 1;
+}
+.cro-col__thread circle {
+  fill: #ff7b47;
+}
+
+.cro-col__cards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cro-card {
+  width: 46%;
+}
+.cro-card.is-1 {
+  top: 51%;
+  right: 0;
+  rotate: 4deg;
+}
+.cro-card.is-2 {
+  top: 67.5%;
+  right: 12%;
+  rotate: -2deg;
+}
+.cro-card.is-3 {
+  top: 84%;
+  right: 2%;
+  rotate: -3.5deg;
+}
+
+/* The cards are the illustration's, so they keep its colours in both themes. */
+.cro-card__face {
+  display: grid;
+  gap: 1cqi;
+  padding: 2.8cqi 3.2cqi;
+  border-radius: 2.8cqi;
+  background: #1b2154;
+  color: #bccbff;
+  box-shadow: 0 4cqi 8cqi -3cqi rgb(0 0 0 / 0.65);
+}
+.cro-card.is-2 .cro-card__face {
+  background: #10142a;
+}
+.cro-card.is-3 .cro-card__face {
+  background: #050507;
+}
+.cro-card__label,
+.cro-card__sub {
+  font-family: var(--cro-label);
+  font-size: max(9px, 1.45cqi);
+  letter-spacing: 0.06em;
+  color: rgb(188 203 255 / 0.66);
+}
+.cro-card__label {
+  text-transform: uppercase;
+}
+.cro-card__value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.22em;
+  font-family: var(--cro-sans);
+  font-weight: 500;
+  font-size: 7.2cqi;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.cro-card__arrow {
+  font-size: 0.8em;
+}
+
+/* ------------------------------------------------------------------ The journey, under the collage */
+
+.cro-col__journey {
+  position: relative;
+  isolation: isolate;
+  margin-top: clamp(72px, 7vw, 112px);
+}
+/* Darkroom's accent glow, lighting the journey and its numbers from behind. */
+.cro-col__journey::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -10%;
+  top: 50%;
+  width: 72%;
+  height: 170%;
+  transform: translateY(-50%);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--signal) 13%, transparent), transparent);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ Narrow screens */
+
+@media (max-width: 899px) {
+  .cro-col__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The cards are taller against the narrow stage, so they step down further and run past its foot. */
+  .cro-col__stage {
+    position: relative;
+    top: auto;
+    margin: 64px 0 120px;
+  }
+  .cro-card {
+    width: 62%;
+  }
+  .cro-card.is-1 {
+    top: 50%;
+  }
+  .cro-card.is-2 {
+    top: 72%;
+  }
+  .cro-card.is-3 {
+    top: 94%;
+  }
+  .cro-card__value {
+    font-size: 7.6cqi;
+  }
+
+  .cro-col__journey {
+    margin-top: 40px;
+  }
+}

@@ -1,0 +1,245 @@
+/* CRO case study — "In brief" as five tiles (BriefTiles.js), one of the summary layouts being compared, on
+   Darkroom's tokens (cro.css). */
+
+
+.cro-tiles {
+  padding-block: clamp(120px, 14vw, 220px);
+  border-top: 1px solid var(--line);
+}
+.cro-tiles__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  column-gap: 24px;
+  margin-bottom: clamp(48px, 6vw, 88px);
+}
+.cro-tiles__head .cro-kicker {
+  grid-column: 1 / -1;
+}
+.cro-tiles__hint {
+  margin: 0;
+  font-family: var(--cro-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+
+.cro-tiles__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cro-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: 500px;
+  padding: 24px 22px 26px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--raise);
+  overflow: hidden;
+  outline: none;
+  transition: border-color 0.35s ease, background-color 0.35s ease;
+}
+.cro-tile::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cro-tile:hover,
+.cro-tile:focus-visible {
+  border-color: var(--line-2);
+  background: color-mix(in srgb, var(--cro-fg) 8%, var(--cro-bg));
+}
+.cro-tile:hover::before,
+.cro-tile:focus-visible::before {
+  transform: scaleX(1);
+}
+.cro-tile:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+.cro-tile__tag {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--cro-label);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t2);
+}
+.cro-tile__tag span {
+  color: var(--signal-ink);
+}
+.cro-tile__face {
+  position: relative;
+}
+.cro-tile__line {
+  margin: 0;
+  font-family: var(--cro-sans);
+  font-weight: 500;
+  font-size: clamp(22px, 1.95vw, 28px);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+  transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cro-tile__body {
+  margin: 18px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--t2);
+}
+
+/* ---- A card with an image behind it (the illustration's own colours, in both themes). The image fills the
+   card, centred; a fade from the bottom takes it to near-black behind the statement and the detail, and a light
+   one at the top keeps the label clear. The words are set light on it whatever the theme. */
+.cro-tile.has-image {
+  border-color: transparent;
+  background: #0b0b14;
+}
+.cro-tile__media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.cro-tile__media img {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease, opacity 0.5s ease;
+}
+/* Both fades sit above the image at all times: while it scales or is filtered it becomes its own layer, and
+   without these it would rise over the first fade (which comes before it) until the transition ends. */
+.cro-tile__media::before,
+.cro-tile__media::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+}
+.cro-tile__media::before {
+  background:
+    linear-gradient(to bottom, rgb(6 6 12 / 0.88) 0%, rgb(6 6 12 / 0.6) 12%, rgb(6 6 12 / 0.2) 24%, transparent 34%),
+    linear-gradient(to top, rgb(6 6 12 / 0.97) 0%, rgb(6 6 12 / 0.9) 32%, rgb(6 6 12 / 0.6) 50%, rgb(6 6 12 / 0.2) 64%, transparent 78%);
+}
+/* When the detail turns over, the image fades well back behind it: dark all over, and black where the small
+   text sits at the foot. */
+.cro-tile__media::after {
+  background: linear-gradient(to top, #000 0%, rgb(0 0 0 / 0.97) 40%, rgb(6 6 12 / 0.9) 65%, rgb(6 6 12 / 0.84) 100%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.cro-tile.has-image:hover .cro-tile__media img,
+.cro-tile.has-image:focus-visible .cro-tile__media img {
+  transform: scale(1.06);
+  filter: saturate(0.4);
+  opacity: 0.55;
+}
+.cro-tile.has-image:hover .cro-tile__media::after,
+.cro-tile.has-image:focus-visible .cro-tile__media::after {
+  opacity: 1;
+}
+.cro-tile.has-image::before {
+  z-index: 2;
+}
+.cro-tile.has-image .cro-tile__tag,
+.cro-tile.has-image .cro-tile__face {
+  position: relative;
+  z-index: 1;
+}
+.cro-tile.has-image .cro-tile__tag {
+  color: #fff;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+}
+.cro-tile.has-image .cro-tile__tag span {
+  color: #b9b1ff;
+}
+.cro-tile.has-image .cro-tile__line {
+  color: #fff;
+  text-shadow: 0 1px 12px rgb(0 0 0 / 0.45);
+}
+.cro-tile.has-image .cro-tile__body {
+  color: rgb(255 255 255 / 0.9);
+}
+
+/* With a pointer that can hover, and room for the tiles side by side, the detail waits behind the line and
+   turns over on hover or focus. Otherwise (touch, or a narrow window) the tiles stack with it shown. */
+@media (hover: hover) and (pointer: fine) and (min-width: 900px) {
+  .cro-tile__body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.4s ease 0.05s, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .cro-tile:hover .cro-tile__line,
+  .cro-tile:focus-visible .cro-tile__line {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  .cro-tile:hover .cro-tile__body,
+  .cro-tile:focus-visible .cro-tile__body {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (hover: none), (pointer: coarse), (max-width: 899px) {
+  .cro-tiles__hint {
+    display: none;
+  }
+  .cro-tile {
+    min-height: 0;
+  }
+  /* Stacked, the detail is always shown, so the card is taller and the fade reaches higher under the words. */
+  .cro-tile.has-image {
+    min-height: 600px;
+  }
+  .cro-tile.has-image .cro-tile__media::before {
+    background:
+      linear-gradient(to bottom, rgb(6 6 12 / 0.88) 0%, rgb(6 6 12 / 0.55) 9%, transparent 22%),
+      linear-gradient(to top, rgb(6 6 12 / 0.97) 0%, rgb(6 6 12 / 0.9) 42%, rgb(6 6 12 / 0.45) 62%, transparent 80%);
+  }
+}
+
+/* ------------------------------------------------------------------ Narrower screens */
+
+@media (max-width: 1199px) {
+  .cro-tiles__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .cro-tiles__head {
+    grid-template-columns: 1fr;
+  }
+  .cro-tiles__grid {
+    grid-template-columns: 1fr;
+  }
+}
