@@ -554,6 +554,13 @@
   }
 }
 
+/* On a phone, only the first beat (Problem) keeps its image; the rest are words alone. */
+@media (max-width: 599px) {
+  .cro-bxs__beat:not(:first-child) .cro-bxs__thumb {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cro-bxs__text,
   .cro-bx-layer,

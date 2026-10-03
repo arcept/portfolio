@@ -250,3 +250,11 @@
     margin-top: 40px;
   }
 }
+
+/* On a phone the hero is its words alone: the collage and its result cards go (the figures come again in
+   "In brief" and the chapters). */
+@media (max-width: 599px) {
+  .cro-col__stage {
+    display: none;
+  }
+}
