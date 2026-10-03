@@ -73,6 +73,11 @@
   --ph-ease: cubic-bezier(0.22, 1, 0.36, 1);
   margin-top: 0;
 }
+/* Their entrance is the hero's (playWords), not Placement's CSS one: run together, GSAP read the CSS one's
+   starting opacity of 0 as where to end, and left the facts hidden once the page loaded fast. */
+.cro-col__facts .ph-facts__lead > div {
+  animation: none;
+}
 
 /* ------------------------------------------------------------------ The collage */
 

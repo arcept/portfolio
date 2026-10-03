@@ -9,7 +9,8 @@ export const META = {
 };
 
 export const HERO = {
-  title: 'Designing for Confidence,',
+  // A no-break space keeps "for Confidence," together where the line wraps (phones).
+  title: 'Designing for\u00a0Confidence,',
   titleEm: 'from guesswork to evidence',
   subtitle: 'How I made data a more empathetic tool for improving Novatr’s course pages',
   intro:

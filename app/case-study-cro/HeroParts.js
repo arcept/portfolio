@@ -62,7 +62,13 @@ function WaveIcon() {
 // The words' entrance on `tl`: the hero shows, the eyebrow fades in, the title rises line by line out
 // of its mask, then the copy and the facts. Returns the split, for the caller to revert.
 export function playWords(tl, el) {
-  const split = SplitText.create(el.querySelector('[data-title]'), { type: 'lines', mask: 'lines', linesClass: 'cro-line' });
+  // The whitespace is left as written, so the title's no-break space holds (SplitText would make it a plain one).
+  const split = SplitText.create(el.querySelector('[data-title]'), {
+    type: 'lines',
+    mask: 'lines',
+    linesClass: 'cro-line',
+    reduceWhiteSpace: false,
+  });
   tl.set(el, { autoAlpha: 1 })
     .from(el.querySelectorAll('[data-eyebrow]'), { autoAlpha: 0, y: 10, duration: 0.6, ease: EASE_IN }, 0)
     .from(split.lines, { yPercent: 105, duration: 1.1, ease: 'expo.out', stagger: 0.11 }, 0.08)
