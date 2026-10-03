@@ -23,18 +23,17 @@ import './cro-collage.css';
 export const metadata = {
   title: META.title,
   description: META.description,
-  // Next.js replaces the whole openGraph/twitter object per page rather than merging it with the
-  // layout's, so the site's default share image is repeated explicitly here rather than assumed
-  // inherited (it silently drops otherwise).
+  // The page's own share image (a crop of the Problem illustration). Next.js replaces the whole
+  // openGraph/twitter object per page rather than merging it with the layout's, so both name it.
   openGraph: {
     title: META.title,
     description: META.description,
     type: 'article',
-    images: [{ url: '/og/default.jpg', width: 1200, height: 630, alt: 'Manik Madaan — Product Design Leader' }],
+    images: [{ url: '/og/cro.jpg', width: 1200, height: 630, alt: 'An illustration of a page’s journey as ribbons, with charts along the way' }],
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['/og/default.jpg'],
+    images: ['/og/cro.jpg'],
     title: META.title,
     description: META.description,
   },
