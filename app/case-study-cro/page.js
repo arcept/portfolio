@@ -23,17 +23,17 @@ import './cro-collage.css';
 export const metadata = {
   title: META.title,
   description: META.description,
-  // The page's own share image (a crop of the Problem illustration). Next.js replaces the whole
+  // The page's own share image (the Problem illustration, titled like the homepage's). Next.js replaces the whole
   // openGraph/twitter object per page rather than merging it with the layout's, so both name it.
   openGraph: {
     title: META.title,
     description: META.description,
     type: 'article',
-    images: [{ url: '/og/cro.jpg', width: 1200, height: 630, alt: 'An illustration of a page’s journey as ribbons, with charts along the way' }],
+    images: [{ url: '/og/case-study-cro.jpg', width: 1200, height: 630, alt: 'Designing for Confidence, a case study by Manik Madaan, over an illustration of a page’s journey' }],
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['/og/cro.jpg'],
+    images: ['/og/case-study-cro.jpg'],
     title: META.title,
     description: META.description,
   },
