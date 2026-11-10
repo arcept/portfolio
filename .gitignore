@@ -43,3 +43,14 @@ public/case-study-cro-lab/
 /PRODUCT.md
 /DESIGN.md
 .claude/settings.local.json
+
+# Workspace guards: these folders live beside repo/ in the parent workspace and must never be committed
+/workbench/
+/backups/
+/archive/
+/project-state/
+/handover/
+/generated/
+*.bundle
+.codex/
+.env*
