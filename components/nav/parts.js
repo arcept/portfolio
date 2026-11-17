@@ -55,10 +55,11 @@ export function isActive(link, path) {
   return Boolean(path) && link.match(path);
 }
 
-// How far the page has scrolled, and how far through it the reader is.
-export function useScroll() {
+// How far the page has scrolled, and how far through it the reader is. Idle while `enabled` is false.
+export function useScroll(enabled = true) {
   const [state, setState] = useState({ y: 0, progress: 0 });
   useEffect(() => {
+    if (!enabled) return undefined;
     let frame = 0;
     const read = () => {
       frame = 0;
@@ -77,7 +78,7 @@ export function useScroll() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, []);
+  }, [enabled]);
   return state;
 }
 
@@ -111,9 +112,10 @@ function colourAt(x, y, skip) {
   return parse(getComputedStyle(document.body).backgroundColor) || parse(getComputedStyle(document.documentElement).backgroundColor) || { r: 8, g: 9, b: 10 };
 }
 
-export function useTone(ref, { y: atY } = {}) {
+export function useTone(ref, { y: atY, enabled = true } = {}) {
   const [tone, setTone] = useState('dark');
   useEffect(() => {
+    if (!enabled) return undefined;
     let frame = 0;
     const read = () => {
       frame = 0;
@@ -143,7 +145,7 @@ export function useTone(ref, { y: atY } = {}) {
       window.removeEventListener('resize', schedule);
       watch.disconnect();
     };
-  }, [ref, atY]);
+  }, [ref, atY, enabled]);
   return tone;
 }
 

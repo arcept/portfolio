@@ -19,10 +19,12 @@ function WideNav({ actions, active = true }) {
   const dock = useRef(null);
   const links = useRef(null);
   const path = usePath();
-  const { y, progress } = useScroll();
+  // Hidden on phones until the width is known to be wide: then it neither listens nor samples.
+  const live = active !== false;
+  const { y, progress } = useScroll(live);
   const docked = y > DOCK_AT;
-  const capTone = useTone(capsule);
-  const dockTone = useTone(dock, { y: useCallback(() => window.innerHeight - 40, []) });
+  const capTone = useTone(capsule, { enabled: live });
+  const dockTone = useTone(dock, { y: useCallback(() => window.innerHeight - 40, []), enabled: live });
 
   // The capsule is gone while docked: things pinned under it move up into its place.
   useEffect(() => {
