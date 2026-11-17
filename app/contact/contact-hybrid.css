@@ -909,14 +909,13 @@ html[data-abt-theme='light'] .cth {
     min-height: 0;
   }
 
+  /* No picture on phones: the card is just its words and the button. */
   .cth__resume-art {
-    width: 100%;
-    flex-basis: auto;
-    height: 200px;
+    display: none;
   }
 
   .cth__resume-body {
-    padding: 0 22px 24px;
+    padding: 24px 22px;
   }
 
   .cth__resume-btn {
