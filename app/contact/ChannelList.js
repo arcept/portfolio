@@ -7,7 +7,8 @@ import { CHANNELS, CopyIcon, EASE, NewTab, outward, pad } from './data';
 // The four ways to reach me, set big and numbered. Only the email shows its address (with a copy icon
 // beside it). Pointing at a word: its letters roll up, one after another, into a copy in the accent
 // colour; the others step back; the accent dot comes up at its shoulder and a big ↗ beside it, drawing
-// itself in; and a small framed picture with the handle follows the pointer.
+// itself in; and a small framed picture with the handle follows the pointer. Only a mouse (or keyboard
+// focus) does this: on a touch screen a tap just opens the link.
 
 const word = (i) => ({
   initial: { y: '110%' },
@@ -33,8 +34,8 @@ export default function ChannelList() {
   return (
     <ol ref={list} className={`chl${on > -1 ? ' has-on' : ''}`} onPointerMove={move} onPointerLeave={() => setOn(-1)}>
       {CHANNELS.map((c, i) => (
-        <li key={c.key} className={`chl__row${on === i ? ' is-on' : ''}`} onPointerEnter={() => setOn(i)}>
-          <a className="chl__link" href={c.href} {...outward(c)} onFocus={() => setOn(i)} onBlur={() => setOn(-1)}>
+        <li key={c.key} className={`chl__row${on === i ? ' is-on' : ''}`} onPointerEnter={(e) => e.pointerType === 'mouse' && setOn(i)}>
+          <a className="chl__link" href={c.href} {...outward(c)} onFocus={(e) => e.currentTarget.matches(':focus-visible') && setOn(i)} onBlur={() => setOn(-1)}>
             <span className="chl__num" aria-hidden="true">
               {pad(i + 1)}
             </span>

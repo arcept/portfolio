@@ -2,7 +2,6 @@
 
 import { motion } from 'motion/react';
 import ResumeDialog from '@/app/about/resume/ResumeDialog';
-import { PAIRS } from '@/app/about/lenses-content';
 import Glow from '@/app/_home/Glow';
 import useTheme from '@/app/_home/useTheme';
 import { FACE } from '@/app/_home/fonts';
@@ -12,7 +11,7 @@ import ChannelList from './ChannelList';
 import Clock from './Clocks';
 import Topics from './Topics';
 import { doto } from './clock-font';
-import { EASE, PAGES, pad } from './data';
+import { EASE } from './data';
 
 // The Contact page. The four ways to reach me set big (after the full-screen menu) beside the
 // portrait, star and headline from the homepage's ending; under them a bento row of frosted tiles, the
@@ -88,62 +87,15 @@ export default function ContactHybrid() {
           </div>
         </motion.div>
 
-        <motion.figure className="cth__tile cth__person" {...tile(1)}>
-          <img src="/home/about-me-still.webp" alt="Manik in a pink T-shirt on a street strung with lights." />
-          <figcaption>
-            <span className="cth__tile-kicker">Who you’re writing to</span>
-            <span className="cth__person-name">Manik Madaan</span>
-            <span className="cth__meta">Product design leader · Delhi NCR</span>
-          </figcaption>
-        </motion.figure>
-
         <motion.div className="cth__tile cth__clock" {...tile(2)}>
           <Clock />
         </motion.div>
 
-        <motion.nav className="cth__tile cth__pages" aria-label="Pages" {...tile(3)}>
-          <h2 className="cth__tile-kicker">Pages</h2>
-          <ul>
-            {PAGES.map((p) => (
-              <li key={p.label}>
-                <a href={p.href}>
-                  <span className="cth__page-label" data-text={p.label}>
-                    <span>{p.label}</span>
-                  </span>
-                  <span className="cth__page-arrow" aria-hidden="true">
-                    →
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </motion.nav>
-
-        <motion.div className="cth__tile cth__topics" {...tile(4)}>
+        <motion.div className="cth__tile cth__topics" {...tile(2)}>
           <Topics />
         </motion.div>
 
-        <motion.div className="cth__tile cth__principles" {...tile(5)}>
-          <h2 className="cth__tile-kicker">How I work</h2>
-          <ol>
-            {PAIRS.map((p, i) => (
-              <li key={p.id}>
-                <span className="cth__p-num" aria-hidden="true">
-                  {pad(i + 1)}
-                </span>
-                <span>
-                  <span className="cth__p-title">{p.title}</span>
-                  <span className="cth__meta">{p.note}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-          <a className="cth__more" href="/about#how-i-work">
-            Read how I work <span aria-hidden="true">→</span>
-          </a>
-        </motion.div>
-
-        <motion.div className="cth__tile cth__places" {...tile(6)}>
+        <motion.div className="cth__tile cth__places" {...tile(3)}>
           <h2 className="cth__tile-kicker">Where I’ve lived</h2>
           <span className="cth__maps" aria-hidden="true">
             <span className="cth__map cth__map--west" />
