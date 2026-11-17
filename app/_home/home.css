@@ -772,9 +772,10 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* The downward arrow's twin, waiting above the disc. */
+/* The downward arrow's twin, waiting above the disc: a whole disc's height up, so none of it shows
+   (a share of the arrow's own height left its tail inside the disc). */
 .hx-btn__arrow--next {
-  transform: translateY(-120%);
+  transform: translateY(-38px);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -785,7 +786,7 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   /* A downward arrow drops out of its disc as its twin drops in from the top, instead of turning:
      transitions, so leaving part-way sends them smoothly back. */
   .hx-btn[href^='#']:hover .hx-btn__arrow {
-    transform: translateY(120%);
+    transform: translateY(38px);
   }
 
   .hx-btn[href^='#']:hover .hx-btn__arrow--next {
