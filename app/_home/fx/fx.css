@@ -1,0 +1,152 @@
+/* The homepage's cursor effect (fx/): the hero's live dots, and the named cursor with its comments.
+   Each part is switched on or off in config.js. */
+
+/* ---------------------------------------------------------------- The hero's live dots (HeroRipple.js)
+
+   Over the CSS dots, which step aside once the live ones are running (and stay if WebGL isn't there). */
+.hxw-ripple {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.4s ease 0.2s;
+}
+.hxw-canvas.is-on .hxw-ripple {
+  opacity: 1;
+}
+.hxw-ripple.is-live + .hxw-dots {
+  opacity: 0 !important;
+}
+
+/* ---------------------------------------------------------------- The named cursor (cursor.js)
+
+   The system pointer is hidden while it runs (mouse screens only); the cursor has its own top layer,
+   over the nav and everything else. */
+html.fx-no-pointer,
+html.fx-no-pointer * {
+  cursor: none !important;
+}
+
+.fx-cursor-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+}
+
+.fx-me {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  will-change: transform;
+}
+.fx-me.is-on {
+  opacity: 1;
+}
+.fx-me svg {
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.fx-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font: 600 12px/1 ui-sans-serif, system-ui, sans-serif;
+  color: #fff;
+  padding: 5px 8px;
+  border-radius: 4px 999px 999px 999px;
+  white-space: nowrap;
+}
+.fx-me__tag {
+  transform: translate(16px, 22px);
+  transition: opacity 0.15s ease;
+}
+/* Over a Selected Work tile, the tile's own pill (Tip.js) takes the tag's place. */
+.fx-me.is-tile .fx-me__tag {
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------- Comments and labels (on hover)
+
+   Over the page's sections (z 1), under the nav (10), never taking the pointer. */
+.fx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fx-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 250px;
+  padding: 7px 14px 7px 7px;
+  border-radius: 18px 18px 18px 4px;
+  background: #fff;
+  color: #17142a;
+  font: 500 13px/1.3 ui-sans-serif, system-ui, sans-serif;
+  box-shadow: 0 8px 28px rgba(10, 10, 30, 0.22);
+  transform-origin: 0 100%;
+  opacity: 0;
+  scale: 0.6;
+  transition: opacity 0.22s ease, scale 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+  will-change: transform;
+}
+.fx-pin.is-flip {
+  border-radius: 18px 18px 4px 18px;
+  transform-origin: 100% 100%;
+}
+.fx-pin.is-on {
+  opacity: 1;
+  scale: 1;
+}
+html[data-abt-theme='dark'] .fx-pin {
+  background: #1b1c2e;
+  color: #f1f2fb;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.fx-pin__face {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 700 11px/1 ui-sans-serif, system-ui, sans-serif;
+  color: #fff;
+  background: #ff2e93;
+}
+
+.fx-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: #2a62f0;
+  color: #fff;
+  font: 600 11px/1 ui-sans-serif, system-ui, sans-serif;
+  padding: 5px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.22s ease 0.08s;
+  will-change: transform;
+}
+.fx-label.is-on {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-pin,
+  .fx-label,
+  .fx-me {
+    transition: none;
+  }
+}

@@ -1,4 +1,4 @@
-/* The hero's working bench (Workbench.js): the dots, the selected frame and the cursor's guides, with
+/* The hero's working bench (Workbench.js): the dots and the selected frame, with
    Magpiary and PushDeck tucked behind the portrait. */
 
 .hxw {
@@ -134,53 +134,6 @@ html[data-abt-theme='light'] .hxw-dots {
 }
 .hxw-canvas.is-on .hxw-dots {
   opacity: 1;
-}
-
-/* The cursor's guides (mouse only; Hero.js adds .is-live while the pointer is over the hero). */
-.hxw-guides {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.hxw-guides.is-live {
-  opacity: 1;
-}
-.hxw-guides__v,
-.hxw-guides__h {
-  position: absolute;
-  background: color-mix(in srgb, var(--abt-ink) 20%, transparent);
-  will-change: transform;
-}
-.hxw-guides__v {
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 1px;
-}
-.hxw-guides__h {
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 1px;
-}
-/* Snapped to the centre line. */
-.hxw-guides__v.is-snap {
-  background: color-mix(in srgb, var(--hxw-sel) 70%, transparent);
-}
-/* The x/y readout, bottom-right. */
-.hxw-guides__xy {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  padding: 5px 8px;
-  border: 1px solid var(--abt-line);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--abt-base) 82%, transparent);
-  font: 500 11px/1 var(--hxw-mono);
-  color: var(--t3);
-  white-space: pre;
-  font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------------- The selection (around)
@@ -328,8 +281,7 @@ html[data-abt-theme='light'] .hxw-dots {
   }
 }
 
-/* Reduced motion: everything simply there once the curtain lifts, nothing moving. (Hero.js never starts
-   the cursor's guides.) */
+/* Reduced motion: everything simply there once the curtain lifts, nothing moving. */
 @media (prefers-reduced-motion: reduce) {
   .hxw-canvas *,
   .hxw-sel,

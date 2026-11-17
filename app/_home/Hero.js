@@ -42,7 +42,7 @@ export default function Hero() {
 
   return (
     <section className="hx-i-hero hxw" ref={ref}>
-      <Canvas hero={ref} ready={ready} />
+      <Canvas ready={ready} />
       <motion.div
         className="hx-i-poster"
         style={css ? undefined : { scale }}

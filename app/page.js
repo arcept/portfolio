@@ -10,6 +10,7 @@ import Runner from './_home/Runner';
 import SelectedWork from './_home/SelectedWork';
 import AboutMe from './_home/AboutMe';
 import Leave from './_home/Leave';
+import NamedCursor from './_home/fx/NamedCursor';
 import { homeIntroGate } from './_home/intro';
 import './about/about.css';
 import './about/resume/resume.css';
@@ -67,6 +68,8 @@ export default function Home() {
               <AboutMe />
             </main>
           </div>
+          {/* The named cursor (_home/fx; on or off in _home/fx/config.js). */}
+          <NamedCursor />
           {/* Any link to another page leaves under a curtain in that page's colour. */}
           <Leave />
         </HomeIntro>

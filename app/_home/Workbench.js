@@ -4,11 +4,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, useTransform } from 'motion/react';
 import { gsap } from 'gsap';
 import useScrollTimeline from '@/app/_home/useScrollTimeline';
+import HeroRipple from './fx/HeroRipple';
+import { HERO_RIPPLE } from './fx/config';
 import './workbench.css';
 
 // The hero's working bench (Hero.js puts it in place): a quiet design-tool frame round the portrait
-// (faint dots behind, the portrait as a selected frame with its real size, guides that follow the
-// cursor), and two of Manik's side projects tucked behind its edges: Magpiary's magpie on its search
+// (faint dots behind, the portrait as a selected frame with its real size), and two of Manik's side projects tucked behind its edges: Magpiary's magpie on its search
 // line (top left) and PushDeck, the Push 2 as a Mac controller and display (bottom right). They carry
 // no labels and are not links; they answer the pointer instead. Both tilt towards it, PushDeck's pads
 // light under it, a click wakes PushDeck (its display plays and the pads put on a light show) and a
@@ -17,12 +18,16 @@ import './workbench.css';
 const EASE = [0.16, 1, 0.3, 1];
 const CLOSE_BY = 0.3; // the objects are back behind the portrait by this much of the hero's scroll
 
+// The selection frame round the portrait (outline, handles, its name and size). Off while trying the
+// hero without it; true brings it back.
+const SHOW_FRAME = false;
+
 // The objects come first, so the portrait paints over them; the frame sits on top of it.
 export function Around(props) {
   return (
     <>
       <Objects {...props} />
-      <Selection {...props} />
+      {SHOW_FRAME && <Selection {...props} />}
     </>
   );
 }
@@ -32,73 +37,13 @@ const at = (s) => ({ '--d': `${s}s` });
 
 /* ---------------------------------------------------------------- The canvas (backdrop) */
 
-// Full-bleed behind the poster: the faint dots and the cursor's guides. Nothing else.
-export function Canvas({ hero, ready }) {
+// Full-bleed behind the poster: the faint dots. Nothing else. With HERO_RIPPLE on (fx/config.js) the
+// dots are live (fx/HeroRipple.js), the CSS ones staying underneath in case WebGL isn't there.
+export function Canvas({ ready }) {
   return (
     <div className={`hxw-canvas${ready ? ' is-on' : ''}`} aria-hidden="true">
+      {HERO_RIPPLE && <HeroRipple />}
       <div className="hxw-dots" />
-      <Guides hero={hero} />
-    </div>
-  );
-}
-
-// The cursor's guides: a faint vertical and horizontal line through the pointer, snapped to the 8pt
-// grid (and to the centre line when close to it, where they turn selection blue), with the x/y in
-// the bottom-right corner. Mouse only: nothing on touch, nor with reduced motion (checked in the
-// effect, so the server's HTML and the first client render agree).
-// Written through refs in a frame, never React state, so a move costs one style write.
-function Guides({ hero }) {
-  const root = useRef(null);
-  const v = useRef(null);
-  const h = useRef(null);
-  const out = useRef(null);
-
-  useEffect(() => {
-    const section = hero.current;
-    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!section || !fine || still) return undefined;
-    let frame = 0;
-    let at = null;
-    const draw = () => {
-      frame = 0;
-      if (!at) return;
-      const box = section.getBoundingClientRect();
-      const rawX = at.x - box.left;
-      const rawY = at.y - box.top;
-      const mid = box.width / 2;
-      const snap = Math.abs(rawX - mid) < 12;
-      const x = snap ? Math.round(mid) : Math.round(rawX / 8) * 8;
-      const y = Math.round(rawY / 8) * 8;
-      v.current.style.transform = `translate3d(${x}px,0,0)`;
-      h.current.style.transform = `translate3d(0,${y}px,0)`;
-      v.current.classList.toggle('is-snap', snap);
-      out.current.textContent = `X ${x}   Y ${y}`;
-      root.current.classList.add('is-live');
-    };
-    const move = (e) => {
-      if (e.pointerType !== 'mouse') return;
-      at = { x: e.clientX, y: e.clientY };
-      if (!frame) frame = requestAnimationFrame(draw);
-    };
-    const leave = () => {
-      at = null;
-      root.current?.classList.remove('is-live');
-    };
-    section.addEventListener('pointermove', move, { passive: true });
-    section.addEventListener('pointerleave', leave);
-    return () => {
-      cancelAnimationFrame(frame);
-      section.removeEventListener('pointermove', move);
-      section.removeEventListener('pointerleave', leave);
-    };
-  }, [hero]);
-
-  return (
-    <div className="hxw-guides" ref={root}>
-      <span className="hxw-guides__v" ref={v} />
-      <span className="hxw-guides__h" ref={h} />
-      <span className="hxw-guides__xy" ref={out} />
     </div>
   );
 }
