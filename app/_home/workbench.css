@@ -1,0 +1,610 @@
+/* The hero's working bench (Workbench.js): the dots, the selected frame and the cursor's guides, with
+   Magpiary and PushDeck tucked behind the portrait. */
+
+.hxw {
+  /* the portrait's width, as home.css sizes it, so the objects can tuck behind its edges */
+  --hxw-pw: clamp(264px, 25.3vw, 396px);
+  /* the portrait's width, as home.css sizes it, so the objects can sit off its edges */
+  --hxw-card: color-mix(in srgb, var(--abt-ink) 7%, #17141a);
+  --hxw-card-ink: var(--abt-ink);
+  --hxw-edge: color-mix(in srgb, var(--abt-ink) 12%, transparent);
+  --hxw-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 36px -14px rgba(0, 0, 0, 0.7);
+  /* PushDeck's pad colours, column by column, from the site's rainbow and accent */
+  --hxw-pad-0: var(--rb-2);
+  --hxw-pad-1: var(--rb-2);
+  --hxw-pad-2: var(--rb-3);
+  --hxw-pad-3: var(--rb-4);
+  --hxw-pad-4: var(--rb-4);
+  --hxw-pad-5: var(--rb-5);
+  --hxw-pad-6: #ff7ac6;
+  --hxw-pad-7: var(--rb-1);
+}
+
+html[data-abt-theme='light'] .hxw {
+  --hxw-card: #ffffff;
+  --hxw-edge: color-mix(in srgb, var(--abt-ink) 10%, transparent);
+  --hxw-shadow: 0 1px 2px rgba(60, 36, 20, 0.12), 0 18px 34px -16px rgba(60, 36, 20, 0.38);
+}
+
+
+
+.hxw {
+  --hxw-sel: var(--rb-3);
+  --hxw-on-sel: var(--abt-base);
+  --hxw-red: var(--abt-accent);
+  --hxw-wire: color-mix(in srgb, var(--abt-ink) 46%, transparent);
+  --hxw-wire-soft: color-mix(in srgb, var(--abt-ink) 24%, transparent);
+  --hxw-minor: color-mix(in srgb, var(--abt-ink) 3.5%, transparent);
+  --hxw-major: color-mix(in srgb, var(--abt-ink) 7%, transparent);
+  --hxw-paper: #e2cf6c;
+  --hxw-paper-ink: #2b2300;
+  --hxw-go: var(--rb-5);
+  --hxw-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --hxw-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --hxw-hand: var(--font-ed-hand), 'Caveat', cursive;
+}
+
+/* The selection blue darkened so it reads on the light base; the sticky note a paler yellow. */
+html[data-abt-theme='light'] .hxw {
+  --hxw-sel: color-mix(in srgb, var(--rb-3) 72%, #001a4d);
+  --hxw-on-sel: #fff;
+  --hxw-wire: color-mix(in srgb, var(--abt-ink) 40%, transparent);
+  --hxw-wire-soft: color-mix(in srgb, var(--abt-ink) 20%, transparent);
+  --hxw-minor: color-mix(in srgb, var(--abt-ink) 4%, transparent);
+  --hxw-major: color-mix(in srgb, var(--abt-ink) 8%, transparent);
+  --hxw-paper: #fff0a0;
+  --hxw-paper-ink: #4a3a00;
+  --hxw-go: color-mix(in srgb, var(--rb-5) 60%, #0f3d00);
+}
+
+/* ---------------------------------------------------------------- Shared entrance parts
+
+   Each part waits for `.is-on` (the curtain has lifted) and then for --t0 (set per layer, so the
+   frame only draws once the portrait has opened) plus its own --d. */
+
+/* Strokes that draw themselves in: every path carries pathLength="1". */
+.hxw .hxw-draw {
+  fill: none;
+  stroke: var(--hxw-wire);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* A gap longer than the dash, so round caps leave no dot before it draws. */
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1.05;
+  transition: stroke-dashoffset 1.1s var(--hxw-ease) calc(var(--t0) + var(--d, 0s));
+}
+.hxw .hxw-draw--soft {
+  stroke: var(--hxw-wire-soft);
+}
+.hxw .is-on .hxw-draw {
+  stroke-dashoffset: 0;
+}
+
+/* Text and fills fade rather than draw. */
+.hxw .hxw-fade {
+  opacity: 0;
+  transition: opacity 0.6s ease calc(var(--t0) + var(--d, 0s));
+}
+.hxw .is-on .hxw-fade {
+  opacity: 1;
+}
+
+/* Handwriting, revealed left to right as if being written. */
+.hxw .hxw-write {
+  position: relative;
+  display: block;
+  font-family: var(--hxw-hand);
+  font-weight: 600;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.1s cubic-bezier(0.45, 0, 0.3, 1) calc(var(--t0) + var(--d, 0s));
+}
+.hxw .is-on .hxw-write {
+  clip-path: inset(0 0 0 0);
+}
+
+/* ---------------------------------------------------------------- The canvas (backdrop)
+
+   Full-bleed behind the poster, scrolling with the hero. */
+
+.hxw-canvas {
+  --t0: 1.9s;
+  --side: max(32px, calc(50% - 660px));
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The ground: a faint dotted field, fading out towards the edges. Nothing else. */
+.hxw-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--abt-ink) var(--hxw-dot, 16%), transparent) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  background-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 78% 70% at 50% 44%, #000 30%, transparent 88%);
+  mask-image: radial-gradient(ellipse 78% 70% at 50% 44%, #000 30%, transparent 88%);
+  opacity: 0;
+  transition: opacity 1.4s ease 0.2s;
+}
+html[data-abt-theme='light'] .hxw-dots {
+  --hxw-dot: 22%;
+}
+.hxw-canvas.is-on .hxw-dots {
+  opacity: 1;
+}
+
+/* The cursor's guides (mouse only; Hero.js adds .is-live while the pointer is over the hero). */
+.hxw-guides {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.hxw-guides.is-live {
+  opacity: 1;
+}
+.hxw-guides__v,
+.hxw-guides__h {
+  position: absolute;
+  background: color-mix(in srgb, var(--abt-ink) 20%, transparent);
+  will-change: transform;
+}
+.hxw-guides__v {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+}
+.hxw-guides__h {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+}
+/* Snapped to the centre line. */
+.hxw-guides__v.is-snap {
+  background: color-mix(in srgb, var(--hxw-sel) 70%, transparent);
+}
+/* The x/y readout, bottom-right. */
+.hxw-guides__xy {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  padding: 5px 8px;
+  border: 1px solid var(--abt-line);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--abt-base) 82%, transparent);
+  font: 500 11px/1 var(--hxw-mono);
+  color: var(--t3);
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- The selection (around)
+
+   Laid exactly over the portrait (the same width rule as .hx-i-portrait, the same 3:4), above it so
+   the outline and handles show on its edges. */
+
+.hxw-sel {
+  --t0: 1.75s;
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 50%;
+  width: clamp(264px, 25.3vw, 396px);
+  aspect-ratio: 3 / 4;
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+/* Shrinks with the portrait as the hero scrolls away, on the shell's own timeline and keyframes. */
+@supports (animation-timeline: view()) {
+  .hxw-sel {
+    animation: hx-portrait-away linear both;
+    animation-timeline: --hx-hero;
+    animation-range: exit-crossing 0% exit-crossing 100%;
+  }
+}
+
+/* The outline, an edge at a time, clockwise from the top. */
+.hxw-sel__edge {
+  position: absolute;
+  background: var(--hxw-sel);
+  transition: transform 0.6s var(--hxw-ease) calc(var(--t0) + var(--d, 0s));
+}
+.hxw-sel__edge--t,
+.hxw-sel__edge--b {
+  left: -1px;
+  right: -1px;
+  height: 1.5px;
+  transform: scaleX(0);
+}
+.hxw-sel__edge--l,
+.hxw-sel__edge--r {
+  top: -1px;
+  bottom: -1px;
+  width: 1.5px;
+  transform: scaleY(0);
+}
+.hxw-sel__edge--t { top: -1px; transform-origin: 0 50%; }
+.hxw-sel__edge--r { right: -1px; transform-origin: 50% 0; }
+.hxw-sel__edge--b { bottom: -1px; transform-origin: 100% 50%; }
+.hxw-sel__edge--l { left: -1px; transform-origin: 50% 100%; }
+.hxw-sel.is-on .hxw-sel__edge {
+  transform: none;
+}
+
+.hxw-sel__handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px;
+  border: 1.5px solid var(--hxw-sel);
+  background: var(--abt-base);
+  transform: scale(0);
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--t0) + var(--d, 0s));
+}
+.hxw-sel__handle--tl { top: 0; left: 0; }
+.hxw-sel__handle--tr { top: 0; left: 100%; }
+.hxw-sel__handle--br { top: 100%; left: 100%; }
+.hxw-sel__handle--bl { top: 100%; left: 0; }
+.hxw-sel.is-on .hxw-sel__handle {
+  transform: none;
+}
+
+/* The frame's name and its real size, over its top-left corner. */
+.hxw-sel__tag {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: -1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 11px/1 var(--hxw-mono);
+  white-space: nowrap;
+}
+.hxw-sel__name {
+  color: var(--hxw-sel);
+}
+.hxw-sel__size {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: var(--hxw-sel);
+  color: var(--hxw-on-sel);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The redline: from the frame's foot down to the headline, just outside its left edge (the name
+   sticker covers the bottom middle), with the measured gap beside it. */
+.hxw-red {
+  position: absolute;
+  top: calc(100% + 1px);
+  /* Clear of the name sticker, a fixed 338px, where it overhangs a narrower frame. */
+  left: min(-22px, calc((100% - 338px) / 2 - 14px));
+  width: 9px;
+  height: var(--gap, 0px);
+  color: var(--hxw-red);
+}
+.hxw-red__line {
+  position: absolute;
+  inset: 0;
+  border-top: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  background: linear-gradient(currentColor, currentColor) center / 1px 100% no-repeat;
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  transition: transform 0.7s var(--hxw-ease) calc(var(--t0) + var(--d, 0s));
+}
+.hxw-sel.is-on .hxw-red__line {
+  transform: none;
+}
+.hxw-red__val {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 5px);
+  translate: 0 -50%;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: var(--hxw-red);
+  color: var(--abt-base);
+  font: 600 10px/1.1 var(--hxw-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The sticky note: left of the frame with an arrow to it on wider screens, stuck over the frame's
+   lower-left edge on a phone. */
+/* A phone: the frame keeps its outline, handles and size; the redline goes, and the note sticks
+   onto the frame's lower-left edge without its arrow. */
+@media (max-width: 700px) {
+  .hxw-sel {
+    width: min(68vw, 290px);
+  }
+  .hxw-sel__name,
+  .hxw-red {
+    display: none;
+  }
+}
+
+/* Reduced motion: everything simply there once the curtain lifts, nothing moving. (Hero.js never starts
+   the cursor's guides.) */
+@media (prefers-reduced-motion: reduce) {
+  .hxw-canvas *,
+  .hxw-sel,
+  .hxw-sel * {
+    transition: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------- The objects
+
+   Laid over the stage (out of the flow, so the portrait stays centred) and under the portrait, each
+   tucked a third or so behind one of its edges: two on the left, two on the right, clear of the Hello
+   sticker (top right). On scroll (--tuck, 0 to 1) they slide in behind it and fade. */
+
+.hxw-objs {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.hxw-obj {
+  position: absolute;
+  width: var(--w);
+  pointer-events: auto;
+  translate: calc(var(--dir, 1) * var(--tuck, 0) * var(--w) * 0.45) 0;
+  opacity: calc(1 - var(--tuck, 0));
+}
+
+.hxw-obj--magpiary {
+  --w: clamp(176px, 16vw, 250px);
+  --r: -4deg;
+  --dir: 1;
+  top: 6%;
+  /* Only its near end tucks behind, so the search line still reads. */
+  right: calc(50% + var(--hxw-pw) / 2 - var(--w) * 0.1);
+}
+
+.hxw-obj--pushdeck {
+  --w: clamp(136px, 12vw, 192px);
+  --r: 7deg;
+  --dir: -1;
+  bottom: 4%;
+  /* Only a sliver tucks behind, so the display strip reads. */
+  left: calc(50% + var(--hxw-pw) / 2 - var(--w) * 0.12);
+}
+
+/* The tilt layer: its own rotation on the desk, plus the pointer's tilt (--rx, --ry from Hero.js)
+   and a slight lift as the pointer comes close. The motion entrance is on the li, apart from this. */
+.hxw-obj__tilt {
+  --rx: 0deg;
+  --ry: 0deg;
+  --lift: 0;
+  transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry)) rotate(var(--r))
+    translateY(calc(var(--lift) * -4px));
+  transform-origin: 50% 50%;
+}
+
+.hxw-obj__thing {
+  border-radius: 12px;
+  box-shadow: var(--hxw-shadow);
+}
+
+/* A screenshot, cropped to its top corner, mounted like a print. */
+.hxw-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--hxw-edge);
+  background: #fff;
+}
+
+/* PushDeck: a dark device body in both themes, like the hardware, with the 8 × 8 pads in it. Each
+   pad shows its column's colour at --on (the sweep) or --hot (the pointer), whichever is higher. */
+/* PushDeck: a dark device body in both themes, like the hardware, with the Push 2's display strip
+   over the pads. It is a button: a click wakes it (Hero.js). */
+.hxw-pd {
+  display: grid;
+  /* A fixed gap: a percentage row gap resolves to nothing here and the pads met the display. */
+  gap: clamp(8px, 0.8vw, 12px);
+  width: 100%;
+  padding: 8%;
+  border: 0;
+  background: linear-gradient(160deg, #22232b, #121318);
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hxw-pd:focus-visible {
+  outline: 2px solid var(--t1);
+  outline-offset: 3px;
+}
+
+/* The display: 6 : 1 like the real one (960 × 160), a dark glass at rest; awake, the recording shows. */
+.hxw-pd__screen {
+  position: relative;
+  display: block;
+  aspect-ratio: 6 / 1;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #050507;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.hxw-pd__screen video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.hxw-pd.is-awake .hxw-pd__screen video {
+  opacity: 1;
+  transition-duration: 0.25s;
+}
+/* A faint sheen on the glass, so the screen reads as a screen even while dark. */
+.hxw-pd__screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.07) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* During the light show the pads fade quickly, so each frame reads. */
+.hxw-pads__grid.is-show .hxw-pad {
+  transition-duration: 0.12s;
+}
+
+
+.hxw-pads__grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: clamp(3px, 0.45vw, 6px);
+}
+
+.hxw-pad {
+  --on: 0;
+  --hot: 0;
+  aspect-ratio: 1;
+  border-radius: 22%;
+  background: color-mix(in srgb, var(--c) calc(max(var(--on), var(--hot)) * 100%), #2c2d36);
+  box-shadow: 0 0 calc(max(var(--on), var(--hot)) * 10px) color-mix(in srgb, var(--c) 60%, transparent);
+  transition:
+    background-color 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+/* Magpiary: its magpie perched on a strip of its search line. */
+.hxw-mag {
+  position: relative;
+  padding-top: 44%;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.hxw-obj--magpiary .hxw-obj__thing {
+  box-shadow: none;
+}
+
+/* The magpie: its frames stacked, one showing at a time (Hero.js), standing on the search line. */
+.hxw-bird {
+  position: absolute;
+  /* The frames carry a lot of air round the bird, so the box is larger than the bird. */
+  z-index: 1;
+  bottom: 44px; /* the feet sink a little behind the search bar's top edge */
+  left: -12%;
+  width: 104%;
+  aspect-ratio: 6 / 5;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+.hxw-bird img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 100%;
+  opacity: 0;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.22));
+  user-select: none;
+}
+.hxw-bird img:last-child {
+  opacity: 1; /* perched, before the script takes over */
+}
+.hxw-bird:focus-visible {
+  outline: 2px solid var(--t1);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+/* While it flies, its object comes up over the portrait. */
+.hxw-obj.is-flying {
+  z-index: 10;
+}
+
+.hxw-mag__search {
+  position: relative;
+  z-index: 2; /* in front of the magpie, so its feet tuck behind the bar's top edge */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--hxw-card);
+  color: var(--hxw-card-ink);
+  border: 1px solid var(--hxw-edge);
+  box-shadow: var(--hxw-shadow);
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.hxw-mag__sym {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  color: var(--abt-ink);
+}
+
+/* ---------------------------------------------------------------- Phone
+
+   Both objects, smaller and tucked half behind the portrait's sides: the magpie up on the left, the
+   pads low on the right. */
+@media (max-width: 700px) {
+  .hxw {
+    --hxw-pw: min(68vw, 290px);
+  }
+  .hxw-obj:not(.is-phone) {
+    display: none;
+  }
+  .hxw-obj--magpiary {
+    --w: 118px;
+    --r: -6deg;
+    top: 14%;
+    bottom: auto;
+    right: calc(50% + var(--hxw-pw) / 2 - 62px);
+  }
+  .hxw-obj--pushdeck {
+    --w: 92px;
+    --r: 8deg;
+    bottom: 12%;
+    left: calc(50% + var(--hxw-pw) / 2 - 58px);
+  }
+  .hxw-mag__search {
+    display: none;
+  }
+  .hxw-mag {
+    padding-top: 0;
+    height: 98px;
+  }
+  .hxw-bird {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+  }
+  .hxw-pads__grid {
+    gap: 2px;
+  }
+}
+
+/* With reduced motion nothing moves (Hero.js holds the pads still and skips the tilt); this drops
+   the pads' fades too. */
+@media (prefers-reduced-motion: reduce) {
+  .hxw-pad {
+    transition: none;
+  }
+}
+

@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import Action from './Action';
 import { FACE } from './fonts';
@@ -9,16 +9,21 @@ import useScrollTimeline from './useScrollTimeline';
 import glideTo from './glideTo';
 import Marquee from './Marquee';
 import Portrait from './Portrait';
-import Scene from './Scene';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Around, Canvas } from './Workbench';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const EASE = [0.16, 1, 0.3, 1];
 // Always two lines, on a phone too: the headline shrinks until its longer line fits (Headline).
 const LINES = ['I build design functions', 'and I still do the craft work to prove it.'];
 
-// The homepage's first screen. The aurora contours run full-bleed behind a layer of words that zooms
-// out as the page scrolls away: the name in very large type running by behind the illustrated
-// portraits, which stand in the middle, taking turns and shrinking with the scroll; the headline under
-// them; and the buttons. Everything comes in once the loading curtain lifts (`ready`).
+// The homepage's first screen, a designer's working bench (Workbench.js): faint dots full-bleed behind
+// a layer that zooms out as the page scrolls away: the name in very large type running by behind the
+// illustrated portraits, which stand in the middle as a selected frame, taking turns and shrinking
+// with the scroll, with Magpiary and PushDeck tucked behind them; the headline under them; and the
+// buttons. Everything comes in once the loading curtain lifts (`ready`).
 export default function Hero() {
   const ready = useIntroDone();
   const ref = useRef(null);
@@ -28,9 +33,16 @@ export default function Hero() {
   // JavaScript lags the scroll by a frame or so, and shakes.
   const css = useScrollTimeline();
 
+  // Measure the page's scroll animations again once it has settled (fonts and pictures change the
+  // hero's height, and the statement under it is placed by ScrollTrigger).
+  useEffect(() => {
+    const settle = window.setTimeout(() => ScrollTrigger.refresh(), 1200);
+    return () => window.clearTimeout(settle);
+  }, []);
+
   return (
-    <section className="hx-i-hero" ref={ref}>
-      <Scene hero={ref} ready={ready} />
+    <section className="hx-i-hero hxw" ref={ref}>
+      <Canvas hero={ref} ready={ready} />
       <motion.div
         className="hx-i-poster"
         style={css ? undefined : { scale }}
@@ -45,6 +57,7 @@ export default function Hero() {
         >
           <div className="hx-i-stage">
             <Marquee ready={ready} />
+            <Around ready={ready} progress={scrollYProgress} />
             <Portrait progress={scrollYProgress} css={css} ready={ready} />
           </div>
           <Headline ready={ready} />
