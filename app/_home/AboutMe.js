@@ -224,7 +224,7 @@ function Clip() {
 // The page's last line, in three columns of two lines: the way back to the top over the time in New
 // Delhi (live, to the second), a line about the work over the email, and the cookie settings over the
 // copyright.
-function FootRow() {
+export function FootRow() {
   const toTop = (e) => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
@@ -281,7 +281,7 @@ function Clock() {
 // colour-dodged over it as one layer (home.css).
 const BLUR_STEPS = [0, 2, 4, 8];
 
-function Wordmark() {
+export function Wordmark() {
   const box = useRef(null);
   const stack = useRef(null);
   const word = useRef(null);

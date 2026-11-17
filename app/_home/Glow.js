@@ -14,15 +14,14 @@ import { Renderer, Program, Mesh, Triangle } from 'ogl';
 //
 // The mouse leaves a trail across the section, as it does over the hero (the same path and sizes as
 // backdrops/auroraContours.js): a blob moving slowly, a tapering streak on a fast sweep, draining away
-// once it stops. Inside it, barely there, faint contour lines over two fainter bands of the colour, its
-// edge fading out into the same grain. Only with a mouse, and not at all with reduced motion.
+// once it stops. Inside it, a soft wash of the colour, its edge fading out into the same grain. Only
+// with a mouse, and not at all with reduced motion.
 
 const MASK_SIZE = 220; // width of the blob, in CSS pixels, when moving slowly
 const TRAIL_LINGER = 0.5; // seconds the trail takes to drain once the mouse stops
 const STREAK = 0.35; // seconds of the path a fast sweep leaves as a tapering streak
 const POINTS = 24; // how much of the path is kept
-const CONTOUR_LINES = 0.26; // the strength of the contours' lines
-const CONTOUR_BANDS = [0.03, 0.07]; // the strengths of their two alternating bands
+const TRAIL_GLOW = 0.1; // how strongly the trail's soft wash of the colour shows
 
 const vertex = `#version 300 es
 in vec2 position;
@@ -132,23 +131,15 @@ void main() {
 
   vec4 glow = paint(shape);
 
-  // Inside the trail: faint lines over two fainter alternating bands of the colour, drifting slowly,
-  // laid over the glow. Worked out only while there is a trail. The test is on a uniform, the same for
-  // every pixel, so it doesn't upset the edge smoothing (which compares neighbouring pixels); inside,
-  // nothing branches pixel by pixel.
+  // Inside the trail: a soft wash of the glow's colour, laid over the glow. Worked out only while there
+  // is a trail (the test is on a uniform, the same for every pixel).
   if (uTrailCount < 0.5) {
     fragColor = glow;
     return;
   }
-  float h = fbm(px / 560.0 + vec2(uTime * 0.015, -uTime * 0.01)) * 11.0;
-  float band = mod(floor(h), 2.0);
-  float line = 1.0 - min(abs(fract(h - 0.5) - 0.5) / max(fwidth(h), 1e-4), 1.0);
   vec3 tone = mix(uC1, vec3(1.0), uPale);
-  vec3 ink = mix(uC0, vec3(1.0), uPale * 0.5);
-  float a = mix(${CONTOUR_BANDS[0].toFixed(3)}, ${CONTOUR_BANDS[1].toFixed(3)}, band);
-  float la = line * ${CONTOUR_LINES.toFixed(3)};
+  float a = ${TRAIL_GLOW.toFixed(3)};
   vec4 inside = vec4(tone * a, a);
-  inside = vec4(ink * la, la) + inside * (1.0 - la);
   inside = inside + glow * (1.0 - inside.a);
   fragColor = mix(glow, inside, mask);
 }`;

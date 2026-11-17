@@ -1,19 +1,19 @@
 import Nav from '@/components/Nav';
-import Footer from '@/components/Footer';
 import { aboutThemeGate } from '../about/theme';
 import AboutMotion from '../about/AboutMotion';
 import AboutThemeSwitch from '../about/AboutThemeSwitch';
 import { display, sans } from '../about/fonts';
-import ContactSoon from './ContactSoon';
+import ContactHybrid from './ContactHybrid';
 import '../about/about.css';
-import './contact.css';
+import '../_home/home.css';
+import '../about/resume/resume.css';
+import './contact-hybrid.css';
 
-// The Contact page. Not built yet; until it is, this says so and gives the ways to get in touch that
-// already work. In the About page's system, so it takes the site's theme.
+// The Contact page (ContactHybrid.js). In the About page's system, so it takes the site's theme. It is its
+// own footer.
 export const metadata = {
   title: 'Contact — Manik Madaan',
   description: 'How to get in touch with Manik Madaan, product design leader.',
-  robots: { index: false, follow: true },
 };
 
 export default function Contact() {
@@ -22,8 +22,7 @@ export default function Contact() {
       <div className={`abt ${display.variable} ${sans.variable}`}>
         <script dangerouslySetInnerHTML={{ __html: aboutThemeGate() }} />
         <Nav actions={<AboutThemeSwitch />} />
-        <ContactSoon />
-        <Footer />
+        <ContactHybrid />
       </div>
     </AboutMotion>
   );

@@ -8,6 +8,7 @@ Most are variable fonts, so one file carries every weight in its range (the file
 Fraunces' files also carry its SOFT and opsz axes. Google Sans also keeps its `symbols` file (the
 arrows and ✦ the homepage sets in it), loaded as a second face right after it (`app/_home/fonts.js`);
 the other families never had those characters, so they fall back to the system font as before.
+Doto (the contact page's clock digits) is a single static Bold file.
 
 All of them are published on Google Fonts under the SIL Open Font License 1.1, which allows bundling
 and redistributing them with the site.
