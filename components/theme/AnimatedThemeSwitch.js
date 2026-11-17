@@ -14,11 +14,16 @@ import { track } from '@/components/track';
 // (media queries, beyond the operating system's colour scheme, that the default depends on) and `page` (for the
 // analytics event). It also owns keeping <html> in step: on client-side navigations the page's inline gate script
 // doesn't run; on coming Back to a page the browser kept, the theme may have been changed on another page since;
-// and the attribute is removed on unmount so it does not linger onto pages that don't use it.
+// and the attribute is removed when the page's last switch unmounts, so it does not linger onto pages that don't use it.
 
 const SPRING = { type: 'spring', stiffness: 700, damping: 30, mass: 0.8 };
 const SOLID = 0.55; // where the wipe's gradient stops being fully opaque — keep in step with `edge`
 const RAYS = [0, 45, 90, 135, 180, 225, 270, 315];
+
+// How many switches each attribute has on the page. A page can mount more than one for a moment (the nav hands
+// its controls between the phone bar and the wide nav once the width is known, and the capsule and dock swap on
+// scroll), so a switch only takes the attribute off <html> when it is the last one keeping it.
+const MOUNTED = new Map();
 
 export default function AnimatedThemeSwitch({ attr, storageKey, resolve, follow = [], page, label = 'Dark theme', className = '' }) {
   const [theme, setTheme] = useState(null); // null until mounted, so server and client first render agree
@@ -31,9 +36,15 @@ export default function AnimatedThemeSwitch({ attr, storageKey, resolve, follow 
 
   useEffect(() => {
     const root = document.documentElement;
+    MOUNTED.set(attr, (MOUNTED.get(attr) ?? 0) + 1);
+    const release = () => {
+      const left = (MOUNTED.get(attr) ?? 1) - 1;
+      MOUNTED.set(attr, left);
+      if (left <= 0) root.removeAttribute(attr);
+    };
     apply(resolve());
     setTheme(current());
-    if (!window.matchMedia) return () => root.removeAttribute(attr);
+    if (!window.matchMedia) return release;
     // Follow the default live (the operating system, and whatever else the page's default depends on), unless a
     // choice was made with the switch this visit.
     const queries = ['(prefers-color-scheme: dark)', '(prefers-color-scheme: light)', ...follow].map((q) => window.matchMedia(q));
@@ -47,7 +58,7 @@ export default function AnimatedThemeSwitch({ attr, storageKey, resolve, follow 
     return () => {
       queries.forEach((q) => q.removeEventListener('change', sync));
       window.removeEventListener('pageshow', back);
-      root.removeAttribute(attr);
+      release();
     };
   }, []);
 
