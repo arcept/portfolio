@@ -522,12 +522,17 @@ html[data-abt-theme='light'] .hxw-dots {
   .hxw-obj:not(.is-phone) {
     display: none;
   }
+  /* The magpie peeks out from behind the portrait's left edge, mirrored so it faces away from it:
+     its head and chest show, the rest of it tucked behind. (Workbench.js flies it off to the left.) */
   .hxw-obj--magpiary {
     --w: 118px;
-    --r: -6deg;
-    top: 14%;
+    --r: 5deg;
+    top: 17%;
     bottom: auto;
-    right: calc(50% + var(--hxw-pw) / 2 - 62px);
+    right: calc(50% + var(--hxw-pw) / 2 - 46px);
+  }
+  .hxw-bird img {
+    transform: scaleX(-1);
   }
   .hxw-obj--pushdeck {
     --w: 92px;

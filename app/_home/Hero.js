@@ -8,6 +8,7 @@ import { useIntroDone } from './HomeIntro';
 import useScrollTimeline from './useScrollTimeline';
 import glideTo from './glideTo';
 import Marquee from './Marquee';
+import { ENTER } from './enter';
 import Portrait from './Portrait';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -66,7 +67,7 @@ export default function Hero() {
             className="abt-actions hx-i-actions"
             initial={{ opacity: 0, y: 18 }}
             animate={ready ? { opacity: 1, y: 0 } : undefined}
-            transition={{ duration: 1, ease: EASE, delay: 0.85 }}
+            transition={{ duration: 1, ease: EASE, delay: ENTER.actions }}
           >
             <Action href="#work" arrow="↓" onClick={glideTo}>
               See the work
@@ -109,7 +110,7 @@ function Headline({ ready }) {
             className="hx-i-title__line"
             initial={{ y: '110%' }}
             animate={ready ? { y: '0%' } : undefined}
-            transition={{ duration: 1.2, ease: EASE, delay: 0.35 + i * 0.12 }}
+            transition={{ duration: 1.2, ease: EASE, delay: ENTER.headline + i * 0.12 }}
           >
             {line}
           </motion.span>

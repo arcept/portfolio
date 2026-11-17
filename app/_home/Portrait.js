@@ -7,6 +7,7 @@ import two from './art/portrait-2.webp';
 import three from './art/portrait-3.webp';
 import Hello from './Hello';
 import NameSticker from './NameSticker';
+import { ENTER } from './enter';
 
 const IMAGES = [one, two, three];
 const HOLD = 4500; // how long each portrait stays before the next comes in
@@ -40,7 +41,7 @@ export default function Portrait({ progress, css, ready }) {
         aria-label="Illustrated portraits of Manik"
         initial={{ opacity: 0, y: 40, clipPath: 'inset(12% 18% 12% 18% round 28px)' }}
         animate={ready ? { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0% round 28px)' } : undefined}
-        transition={{ duration: 1.3, ease: EASE, delay: 0.45 }}
+        transition={{ duration: 1.3, ease: EASE, delay: ENTER.portrait }}
       >
         <Slices index={index} />
       </motion.div>

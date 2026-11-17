@@ -68,9 +68,18 @@ export default function HomeIntro({ children }) {
     const root = document.documentElement;
     if (armed.current === null) armed.current = root.hasAttribute(INTRO_ATTR);
     if (!armed.current) {
-      setDone(true);
-      setGone(true);
-      return undefined;
+      // No curtain (a later visit in this tab): the entrances still wait for the fonts and the first
+      // screen's pictures (a short cap, so a slow one never holds the page), or they would play over
+      // a headline still changing face and a portrait not yet there. Usually already true from cache.
+      let stale = false;
+      Promise.race([Promise.all(firstScreenWork()), new Promise((resolve) => window.setTimeout(resolve, 1200))]).then(() => {
+        if (stale) return;
+        setDone(true);
+        setGone(true);
+      });
+      return () => {
+        stale = true;
+      };
     }
 
     let cancelled = false;

@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, useTransform } from 'motion/react';
 import { gsap } from 'gsap';
+import { ENTER, OBJECT_GAP } from './enter';
 import useScrollTimeline from '@/app/_home/useScrollTimeline';
 import HeroRipple from './fx/HeroRipple';
 import { HERO_RIPPLE } from './fx/config';
@@ -128,7 +129,7 @@ function Objects({ ready, progress }) {
           aria-label={`${item.name}: ${item.line}`}
           initial={{ opacity: 0, y: 28 }}
           animate={ready ? { opacity: 1, y: 0 } : undefined}
-          transition={{ duration: 1.1, ease: EASE, delay: 1 + i * 0.12 }}
+          transition={{ duration: 1.1, ease: EASE, delay: ENTER.objects + i * OBJECT_GAP }}
         >
           <div className="hxw-obj__tilt">
             <div className="hxw-obj__thing">{THINGS[item.key]}</div>
@@ -426,6 +427,9 @@ function Magpie() {
       return;
     }
     const box = b.getBoundingClientRect();
+    // On a phone the magpie is mirrored (it peeks out from the portrait's left, facing left), so it
+    // leaves to the left and comes back in from the right.
+    const s = window.matchMedia('(max-width: 700px)').matches ? -1 : 1;
     const o = { i: 0 };
     const flap = gsap.to(o, { i: 3, duration: 0.3, repeat: -1, ease: 'none', paused: true, onUpdate: () => show(Math.min(2, Math.floor(o.i))) });
     gsap.set(b, { transformOrigin: '50% 100%' });
@@ -433,18 +437,18 @@ function Magpie() {
     const T = 1.5;
     gsap
       .timeline({ onComplete: () => { busy.current = false; holder.classList.remove('is-flying'); } })
-      // A crouch, then off: a short climb and away to the right, across the top of the portrait and out
-      // of the hero.
+      // A crouch, then off: a short climb and away (to the right; to the left on a phone), across the top
+      // of the portrait and out of the hero.
       .to(b, { scaleY: 0.92, scaleX: 1.04, duration: 0.12, ease: 'power1.in' })
       .add(() => { show(3); })
       .add(() => flap.play(), '+=0.05')
       .to(b, { scaleY: 1, scaleX: 1, duration: 0.2, ease: 'back.out(2)' }, '<')
-      .to(b, { x: window.innerWidth - box.left + 80, duration: 1.7, ease: 'power1.in' }, '<')
-      .to(b, { y: -Math.min(box.top + box.height * 0.3, 130), rotation: -6, duration: 1.7, ease: 'sine.out' }, '<')
+      .to(b, { x: s > 0 ? window.innerWidth - box.left + 80 : -(box.right + 80), duration: 1.7, ease: 'power1.in' }, '<')
+      .to(b, { y: -Math.min(box.top + box.height * 0.3, 130), rotation: -6 * s, duration: 1.7, ease: 'sine.out' }, '<')
       .add(() => { flap.pause(); gsap.set(b, { opacity: 0 }); })
       // Back, a moment later, in from the left and down onto its line.
       .add(() => {
-        gsap.set(b, { x: -(box.left + box.width + 60), y: -window.innerHeight * 0.3, rotation: -5, opacity: 1 });
+        gsap.set(b, { x: s > 0 ? -(box.left + box.width + 60) : window.innerWidth - box.left + 60, y: -window.innerHeight * 0.3, rotation: -5 * s, opacity: 1 });
         flap.play();
       }, '+=0.9')
       .to(b, { x: 0, duration: T, ease: 'power2.out' })

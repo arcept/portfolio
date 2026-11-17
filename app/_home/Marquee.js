@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { motion, useAnimationFrame, useInView, useMotionValue, useReducedMotion } from 'motion/react';
 import { FACE } from './fonts';
+import { ENTER } from './enter';
 
 const PARTS = ['Manik Madaan', 'Product Design Leader'];
 const PASS_SECONDS = 14; // one full "Manik Madaan ✦ Product Design Leader ✦" goes by in this long
@@ -53,7 +54,7 @@ export default function Marquee({ ready }) {
       aria-hidden="true"
       initial={{ opacity: 0, y: 40 }}
       animate={ready ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: ENTER.band }}
     >
       <motion.div ref={track} className="hx-i-mq__track" style={{ x }}>
         {Array.from({ length: COPIES }, (_, c) => (
