@@ -1,5 +1,4 @@
 import localFont from 'next/font/local';
-import { Newsreader } from 'next/font/google';
 import Nav from '@/components/Nav';
 import ThemeSwitch from '@/components/theme/ThemeSwitch';
 import LangSwitch from '@/components/i18n/LangSwitch';
@@ -34,10 +33,11 @@ const neueAlteGrotesk = localFont({
 });
 
 // Newsreader is reserved for the sentences that carry the argument (pull statements and quotes).
-const serif = Newsreader({
-  subsets: ['latin'],
-  style: ['normal', 'italic'],
-  weight: ['300', '400', '500'],
+const newsreader = localFont({
+  src: [
+    { path: '../fonts/google/newsreader/newsreader-italic-300-500.woff2', weight: '300 500', style: 'italic' },
+    { path: '../fonts/google/newsreader/newsreader-normal-300-500.woff2', weight: '300 500', style: 'normal' },
+  ],
   display: 'swap',
   variable: '--font-serif',
 });
@@ -94,16 +94,16 @@ export default function CaseStudyPlacement() {
         }
       />
 
-      <PlacementBody headlineFont={neueAlteGrotesk.className} fontVars={`${neueAlteGrotesk.variable} ${serif.variable}`} narrationDuration={narration.duration} listen={listen} />
+      <PlacementBody headlineFont={neueAlteGrotesk.className} fontVars={`${neueAlteGrotesk.variable} ${newsreader.variable}`} narrationDuration={narration.duration} listen={listen} />
 
-      <SiteFooter fontVars={`${neueAlteGrotesk.variable} ${serif.variable}`}>
+      <SiteFooter fontVars={`${neueAlteGrotesk.variable} ${newsreader.variable}`}>
         <CaseStudyEnd current="placement" />
       </SiteFooter>
     </div>
 
     {/* The narration: a floating card that is a small player by default and expands to the full player (a sheet on phones). */}
     <NarrationPanel>
-      <NarrationPlayer narration={narration} fontClass={serif.variable} />
+      <NarrationPlayer narration={narration} fontClass={newsreader.variable} />
     </NarrationPanel>
     </NarrationUIProvider>
     </NarrationProvider>

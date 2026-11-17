@@ -1,5 +1,4 @@
 import localFont from 'next/font/local';
-import { Newsreader } from 'next/font/google';
 import Nav from '@/components/Nav';
 import ThemeSwitch from '@/components/theme/ThemeSwitch';
 import { themeGateScript } from '@/components/theme/theme';
@@ -32,10 +31,11 @@ const neueAlteGrotesk = localFont({
 });
 
 // Newsreader is reserved for the sentences that carry the argument (pull statements).
-const serif = Newsreader({
-  subsets: ['latin'],
-  style: ['normal', 'italic'],
-  weight: ['300', '400', '500'],
+const newsreader = localFont({
+  src: [
+    { path: '../fonts/google/newsreader/newsreader-italic-300-500.woff2', weight: '300 500', style: 'italic' },
+    { path: '../fonts/google/newsreader/newsreader-normal-300-500.woff2', weight: '300 500', style: 'normal' },
+  ],
   display: 'swap',
   variable: '--font-serif',
 });
@@ -157,7 +157,7 @@ export default function CaseStudyOMS() {
                 <a href="#prototype" className="btn btn--rainbow-outline">
                   Try the prototype ↓
                 </a>
-                <OmsStory className="btn btn--tertiary btn--rainbow-text" fontClass={`${neueAlteGrotesk.variable} ${serif.variable}`}>
+                <OmsStory className="btn btn--tertiary btn--rainbow-text" fontClass={`${neueAlteGrotesk.variable} ${newsreader.variable}`}>
                   Read the 2-minute version
                 </OmsStory>
               </div>
@@ -197,7 +197,7 @@ export default function CaseStudyOMS() {
       </ScrollRise>
 
       <div className="cs-article-grid wrap wrap--wide">
-        <main className={`lx pcs ${neueAlteGrotesk.variable} ${serif.variable}`}>
+        <main className={`lx pcs ${neueAlteGrotesk.variable} ${newsreader.variable}`}>
           <div className="lx-stack">
             <OmsSections />
           </div>
@@ -206,7 +206,7 @@ export default function CaseStudyOMS() {
         <CaseStudyNav sections={sections} projectFiles={projectFiles} />
       </div>
 
-      <SiteFooter fontVars={`${neueAlteGrotesk.variable} ${serif.variable}`}>
+      <SiteFooter fontVars={`${neueAlteGrotesk.variable} ${newsreader.variable}`}>
         <CaseStudyEnd current="oms" />
       </SiteFooter>
     </div>
