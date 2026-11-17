@@ -1,7 +1,8 @@
 import omsCover from './art/oms-cover.webp';
 
 // The homepage's selected work (Work.js): the three case studies it features, in order, then the ones
-// still being written, under "Read more". Each wears its own colour (`accent`). `image` is the
+// still being written, under "Read more". Each wears its own colour (`accent`), and its
+// tooltip the same hue at full saturation, dark enough for white words (`tip`). `image` is the
 // featured card's screenshot (`srcLight` in the light theme, where there is one), with its size, which
 // the dissolve between them needs to crop it.
 
@@ -20,6 +21,12 @@ export const CASES = [
     ],
     prototype: true,
     accent: '#2fb583',
+    tip: '#059669',
+    // More of the product, for the layouts that show more than one screen.
+    shots: [
+      { src: '/case-studies/oms/body/status-deals-list.png', w: 1440, h: 736, alt: 'The deals list, every offer with its status.' },
+      { src: '/case-studies/oms/body/offer-flow-form.png', w: 754, h: 640, alt: 'Raising an offer: the learner details form.' },
+    ],
     image: {
       src: omsCover.src,
       w: omsCover.width,
@@ -41,6 +48,11 @@ export const CASES = [
     ],
     prototype: true,
     accent: '#4d7bf0',
+    tip: '#2563eb',
+    shots: [
+      { src: '/case-studies/placement-hub/body/jobs-board.png', w: 1504, h: 1280, alt: 'The jobs board, with featured and best-match roles.' },
+      { src: '/case-studies/placement-hub/body/application-tracker.png', w: 880, h: 812, alt: 'An application tracked step by step.' },
+    ],
     image: {
       src: '/case-studies/placement-hub/preview.png',
       w: 1280,
@@ -62,6 +74,11 @@ export const CASES = [
     ],
     prototype: false,
     accent: '#8a6cff',
+    tip: '#7c3aed',
+    shots: [
+      { src: '/case-study-cro/hero-01-laptop.webp', w: 1600, h: 1088, alt: 'The redesigned BIM course page on a laptop.' },
+      { src: '/case-study-cro/proof-outcomes.webp', w: 1920, h: 698, alt: 'Learner outcomes shown as proof on the course page.' },
+    ],
     // The case study's hero illustration, cropped to the card (a placeholder until it's regenerated).
     image: {
       src: '/case-studies/cro-cover-hero.webp',
@@ -82,6 +99,7 @@ export const MORE = [
     title: 'Building the Novatr LMS',
     line: 'A 0-to-1 platform, its design system, and the revenue it carried.',
     accent: '#e0569b',
+    tip: '#db2777',
   },
   {
     slug: 'team',
@@ -90,6 +108,7 @@ export const MORE = [
     title: 'A design team from zero',
     line: 'Hiring, structure and leadership from the first hire.',
     accent: '#22a6c4',
+    tip: '#0891b2',
   },
 ].map((w, i) => ({ ...w, index: pad(CASES.length + i + 1) }));
 

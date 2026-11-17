@@ -7,7 +7,7 @@ import HomeIntro from './_home/HomeIntro';
 import Hero from './_home/Hero';
 import Statement from './_home/Statement';
 import Runner from './_home/Runner';
-import Work from './_home/Work';
+import SelectedWork from './_home/SelectedWork';
 import AboutMe from './_home/AboutMe';
 import Leave from './_home/Leave';
 import { homeIntroGate } from './_home/intro';
@@ -62,7 +62,7 @@ export default function Home() {
               <Statement />
               {SHOW_RUNNER && <Runner />}
 
-              <Work />
+              <SelectedWork />
 
               <AboutMe />
             </main>

@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import useTheme from './useTheme';
 import DissolveImage from './DissolveImage';
-import Behind from './Behind';
+import Backdrop from './Backdrops';
 import { FACE } from './fonts';
 import { CASES, MORE } from './cases';
 
-const EASE = [0.16, 1, 0.3, 1];
+export const EASE = [0.16, 1, 0.3, 1];
 const IMAGES = CASES.map((w) => w.image);
-const src = (image, light) => (image.srcLight && light ? image.srcLight : image.src);
+export const src = (image, light) => (image.srcLight && light ? image.srcLight : image.src);
 
 // Selected work. On a wide screen, the featured case studies as a list (a big number, the title and
 // its line) with one card beside it for the row hovered (the first until then): its screenshot melts
@@ -18,21 +18,23 @@ const src = (image, light) => (image.srcLight && light ? image.srcLight : image.
 // phone, the same cards in a carousel. Then "Read more": the case studies still being written.
 //
 // Everything wears its case study's own colour; a light runs round each featured card's edge (Beam);
-// faint lines drift behind the cards (Behind); everything rises in as it comes into view. The cards are
+// what lies behind the cards is chosen with `bg` (Backdrops.js; the drifting lines are one choice); everything rises in as it comes into view. The cards are
 // frosted glass in the dark theme and solid, lifted a little, in the light one (home.css). Titles and
 // text are in DM Sans; the headings in the homepage's face.
-export default function Work() {
+// `Wide` swaps in another wide-screen layout (WorkVariants.js); `foldMore` is for layouts that show the
+// case studies still being written themselves, so "Read more" is left out on a wide screen.
+export default function Work({ Wide, bg = 'none', foldMore = false }) {
   const wide = useWide();
   const [active, setActive] = useState(0);
   return (
     <section className="hx-w" id="work" aria-labelledby="hx-w-title" style={{ '--hx-w-head-face': FACE.family }}>
-      <Behind />
+      <Backdrop kind={bg} />
       <header className="hx-w__head hx-w-wrap">
         <Title id="hx-w-title">Selected work</Title>
       </header>
       <div className="hx-w-wrap">
-        {wide ? <Split active={active} pick={setActive} /> : <Carousel />}
-        <More compact={!wide} />
+        {wide ? Wide ? <Wide /> : <Split active={active} pick={setActive} /> : <Carousel />}
+        {!(wide && foldMore) && <More compact={!wide} />}
       </div>
     </section>
   );
@@ -338,12 +340,12 @@ function MoreRow({ work }) {
 }
 
 // They are still being written, and say so.
-function InProgress() {
+export function InProgress() {
   return <span className="hx-w-more__state">In progress</span>;
 }
 
 // Where a screenshot will go: the ✦ in the case study's colour (and, with `label`, a word to say so).
-function Soon({ label }) {
+export function Soon({ label }) {
   return (
     <span className="hx-w-more__soon">
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -359,7 +361,7 @@ function Soon({ label }) {
 // The light that runs round the OMS case study's prototype frame (components/StarBorder): a glow in
 // the case study's colour sliding along the top edge one way and the bottom the other, fading as it
 // goes. Every featured card carries one.
-function Beam() {
+export function Beam() {
   return (
     <span className="hx-w-beam" aria-hidden="true">
       <span className="hx-w-beam__top" />
@@ -369,7 +371,7 @@ function Beam() {
 }
 
 // Where a case study is from, and whether it has a prototype to try.
-function Kicker({ work }) {
+export function Kicker({ work }) {
   return (
     <span className="hx-w-card__kicker">
       {work.kicker}
@@ -400,7 +402,7 @@ function Details({ work }) {
 }
 
 // The case study's headline number, in its colour, with what it counts beside it.
-function Metric({ metric }) {
+export function Metric({ metric }) {
   return (
     <span className="hx-w-metric">
       <span className="hx-w-metric__value">
@@ -413,7 +415,7 @@ function Metric({ metric }) {
   );
 }
 
-function Cta() {
+export function Cta() {
   return (
     <span className="hx-w-cta">
       Read the case study <span aria-hidden="true">→</span>
@@ -422,7 +424,7 @@ function Cta() {
 }
 
 // A card's way in: it opens upwards out of a clip as it rises.
-function Enter({ delay = 0, className, children }) {
+export function Enter({ delay = 0, className, children }) {
   return (
     <motion.div
       className={className}

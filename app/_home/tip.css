@@ -1,0 +1,90 @@
+/* ---------------------------------------------------------------- The pointer tooltip (Tip.js)
+
+   One element fixed to the viewport, moved to the pointer by a transform; --tip is the case study's
+   colour at full saturation (cases.js `tip`), dark enough that white words read on it. */
+
+.wt {
+  --tip-fill: var(--tip, #2563eb);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 80;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.wt__body {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-family: var(--font-abt-sans), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  opacity: 0;
+  transform: scale(0.6);
+  transform-origin: 0 0;
+  transition:
+    opacity 0.18s ease,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.25s ease;
+}
+
+.wt[data-on='true'] .wt__body {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ------------------------------------------------ Pill */
+
+.wt--pill .wt__body,
+.wt--arrow .wt__body {
+  padding: 9px 15px;
+  border-radius: 999px;
+  background: var(--tip-fill);
+  color: #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tip-fill) 70%, #000),
+    0 10px 24px -8px color-mix(in srgb, var(--tip-fill) 80%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+/* ------------------------------------------------ Pill + arrow */
+
+.wt--arrow .wt__body {
+  padding: 5px 5px 5px 15px;
+}
+
+/* Without the arrow (nowhere to go yet), the plain pill's padding. */
+.wt--arrow .wt__body:not(:has(.wt__go)) {
+  padding: 9px 15px;
+}
+
+.wt__go {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.wt__go svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--tip-fill);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wt__body {
+    transition: opacity 0.15s ease;
+  }
+}

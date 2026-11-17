@@ -54,3 +54,6 @@ public/case-study-cro-lab/
 *.bundle
 .codex/
 .env*
+
+# The selected-work layout lab (/work-lab): the current layout and four alternatives, local-only like the other labs.
+app/work-lab/

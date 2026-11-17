@@ -1,0 +1,535 @@
+/* ---------------------------------------------------------------- Selected work: the other layouts
+
+   WorkVariants.js: Bento and Showcase, each a wide-screen alternative to the list and its
+   card. They build on the section's own pieces in home.css (.hx-w-card, .hx-w-num, .hx-w-metric,
+   .hx-w-facts, .hx-w-cta, the Beam), and every card carries its case study's colour as --accent. */
+
+/* The light that follows the pointer over a card. */
+.hx-w-card.wv-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hx-w-card.wv-tile:hover::after {
+    opacity: 1;
+  }
+}
+
+/* A screen as a picture: rounded, edged, lifted. */
+.wv-tile__main,
+.wv-tile__extra,
+.wv-show__float {
+  display: block;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--abt-ink) 12%, transparent);
+  background: color-mix(in srgb, var(--abt-ink) 6%, var(--abt-base));
+  box-shadow:
+    0 30px 60px -24px rgba(0, 0, 0, 0.55),
+    0 0 0 1px color-mix(in srgb, #000 10%, transparent);
+}
+
+html[data-abt-theme='light'] :is(.wv-tile__main, .wv-tile__extra, .wv-show__float) {
+  box-shadow:
+    0 24px 50px -24px rgba(20, 24, 50, 0.28),
+    0 0 0 1px rgba(20, 24, 50, 0.06);
+}
+
+/* ================================================================ Bento */
+
+.wv-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: clamp(460px, 38vw, 600px);
+  gap: clamp(14px, 1.4vw, 22px);
+}
+
+.wv-bento__a {
+  grid-column: 1 / 8;
+}
+.wv-bento__b {
+  grid-column: 8 / 13;
+}
+.wv-bento__d {
+  grid-column: 1 / 5;
+}
+.wv-bento__c {
+  grid-column: 5 / 13;
+}
+
+.wv-bento > * > a,
+.wv-bento > * > div {
+  height: 100%;
+}
+
+.hx-w-card.wv-tile {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  isolation: isolate;
+}
+
+/* The case study's colour, rising from the foot of the tile behind the screens. */
+.wv-tile__glow {
+  position: absolute;
+  inset: auto -20% -40% -20%;
+  height: 80%;
+  z-index: -1;
+  background: radial-gradient(50% 50% at 50% 50%, color-mix(in srgb, var(--accent) 40%, transparent), transparent 70%);
+  opacity: 0.55;
+  transition: opacity 0.5s ease;
+}
+
+.wv-tile__text {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  gap: 14px;
+  padding: clamp(22px, 2.2vw, 34px) clamp(22px, 2.2vw, 34px) 0;
+}
+
+.wv-tile__top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.wv-tile__top .hx-w-num {
+  font-size: 40px;
+}
+
+.wv-tile__top .hx-w-card__kicker {
+  margin: 0;
+}
+
+.wv-tile__title {
+  max-width: 20ch;
+  font-family: var(--hx-w-face);
+  font-size: clamp(24px, 2.3vw, 36px);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--t1);
+}
+
+.wv-tile__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
+}
+
+.wv-tile__foot .hx-w-metric {
+  margin: 0;
+}
+
+.wv-tile__foot .hx-w-metric__value {
+  font-size: clamp(24px, 2vw, 30px);
+}
+
+.wv-tile__foot .hx-w-metric__label {
+  max-width: 24ch;
+  font-size: 13px;
+}
+
+/* The screens: the main one runs off the tile's bottom-right corner; a second sits in front of it,
+   lower left, turned a little. */
+.wv-tile__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin-top: 26px;
+}
+
+.wv-tile__main {
+  position: absolute;
+  top: 0;
+  left: 14%;
+  width: 96%;
+  height: auto;
+  transform-origin: top left;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wv-tile__extra {
+  position: absolute;
+  bottom: -18%;
+  left: 5%;
+  width: 34%;
+  height: auto;
+  transform: rotate(-4deg);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The tall tile (Placement): a portrait screen, and the tracker in front of it. */
+.hx-w-card.wv-tile[data-tall='true'] .wv-tile__main {
+  left: 18%;
+  width: 92%;
+}
+
+.hx-w-card.wv-tile[data-tall='true'] .wv-tile__extra {
+  bottom: 6%;
+  left: 6%;
+  width: 48%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hx-w-card.wv-tile:hover .wv-tile__main {
+    transform: translate(-3%, -4%) scale(1.03);
+  }
+  .hx-w-card.wv-tile:hover .wv-tile__extra {
+    transform: translateY(-14%) rotate(0deg) scale(1.04);
+  }
+  .hx-w-card.wv-tile:hover .wv-tile__glow {
+    opacity: 1;
+  }
+}
+
+/* The last slot: the two case studies still being written, one above the other. */
+.wv-bento__d {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: clamp(14px, 1.4vw, 22px);
+}
+
+.wv-bento__more {
+  min-height: 0;
+}
+
+.wv-bento__more > a {
+  height: 100%;
+}
+
+.hx-w-card.wv-more {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: clamp(20px, 2vw, 28px);
+  isolation: isolate;
+  cursor: default;
+}
+
+/* Blueprint hatching in the case study's colour, fading out towards the words. */
+.wv-more__hatch {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 22%, transparent) 0 1px,
+    transparent 1px 11px
+  );
+  -webkit-mask-image: linear-gradient(to left, #000, transparent 75%);
+  mask-image: linear-gradient(to left, #000, transparent 75%);
+  opacity: 0.8;
+  transition: opacity 0.5s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hx-w-card.wv-more:hover .wv-more__hatch {
+    opacity: 1;
+  }
+}
+
+.wv-more__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--hx-w-face);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t3);
+}
+
+.wv-more__top .hx-w-num {
+  font-size: 30px;
+}
+
+.wv-more__kicker {
+  white-space: nowrap;
+}
+
+/* The title and its line, centred in the height between the top and the foot. */
+.wv-more__mid {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 0;
+}
+
+.wv-more__title {
+  max-width: 18ch;
+  font-family: var(--hx-w-face);
+  font-size: clamp(20px, 1.7vw, 26px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--t1);
+}
+
+.wv-more__line {
+  max-width: 34ch;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--t3);
+}
+
+.wv-more__soon {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  font-family: var(--hx-w-face);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t2);
+}
+
+.wv-more__soon::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+@media (max-width: 1180px) {
+  .wv-bento__a,
+  .wv-bento__c {
+    grid-column: span 12;
+  }
+  .wv-bento__b {
+    grid-column: 1 / 8;
+  }
+  .wv-bento__d {
+    grid-column: 8 / 13;
+  }
+  .wv-bento__c {
+    order: 5;
+  }
+}
+
+/* ================================================================ Showcase */
+
+.wv-show-list {
+  display: grid;
+  gap: clamp(96px, 14vh, 180px);
+}
+
+.wv-show {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: clamp(40px, 5vw, 96px);
+}
+
+.wv-show[data-flip='true'] {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+
+/* Flipped rows put the screen first, still in the wide column, so every case's UI is the same size. */
+.wv-show[data-flip='true'] .wv-show__text {
+  order: 2;
+}
+
+.wv-show__text {
+  display: grid;
+  justify-items: start;
+  gap: 18px;
+}
+
+.wv-show__index {
+  font-family: var(--hx-w-face);
+  font-size: clamp(80px, 9vw, 140px);
+  font-weight: 600;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  color: transparent;
+  background: linear-gradient(to bottom, var(--accent), color-mix(in srgb, var(--accent) 0%, transparent) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.wv-show .hx-w-card__kicker {
+  margin: 0;
+}
+
+.wv-show__title {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--hx-w-face);
+  font-size: clamp(32px, 3.4vw, 54px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--t1);
+}
+
+.wv-show__title a {
+  color: inherit;
+  text-decoration: none;
+  background: linear-gradient(var(--accent), var(--accent)) left bottom / 0% 2px no-repeat;
+  transition: background-size 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wv-show__title a:hover,
+.wv-show__title a:focus-visible {
+  background-size: 100% 2px;
+  outline: none;
+}
+
+.wv-show__line {
+  max-width: 50ch;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--t2);
+}
+
+.wv-show .hx-w-metric,
+.wv-show .hx-w-facts {
+  margin: 0;
+}
+
+.wv-show .hx-w-facts {
+  align-self: stretch;
+}
+
+.wv-show__go {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wv-show:hover .wv-show__go .hx-w-cta > span {
+    transform: translateX(6px);
+  }
+}
+
+/* The screens: a framed window, and two more drifting in front of it. */
+.wv-show__media {
+  position: relative;
+  display: block;
+  padding: 8% 6% 12%;
+  perspective: 1400px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.wv-show__glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 40px;
+  background:
+    radial-gradient(60% 60% at 50% 50%, color-mix(in srgb, var(--accent) 34%, transparent), transparent 72%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--accent) 7%, transparent), transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.wv-show__frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--abt-ink) 14%, transparent);
+  background: color-mix(in srgb, var(--abt-ink) 5%, var(--abt-base));
+  box-shadow: 0 60px 120px -40px color-mix(in srgb, var(--accent) 50%, rgba(0, 0, 0, 0.6));
+  transform-origin: 50% 100%;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wv-show__chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--abt-ink) 10%, transparent);
+}
+
+.wv-show__chrome i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--abt-ink) 22%, transparent);
+}
+
+.wv-show__url {
+  margin: 0 auto;
+  padding: 3px 14px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--abt-ink) 7%, transparent);
+  font-size: 11px;
+  color: var(--t4);
+}
+
+.wv-show__frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top left;
+}
+
+.wv-show__float {
+  position: absolute;
+  height: auto;
+  transition: scale 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wv-show__float--a {
+  right: -2%;
+  bottom: 2%;
+  width: 46%;
+}
+
+.wv-show__float--b {
+  left: -4%;
+  top: 30%;
+  width: 30%;
+}
+
+.wv-show[data-flip='true'] .wv-show__float--a {
+  right: auto;
+  left: -2%;
+}
+
+.wv-show[data-flip='true'] .wv-show__float--b {
+  left: auto;
+  right: -4%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wv-show__media:hover .wv-show__float {
+    scale: 1.05;
+  }
+}
+
+/* ================================================================ Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .wv-tile__main,
+  .wv-tile__extra,
+  .wv-show__frame,
+  .wv-show__float {
+    transition: none;
+  }
+  .hx-w-card.wv-tile:hover .wv-tile__main,
+  .hx-w-card.wv-tile:hover .wv-tile__extra {
+    transform: none;
+  }
+}

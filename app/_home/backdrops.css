@@ -1,0 +1,133 @@
+/* ---------------------------------------------------------------- Selected work: what lies behind it
+
+   Backdrops.js. Each fills the section (.hx-w is isolated, so z-index -1 sits behind its content
+   and above the page). The contour lines are drawn by Behind.js instead. */
+
+.wb {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------ Dot grid */
+
+.wb--dots {
+  background-image: radial-gradient(color-mix(in srgb, var(--abt-ink) 16%, transparent) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 45%, #000 20%, transparent 85%);
+  mask-image: radial-gradient(70% 60% at 50% 45%, #000 20%, transparent 85%);
+}
+
+/* Light: the dots darker and a touch larger, over a cool grey wash that sinks the middle of the
+   section a step below the page, so the white cards lift off it the way the glass ones do in the dark. */
+html[data-abt-theme='light'] .wb--dots {
+  background-image:
+    radial-gradient(rgba(28, 34, 72, 0.3) 1.1px, transparent 1.6px),
+    radial-gradient(60% 55% at 50% 45%, rgba(28, 34, 72, 0.07), transparent 100%);
+  background-size:
+    20px 20px,
+    100% 100%;
+}
+
+/* ------------------------------------------------ Aurora */
+
+.wb__pool {
+  position: absolute;
+  width: 46vw;
+  height: 46vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent), transparent 65%);
+  filter: blur(60px);
+  opacity: 0.32;
+  animation: wb-drift 28s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * -9s);
+}
+
+.wb__pool:nth-child(1) {
+  top: 4%;
+  left: -12%;
+}
+.wb__pool:nth-child(2) {
+  top: 30%;
+  right: -14%;
+}
+.wb__pool:nth-child(3) {
+  bottom: -6%;
+  left: 22%;
+}
+
+html[data-abt-theme='light'] .wb__pool {
+  opacity: 0.2;
+}
+
+@keyframes wb-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(8vw, -6vh) scale(1.15);
+  }
+}
+
+/* ------------------------------------------------ Grain */
+
+.wb--grain {
+  background:
+    radial-gradient(80% 50% at 50% 0%, color-mix(in srgb, var(--abt-ink) 7%, transparent), transparent 70%),
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, color-mix(in srgb, #000 35%, transparent));
+}
+
+html[data-abt-theme='light'] .wb--grain {
+  background:
+    radial-gradient(80% 50% at 50% 0%, #fff, transparent 70%),
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(20, 24, 50, 0.06));
+}
+
+.wb__noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+}
+
+html[data-abt-theme='light'] .wb__noise {
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+}
+
+/* The grain alone, over the dot grid (dots-grain): no light or vignette, a touch stronger than the
+   grain backdrop's so it reads over the dots. */
+.wb--grain-only .wb__noise {
+  opacity: 0.12;
+}
+
+html[data-abt-theme='light'] .wb--grain-only .wb__noise {
+  opacity: 0.2;
+}
+
+/* ------------------------------------------------ Horizon */
+
+.wb--horizon {
+  background: radial-gradient(70% 38% at 50% 62%, color-mix(in srgb, #6f86ff 16%, transparent), transparent 70%);
+}
+
+html[data-abt-theme='light'] .wb--horizon {
+  background: radial-gradient(70% 38% at 50% 62%, color-mix(in srgb, #6f86ff 12%, transparent), transparent 70%);
+}
+
+.wb__line {
+  position: absolute;
+  top: 62%;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--abt-ink) 22%, transparent), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb__pool {
+    animation: none;
+  }
+}
