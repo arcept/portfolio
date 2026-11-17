@@ -1,0 +1,391 @@
+/* The site nav (Nav.js): a capsule at the top of the page, a dock once reading. One material for both: frosted and matte, one hairline edge, a faint top highlight. */
+
+.snav {
+  font-family: var(--font-nav-sans), var(--font-inter), system-ui, sans-serif;
+}
+
+.snav-glass {
+  --face: rgba(24, 24, 27, 0.6);
+  --ink: #f4f4f2;
+  --dim: rgba(244, 244, 242, 0.64);
+  --edge: rgba(255, 255, 255, 0.11);
+  --sheen: rgba(255, 255, 255, 0.09);
+  --fill: rgba(255, 255, 255, 0.1);
+  --shadow: 0 14px 34px -16px rgba(0, 0, 0, 0.75), 0 2px 6px -3px rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  background: var(--face);
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--sheen), var(--shadow);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(16px) saturate(1.5);
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.35s ease;
+}
+.snav-glass[data-tone='light'] {
+  --face: rgba(255, 255, 255, 0.7);
+  --ink: #141415;
+  --dim: rgba(20, 20, 21, 0.62);
+  --edge: rgba(0, 0, 0, 0.07);
+  --sheen: rgba(255, 255, 255, 0.9);
+  --fill: rgba(0, 0, 0, 0.055);
+  --shadow: 0 14px 34px -18px rgba(20, 24, 40, 0.38), 0 2px 6px -3px rgba(20, 24, 40, 0.12);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .snav-glass {
+    --face: rgba(24, 24, 27, 0.94);
+  }
+  .snav-glass[data-tone='light'] {
+    --face: rgba(250, 250, 250, 0.96);
+  }
+}
+
+/* -------------------------------------------------------------- The capsule */
+
+.snav__top {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 10; /* the old bar's layer: page overlays (intro, story, lightbox, players) still cover it */
+  display: flex;
+  justify-content: center;
+  padding: 14px 16px 0;
+  pointer-events: none;
+}
+.snav__capsule {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 52px;
+  padding: 0 6px;
+  border-radius: 999px;
+  pointer-events: auto;
+}
+.snav.is-docked .snav__capsule {
+  opacity: 0;
+  transform: translateY(calc(-100% - 20px)) scale(0.96);
+  pointer-events: none;
+}
+
+.snav__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding-right: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+  border-radius: 999px;
+}
+.snav__name:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.snav__orb {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--fill);
+  box-shadow: inset 0 1px 0 var(--sheen);
+}
+.snav__orb svg {
+  width: 14px;
+  height: 14px;
+  fill: #34c759;
+}
+
+.snav__links {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.snav__links a {
+  position: relative;
+  z-index: 1;
+  padding: 9px 15px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dim);
+  transition: color 0.2s ease;
+}
+.snav__links a:hover,
+.snav__links a:focus-visible,
+.snav__links a[aria-current='page'] {
+  color: var(--ink);
+}
+.snav__links a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+/* The indicator: a flat fill with the material's sheen on top — the Lens's bead, without the gloss. */
+.snav__mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--w);
+  transform: translateX(var(--x));
+  border-radius: 999px;
+  background: var(--fill);
+  box-shadow: inset 0 1px 0 var(--sheen);
+  transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.4, 1), width 0.5s cubic-bezier(0.34, 1.3, 0.4, 1);
+}
+
+.snav__actions {
+  display: flex;
+  align-items: center;
+  padding: 0 2px 0 6px;
+  margin-left: 2px;
+  border-left: 1px solid var(--edge);
+  transform: scale(0.86);
+}
+
+/* ----------------------------------------------------------------- The dock */
+
+.snav__dock {
+  position: fixed;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 10; /* the old bar's layer: page overlays (intro, story, lightbox, players) still cover it */
+  padding: 7px;
+  border-radius: 28px;
+  transform: translate(-50%, calc(100% + 40px));
+  opacity: 0;
+  pointer-events: none;
+}
+.snav.is-docked .snav__dock {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0s, 0s, 0s, 0.08s, 0.08s;
+}
+
+.snav__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.snav__item {
+  --s: 1;
+  position: relative;
+  width: calc(44px * var(--s));
+  height: calc(44px * var(--s));
+  transition: width 0.18s ease-out, height 0.18s ease-out;
+}
+.snav__item > a,
+.snav__item > button {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.snav__item svg {
+  width: 46%;
+  height: 46%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.snav__item > a:hover,
+.snav__item > button:hover,
+.snav__item > a:focus-visible,
+.snav__item > button:focus-visible,
+.snav__item > a[aria-current='page'] {
+  color: var(--ink);
+  background: var(--fill);
+  box-shadow: inset 0 1px 0 var(--sheen);
+  outline: none;
+}
+.snav__item > a:focus-visible,
+.snav__item > button:focus-visible {
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+.snav__label {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--face);
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--sheen), var(--shadow);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.snav__item:hover .snav__label,
+.snav__item :focus-visible .snav__label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.snav__ring {
+  width: 70% !important;
+  height: 70% !important;
+}
+.snav__ring-track {
+  stroke: var(--edge);
+  stroke-width: 2.4;
+}
+.snav__ring-fill {
+  stroke: #34c759;
+  stroke-width: 2.4;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.15s linear;
+}
+.snav__ring-arrow {
+  stroke-width: 2;
+}
+.snav__sep {
+  align-self: center;
+  width: 1px;
+  height: 26px;
+  margin: 0 5px;
+  background: var(--edge);
+}
+.snav__dock .snav__actions {
+  height: 44px;
+  border-left: 0;
+  margin-left: 0;
+}
+
+/* ------------------------------------------- Room for the dock at the foot */
+
+/* While the dock shows, what else sits at the foot of the screen stands on it: the cookie card and the
+   narration player (unless expanded to a full sheet, which covers the dock). */
+html[data-nav-docked] {
+  --dock-room: 84px;
+}
+.ck {
+  transition: bottom 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+html[data-nav-docked] .ck {
+  bottom: calc(20px + var(--dock-room));
+}
+html[data-nav-docked] .nr-dock:not([data-mode='expanded']) {
+  bottom: calc(var(--nr-inset) + var(--dock-room) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ------------------------------------------------------------------ Phones */
+
+@media (max-width: 640px) {
+  /* The capsule spans the top: the star is home, then the three pages and the theme. */
+  .snav__top {
+    padding: 10px 12px 0;
+  }
+  .snav__capsule {
+    width: 100%;
+    max-width: 440px;
+    justify-content: space-between;
+  }
+  .snav__name {
+    padding-right: 0;
+  }
+  .snav__name-text {
+    display: none;
+  }
+  .snav__links a {
+    padding: 9px 12px;
+  }
+
+  /* The dock becomes a thumb bar: full width, labels under the icons, no magnifying. */
+  .snav__dock {
+    left: 12px;
+    right: 12px;
+    padding: 6px;
+    border-radius: 26px;
+    transform: translateY(calc(100% + 40px));
+  }
+  .snav.is-docked .snav__dock {
+    transform: none;
+  }
+  .snav__row {
+    justify-content: space-between;
+    align-items: center;
+    gap: 0;
+  }
+  .snav__item {
+    --s: 1 !important;
+    flex: 1;
+    width: auto;
+    height: 52px;
+  }
+  .snav__item > a,
+  .snav__item > button {
+    grid-template-rows: 1fr auto;
+    padding: 7px 0 6px;
+    gap: 2px;
+    border-radius: 20px;
+  }
+  .snav__item svg {
+    width: 21px;
+    height: 21px;
+  }
+  .snav__ring {
+    width: 23px !important;
+    height: 23px !important;
+  }
+  .snav__label {
+    position: static;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    opacity: 1;
+    transform: none;
+    font-size: 10px;
+    color: inherit;
+  }
+  .snav__sep {
+    display: none;
+  }
+  .snav__dock .snav__actions {
+    height: 52px;
+    padding: 0 2px;
+  }
+}
+
+/* Reduced motion: the two swap with a plain fade, nothing slides or swells. */
+@media (prefers-reduced-motion: reduce) {
+  .snav.is-docked .snav__capsule,
+  .snav__dock,
+  .snav.is-docked .snav__dock {
+    transform: none;
+  }
+  @media (min-width: 641px) {
+    .snav__dock,
+    .snav.is-docked .snav__dock {
+      transform: translateX(-50%);
+    }
+  }
+  .snav *,
+  .snav-glass {
+    transition-duration: 0.15s !important;
+    transition-delay: 0s !important;
+  }
+}

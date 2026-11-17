@@ -90,9 +90,6 @@ html:has(.cro) {
   margin: 0 auto;
   padding-inline: 24px;
 }
-.cro .site-nav__inner {
-  max-width: 1600px;
-}
 
 /* A heading's second voice: the same face upright, a step quieter. Only the hero's title sets it in italic. */
 .cro em {

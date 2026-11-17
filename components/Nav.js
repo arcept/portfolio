@@ -1,127 +1,128 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useT } from '@/components/i18n/LangProvider';
-import MobileMenu from './MobileMenu';
 import { navSans } from './nav-font';
+import { ICONS, ITEMS, PAGES, Star, isActive, usePath, useScroll, useTone } from './nav/parts';
+import './nav/nav.css';
 
-// The site's links. They appear in the bar on wide screens and in the menu's sheet on phones: add one here and it
-// shows in both. `note` is the short line under it in the menu.
-const NAV_LINKS = [
-  { label: 'Work', href: '/#work', note: 'Selected case studies' },
-  { label: 'About', href: '/about', note: 'The person behind them' },
-  { label: 'Contact', href: '/contact', note: 'Say hello' },
-];
+// The site's nav, on every page. A page opens with a frosted capsule at the top (the Lens, calmed down: matte glass, one
+// hairline edge, a faint top highlight, no glare or tilt). Once you start reading, the capsule lifts away and the
+// same material rises at the foot of the screen as the Dock: icons that swell under the pointer, and a ring that
+// fills as you read. Back at the top, they swap back. Only one is ever on screen (the other is inert).
+const DOCK_AT = 160; // px scrolled before the dock takes over
 
-const CLOSE_MS = 600; // how long the menu's sheet takes to drop away
-
+// `actions` are the page's own controls (theme switch, language), shown in whichever of the two is on screen.
 export default function Nav({ actions }) {
-  const t = useT();
-  const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false); // tucked away while scrolling down, back on the way up
-  const [mounted, setMounted] = useState(false); // the menu exists
-  const [open, setOpen] = useState(false); // the menu is showing (drives the animation)
-  const burger = useRef(null);
-  const timer = useRef(0);
+  const capsule = useRef(null);
+  const dock = useRef(null);
+  const links = useRef(null);
+  const path = usePath();
+  const { y, progress } = useScroll();
+  const docked = y > DOCK_AT;
+  const capTone = useTone(capsule);
+  const dockTone = useTone(dock, { y: useCallback(() => window.innerHeight - 40, []) });
 
+  // The capsule is gone while docked: things pinned under it move up into its place.
   useEffect(() => {
-    let last = window.scrollY;
-    let travel = 0; // distance moved in the current direction, so a jitter of a pixel or two does nothing
-    function handleScroll() {
-      const y = window.scrollY;
-      const dy = y - last;
-      last = y;
-      setScrolled(y > 4);
-      if (y < 80) {
-        travel = 0;
-        setHidden(false);
-        return;
-      }
-      travel = Math.sign(dy) === Math.sign(travel) ? travel + dy : dy;
-      if (travel > 12) setHidden(true);
-      else if (travel < -6) setHidden(false);
-    }
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // The page is told when the bar is tucked away, so anything pinned under it (a case study's section bar on
-  // phones) can move up into its place.
-  const tucked = hidden && !mounted;
-  useEffect(() => {
-    document.documentElement.toggleAttribute('data-nav-hidden', tucked);
-  }, [tucked]);
-  useEffect(() => () => document.documentElement.removeAttribute('data-nav-hidden'), []);
-
-  const openMenu = () => {
-    window.clearTimeout(timer.current);
-    setMounted(true);
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => setOpen(true)));
-  };
-
-  const closeMenu = useCallback(({ refocus = true, instant = false } = {}) => {
-    setOpen(false);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setMounted(false), instant ? 0 : CLOSE_MS);
-    if (refocus) burger.current?.focus({ preventScroll: true });
-  }, []);
-
-  // Choosing a link: close the menu, then go (unless it was a new-tab click).
-  const go = useCallback(
-    (event, href) => {
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button) return;
-      event.preventDefault();
-      closeMenu({ refocus: false });
-      window.setTimeout(() => window.location.assign(href), 420);
+    document.documentElement.toggleAttribute('data-nav-hidden', docked);
+    document.documentElement.toggleAttribute('data-nav-docked', docked);
+  }, [docked]);
+  useEffect(
+    () => () => {
+      document.documentElement.removeAttribute('data-nav-hidden');
+      document.documentElement.removeAttribute('data-nav-docked');
     },
-    [closeMenu]
+    []
   );
 
-  // The menu is for phones: if the window grows past that while it is open, drop it.
+  // The capsule's indicator glides to the link being pointed at, and back to the current page.
+  const [mark, setMark] = useState(null);
+  const place = useCallback((el) => {
+    const host = links.current;
+    if (!host) return;
+    const target = el || host.querySelector('a[aria-current="page"]');
+    setMark(target ? { x: target.offsetLeft, w: target.offsetWidth } : null);
+  }, []);
   useEffect(() => {
-    if (!mounted) return undefined;
-    const wide = window.matchMedia('(min-width: 641px)');
-    const check = () => wide.matches && closeMenu({ refocus: false, instant: true });
-    wide.addEventListener('change', check);
-    return () => wide.removeEventListener('change', check);
-  }, [mounted, closeMenu]);
+    place();
+    const again = () => place();
+    window.addEventListener('resize', again);
+    document.fonts?.ready.then(again);
+    return () => window.removeEventListener('resize', again);
+  }, [place, path]);
 
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const onMove = (e) => {
+    if (e.pointerType === 'touch' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    dock.current?.querySelectorAll('.snav__item').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      const d = Math.abs(e.clientX - (r.left + r.width / 2));
+      el.style.setProperty('--s', (1 + 0.35 * Math.max(0, 1 - d / 110)).toFixed(3));
+    });
+  };
+  const onLeave = () => dock.current?.querySelectorAll('.snav__item').forEach((el) => el.style.setProperty('--s', '1'));
+
+  const toTop = () => window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  const R = 15;
+  const C = 2 * Math.PI * R;
 
   return (
-    <nav className={`site-nav ${navSans.variable} ${scrolled ? 'is-scrolled' : ''}${tucked ? ' is-hidden' : ''}${open ? ' is-menu-open' : ''}`}>
-      <div className="site-nav__inner">
-        <a href="/" className="site-nav__name">
-          {/* The ✦ is drawn, not typed: the bar's face has no glyph for it, and a fallback's would vary. */}
-          <svg className="site-nav__star" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 0C12.6 6.6 17.4 11.4 24 12 17.4 12.6 12.6 17.4 12 24 11.4 17.4 6.6 12.6 0 12 6.6 11.4 11.4 6.6 12 0Z" />
-          </svg>
-          Manik Madaan
-        </a>
-        <div className="site-nav__links">
-          {NAV_LINKS.map((link) => (
-            <a key={link.label} href={link.href} className="site-nav__link">
-              {link.label}
-            </a>
-          ))}
-          {actions}
-          <button
-            ref={burger}
-            type="button"
-            className="site-nav__menu"
-            aria-haspopup="dialog"
-            aria-expanded={open}
-            aria-controls={mounted ? 'site-menu' : undefined}
-            aria-label={open ? t('ui.menuClose', 'Close menu') : t('ui.menuOpen', 'Open menu')}
-            onClick={() => (open ? closeMenu() : openMenu())}
-          >
-            <i />
-            <i />
-          </button>
+    <nav aria-label="Site" className={`snav ${navSans.variable}${docked ? ' is-docked' : ''}`}>
+      {/* At the top: the capsule. */}
+      <div className="snav__top">
+        <div ref={capsule} className="snav__capsule snav-glass" data-tone={capTone} inert={docked || undefined}>
+          <a href="/" className="snav__name" aria-label="Manik Madaan, home">
+            <span className="snav__orb" aria-hidden="true">
+              <Star />
+            </span>
+            <span className="snav__name-text">Manik Madaan</span>
+          </a>
+          <div ref={links} className="snav__links" onPointerLeave={() => place()} onBlur={() => place()}>
+            {mark && <span className="snav__mark" style={{ '--x': `${mark.x}px`, '--w': `${mark.w}px` }} aria-hidden="true" />}
+            {PAGES.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                aria-current={isActive(link, path) ? 'page' : undefined}
+                onPointerEnter={(e) => place(e.currentTarget)}
+                onFocus={(e) => place(e.currentTarget)}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+          {actions && !docked && <div className="snav__actions">{actions}</div>}
         </div>
       </div>
-      {mounted && <MobileMenu open={open} links={NAV_LINKS} onClose={closeMenu} onGo={go} />}
+
+      {/* Reading: the dock. */}
+      <div ref={dock} className="snav__dock snav-glass" data-tone={dockTone} inert={!docked || undefined} onPointerMove={onMove} onPointerLeave={onLeave}>
+        <ul className="snav__row">
+          {ITEMS.map((item) => (
+            <li key={item.label} className="snav__item">
+              <a href={item.href} aria-current={isActive(item, path) ? 'page' : undefined}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  {ICONS[item.label]}
+                </svg>
+                <span className="snav__label">{item.label}</span>
+              </a>
+            </li>
+          ))}
+          <li className="snav__sep" aria-hidden="true" />
+          <li className="snav__item">
+            <button type="button" onClick={toTop} aria-label={`Back to top (${Math.round(progress * 100)}% read)`}>
+              <svg viewBox="0 0 36 36" className="snav__ring" aria-hidden="true">
+                <circle cx="18" cy="18" r={R} className="snav__ring-track" />
+                <circle cx="18" cy="18" r={R} className="snav__ring-fill" style={{ strokeDasharray: C, strokeDashoffset: C * (1 - progress) }} />
+                <path d="M18 23v-10M13.5 17.5 18 13l4.5 4.5" className="snav__ring-arrow" />
+              </svg>
+              <span className="snav__label" aria-hidden="true">
+                {Math.round(progress * 100)}%
+              </span>
+            </button>
+          </li>
+          {actions && docked && <li className="snav__actions">{actions}</li>}
+        </ul>
+      </div>
     </nav>
   );
 }

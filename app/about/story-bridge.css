@@ -257,7 +257,7 @@
   display: none;
 }
 
-/* The foot: spans the nav bar's width (--nav-l/-r), the name's edge to the last control's. */
+/* The foot: the column's width. */
 .abt-end__foot {
   position: relative;
   z-index: 1;
@@ -265,7 +265,7 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px 24px;
-  margin: clamp(48px, 8vh, 80px) calc(-1 * var(--nav-r, 0px)) 0 calc(-1 * var(--nav-l, 0px));
+  margin: clamp(48px, 8vh, 80px) 0 0;
   padding: 20px 0;
   font-size: 13px;
   text-align: left;

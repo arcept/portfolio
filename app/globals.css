@@ -15,7 +15,7 @@
   --chart-2: #6366f1;
   --site-nav-h: 56px;
   /* Where anything pinned under the site's bar sits: the bar's height, or the top of the screen while the bar
-     is tucked away (Nav.js sets data-nav-hidden). Sticky elements that sit right under the bar use it for
+     is away (Nav.js sets data-nav-hidden while the dock is showing). Sticky elements that sit right under the bar use it for
      `top`, with a transition on top (0.35s, the bar's own easing), so they move up into its place in step
      with it instead of leaving a gap. */
   --nav-top: var(--site-nav-h);
@@ -100,82 +100,6 @@ a {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-}
-
-/* ---------- Nav ---------- */
-.site-nav {
-  position: fixed;
-  font-family: var(--font-nav-sans), var(--font-inter), system-ui, sans-serif;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  background: transparent;
-  backdrop-filter: none;
-  border-bottom: 1px solid transparent;
-  transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Once the page has scrolled under it, the bar is frosted in the page's own colour (--void, which each page's
-   light theme remaps), so its links read over anything. */
-.site-nav.is-scrolled {
-  background: color-mix(in srgb, var(--void) 72%, transparent);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  backdrop-filter: blur(14px) saturate(1.2);
-  border-bottom-color: var(--graphite);
-}
-
-/* Tucked away while the reader scrolls down, back as soon as they scroll up (Nav.js). Keyboard focus
-   inside it brings it back too. */
-.site-nav.is-hidden:not(:focus-within) {
-  transform: translateY(-100%);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .site-nav {
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-  }
-}
-
-.site-nav__inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.site-nav__name {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-  font-weight: 590;
-  color: var(--paper);
-}
-
-.site-nav__star {
-  width: 0.8em;
-  height: 0.8em;
-  flex: none;
-  fill: #34c759;
-}
-
-.site-nav__links {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.site-nav__link {
-  color: var(--fog);
-  font-size: 14px;
-  transition: color 0.15s ease;
-}
-
-a.site-nav__link:hover,
-a.site-nav__link:focus-visible {
-  color: var(--paper);
 }
 
 /* Shown, but with nowhere to go yet: it must not offer itself as a link. */
@@ -1271,13 +1195,6 @@ footer a:hover {
   .hero-actions .btn {
     width: 100%;
   }
-  .site-nav__inner {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .site-nav__links {
-    gap: 12px;
-  }
 }
 
 /* Language menu, beside the theme switch (see components/i18n/LangSwitch.js): a small "DE ▾" button that opens a short
@@ -1418,10 +1335,6 @@ html[data-cs-theme='light'] .cs-lang__menu {
   .cs-lang__caret {
     display: none;
   }
-}
-
-.site-nav__name {
-  white-space: nowrap;
 }
 
 /* The theme switch (components/theme/AnimatedThemeSwitch.js), wherever a page has one. One disc does both

@@ -11,8 +11,7 @@
 
 /* The site's containers top out at 1400px. This page lets them grow to 1600px so the article's
    three columns (margin, text, contents nav) have room; it changes nothing below ~1650px. */
-.ph-page .wrap--wide,
-.ph-page .site-nav__inner {
+.ph-page .wrap--wide {
   max-width: 1600px;
 }
 
