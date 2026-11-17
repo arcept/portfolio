@@ -1,0 +1,127 @@
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useT } from '@/components/i18n/LangProvider';
+import MobileMenu from '../MobileMenu';
+import { navSans } from '../nav-font';
+import { PAGES } from './parts';
+import './phone-nav.css';
+
+// The site's nav on phones (up to 640px; Nav.js shows the capsule and dock above that): the bar as it was before
+// them, restored as is, with the menu's sheet (MobileMenu). Its links are the site's (PAGES, in nav/parts.js).
+const NAV_LINKS = PAGES;
+
+const CLOSE_MS = 600; // how long the menu's sheet takes to drop away
+
+// `active`: this is the nav on screen, so it, not the other, tells the page when it is tucked away.
+export default function PhoneNav({ actions, active = true }) {
+  const t = useT();
+  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false); // tucked away while scrolling down, back on the way up
+  const [mounted, setMounted] = useState(false); // the menu exists
+  const [open, setOpen] = useState(false); // the menu is showing (drives the animation)
+  const burger = useRef(null);
+  const timer = useRef(0);
+
+  useEffect(() => {
+    let last = window.scrollY;
+    let travel = 0; // distance moved in the current direction, so a jitter of a pixel or two does nothing
+    function handleScroll() {
+      const y = window.scrollY;
+      const dy = y - last;
+      last = y;
+      setScrolled(y > 4);
+      if (y < 80) {
+        travel = 0;
+        setHidden(false);
+        return;
+      }
+      travel = Math.sign(dy) === Math.sign(travel) ? travel + dy : dy;
+      if (travel > 12) setHidden(true);
+      else if (travel < -6) setHidden(false);
+    }
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // The page is told when the bar is tucked away, so anything pinned under it (a case study's section bar on
+  // phones) can move up into its place.
+  const tucked = hidden && !mounted;
+  useEffect(() => {
+    if (!active) return undefined;
+    document.documentElement.toggleAttribute('data-nav-hidden', tucked);
+    return () => document.documentElement.removeAttribute('data-nav-hidden');
+  }, [tucked, active]);
+
+  const openMenu = () => {
+    window.clearTimeout(timer.current);
+    setMounted(true);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => setOpen(true)));
+  };
+
+  const closeMenu = useCallback(({ refocus = true, instant = false } = {}) => {
+    setOpen(false);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setMounted(false), instant ? 0 : CLOSE_MS);
+    if (refocus) burger.current?.focus({ preventScroll: true });
+  }, []);
+
+  // Choosing a link: close the menu, then go (unless it was a new-tab click).
+  const go = useCallback(
+    (event, href) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button) return;
+      event.preventDefault();
+      closeMenu({ refocus: false });
+      window.setTimeout(() => window.location.assign(href), 420);
+    },
+    [closeMenu]
+  );
+
+  // The menu is for phones: if the window grows past that while it is open, drop it.
+  useEffect(() => {
+    if (!mounted) return undefined;
+    const wide = window.matchMedia('(min-width: 641px)');
+    const check = () => wide.matches && closeMenu({ refocus: false, instant: true });
+    wide.addEventListener('change', check);
+    return () => wide.removeEventListener('change', check);
+  }, [mounted, closeMenu]);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  return (
+    <nav className={`site-nav ${navSans.variable} ${scrolled ? 'is-scrolled' : ''}${tucked ? ' is-hidden' : ''}${open ? ' is-menu-open' : ''}`}>
+      <div className="site-nav__inner">
+        <a href="/" className="site-nav__name">
+          {/* The ✦ is drawn, not typed: the bar's face has no glyph for it, and a fallback's would vary. */}
+          <svg className="site-nav__star" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 0C12.6 6.6 17.4 11.4 24 12 17.4 12.6 12.6 17.4 12 24 11.4 17.4 6.6 12.6 0 12 6.6 11.4 11.4 6.6 12 0Z" />
+          </svg>
+          Manik Madaan
+        </a>
+        <div className="site-nav__links">
+          {NAV_LINKS.map((link) => (
+            <a key={link.label} href={link.href} className="site-nav__link">
+              {link.label}
+            </a>
+          ))}
+          {actions}
+          <button
+            ref={burger}
+            type="button"
+            className="site-nav__menu"
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-controls={mounted ? 'site-menu' : undefined}
+            aria-label={open ? t('ui.menuClose', 'Close menu') : t('ui.menuOpen', 'Open menu')}
+            onClick={() => (open ? closeMenu() : openMenu())}
+          >
+            <i />
+            <i />
+          </button>
+        </div>
+      </div>
+      {mounted && <MobileMenu open={open} links={NAV_LINKS} onClose={closeMenu} onGo={go} />}
+    </nav>
+  );
+}

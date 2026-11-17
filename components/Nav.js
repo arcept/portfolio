@@ -3,16 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { navSans } from './nav-font';
 import { ICONS, ITEMS, PAGES, Star, isActive, usePath, useScroll, useTone } from './nav/parts';
+import PhoneNav from './nav/PhoneNav';
 import './nav/nav.css';
 
-// The site's nav, on every page. A page opens with a frosted capsule at the top (the Lens, calmed down: matte glass, one
+// The site's nav above 640px (phones keep the bar and menu, nav/PhoneNav.js). A page opens with a frosted capsule at the top (the Lens, calmed down: matte glass, one
 // hairline edge, a faint top highlight, no glare or tilt). Once you start reading, the capsule lifts away and the
 // same material rises at the foot of the screen as the Dock: icons that swell under the pointer, and a ring that
 // fills as you read. Back at the top, they swap back. Only one is ever on screen (the other is inert).
 const DOCK_AT = 160; // px scrolled before the dock takes over
 
 // `actions` are the page's own controls (theme switch, language), shown in whichever of the two is on screen.
-export default function Nav({ actions }) {
+// `active`: this is the nav on screen, so it, not the phone bar, tells the page when it is away or docked.
+function WideNav({ actions, active = true }) {
   const capsule = useRef(null);
   const dock = useRef(null);
   const links = useRef(null);
@@ -24,16 +26,15 @@ export default function Nav({ actions }) {
 
   // The capsule is gone while docked: things pinned under it move up into its place.
   useEffect(() => {
-    document.documentElement.toggleAttribute('data-nav-hidden', docked);
-    document.documentElement.toggleAttribute('data-nav-docked', docked);
-  }, [docked]);
-  useEffect(
-    () => () => {
-      document.documentElement.removeAttribute('data-nav-hidden');
-      document.documentElement.removeAttribute('data-nav-docked');
-    },
-    []
-  );
+    if (!active) return undefined;
+    const html = document.documentElement;
+    html.toggleAttribute('data-nav-hidden', docked);
+    html.toggleAttribute('data-nav-docked', docked);
+    return () => {
+      html.removeAttribute('data-nav-hidden');
+      html.removeAttribute('data-nav-docked');
+    };
+  }, [docked, active]);
 
   // The capsule's indicator glides to the link being pointed at, and back to the current page.
   const [mark, setMark] = useState(null);
@@ -124,5 +125,32 @@ export default function Nav({ actions }) {
         </ul>
       </div>
     </nav>
+  );
+}
+
+// Phones (up to 640px) get the bar and its menu as they were; wider screens the capsule and dock. Both are in the
+// page's HTML and CSS shows one (nav/phone-nav.css), so neither flashes in. Once the width is known, only the one on
+// screen writes to the page and holds the page's controls, and it follows the window across the line.
+const PHONE = '(max-width: 640px)';
+
+function usePhone() {
+  const [phone, setPhone] = useState(null); // null until known (the static HTML)
+  useEffect(() => {
+    const query = window.matchMedia(PHONE);
+    const sync = () => setPhone(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  return phone;
+}
+
+export default function Nav({ actions }) {
+  const phone = usePhone();
+  return (
+    <>
+      <PhoneNav actions={phone === false ? null : actions} active={phone === true} />
+      <WideNav actions={phone === true ? null : actions} active={phone === false} />
+    </>
   );
 }

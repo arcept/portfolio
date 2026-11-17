@@ -1,0 +1,105 @@
+/* The phone nav (PhoneNav.js): the site's bar as it was before the capsule and dock, restored from bc9eef4's
+   globals.css as is. Shown up to 640px wide; above that the capsule and dock (Nav.js) take over. */
+
+/* ---------- Nav ---------- */
+.site-nav {
+  position: fixed;
+  font-family: var(--font-nav-sans), var(--font-inter), system-ui, sans-serif;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Once the page has scrolled under it, the bar is frosted in the page's own colour (--void, which each page's
+   light theme remaps), so its links read over anything. */
+.site-nav.is-scrolled {
+  background: color-mix(in srgb, var(--void) 72%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom-color: var(--graphite);
+}
+
+/* Tucked away while the reader scrolls down, back as soon as they scroll up (Nav.js). Keyboard focus
+   inside it brings it back too. */
+.site-nav.is-hidden:not(:focus-within) {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+}
+
+.site-nav__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.site-nav__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-weight: 590;
+  color: var(--paper);
+}
+
+.site-nav__star {
+  width: 0.8em;
+  height: 0.8em;
+  flex: none;
+  fill: #34c759;
+}
+
+.site-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.site-nav__link {
+  color: var(--fog);
+  font-size: 14px;
+  transition: color 0.15s ease;
+}
+
+a.site-nav__link:hover,
+a.site-nav__link:focus-visible {
+  color: var(--paper);
+}
+
+
+@media (max-width: 640px) {
+  .site-nav__inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .site-nav__links {
+    gap: 12px;
+  }
+}
+
+.site-nav__name {
+  white-space: nowrap;
+}
+
+/* Only one nav shows: this bar on phones, the capsule and dock above 640px. */
+@media (min-width: 641px) {
+  .site-nav {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .snav {
+    display: none;
+  }
+}

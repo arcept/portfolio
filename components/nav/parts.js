@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 
 // The site nav's parts (Nav.js): its links and icons, the scroll state, and the tone of what is under the nav.
 
+// The site's pages, for both navs: add one here and it shows in the capsule, the dock and the phone menu (which
+// also wants a picture for it, in MobileMenu.js, and the dock an icon, below). `note` is its line in the phone menu.
 export const PAGES = [
-  { label: 'Work', href: '/#work', match: (p) => p === '/' || p.startsWith('/case-study') },
-  { label: 'About', href: '/about', match: (p) => p.startsWith('/about') },
-  { label: 'Contact', href: '/contact', match: (p) => p.startsWith('/contact') },
+  { label: 'Work', href: '/#work', note: 'Selected case studies', match: (p) => p === '/' || p.startsWith('/case-study') },
+  { label: 'About', href: '/about', note: 'The person behind them', match: (p) => p.startsWith('/about') },
+  { label: 'Contact', href: '/contact', note: 'Say hello', match: (p) => p.startsWith('/contact') },
 ];
 
 
