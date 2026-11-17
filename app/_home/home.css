@@ -600,6 +600,18 @@ html[data-abt-theme='dark'] .hx-i .hx-btn--ghost {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
+/* On the dark ground the dark pill all but vanished, leaving "See the work" as bare words beside a
+   bordered ghost: in the dark theme the primary turns light, its disc dark. */
+html[data-abt-theme='dark'] .hx-i .hx-btn--primary {
+  background: #f4f2f7;
+  color: #16121c;
+}
+
+html[data-abt-theme='dark'] .hx-i .hx-btn--primary .hx-btn__icon {
+  background: #16121c;
+  color: #fff;
+}
+
 /* ---------------------------------------------------------------- The runner */
 
 .hx-i-runner {
